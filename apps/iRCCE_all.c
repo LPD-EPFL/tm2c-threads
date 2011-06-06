@@ -108,8 +108,10 @@ void listen(int repeats) {
         if (send_current != NULL) {
             cmd_t * cmd = (cmd_t *) send_current->privbuf;
 
+/*
             PRINTD("-->>[%s] to %02d (%d) for %d (%d)", cmd->type == REQUEST ? "REQUEST " : "RESPONSE", 
                 cmd->to, number_sent_to, cmd->number, number_sent);
+*/
 
 
             free(send_current->privbuf);
@@ -128,13 +130,10 @@ void listen(int repeats) {
             /*the cmd sent*/
             cmd_t * cmd = (cmd_t *) base;
 
-            PRINTD("<<--[%s] to %02d for %d", cmd->type == REQUEST ? "REQUEST " : "RESPONSE", 
-                cmd->to, cmd->number);
-            
             if (cmd->type == RESPONSE) {
                 /*if the wrong number received*/
                 if (cmd->number != number_sent) {
-                    PRINTD("\t\t\t\t\t[Expected] num: %5d from %02d, to %02d | [Received] num: %5d from %02d (%02d), to %02d",
+                    PRINTD("[Expected] num: %5d from %02d, to %02d | [Received] num: %5d from %02d (%02d), to %02d",
                             number_sent, number_sent_to, RCCE_ue(), cmd->number, sender, cmd->from, cmd->to);
                 }
                 else {
