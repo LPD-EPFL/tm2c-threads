@@ -202,7 +202,8 @@ void send(int core, int number) {
         iRCCE_add_to_wait_list(&sendlist, s, NULL);
     }
     else { /*message delivered*/
-        PRINTD("On the fly ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~>");
+        PRINTD("On the fly: [%s] num: %5d from %02d, to %02d ", 
+                cmd.type == REQUEST ? "REQUEST" : "RESPONSE", cmd.number, cmd.to);
         free(s);
         free(data);
         scounter++;
