@@ -80,7 +80,10 @@ void dsl_init(void) {
 }
 
 static void dsl_communication() {
-
+    char local[PS_BUFFER_SIZE];
+    int sender;
+    char *base;
+    
     while (1) {
 
         iRCCE_test_any(&sendlist, &send_current, NULL);
@@ -94,9 +97,15 @@ static void dsl_communication() {
 
             
             //the sender of the message
-            int sender = recv_current->source;
-            char *base = buf + sender * 32;
-            ps_remote = (PS_COMMAND *) base;
+            sender = recv_current->source;
+            base = buf + sender * 32;
+            memcpy(&local, base, PS_BUFFER_SIZE);
+            
+            // Create request for new message from this core, add to waitlist
+            iRCCE_irecv(base, PS_BUFFER_SIZE, sender, &recv_requests[sender]);
+            iRCCE_add_to_wait_list(&waitlist, NULL, &recv_requests[sender]);
+            
+            ps_remote = (PS_COMMAND *) local;
 
             switch (ps_remote->type) {
                 case PS_SUBSCRIBE:
@@ -105,18 +114,12 @@ static void dsl_communication() {
                 case PS_PUBLISH:
                     ps_send(sender, PS_PUBLISH_RESPONSE, ps_remote->address, try_publish(sender, ps_remote->address));
                     break;
-                    unsubscribe(sender, ps_remote->address);
                 case PS_REMOVE_NODE:
                     ps_hashtable_delete_node(ps_hashtable, sender);
                     break;
                 default:
                     PRINTD("REMOTE MSG: ??");
             }
-
-
-            // Create request for new message from this core, add to waitlist
-            iRCCE_irecv(base, PS_BUFFER_SIZE, sender, &recv_requests[sender]);
-            iRCCE_add_to_wait_list(&waitlist, NULL, &recv_requests[sender]);
 
         }
     }
