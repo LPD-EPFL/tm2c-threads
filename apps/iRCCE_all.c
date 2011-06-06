@@ -107,10 +107,10 @@ void listen(int repeats) {
         iRCCE_test_any(&sendlist, &send_current, NULL);
         if (send_current != NULL) {
             cmd_t * cmd = (cmd_t *) send_current->privbuf;
-/*
-            PRINTD("[%s] to %02d (%d) for %d (%d)", cmd->type == REQUEST ? "REQUEST " : "RESPONSE", 
+
+            PRINTD("-->>[%s] to %02d (%d) for %d (%d)", cmd->type == REQUEST ? "REQUEST " : "RESPONSE", 
                 cmd->to, number_sent_to, cmd->number, number_sent);
-*/
+
 
             free(send_current->privbuf);
             free(send_current);
@@ -128,6 +128,9 @@ void listen(int repeats) {
             /*the cmd sent*/
             cmd_t * cmd = (cmd_t *) base;
 
+            PRINTD("<<--[%s] to %02d for %d", cmd->type == REQUEST ? "REQUEST " : "RESPONSE", 
+                cmd->to, cmd->number);
+            
             if (cmd->type == RESPONSE) {
                 /*if the wrong number received*/
                 if (cmd->number != number_sent) {
