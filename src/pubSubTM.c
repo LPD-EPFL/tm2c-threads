@@ -56,7 +56,7 @@ void ps_init_(void) {
     int j, dsln = 0;
     for (j = 0; j < NUM_UES; j++) {
         nodes_contacted[j] = 0;
-        if (j % DSLNDPERNODES) {
+        if (j % DSLNDPERNODES == 0) {
             dsl_nodes[dsln++] = j;
         }
     }
