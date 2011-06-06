@@ -85,7 +85,6 @@ MAIN(int argc, char **argv) {
 
     //
     
-    BARRIER
 
             int txupdate = 0;
     int txro = 0;
