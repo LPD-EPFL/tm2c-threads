@@ -64,7 +64,6 @@ MAIN(int argc, char **argv) {
     
     BMSTART("NO TX writes")
     for (i = ID; i < SIS_SIZE; i += NUM_UES) {
-        taskyield();
         *(sis + i) = sum;
     }
     BMEND
@@ -92,5 +91,5 @@ MAIN(int argc, char **argv) {
     }
 
     TM_END
-    EXIT(0);
+    EXIT(0);    
 }
