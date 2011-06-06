@@ -12,8 +12,10 @@
 extern "C" {
 #endif
 
-#define DEBUG_
-    
+#define DSLNDPERNODES 4 /* 1 dedicated DS-Locking core per DSLNDPERNODES cores*/
+
+#define DEBUG
+
 #define PRINT(args...) printf("[%02d] ", RCCE_ue()); printf(args); printf("\n"); fflush(stdout)
 #define FLUSH fflush(stdout);
 #ifdef DEBUG
@@ -57,7 +59,7 @@ extern "C" {
         READ,
         WRITE
     } RW;
-    
+
     //extern unsigned int ID; //=RCCE_ue()
     //extern unsigned int NUM_UES;
 
@@ -67,25 +69,11 @@ extern "C" {
 #include <stddef.h>
 #include <unistd.h>
 
-    //statically enable libtask, else -DTASKLIB on compile
-#define TASKLIB
+#define MAIN int main
+#define EXIT(reason) exit(reason);
+#define EXITALL(reason) exit((reason))
 
-#ifdef TASKLIB
-#include "task.h"
-
-#define TASKMAIN void taskmain
-#define EXIT(reason) taskexit((reason))
-#define EXITALL(reason) taskexitall((reason))
-#else
-#include <pthread.h>
-
-#define TASKMAIN int main
-#define EXIT(reason) pthread_exit((void *) (reason));
-#define EXITALL(reason) pthread_exit((void *) (reason));
-#endif
-    
-    int RCCE_barrier_nb(RCCE_COMM *comm);
-#define BARRIER RCCE_barrier_nb(&RCCE_COMM_WORLD);
+#define BARRIER RCCE_barrier(&RCCE_COMM_WORLD);
 
 #ifdef	__cplusplus
 }
