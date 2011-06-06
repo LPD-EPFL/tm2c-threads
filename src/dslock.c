@@ -31,7 +31,7 @@ iRCCE_SEND_REQUEST *send_current;
 CONFLICT_TYPE ps_response; //TODO: make it more sophisticated
 PS_COMMAND *ps_command, *ps_remote, *psc;
 
-static void ps_communication(void *);
+static void dsl_communication();
 static void ps_send(unsigned short int target, PS_COMMAND_TYPE operation, unsigned int address, CONFLICT_TYPE response);
 
 inline CONFLICT_TYPE try_subscribe(int nodeId, int shmem_address);
