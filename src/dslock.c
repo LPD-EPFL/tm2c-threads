@@ -87,13 +87,13 @@ static void dsl_communication() {
         if (send_current != NULL) {
             free(send_current->privbuf);
             free(send_current);
-
-            continue;
         }
         //test if any send or recv completed
         iRCCE_test_any(&waitlist, NULL, &recv_current);
         if (recv_current != NULL) {
 
+            PRINTF("receeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeived");
+            
             //the sender of the message
             int sender = recv_current->source;
             char *base = buf + sender * 32;
