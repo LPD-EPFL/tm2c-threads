@@ -20,11 +20,9 @@ MAIN(int argc, char **argv) {
     PRINTD("~ %p", sis);
 
     int i;
-    for (i = ID; i < SIS_SIZE; i += NUM_UES) {
+    for (i = ID; i < SIS_SIZE; i += 1) {
         *(sis + i) = 1;
     }
-
-    BARRIER
 
             int sum;
 
@@ -46,13 +44,11 @@ MAIN(int argc, char **argv) {
 
     PRINTD("\t\t\t\t\t\t\t\t\t[TX] sum: %d in %f secs", sum, te - ts);
 
-    BARRIER
 
     ts = RCCE_wtime();
 
     sum = 0;
     for (i = 0; i < SIS_SIZE; i++) {
-        taskyield();
         int val = *(int *) (sis + i);
         if (val != 1) {
             PRINTD("\t\t\t\t\t\t*** val %d (shmem : %d) @ +%d", val, *(sis + i), i);
@@ -66,8 +62,6 @@ MAIN(int argc, char **argv) {
     PRINTD("\t\t\t\t\t\t\t\t\t[NO TX] sum: %d in %f secs", sum, te - ts);
 
     
-    BARRIER
-    
     BMSTART("NO TX writes")
     for (i = ID; i < SIS_SIZE; i += NUM_UES) {
         taskyield();
@@ -75,7 +69,6 @@ MAIN(int argc, char **argv) {
     }
     BMEND
     
-    BARRIER
     
     BMSTART("TX writes")
     TX_START
@@ -89,7 +82,6 @@ MAIN(int argc, char **argv) {
     TX_COMMIT
     BMEND
 
-    BARRIER
 
     if (ID == 0) {
         ME;
@@ -100,5 +92,5 @@ MAIN(int argc, char **argv) {
     }
 
     TM_END
-    taskexit(0);
+    EXIT(0);
 }
