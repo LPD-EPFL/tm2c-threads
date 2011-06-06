@@ -37,6 +37,8 @@ extern "C" {
 
 
 #define TM_INIT                                                         \
+    RCCE_init(&argc, &argv);                                            \
+    iRCCE_init();                                                       \
     {                                                                   \
         unsigned int ID = RCCE_ue();                                    \
         unsigned int NUM_UES = RCCE_num_ues();                          \
@@ -44,8 +46,6 @@ extern "C" {
 
 
     inline void tm_init(int argc, char **argv, unsigned int ID) {
-        RCCE_init(&argc, &argv);
-        iRCCE_init();
         if (ID % DSLNDPERNODES == 0) {
             //dsl node
             PRINTD("[DSL NODE]");
