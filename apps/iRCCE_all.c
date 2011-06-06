@@ -198,19 +198,14 @@ void send(int core, int number) {
     }
 
     memcpy(data, &cmd, sizeof (cmd_t)); /*cp the data to the data buffer*/
-    iRCCE_isend(data, 32, core, s); iRCCE_add_to_wait_list(&sendlist, s, NULL);
-/*
     if (iRCCE_isend(data, 32, core, s) != iRCCE_SUCCESS) {
         iRCCE_add_to_wait_list(&sendlist, s, NULL);
     }
-    else { /*message delivered/
-        PRINTD("On the fly: [%s] num: %5d from %02d, to %02d ", 
-                cmd.type == REQUEST ? "REQUEST" : "RESPONSE", cmd.number, cmd.from, cmd.to);
+    else { /*message delivered*/
         free(s);
         free(data);
         scounter++;
     }
-*/
 
     /*increase the "non-confirmed" counter*/
     snccounter++;
