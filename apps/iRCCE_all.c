@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
 
     srand_core(); /*seed the rand()*/
 
-    int numreqs; /*number of REQUESTs to send*/
+    int numreqs; /*number of total msgs (REQ and RESP) to send*/
     if (argc == 1) {
         numreqs = 10000;
     }
@@ -81,7 +81,7 @@ void listen(int numreqs) {
     
     iRCCE_RECV_REQUEST *recv_requests; /*recvs for every other core*/
     iRCCE_RECV_REQUEST *recv_current; /*to be used with the waitlist test function*/
-    iRCCE_SEND_REQUEST *send_current; /*to be used with the sendlist test funciton*/
+    iRCCE_SEND_REQUEST *send_current; /*to be used with the sendlist test function*/
     
     char buf[cores * 32]; /*buffer for incoming data*/
     int sender;
