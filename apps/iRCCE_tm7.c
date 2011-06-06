@@ -113,8 +113,6 @@ MAIN(int argc, char **argv) {
     PRINT("%02d\t%d\t%d\t%f", NUM_UES,
             stm_tx_node->tx_commited, (int) (stm_tx_node->tx_commited / duration__),  1000*(duration__ / stm_tx_node->tx_commited));
 
-    BARRIER
-
     RCCE_shfree((t_vcharp) sis);
 
     TM_END
