@@ -89,7 +89,7 @@ MAIN(int argc, char **argv) {
             int txupdate = 0;
     int txro = 0;
 
-    FOR(10) { //seconds
+    FOR(1) { //seconds
 
         TX_START
 
