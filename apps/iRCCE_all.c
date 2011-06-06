@@ -84,7 +84,7 @@ void listen(int repeats) {
     /*Create recv request for each possible (other) core.*/
     for (sender = 0; sender < cores; sender++) {
         if (sender != core) {
-            iRCCE_irecv(buf + sender * 32, 32, sender, &recv_requests[sender]);
+            iRCCE_irecv(buff[sender], 32, sender, &recv_requests[sender]);
             iRCCE_add_to_wait_list(&waitlist, NULL, &recv_requests[sender]);
         }
     }
@@ -128,7 +128,7 @@ void listen(int repeats) {
 
             /*the sender of the message*/
             sender = recv_current->source;
-            char *base = buf + sender * 32;
+            char *base = buff[sender];
             /*the cmd sent*/
             cmd_t * cmd = (cmd_t *) base;
 
