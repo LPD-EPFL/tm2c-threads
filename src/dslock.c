@@ -23,7 +23,7 @@ BOOLEAN tm_has_command;
 #endif
 ps_hashtable_t ps_hashtable;
 unsigned int ID; //=RCCE_ue()
-unsigned int NUM_UES;
+unsigned int NUM_UES, NUM_UES_APP;
 char *buf;
 iRCCE_RECV_REQUEST *recv_requests;
 iRCCE_RECV_REQUEST *recv_current;
@@ -42,9 +42,12 @@ inline void publish_finish(int nodeId, int shmem_address);
 void dsl_init(void) {
     ID = RCCE_ue();
     NUM_UES = RCCE_num_ues();
+    NUM_UES_APP = NUM_UES - DSLNDPERNODES;
+    
     ps_command = (PS_COMMAND *) malloc(sizeof (PS_COMMAND)); //TODO: free at finalize + check for null
     ps_remote = (PS_COMMAND *) malloc(sizeof (PS_COMMAND)); //TODO: free at finalize + check for null
     psc = (PS_COMMAND *) malloc(sizeof (PS_COMMAND)); //TODO: free at finalize + check for null
+    
     buf = (char *) malloc(NUM_UES * PS_BUFFER_SIZE); //TODO: free at finalize + check for null
     if (ps_command == NULL || ps_remote == NULL || psc == NULL || buf == NULL) {
         PRINTD("malloc ps_command == NULL || ps_remote == NULL || psc == NULL || buf == NULL");
@@ -55,7 +58,7 @@ void dsl_init(void) {
     iRCCE_init_wait_list(&waitlist);
     iRCCE_init_wait_list(&sendlist);
 
-    recv_requests = (iRCCE_RECV_REQUEST*) calloc(NUM_UES, sizeof (iRCCE_RECV_REQUEST));
+    recv_requests = (iRCCE_RECV_REQUEST*) calloc(NUM_UES_APP, sizeof (iRCCE_RECV_REQUEST));
     if (recv_requests == NULL) {
         fprintf(stderr, "alloc");
         PRINTD("not able to alloc the recv_requests..");
@@ -65,7 +68,7 @@ void dsl_init(void) {
     // Create recv request for each possible (other) core.
     int i;
     for (i = 0; i < NUM_UES; i++) {
-        if (i != ID) {
+        if (i != ID && (i % DSLNDPERNODES)) {
             iRCCE_irecv(buf + i * 32, 32, i, &recv_requests[i]);
             iRCCE_add_to_wait_list(&waitlist, NULL, &recv_requests[i]);
         }
@@ -113,7 +116,7 @@ static void dsl_communication() {
 
 
             // Create request for new message from this core, add to waitlist
-            iRCCE_irecv(base, 32, sender, &recv_requests[sender]);
+            iRCCE_irecv(base, PS_BUFFER_SIZE, sender, &recv_requests[sender]);
             iRCCE_add_to_wait_list(&waitlist, NULL, &recv_requests[sender]);
 
         }
