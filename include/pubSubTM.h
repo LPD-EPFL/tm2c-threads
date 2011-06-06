@@ -25,8 +25,6 @@
 extern "C" {
 #endif
 
-#define PS_TASK_STACK_SIZE 20480
-
     //the buffer size for pub-sub = the size (in bytes) of the msg exchanged
 #define PS_BUFFER_SIZE     32
 
@@ -68,13 +66,9 @@ extern "C" {
     extern PS_COMMAND *ps_command;
 
 
-    /* The function that will run on a different task
-     */
-    //    void ps_task(void *);
-    /* Initializes and starts the publish-subscribe service. Creates the new task.
-     */
     //void ps_init(void);
     void ps_init_(void);
+    void dsl_init(void);
     /* Pushes both the sends and receive messages that queued in the node.
      * Pushing is necessary in order to proceed, else there could be a
      * "deadlock" case where no node delivers any messages.
