@@ -202,6 +202,7 @@ void send(int core, int number) {
         iRCCE_add_to_wait_list(&sendlist, s, NULL);
     }
     else { /*message delivered*/
+        PRINTD("On the fly ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~>")
         free(s);
         free(data);
         scounter++;
