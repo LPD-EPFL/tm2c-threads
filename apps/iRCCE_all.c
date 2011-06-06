@@ -185,14 +185,18 @@ void send(int core, int number) {
 
     memcpy(data, &cmd, sizeof (cmd_t)); /*cp the data to the data buffer*/
     cmd_t * cmd_vd = (cmd_t *) data;
-    assert(cmd_vd->from == cmd.from);
-    assert(cmd_vd->number == cmd.number);
-    assert(cmd_vd->to == cmd.to);
-    assert(cmd_vd->type == cmd.type);
     if (iRCCE_isend(data, 32, core, s) != iRCCE_SUCCESS) {
         iRCCE_add_to_wait_list(&sendlist, s, NULL);
+        assert(cmd_vd->from == cmd.from);
+        assert(cmd_vd->number == cmd.number);
+        assert(cmd_vd->to == cmd.to);
+        assert(cmd_vd->type == cmd.type);
     }
     else {
+        assert(cmd_vd->from == cmd.from);
+        assert(cmd_vd->number == cmd.number);
+        assert(cmd_vd->to == cmd.to);
+        assert(cmd_vd->type == cmd.type);
         free(s);
         free(data);
         scounter++;
