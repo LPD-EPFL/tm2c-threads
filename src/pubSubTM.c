@@ -101,10 +101,9 @@ CONFLICT_TYPE ps_subscribe(void *address) {
     nodes_contacted[responsible_node]++;
 
     subscribing_address = address_offs;
-
-    PRINTD("[SUB] addr: %d to %02d", address_offs, responsible_node);
     
     ps_sendb(responsible_node, PS_SUBSCRIBE, address_offs, NO_CONFLICT);
+    PRINTD("[SUB] addr: %d to %02d", address_offs, responsible_node);
     ps_recvb(responsible_node);
 
     return ps_response;
