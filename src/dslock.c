@@ -58,7 +58,7 @@ void dsl_init(void) {
     iRCCE_init_wait_list(&waitlist);
     iRCCE_init_wait_list(&sendlist);
 
-    recv_requests = (iRCCE_RECV_REQUEST*) calloc(NUM_UES_APP, sizeof (iRCCE_RECV_REQUEST));
+    recv_requests = (iRCCE_RECV_REQUEST*) calloc(NUM_UES, sizeof (iRCCE_RECV_REQUEST));
     if (recv_requests == NULL) {
         fprintf(stderr, "alloc");
         PRINTD("not able to alloc the recv_requests..");
@@ -80,7 +80,7 @@ void dsl_init(void) {
 }
 
 static void dsl_communication() {
-PRINTD("ruuuuning");
+
     while (1) {
 
         iRCCE_test_any(&sendlist, &send_current, NULL);
@@ -92,7 +92,6 @@ PRINTD("ruuuuning");
         iRCCE_test_any(&waitlist, NULL, &recv_current);
         if (recv_current != NULL) {
 
-            PRINTD("receeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeived");
             
             //the sender of the message
             int sender = recv_current->source;
