@@ -150,6 +150,8 @@ void listen(int repeats) {
             }
 
             /*make a new recv request for the sender*/
+            free((cmd_t *) base);
+            base = (cmd_t *) calloc(1, sizeof(cmd_t));
             iRCCE_irecv(base, 32, sender, &recv_requests[sender]);
             iRCCE_add_to_wait_list(&waitlist, NULL, &recv_requests[sender]);
 
