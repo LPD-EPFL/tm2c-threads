@@ -203,7 +203,7 @@ void send(int core, int number) {
     }
     else { /*message delivered*/
         PRINTD("On the fly: [%s] num: %5d from %02d, to %02d ", 
-                cmd.type == REQUEST ? "REQUEST" : "RESPONSE", cmd.number, cmd.to);
+                cmd.type == REQUEST ? "REQUEST" : "RESPONSE", cmd.number, cmd.from, cmd.to);
         free(s);
         free(data);
         scounter++;
