@@ -20,6 +20,8 @@ MAIN(int argc, char **argv) {
     }
 
 
+    BARRIER
+    
     BMSTART("time to start and end an empty TX");
     TX_START
     TX_COMMIT
