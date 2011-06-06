@@ -1,0 +1,29 @@
+RCCEPATH=/home/trigonak/rcce/latest
+SYMBOLSPATH=/home/trigonak/rcce/latest/common/symbols
+iRCCEINCLUDE := ../include
+
+include $(SYMBOLSPATH)
+
+CFLAGS := $(CFLAGS) -I$(iRCCEINCLUDE)
+
+ALLOBJS  := iRCCE_all.o   $(ARCHIVE)
+
+.PHONY: all default clean all
+
+default:
+	@echo "Usage: make all      "
+
+all: all
+
+all: $(RINGOBJS)
+	$(CCOMPILE) -o all $(RINGOBJS) $(CFLAGS)
+
+
+iRCCE_all.o: iRCCE_all.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h
+	$(CCOMPILE) -c $(CFLAGS) iRCCE_all.c
+
+clean:
+	@ rm -f *.o all
+
+
+
