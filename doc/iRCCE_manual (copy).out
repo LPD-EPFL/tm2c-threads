@@ -1,0 +1,30 @@
+\BOOKMARK [2][-]{subsection.0.1}{0.1 Library Initialization Function}{}
+\BOOKMARK [3][-]{section*.1}{int iRCCE\137init\(void\)}{subsection.0.1}
+\BOOKMARK [2][-]{subsection.0.2}{0.2 Functions for Non-Blocking Sending}{}
+\BOOKMARK [3][-]{section*.2}{int iRCCE\137isend\(char *buffer, size\137t length, int dest, iRCCE\137SEND\137REQUEST *request\)}{subsection.0.2}
+\BOOKMARK [3][-]{section*.3}{int iRCCE\137isend\137test\(iRCCE\137SEND\137REQUEST *request, int *flag\)}{subsection.0.2}
+\BOOKMARK [3][-]{section*.4}{int iRCCE\137isend\137wait\(iRCCE\137SEND\137REQUEST *request\)}{subsection.0.2}
+\BOOKMARK [3][-]{section*.5}{int iRCCE\137isend\137push\(void\)}{subsection.0.2}
+\BOOKMARK [2][-]{subsection.0.3}{0.3 Functions for Non-Blocking Receiving}{}
+\BOOKMARK [3][-]{section*.6}{int iRCCE\137irecv\(char *buffer, size\137t length, int source, iRCCE\137RECV\137REQUEST *request\)}{subsection.0.3}
+\BOOKMARK [3][-]{section*.7}{int iRCCE\137irecv\137test\(iRCCE\137RECV\137REQUEST *request, int *flag\)}{subsection.0.3}
+\BOOKMARK [3][-]{section*.8}{int iRCCE\137irecv\137wait\(iRCCE\137RECV\137REQUEST *request\)}{subsection.0.3}
+\BOOKMARK [3][-]{section*.9}{int iRCCE\137irecv\137push\(void\)}{subsection.0.3}
+\BOOKMARK [2][-]{subsection.0.4}{0.4 Blocking but Pipelined Communication Functions}{}
+\BOOKMARK [3][-]{section*.10}{int iRCCE\137send\(char *buffer, size\137t length, int dest\)}{subsection.0.4}
+\BOOKMARK [3][-]{section*.11}{int iRCCE\137recv\(char *buffer, size\137t length, int source\)}{subsection.0.4}
+\BOOKMARK [2][-]{subsection.0.5}{0.5 SCC-customized Put/Get and Mem-Copy Functions}{}
+\BOOKMARK [3][-]{section*.12}{int iRCCE\137put\(t\137vcharp target, t\137vcharp source, int size, int rank\)}{subsection.0.5}
+\BOOKMARK [3][-]{section*.13}{int iRCCE\137get\(t\137vcharp target, t\137vcharp source, int size, int rank\)}{subsection.0.5}
+\BOOKMARK [3][-]{section*.14}{void* iRCCE\137memcpy\137put\(void* dest, const void* src, size\137t num\)}{subsection.0.5}
+\BOOKMARK [3][-]{section*.15}{void* iRCCE\137memcpy\137get\(void* dest, const void* src, size\137t num\)}{subsection.0.5}
+\BOOKMARK [2][-]{subsection.0.6}{0.6 Cancel Functions for Non-blocking Requests}{}
+\BOOKMARK [3][-]{section*.16}{int iRCCE\137isend\137cancel\(iRCCE\137SEND\137REQUEST *request, int *flag\)}{subsection.0.6}
+\BOOKMARK [3][-]{section*.17}{int iRCCE\137irecv\137cancel\(iRCCE\137RECV\137REQUEST *request, int *flag\)}{subsection.0.6}
+\BOOKMARK [2][-]{subsection.0.7}{0.7 Functions for Handling Multiple Outstanding Requests}{}
+\BOOKMARK [3][-]{section*.18}{void iRCCE\137init\137wait\137list\(iRCCE\137WAIT\137LIST* wait\137list\)}{subsection.0.7}
+\BOOKMARK [3][-]{section*.19}{iRCCE\137add\137to\137wait\137list\(iRCCE\137WAIT\137LIST* wait\137list, iRCCE\137SEND\137REQUEST *send\137request, \040 \040iRCCE\137RECV\137REQUEST *recv\137request\)}{subsection.0.7}
+\BOOKMARK [3][-]{section*.20}{iRCCE\137test\137all\(iRCCE\137WAIT\137LIST* wait\137list, int *flag\)}{subsection.0.7}
+\BOOKMARK [3][-]{section*.21}{iRCCE\137wait\137all\(iRCCE\137WAIT\137LIST* wait\137list\)}{subsection.0.7}
+\BOOKMARK [3][-]{section*.22}{iRCCE\137test\137any\(iRCCE\137WAIT\137LIST* wait\137list, iRCCE\137SEND\137REQUEST **send\137request, \040 \040iRCCE\137RECV\137REQUEST **recv\137request\)}{subsection.0.7}
+\BOOKMARK [3][-]{section*.23}{iRCCE\137wait\137any\(iRCCE\137WAIT\137LIST* wait\137list, iRCCE\137SEND\137REQUEST **send\137request, \040 \040iRCCE\137RECV\137REQUEST **recv\137request\)}{subsection.0.7}

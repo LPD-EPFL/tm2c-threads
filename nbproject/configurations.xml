@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="79">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <df name="iRCCE" root=".">
+      <df name="apps">
+        <in>bm_rams.c</in>
+        <in>global_clock.c</in>
+        <in>iRCCE_all.c</in>
+        <in>iRCCE_all2all.c</in>
+        <in>iRCCE_async_pingpong.c</in>
+        <in>iRCCE_madmonkey.c</in>
+        <in>iRCCE_pingping.c</in>
+        <in>iRCCE_pingpong.c</in>
+        <in>iRCCE_ps_hashtable.c</in>
+        <in>iRCCE_pthread.c</in>
+        <in>iRCCE_recv_all.c</in>
+        <in>iRCCE_recv_all_i.c</in>
+        <in>iRCCE_recv_all_p.c</in>
+        <in>iRCCE_ring.c</in>
+        <in>iRCCE_ring_simple.c</in>
+        <in>iRCCE_ring_token.c</in>
+        <in>iRCCE_simple.c</in>
+        <in>iRCCE_spam.c</in>
+        <in>iRCCE_tasklib.c</in>
+        <in>iRCCE_tm.c</in>
+        <in>iRCCE_tm1.c</in>
+        <in>iRCCE_tm2.c</in>
+        <in>iRCCE_tm3.c</in>
+        <in>iRCCE_tm4.c</in>
+        <in>iRCCE_tm5.c</in>
+        <in>iRCCE_tm6.c</in>
+        <in>iRCCE_tm7.c</in>
+        <in>iRCCE_tm8.c</in>
+        <in>iRCCE_tm9.c</in>
+        <in>ps_hashtable.c</in>
+        <in>shmem_map.c</in>
+        <in>tasklib_test.c</in>
+      </df>
+      <df name="doc">
+      </df>
+      <df name="include">
+        <in>common.h</in>
+        <in>hashtable.h</in>
+        <in>iRCCE.h</in>
+        <in>iRCCE_lib.h</in>
+        <in>log.h</in>
+        <in>pubSubTM.h</in>
+        <in>rwhash.h</in>
+        <in>scc_memcpy.h</in>
+        <in>stm.h</in>
+        <in>task.h</in>
+        <in>tm.h</in>
+      </df>
+      <df name="src">
+        <df name="libtask">
+          <in>386-ucontext.h</in>
+          <in>amd64-ucontext.h</in>
+          <in>asm.S</in>
+          <in>channel.c</in>
+          <in>context.c</in>
+          <in>fd.c</in>
+          <in>httpload.c</in>
+          <in>mips-ucontext.h</in>
+          <in>net.c</in>
+          <in>power-ucontext.h</in>
+          <in>primes.c</in>
+          <in>print.c</in>
+          <in>qlock.c</in>
+          <in>rendez.c</in>
+          <in>task.c</in>
+          <in>task.h</in>
+          <in>taskimpl.h</in>
+          <in>tcpproxy.c</in>
+          <in>testdelay.c</in>
+          <in>testdelay1.c</in>
+        </df>
+        <in>RCCE_barrier_nb.c</in>
+        <in>hashtable.c</in>
+        <in>iRCCE_admin.c</in>
+        <in>iRCCE_get.c</in>
+        <in>iRCCE_irecv.c</in>
+        <in>iRCCE_irecv32.c</in>
+        <in>iRCCE_isend.c</in>
+        <in>iRCCE_isend32.c</in>
+        <in>iRCCE_put.c</in>
+        <in>iRCCE_recv.c</in>
+        <in>iRCCE_send.c</in>
+        <in>iRCCE_synch.c</in>
+        <in>iRCCE_waitlist.c</in>
+        <in>log.c</in>
+        <in>pubSubTM.c</in>
+        <in>rwhash.c</in>
+        <in>tm.c</in>
+      </df>
+    </df>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false"
+                   kind="IMPORTANT_FILES_FOLDER">
+      <itemPath>Makefile</itemPath>
+      <itemPath>Makefile-iRCCE.mk</itemPath>
+      <itemPath>configure</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <sourceRootList>
+    <Elem>.</Elem>
+  </sourceRootList>
+  <projectmakefile>Makefile-iRCCE.mk</projectmakefile>
+  <confs>
+    <conf name="Default" type="0">
+      <toolsSet>
+        <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
+        <compilerSet>GNU|GNU</compilerSet>
+      </toolsSet>
+      <makefileType>
+        <makeTool>
+          <buildCommandWorkingDir>.</buildCommandWorkingDir>
+          <buildCommand>$(MAKE) -f Makefile</buildCommand>
+          <cleanCommand>$(MAKE) -f Makefile clean</cleanCommand>
+          <executablePath></executablePath>
+          <cTool>
+            <incDir>
+              <pElem>../../../rcce/latest</pElem>
+            </incDir>
+          </cTool>
+          <ccTool>
+            <incDir>
+              <pElem>../../../rcce/latest/include</pElem>
+              <pElem>.</pElem>
+              <pElem>include</pElem>
+            </incDir>
+            <preprocessorList>
+              <Elem>_OPENMP=200505</Elem>
+            </preprocessorList>
+          </ccTool>
+        </makeTool>
+      </makefileType>
+      <item path="apps/iRCCE_madmonkey.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="apps/iRCCE_pingping.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="apps/iRCCE_pingpong.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="apps/iRCCE_spam.c" ex="true" tool="0" flavor="0">
+      </item>
+      <folder path="iRCCE">
+        <cTool>
+          <incDir>
+            <pElem>/usr/lib/gcc/i486-linux-gnu/4.4/include</pElem>
+          </incDir>
+        </cTool>
+      </folder>
+      <folder path="iRCCE/apps">
+        <cTool>
+          <incDir>
+            <pElem>/usr/lib/gcc/i486-linux-gnu/4.4/include</pElem>
+            <pElem>include</pElem>
+            <pElem>../rcce_latest/include</pElem>
+          </incDir>
+        </cTool>
+      </folder>
+      <folder path="iRCCE/src">
+        <cTool>
+          <incDir>
+            <pElem>include</pElem>
+          </incDir>
+        </cTool>
+      </folder>
+      <item path="src/iRCCE_admin.c" ex="false" tool="1" flavor="0">
+      </item>
+      <item path="src/iRCCE_get.c" ex="false" tool="1" flavor="0">
+      </item>
+      <item path="src/iRCCE_irecv.c" ex="false" tool="1" flavor="0">
+      </item>
+      <item path="src/iRCCE_isend.c" ex="false" tool="1" flavor="0">
+      </item>
+      <item path="src/iRCCE_put.c" ex="false" tool="1" flavor="0">
+      </item>
+      <item path="src/iRCCE_recv.c" ex="false" tool="1" flavor="0">
+      </item>
+      <item path="src/iRCCE_send.c" ex="false" tool="1" flavor="0">
+      </item>
+      <item path="src/iRCCE_synch.c" ex="false" tool="1" flavor="0">
+      </item>
+      <item path="src/iRCCE_waitlist.c" ex="false" tool="1" flavor="0">
+      </item>
+    </conf>
+  </confs>
+</configurationDescriptor>

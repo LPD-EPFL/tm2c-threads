@@ -1,0 +1,39 @@
+2------------------------------------------------------------------
+rck05: 1: PACKET: 32byte	SENT: 33410	RECEIVED: 32001
+	SENT RATIO: (KB/s)	SENT: 7.513	RECEIVED: 7.196
+
+10-----------------------------------------------------------------
+rck04: 0: PACKET: 32byte	SENT: 3201	RECEIVED: 3205
+	SENT RATIO: (KB/s)	SENT: 251.749	RECEIVED: 251.749
+
+rck13: 9: PACKET: 32byte	SENT: 16001	RECEIVED: 16142
+	SENT RATIO: (KB/s)	SENT: 52.348	RECEIVED: 52.766
+
+20-----------------------------------------------------------------
+rck07: 3: PACKET: 32byte	SENT: 3201	RECEIVED: 3201
+	SENT RATIO: (KB/s)	SENT: 248.086	RECEIVED: 248.086
+
+rck10: 6: PACKET: 32byte	SENT: 16001	RECEIVED: 16052
+	SENT RATIO: (KB/s)	SENT: 51.677	RECEIVED: 51.780
+
+30------------------------------------------------------------------
+rck20: 16: PACKET: 32byte	SENT: 3201	RECEIVED: 3208
+	SENT RATIO: (KB/s)	SENT: 244.369	RECEIVED: 244.369
+
+rck11: 7: PACKET: 32byte	SENT: 16004	RECEIVED: 16001
+	SENT RATIO: (KB/s)	SENT: 52.220	RECEIVED: 52.220
+
+40------------------------------------------------------------------
+rck17: 13: PACKET: 32byte	SENT: 3220	RECEIVED: 3201
+	SENT RATIO: (KB/s)	SENT: 224.419	RECEIVED: 224.419
+
+rck30: 26: PACKET: 32byte	SENT: 16001	RECEIVED: 16101
+	SENT RATIO: (KB/s)	SENT: 52.100	RECEIVED: 52.413
+
+47------------------------------------------------------------------
+rck19: 18: PACKET: 32byte	SENT: 3201	RECEIVED: 3241
+	SENT RATIO: (KB/s)	SENT: 237.021	RECEIVED: 239.391
+
+rck21: 20: PACKET: 32byte	SENT: 16001	RECEIVED: 16094
+	SENT RATIO: (KB/s)	SENT: 49.975	RECEIVED: 50.175
+
