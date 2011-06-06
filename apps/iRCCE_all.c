@@ -3,13 +3,19 @@
  * Author: Vasileios Trigonakis
  *
  * Created on May 30, 2011, 5:45 PM
+ * 
+ * Each core (core_a) randomly selects another (core_b) and sends a REQUEST message containing an integer. On receive, 
+ * core_b sends back a RESPONSE message to core_a, containing the integer of the REQUEST. 
+ * core_a validates the RESPONSE against this integer.
+ * 
+ * This process is executed repeatedly.
+ * 
  */
 
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <assert.h>
 #include "iRCCE.h"
 
 
@@ -23,6 +29,7 @@ void send(int, int);
 inline long rand_range(long r);
 inline void srand_core();
 
+/*variables*/
 int rcounter = 0; /*receives counter  */
 int scounter = 0; /*sends counter*/
 int snccounter = 0; /*sends including the ones queued*/
@@ -32,12 +39,13 @@ unsigned int number_sent_to = -1; /*the core to which the last REQUEST was sent*
 unsigned int to_send = 1; /*if a new REQUEST should be sent (after the previous one is completed)*/
 iRCCE_WAIT_LIST waitlist, sendlist; /*incoming & outgoing msgs waitlists*/
 
-/*REQUEST or RESPONSE*/
+/*REQUEST or RESPONSE type*/
 typedef enum {
     REQUEST,
     RESPONSE
 } TYPE;
 
+/*command type*/
 typedef struct {
     TYPE type; /*REQUEST or RESPONSE*/
     int number; /*the integer that is sent*/
@@ -68,11 +76,13 @@ int main(int argc, char *argv[]) {
 
 void listen(int numreqs) {
 
-    int cores = RCCE_num_ues();
-    int core = RCCE_ue();
+    int cores = RCCE_num_ues(); /*number of cores*/
+    int core = RCCE_ue(); /*core id*/
+    
     iRCCE_RECV_REQUEST *recv_requests; /*recvs for every other core*/
-    iRCCE_RECV_REQUEST *recv_current; /*to be used with the test function*/
-    iRCCE_SEND_REQUEST *send_current; /*to be used with the test funciton*/
+    iRCCE_RECV_REQUEST *recv_current; /*to be used with the waitlist test function*/
+    iRCCE_SEND_REQUEST *send_current; /*to be used with the sendlist test funciton*/
+    
     char buf[cores * 32]; /*buffer for incoming data*/
     int sender;
 
@@ -104,7 +114,7 @@ void listen(int numreqs) {
             print_success = 0;
         }
 
-        /*if not enough messages have been sent yet & to_send*/
+        /*if not enough messages have been sent && to_send (should send)*/
         if (snccounter < numreqs && to_send) {
             send(-1, -1);
             to_send = 0; /*wait for this request to be completed*/
@@ -137,6 +147,10 @@ void listen(int numreqs) {
                 else {
                     to_send = 1; /*in order to send the next message*/
                 }
+#define CONT_ON_ERROR
+#ifdef CONT_ON_ERROR 
+                to_send = 1;
+#endif
             }
             else if (cmd->type == REQUEST) {
                 send(sender, cmd->number); /*simply send back the received number*/
@@ -184,19 +198,10 @@ void send(int core, int number) {
     }
 
     memcpy(data, &cmd, sizeof (cmd_t)); /*cp the data to the data buffer*/
-    cmd_t * cmd_vd = (cmd_t *) data;
     if (iRCCE_isend(data, 32, core, s) != iRCCE_SUCCESS) {
         iRCCE_add_to_wait_list(&sendlist, s, NULL);
-        assert(cmd_vd->from == cmd.from);
-        assert(cmd_vd->number == cmd.number);
-        assert(cmd_vd->to == cmd.to);
-        assert(cmd_vd->type == cmd.type);
     }
-    else {
-        assert(cmd_vd->from == cmd.from);
-        assert(cmd_vd->number == cmd.number);
-        assert(cmd_vd->to == cmd.to);
-        assert(cmd_vd->type == cmd.type);
+    else { /*message delivered*/
         free(s);
         free(data);
         scounter++;
