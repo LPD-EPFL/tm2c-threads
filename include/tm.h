@@ -36,22 +36,34 @@ extern "C" {
      */
 
 
-#define TM_INIT                                                     \
-    {                                                               \
-        RCCE_init(&argc, &argv);                                    \
-        unsigned int ID = RCCE_ue();                                \
-        unsigned int NUM_UES = RCCE_num_ues();                      \
-        stm_tx_node = tx_metadata_node_new();                       \
-        stm_tx = tx_metadata_new(IDLE);                             \
-        if (stm_tx == NULL || stm_tx_node == NULL) {                \
-            PRINTD("Could not alloc tx metadata @ TM_INIT");        \
-            EXIT(-1);                                               \
-        }                                                           \
-        ps_init_();                                                 \
-        taskyield();
+#define TM_INIT                                                         \
+    {                                                                   \
+        unsigned int ID = RCCE_ue();                                    \
+        unsigned int NUM_UES = RCCE_num_ues();                          \
+        tm_init(argc, argv, ID);
+
+
+    inline void tm_init(int argc, char **argv, unsigned int ID) {
+        RCCE_init(&argc, &argv);
+        iRCCE_init();
+        if (!(ID % DSLNDPERNODES)) {
+            //dsl node
+            PRINTD("[DSL NODE]");
+            dsl_init();
+        }
+        else { //app node
+            PRINTD("[APP NODE]");
+            ps_init_();
+            stm_tx_node = tx_metadata_node_new();
+            stm_tx = tx_metadata_new(IDLE);
+            if (stm_tx == NULL || stm_tx_node == NULL) {
+                PRINTD("Could not alloc tx metadata @ TM_INIT");
+                EXIT(-1);
+            }
+        }
+    }
 
 #define TX_START                                                        \
-    taskndelay(3);                                                      \
     { PRINTD("|| Starting new tx");                                     \
     if (stm_tx == NULL) {                                               \
         stm_tx = tx_metadata_new(RUNNING);                              \
@@ -75,8 +87,7 @@ extern "C" {
     stm_tx->retries++;                                                  \
     stm_tx->state = RUNNING;                                            \
     stm_tx->max_retries = (stm_tx->max_retries >= stm_tx->retries)      \
-        ? stm_tx->max_retries : stm_tx->retries;                        \
-    taskyield();
+        ? stm_tx->max_retries : stm_tx->retries;                        
 
 
 #define TX_ABORT(reason)                                \
@@ -102,8 +113,7 @@ extern "C" {
     stm_tx_node->aborts_war += stm_tx->aborts_war;      \
     stm_tx_node->aborts_raw += stm_tx->aborts_raw;      \
     stm_tx_node->aborts_waw += stm_tx->aborts_waw;      \
-    tx_metadata_free(&stm_tx);                          \
-    taskyield(); }
+    tx_metadata_free(&stm_tx); }
 
 
 #define TM_END                                          \
@@ -116,15 +126,18 @@ extern "C" {
     tx_load(stm_tx->write_set, stm_tx->read_set, ((void *) (addr)))
 
 #define TX_STORE(addr, ptr, datatype)                   \
-    taskyield();                                        \
     write_set_update(stm_tx->write_set, datatype, ((void *) (ptr)), ((void *) (addr)))
 
+    inline void udelay(unsigned int micros) {
+        double __ts_start = RCCE_wtime();
+        double __seconds = micros / 1000000;
+        while (RCCE_wtime() - __ts_start < __seconds);
+    }
 
     inline void ps_unsubscribe_all();
 
     inline void handle_abort(stm_tx_t *stm_tx, CONFLICT_TYPE reason) {
         ps_finish_all();
-        taskudelay(10); //TODO: check if needed and how it is needed
         stm_tx->state = ABORTED;
         stm_tx->aborts++;
         switch (reason) {
@@ -147,7 +160,8 @@ extern "C" {
         if ((we = write_set_contains(ws, addr)) != NULL) {
             read_set_update(rs, addr);
             return (void *) &we->i;
-        } else {
+        }
+        else {
             if (!read_set_update(rs, addr)) {
                 //the node is NOT already subscribed for the address
                 CONFLICT_TYPE conflict;
@@ -160,7 +174,7 @@ retry:
                 if ((conflict = ps_subscribe((void *) addr)) != NO_CONFLICT) {
 #ifdef BACKOFF
                     if (num_delays++ < BACKOFF_MAX) {
-                        taskudelay(delay);
+                        udelay(delay);
                         delay *= 2;
                         goto retry;
                     }
@@ -195,7 +209,7 @@ retry:
                 //ps_publish_finish_all(locked);
 #ifdef BACKOFF
                 if (num_delays++ < BACKOFF_MAX) {
-                    taskudelay(delay);
+                    udelay(delay);
                     delay *= 2;
                     goto retry;
                 }
