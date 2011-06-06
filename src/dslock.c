@@ -80,7 +80,7 @@ void dsl_init(void) {
 }
 
 static void dsl_communication() {
-
+PRINTF("ruuuuning");
     while (1) {
 
         iRCCE_test_any(&sendlist, &send_current, NULL);
