@@ -6,7 +6,7 @@
 #include "tm.h"
 
 
-TASKMAIN(int argc, char **argv) {
+MAIN(int argc, char **argv) {
     unsigned int SIS_SIZE = 4800;
     
     TM_INIT

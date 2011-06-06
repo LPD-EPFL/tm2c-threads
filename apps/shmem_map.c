@@ -2,7 +2,7 @@
 
 #define MEMSIZE 480
 
-TASKMAIN(int argc, char **argv) {
+MAIN(int argc, char **argv) {
 
     RCCE_init(&argc, &argv);
 

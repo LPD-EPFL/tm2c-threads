@@ -7,7 +7,7 @@
 
 #define SIS_SIZE 48
 
-TASKMAIN(int argc, char **argv) {    
+MAIN(int argc, char **argv) {    
     TM_INIT
 
             int *sis = (int *) RCCE_shmalloc(SIS_SIZE * sizeof (int));

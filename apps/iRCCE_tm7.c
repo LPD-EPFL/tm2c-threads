@@ -60,7 +60,7 @@ inline void ro_tx(int * sis);
 unsigned int SIS_SIZE = 4800;
 unsigned int store_me, ID;
 
-TASKMAIN(int argc, char **argv) {
+MAIN(int argc, char **argv) {
 
     TM_INIT
 

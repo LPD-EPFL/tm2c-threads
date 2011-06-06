@@ -6,7 +6,7 @@
 
 #define TEST2
 
-TASKMAIN(int argc, char **argv) {
+MAIN(int argc, char **argv) {
 
     RCCE_init(&argc, &argv);
     int ID = RCCE_ue();

@@ -7,7 +7,7 @@
 
 void run(void * args);
 
-TASKMAIN(int argc, char **argv) {
+MAIN(int argc, char **argv) {
     RCCE_init(&argc, &argv);
 
     taskcreate(run, NULL, 20480);

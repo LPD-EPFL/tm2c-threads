@@ -8,7 +8,7 @@
 
 #define SIS_SIZE 20
 
-TASKMAIN(int argc, char **argv) {
+MAIN(int argc, char **argv) {
 
     TM_INIT
 
