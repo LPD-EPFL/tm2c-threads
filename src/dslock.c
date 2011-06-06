@@ -80,7 +80,7 @@ void dsl_init(void) {
 }
 
 static void dsl_communication() {
-PRINTF("ruuuuning");
+PRINTD("ruuuuning");
     while (1) {
 
         iRCCE_test_any(&sendlist, &send_current, NULL);
@@ -92,7 +92,7 @@ PRINTF("ruuuuning");
         iRCCE_test_any(&waitlist, NULL, &recv_current);
         if (recv_current != NULL) {
 
-            PRINTF("receeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeived");
+            PRINTD("receeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeived");
             
             //the sender of the message
             int sender = recv_current->source;
