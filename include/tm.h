@@ -49,7 +49,7 @@ int comsz; RCCE_comm_size(RCCE_COMM_APP, &comsz);PRINTD("size of comm_app is %d"
 
 
     int color(int id, void *aux) {
-        return (id % DSLNDPERNODES);
+        return !(id % DSLNDPERNODES);
     }
     
     inline void tm_init(int argc, char **argv, unsigned int ID) {
