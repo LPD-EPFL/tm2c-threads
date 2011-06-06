@@ -191,6 +191,7 @@ void send(int core, int number) {
         exit(-1);
     }
 
+    RC_cache_invalidate();
     memcpy(data, &cmd, sizeof (cmd_t));
 
     if (iRCCE_isend(data, 32, core, s) != iRCCE_SUCCESS) {
