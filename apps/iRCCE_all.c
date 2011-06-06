@@ -134,7 +134,7 @@ void listen(int repeats) {
             if (cmd->type == RESPONSE) {
                 /*if the wrong number received*/
                 if (cmd->number != number_sent) {
-                    PRINTD("[Expected] num: %5d from %02d, to %02d | [Received] num: %5d from %02d (%02d), to %02d",
+                    PRINTD("\t\t\t\t\t[Expected] num: %5d from %02d, to %02d | [Received] num: %5d from %02d (%02d), to %02d",
                             number_sent, number_sent_to, RCCE_ue(), cmd->number, sender, cmd->from, cmd->to);
                 }
                 else {
