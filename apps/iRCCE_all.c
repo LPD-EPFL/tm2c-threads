@@ -198,7 +198,7 @@ void send(int core, int number) {
     }
 
     memcpy(data, &cmd, sizeof (cmd_t)); /*cp the data to the data buffer*/
-    iRCCE_isend(data, 32, core, s);
+    iRCCE_isend(data, 32, core, s); iRCCE_add_to_wait_list(&sendlist, s, NULL);
 /*
     if (iRCCE_isend(data, 32, core, s) != iRCCE_SUCCESS) {
         iRCCE_add_to_wait_list(&sendlist, s, NULL);
