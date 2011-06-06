@@ -26,7 +26,7 @@ MAIN(int argc, char **argv) {
         sis[i] = -1;
     }
 
-    BARRIER
+  //  BARRIER
     
     /*
      * Benchmark SIS_SIZE reads
@@ -44,7 +44,7 @@ MAIN(int argc, char **argv) {
     
     PRINTD("Completed %d TX reads in %f secs. Time per READ = %f", SIS_SIZE, duration, duration / SIS_SIZE);
 
-    BARRIER
+//    BARRIER
     
     /*
      * Benchmark 2*SIS_SIZE reads : the second pass exist in the read set (buffered)!
@@ -65,8 +65,6 @@ MAIN(int argc, char **argv) {
     TX_COMMIT
     
     PRINTD("Completed %d TX reads in %f secs. Time per READ = %f", 2 * SIS_SIZE, duration, duration / (2 * SIS_SIZE));
-
-    BARRIER
 
     RCCE_shfree((t_vcharp) sis);
 
