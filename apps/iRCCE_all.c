@@ -68,11 +68,13 @@ void listen(int repeats) {
     iRCCE_RECV_REQUEST *recv_requests, *recv_current;
     iRCCE_SEND_REQUEST *send_current;
     char buf[cores * 32];
+    char * buff[cores];
     int sender;
 
     iRCCE_init_wait_list(&waitlist);
     iRCCE_init_wait_list(&sendlist);
 
+    buff = (char *) calloc(cores, 32 * sizeof(char));
     recv_requests = (iRCCE_RECV_REQUEST *) calloc(cores, sizeof (iRCCE_RECV_REQUEST));
     if (recv_requests == NULL) {
         PRINTD("could not alloc recv_reqs");
