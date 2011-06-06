@@ -39,12 +39,19 @@ extern "C" {
 #define TM_INIT                                                         \
     RCCE_init(&argc, &argv);                                            \
     iRCCE_init();                                                       \
+    RCCE_COMM RCCE_COMM_APP;                                            \
+    RCCE_comm_split(color, NULL, &RCCE_COMM_APP);                       \
+int comsz; RCCE_comm_size(RCCE_COMM_APP, &comsz);PRINTD("size of comm_app is %d", comsz);\
     {                                                                   \
         unsigned int ID = RCCE_ue();                                    \
         unsigned int NUM_UES = RCCE_num_ues();                          \
         tm_init(argc, argv, ID);
 
 
+    int color(int id, void *aux) {
+        return (id % DSLNDPERNODES);
+    }
+    
     inline void tm_init(int argc, char **argv, unsigned int ID) {
         if (ID % DSLNDPERNODES == 0) {
             //dsl node
