@@ -68,13 +68,11 @@ void listen(int repeats) {
     iRCCE_RECV_REQUEST *recv_requests, *recv_current;
     iRCCE_SEND_REQUEST *send_current;
     char buf[cores * 32];
-    char * buff[cores];
     int sender;
 
     iRCCE_init_wait_list(&waitlist);
     iRCCE_init_wait_list(&sendlist);
 
-    buff = (char *) calloc(cores, 32 * sizeof(char));
     recv_requests = (iRCCE_RECV_REQUEST *) calloc(cores, sizeof (iRCCE_RECV_REQUEST));
     if (recv_requests == NULL) {
         PRINTD("could not alloc recv_reqs");
@@ -84,7 +82,7 @@ void listen(int repeats) {
     /*Create recv request for each possible (other) core.*/
     for (sender = 0; sender < cores; sender++) {
         if (sender != core) {
-            iRCCE_irecv(buff[sender], 32, sender, &recv_requests[sender]);
+            iRCCE_irecv(buf + sender * 32, 32, sender, &recv_requests[sender]);
             iRCCE_add_to_wait_list(&waitlist, NULL, &recv_requests[sender]);
         }
     }
@@ -128,7 +126,7 @@ void listen(int repeats) {
 
             /*the sender of the message*/
             sender = recv_current->source;
-            char *base = buff[sender];
+            char *base = buf + sender * 32;
             /*the cmd sent*/
             cmd_t * cmd = (cmd_t *) base;
 
@@ -150,8 +148,6 @@ void listen(int repeats) {
             }
 
             /*make a new recv request for the sender*/
-            free((cmd_t *) base);
-            base = (cmd_t *) calloc(1, sizeof(cmd_t));
             iRCCE_irecv(base, 32, sender, &recv_requests[sender]);
             iRCCE_add_to_wait_list(&waitlist, NULL, &recv_requests[sender]);
 
@@ -195,6 +191,7 @@ void send(int core, int number) {
         exit(-1);
     }
 
+    RC_cache_invalidate();
     memcpy(data, &cmd, sizeof (cmd_t));
 
     if (iRCCE_isend(data, 32, core, s) != iRCCE_SUCCESS) {
