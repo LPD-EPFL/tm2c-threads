@@ -40,7 +40,7 @@ inline void publish_finish(int nodeId, int shmem_address);
 void ps_init_(void) {
     ID = RCCE_ue();
     NUM_UES = RCCE_num_ues();
-    NUM_DSL_NODES = (int) ((NUM_UES / DSLNDPERNODES) + 1);
+    NUM_DSL_NODES = (int) ((NUM_UES / DSLNDPERNODES) + 0.9999999);
     PRINTD("NUM_DSL_NODES = %d", NUM_DSL_NODES);
     if ((dsl_nodes = (unsigned  int *) malloc(NUM_DSL_NODES * sizeof (unsigned int))) == NULL) {
         PRINTD("malloc dsl_nodes");
