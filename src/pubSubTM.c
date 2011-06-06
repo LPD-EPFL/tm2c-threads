@@ -24,6 +24,7 @@ char *buf;
 unsigned short nodes_contacted[48];
 CONFLICT_TYPE ps_response; //TODO: make it more sophisticated
 SHMEM_START_ADDRESS shmem_start_address = NULL;
+PS_COMMAND *psc;
 
 int subscribing_address;
 
@@ -41,16 +42,14 @@ void ps_init_(void) {
     NUM_UES = RCCE_num_ues();
     NUM_DSL_NODES = (int) ((NUM_UES / DSLNDPERNODES) + 1);
     PRINTD("NUM_DSL_NODES = %d", NUM_DSL_NODES);
-    if ((dsl_nodes) = (unsigned  int *) malloc(NUM_DSL_NODES * sizeof (unsigned int)) == NULL) {
+    if ((dsl_nodes = (unsigned  int *) malloc(NUM_DSL_NODES * sizeof (unsigned int))) == NULL) {
         PRINTD("malloc dsl_nodes");
         EXIT(-1);
     }
 
-    ps_command = (PS_COMMAND *) malloc(sizeof (PS_COMMAND)); //TODO: free at finalize + check for null
-    ps_remote = (PS_COMMAND *) malloc(sizeof (PS_COMMAND)); //TODO: free at finalize + check for null
     psc = (PS_COMMAND *) malloc(sizeof (PS_COMMAND)); //TODO: free at finalize + check for null
     buf = (char *) malloc(NUM_UES * PS_BUFFER_SIZE); //TODO: free at finalize + check for null
-    if (ps_command == NULL || ps_remote == NULL || psc == NULL || buf == NULL) {
+    if (psc == NULL || buf == NULL) {
         PRINTD("malloc ps_command == NULL || ps_remote == NULL || psc == NULL || buf == NULL");
     }
     shmem_init_start_address();
