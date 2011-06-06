@@ -147,7 +147,7 @@ void listen(int numreqs) {
                 else {
                     to_send = 1; /*in order to send the next message*/
                 }
-#define CONT_ON_ERROR
+#define CONT_ON_ERROR_
 #ifdef CONT_ON_ERROR 
                 to_send = 1;
 #endif
@@ -202,7 +202,7 @@ void send(int core, int number) {
         iRCCE_add_to_wait_list(&sendlist, s, NULL);
     }
     else { /*message delivered*/
-        PRINTD("On the fly ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~>")
+        PRINTD("On the fly ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~>");
         free(s);
         free(data);
         scounter++;
