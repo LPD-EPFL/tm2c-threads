@@ -46,7 +46,7 @@ extern "C" {
     inline void tm_init(int argc, char **argv, unsigned int ID) {
         RCCE_init(&argc, &argv);
         iRCCE_init();
-        if (!(ID % DSLNDPERNODES)) {
+        if (ID % DSLNDPERNODES == 0) {
             //dsl node
             PRINTD("[DSL NODE]");
             dsl_init();
