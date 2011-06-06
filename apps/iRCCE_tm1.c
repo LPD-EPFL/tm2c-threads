@@ -19,7 +19,6 @@ MAIN(int argc, char **argv) {
         *(sis + i) = 1;
     }
 
-    BARRIER
 
     BMSTART("time to start and end an empty TX");
     TX_START
