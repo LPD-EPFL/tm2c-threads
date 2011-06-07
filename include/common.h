@@ -14,7 +14,7 @@ extern "C" {
 
 #define DSLNDPERNODES 2 /* 1 dedicated DS-Locking core per DSLNDPERNODES cores*/
 
-#define DEBUG__
+#define DEBUG_
 
 #define PRINT(args...) printf("[%02d] ", RCCE_ue()); printf(args); printf("\n"); fflush(stdout)
 #define FLUSH fflush(stdout);
