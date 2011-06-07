@@ -17,8 +17,6 @@ MAIN(int argc, char **argv) {
         EXIT(-1);
     }
 
-    PRINTD("~ %p", sis);
-
     int i;
     for (i = ID; i < SIS_SIZE; i += 1) {
         *(sis + i) = 1;
