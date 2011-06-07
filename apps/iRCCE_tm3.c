@@ -1,3 +1,7 @@
+/*
+ * Test if the write-set -> read-set work properly
+ */
+
 #include <assert.h>
 
 #include "tm.h"

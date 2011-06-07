@@ -1,3 +1,8 @@
+/*
+ * Benchmarks the time to start and finish an empty TX ->
+ * -> the time to start and finish an empty TX that has one (explicitly called) abort
+ */
+
 #include "tm.h"
 
 #define SIS_SIZE 480

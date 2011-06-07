@@ -1,3 +1,7 @@
+/*
+ * A write non-conflicting TX -> a read-only (whole mem) TX -> print results for validation
+ */
+
 #include "tm.h"
 
 #define SIS_SIZE 480

@@ -1,3 +1,7 @@
+/*
+ * TX with WAR conflicts -> TX with RAW conflicts
+ */
+
 #include <assert.h>
 
 #include "tm.h"
