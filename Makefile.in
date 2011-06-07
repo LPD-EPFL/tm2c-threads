@@ -8,6 +8,9 @@ CFLAGS := $(CFLAGS) -I$(iRCCEINCLUDE)
 
 ARCHIVEOBJS= iRCCE_isend.o iRCCE_irecv.o iRCCE_isend32.o iRCCE_irecv32.o iRCCE_admin.o iRCCE_synch.o iRCCE_send.o iRCCE_recv.o iRCCE_get.o iRCCE_put.o iRCCE_waitlist.o \
 	 pubSubTM.o dslock.o rwhash.o log.o
+	
+TMH := $(iRCCEINCLUDE)/pubSubTM.h $(iRCCEINCLUDE)/common.h $(iRCCEINCLUDE)/tm.h $(iRCCEINCLUDE)/stm.h \
+	$(iRCCEINCLUDE)/hashtable.h $(iRCCEINCLUDE)/rwhash.h $(iRCCEINCLUDE)/log.h
 
 .PHONY: all libs clean install dist
 
@@ -51,7 +54,8 @@ iRCCE_waitlist.o: $(iRCCESRC)/iRCCE_waitlist.c $(RCCEINCLUDE)/RCCE.h $(RCCEINCLU
 	$(CCOMPILE) -c $(CFLAGS) $(iRCCESRC)/iRCCE_waitlist.c  $(RCCE_FLAGS)
 
 
-dslock.o: $(iRCCESRC)/dslock.c $(RCCEINCLUDE)/RCCE.h $(RCCEINCLUDE)/RCCE_lib.h $(iRCCEINCLUDE)/iRCCE.h $(iRCCEINCLUDE)/pubSubTM.h
+dslock.o: $(iRCCESRC)/dslock.c $(RCCEINCLUDE)/RCCE.h $(RCCEINCLUDE)/RCCE_lib.h $(iRCCEINCLUDE)/iRCCE.h $(iRCCEINCLUDE)/pubSubTM.h \
+	$(TMH)
 	$(CCOMPILE) -c $(CFLAGS) $(iRCCESRC)/dslock.c
 
 rwhash.o: $(iRCCESRC)/rwhash.c $(RCCEINCLUDE)/RCCE.h $(RCCEINCLUDE)/RCCE_lib.h $(iRCCEINCLUDE)/iRCCE.h $(iRCCEINCLUDE)/rwhash.h
@@ -61,7 +65,7 @@ log.o: $(iRCCESRC)/log.c $(RCCEINCLUDE)/RCCE.h $(RCCEINCLUDE)/RCCE_lib.h $(iRCCE
 	$(CCOMPILE) -c $(CFLAGS) $(iRCCESRC)/log.c
 
 pubSubTM.o: $(iRCCESRC)/pubSubTM.c  $(RCCEINCLUDE)/RCCE.h $(RCCEINCLUDE)/RCCE_lib.h $(iRCCEINCLUDE)/iRCCE.h $(iRCCEINCLUDE)/iRCCE_lib.h \
-	    $(iRCCEINCLUDE)/pubSubTM.h $(iRCCEINCLUDE)/common.h $(iRCCEINCLUDE)/tm.h $(iRCCEINCLUDE)/stm.h $(iRCCEINCLUDE)/hashtable.h $(iRCCEINCLUDE)/rwhash.h $(iRCCEINCLUDE)/log.h
+	$(TMH)
 	$(CCOMPILE) -c $(CFLAGS) $(iRCCESRC)/pubSubTM.c
 
 clean:
