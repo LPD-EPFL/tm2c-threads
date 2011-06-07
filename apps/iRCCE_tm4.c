@@ -47,6 +47,7 @@ MAIN(int argc, char **argv) {
     TX_START
 
     if(ID == 1) {
+        PRINTD("sleeping");
         udelay(350000);
     }
             int i;
