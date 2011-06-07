@@ -42,7 +42,7 @@ void ps_init_(void) {
     NUM_UES = RCCE_num_ues();
     NUM_DSL_NODES = (int) ((NUM_UES / DSLNDPERNODES)) + (NUM_UES % DSLNDPERNODES ? 1 : 0);
     PRINTD("NUM_DSL_NODES = %d", NUM_DSL_NODES);
-    if ((dsl_nodes = (unsigned  int *) malloc(NUM_DSL_NODES * sizeof (unsigned int))) == NULL) {
+    if ((dsl_nodes = (unsigned int *) malloc(NUM_DSL_NODES * sizeof (unsigned int))) == NULL) {
         PRINTD("malloc dsl_nodes");
         EXIT(-1);
     }
@@ -75,7 +75,7 @@ static void ps_sendb(unsigned short int target, PS_COMMAND_TYPE command, unsigne
     psc->response = response;
 
     char data[PS_BUFFER_SIZE];
-    
+
     memcpy(data, psc, sizeof (PS_COMMAND));
     iRCCE_isend(data, PS_BUFFER_SIZE, target, NULL);
 }
@@ -101,9 +101,9 @@ CONFLICT_TYPE ps_subscribe(void *address) {
     nodes_contacted[responsible_node]++;
 
     subscribing_address = address_offs;
-    
+
     ps_sendb(responsible_node, PS_SUBSCRIBE, address_offs, NO_CONFLICT);
-//    PRINTD("[SUB] addr: %d to %02d", address_offs, responsible_node);
+    //    PRINTD("[SUB] addr: %d to %02d", address_offs, responsible_node);
     ps_recvb(responsible_node);
 
     return ps_response;
@@ -118,7 +118,7 @@ CONFLICT_TYPE ps_publish(void *address) {
 
     ps_sendb(responsible_node, PS_PUBLISH, address_offs, NO_CONFLICT); //make sync
     ps_recvb(responsible_node);
-    
+
     return ps_response;
 }
 
@@ -141,9 +141,8 @@ void ps_finish_all() {
     int i;
     for (i = 0; i < NUM_UES; i++) {
         if (nodes_contacted[i] != 0) { //can be changed to non-blocking
-            if (i != ID) {
-                ps_sendb(i, PS_REMOVE_NODE, 0, NO_CONFLICT);
-            }
+            PRINTD("PS_REMOVE_NODE to %d", i)
+            ps_sendb(i, PS_REMOVE_NODE, 0, NO_CONFLICT);
             nodes_contacted[i] = 0;
         }
     }
