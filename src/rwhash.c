@@ -147,7 +147,9 @@ inline void rw_entry_insert_bucket_entry(bucket_entry_t *bucket_entry, int nodeI
                 //TODO: here the logic for READ -> WRITE
                 ME;
                 PRINTF("[X] %d tries to write %d: READ lock by ", nodeId, bucket_entry->address);
+#ifdef DEBUG
                 rw_entry_print_readers(rw_entry);
+#endif
 
                 /*change it with CM*/
                 ps_conflict_type = WRITE_AFTER_READ;
