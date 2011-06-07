@@ -47,7 +47,7 @@ MAIN(int argc, char **argv) {
     TX_START
 
     if(ID == 1) {
-        udelay(35000);
+        udelay(350000);
     }
             int i;
     for (i = 0; i < SIS_SIZE; i++) {
