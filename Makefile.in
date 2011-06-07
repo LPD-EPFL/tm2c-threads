@@ -58,7 +58,8 @@ dslock.o: $(iRCCESRC)/dslock.c $(RCCEINCLUDE)/RCCE.h $(RCCEINCLUDE)/RCCE_lib.h $
 	$(TMH)
 	$(CCOMPILE) -c $(CFLAGS) $(iRCCESRC)/dslock.c
 
-rwhash.o: $(iRCCESRC)/rwhash.c $(RCCEINCLUDE)/RCCE.h $(RCCEINCLUDE)/RCCE_lib.h $(iRCCEINCLUDE)/iRCCE.h $(iRCCEINCLUDE)/rwhash.h
+rwhash.o: $(iRCCESRC)/rwhash.c $(RCCEINCLUDE)/RCCE.h $(RCCEINCLUDE)/RCCE_lib.h $(iRCCEINCLUDE)/iRCCE.h $(iRCCEINCLUDE)/rwhash.h \
+	$(iRCCEINCLUDE)/common.h
 	$(CCOMPILE) -c $(CFLAGS) $(iRCCESRC)/rwhash.c
 
 log.o: $(iRCCESRC)/log.c $(RCCEINCLUDE)/RCCE.h $(RCCEINCLUDE)/RCCE_lib.h $(iRCCEINCLUDE)/iRCCE.h $(iRCCEINCLUDE)/log.h
