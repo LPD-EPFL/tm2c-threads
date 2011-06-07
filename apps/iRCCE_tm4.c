@@ -46,8 +46,8 @@ MAIN(int argc, char **argv) {
     BMSTART("read after write");
     TX_START
 
-    if(ID == 1) {
-        //udelay(3500);
+    if(ID != 1) {
+        udelay(350);
     }
             int i;
     for (i = 0; i < SIS_SIZE; i++) {
