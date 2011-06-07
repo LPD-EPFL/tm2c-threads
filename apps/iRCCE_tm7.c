@@ -93,7 +93,7 @@ MAIN(int argc, char **argv) {
 
         TX_START
 
-        ROLL(0) {
+        ROLL(10) {
             //update tx
             txupdate++;
 
