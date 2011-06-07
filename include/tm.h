@@ -128,6 +128,10 @@ int comsz; RCCE_comm_size(RCCE_COMM_APP, &comsz);PRINTD("size of comm_app is %d"
     tx_metadata_node_print(stm_tx_node);                \
     free(stm_tx_node); }                                  
 
+#define TM_END_STATS                                    \
+    PRINTD("|| FAKE: TM ends");                         \
+    free(stm_tx_node); }                                  
+
 
 #define TX_LOAD(addr)                                   \
     tx_load(stm_tx->write_set, stm_tx->read_set, ((void *) (addr)))
