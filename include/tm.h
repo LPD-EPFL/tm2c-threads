@@ -135,12 +135,9 @@ int comsz; RCCE_comm_size(RCCE_COMM_APP, &comsz);PRINTD("size of comm_app is %d"
 #define TX_STORE(addr, ptr, datatype)                   \
     write_set_update(stm_tx->write_set, datatype, ((void *) (ptr)), ((void *) (addr)))
 
-    inline double udelay(unsigned int micros) {
-        double __ts_start = RCCE_wtime();
-        double __ts_end = __ts_start + ((double) micros / 1000000);
-        PRINTD("Start: %f, End: %f", __ts_start, __ts_end);
+    inline void udelay(unsigned int micros) {
+        double __ts_end = RCCE_wtime() + ((double) micros / 1000000);
         while (RCCE_wtime() < __ts_end);
-        return __ts_start - __ts_end;
     }
 
     inline void ps_unsubscribe_all();
