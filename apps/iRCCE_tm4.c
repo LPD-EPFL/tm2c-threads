@@ -30,7 +30,7 @@ MAIN(int argc, char **argv) {
 
             int i;
     for (i = 0; i < SIS_SIZE; i++) {
-        if (ID == 0) {
+        if (ID == 1) {
             TX_LOAD(sis + i);
         } else {
             TX_STORE(sis + i, &ID, TYPE_INT);
@@ -46,12 +46,12 @@ MAIN(int argc, char **argv) {
     BMSTART("read after write");
     TX_START
 
-    if(ID == 0) {
-        taskudelay(3500);
+    if(ID == 1) {
+        udelay(3500);
     }
             int i;
     for (i = 0; i < SIS_SIZE; i++) {
-        if (ID == 0) {
+        if (ID == 1) {
             TX_LOAD(sis + i);
         } else {
             TX_STORE(sis + i, &ID, TYPE_INT);
