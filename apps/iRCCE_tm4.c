@@ -46,7 +46,7 @@ MAIN(int argc, char **argv) {
     BMSTART("read after write");
     TX_START
 
-    if(ID != 1) {
+    if(ID == 1) {
         udelay(35000);
     }
             int i;
@@ -60,6 +60,10 @@ MAIN(int argc, char **argv) {
 
     TX_COMMIT
     BMEND
+    
+    PRINTD(">>waiting for 10 secs");
+    udelay(10000000);
+    PRINTD("<<waiting for 10 secs");
     
     RCCE_shfree((t_vcharp) sis);
 
