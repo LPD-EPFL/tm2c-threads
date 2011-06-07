@@ -4,7 +4,7 @@
 
 #include "tm.h"
 
-#define SIS_SIZE 480
+#define SIS_SIZE 4800
 
 MAIN(int argc, char **argv) {
 
