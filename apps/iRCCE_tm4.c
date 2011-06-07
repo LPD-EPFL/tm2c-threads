@@ -61,10 +61,6 @@ MAIN(int argc, char **argv) {
     TX_COMMIT
     BMEND
     
-    PRINTD(">>waiting for 10 secs");
-    udelay(10000000);
-    PRINTD("<<waiting for 10 secs");
-    
     RCCE_shfree((t_vcharp) sis);
 
     TM_END
