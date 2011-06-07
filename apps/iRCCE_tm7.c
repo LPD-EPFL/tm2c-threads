@@ -10,7 +10,8 @@
 
 #define SHMEM_SIZE      SIS_SIZE
 #define NUM_TXOPS       100
-#define WRITE_PRCNT      10
+#define UPDTX_PRCNT     20
+#define WRITE_PRCNT     20
 
 #define FOR(seconds)    double starting__ = RCCE_wtime(), duration__; while ((duration__ = (RCCE_wtime() - starting__)) < (seconds))
 #define ROLL(prcntg)    if (rand_range(100) <= (prcntg))
@@ -85,7 +86,6 @@ MAIN(int argc, char **argv) {
 
     BARRIER
     
-
             int txupdate = 0;
     int txro = 0;
 
@@ -93,7 +93,7 @@ MAIN(int argc, char **argv) {
 
         TX_START
 
-        ROLL(10) {
+        ROLL(UPDTX_PRCNT) {
             //update tx
             txupdate++;
 
@@ -115,7 +115,6 @@ MAIN(int argc, char **argv) {
 
     BARRIER
 
-    
     RCCE_shfree((t_vcharp) sis);
 
     TM_END
