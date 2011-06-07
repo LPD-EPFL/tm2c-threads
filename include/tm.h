@@ -137,7 +137,8 @@ int comsz; RCCE_comm_size(RCCE_COMM_APP, &comsz);PRINTD("size of comm_app is %d"
 
     inline double udelay(unsigned int micros) {
         double __ts_start = RCCE_wtime();
-        double __seconds = micros / 1000000;
+        double __ts_end = __ts_start + (micros / 1000000);
+        PRINTD("Start: %f, End: %f", __ts_start, __ts_end);
         double __duration;
         while ((__duration = (RCCE_wtime() - __ts_start)) < __seconds);
         return __duration;
