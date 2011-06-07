@@ -47,8 +47,7 @@ MAIN(int argc, char **argv) {
     TX_START
 
     if(ID == 1) {
-        PRINTD("sleeping %f s", udelay(7500));
-        
+        udelay(3500);
     }
             int i;
     for (i = 0; i < SIS_SIZE; i++) {
