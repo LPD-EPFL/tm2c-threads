@@ -12,7 +12,7 @@
 extern "C" {
 #endif
 
-#define DSLNDPERNODES 4 /* 1 dedicated DS-Locking core per DSLNDPERNODES cores*/
+#define DSLNDPERNODES 2 /* 1 dedicated DS-Locking core per DSLNDPERNODES cores*/
 
 #define DEBUG_
 
