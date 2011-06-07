@@ -48,7 +48,7 @@ MAIN(int argc, char **argv) {
 
     if(ID == 1) {
         PRINTD("sleeping");
-        udelay(350000);
+        udelay(3500000);
     }
             int i;
     for (i = 0; i < SIS_SIZE; i++) {
