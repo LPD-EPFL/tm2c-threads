@@ -9,7 +9,6 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include "task.h"
 
 #define ME printf("[%d] ", RCCE_ue())
 #define PRINTD(args...) {ME; printf(args); printf("\n"); fflush(stdout);}
