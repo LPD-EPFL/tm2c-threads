@@ -141,7 +141,6 @@ void ps_finish_all() {
     int i;
     for (i = 0; i < NUM_UES; i++) {
         if (nodes_contacted[i] != 0) { //can be changed to non-blocking
-            PRINTD("PS_REMOVE_NODE to %d", i);
             ps_sendb(i, PS_REMOVE_NODE, 0, NO_CONFLICT);
             nodes_contacted[i] = 0;
         }
