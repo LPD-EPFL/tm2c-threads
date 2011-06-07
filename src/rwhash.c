@@ -1,7 +1,7 @@
 /*
  * File:   rwhash.c
  * Author: trigonak
- *
+ * 
  * Created on June 01, 2011, 6:10PM
  */
 
