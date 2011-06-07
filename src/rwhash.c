@@ -93,13 +93,13 @@ inline void rw_entry_print_readers(rw_entry_t *rwe) {
     int i;
     for (i = 0; i < 48; i++) {
         if (convert.lli & 0x01) {
-            printf("%d -> ", i);
+            PRINTF("%d -> ", i);
         }
         convert.lli >>= 1;
     }
 
-    printf("NULL\n");
-    fflush(stdout);
+    PRINTF("NULL\n");
+    FLUSHD;
 }
 
 /*  insert a reader or a writer for the bucket_entry->address address to the bucket_entry.
@@ -146,7 +146,7 @@ inline void rw_entry_insert_bucket_entry(bucket_entry_t *bucket_entry, int nodeI
             else { /*READ/WRITE conflict*/
                 //TODO: here the logic for READ -> WRITE
                 ME;
-                printf("[X] %d tries to write %d: READ lock by ", nodeId, bucket_entry->address);
+                PRINTF("[X] %d tries to write %d: READ lock by ", nodeId, bucket_entry->address);
                 rw_entry_print_readers(rw_entry);
 
                 /*change it with CM*/
@@ -342,20 +342,20 @@ inline void ps_hashtable_delete_node(ps_hashtable_t ps_hashtable, unsigned int n
  */
 inline void ps_hashtable_print(ps_hashtable_t ps_hashtable) {
 
-    printf("__PRINT PS_HASHTABLE________________________________________________\n");
+    PRINTF("__PRINT PS_HASHTABLE________________________________________________\n");
     int i;
     for (i = 0; i < NUM_OF_BUCKETS; i++) {
         bucket_t *bucket = ps_hashtable[i];
-        printf("Bucket %-3d | #Entries: %-3d\n", i, bucket->nb_entries);
+        PRINTF("Bucket %-3d | #Entries: %-3d\n", i, bucket->nb_entries);
         bucket_entry_t *curbe = bucket->head;
         while (curbe != NULL) {
             rw_entry_t *rwe = curbe->rw_entry;
-            printf(" [%-3d]: Write: %-3d\n   ", curbe->address, rwe->shorts[3]);
+            PRINTF(" [%-3d]: Write: %-3d\n   ", curbe->address, rwe->shorts[3]);
             rw_entry_print_readers(rwe);
 
 
             curbe = curbe->next;
         }
     }
-    fflush(stdout);
+    FLUSHD;
 }
