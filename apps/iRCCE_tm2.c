@@ -4,10 +4,6 @@
 
 #include "tm.h"
 
-#ifndef DEBUG
-#define DEBUG
-#endif
-
 #define SIS_SIZE 4800
 
 MAIN(int argc, char **argv) {
