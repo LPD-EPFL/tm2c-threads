@@ -4,6 +4,10 @@
 
 #include "tm.h"
 
+#ifndef DEBUG
+#define DEBUG
+#endif
+
 #define SIS_SIZE 4800
 
 MAIN(int argc, char **argv) {
@@ -15,8 +19,6 @@ MAIN(int argc, char **argv) {
         PRINTD("RCCE_shmalloc");
         EXIT(-1);
     }
-
-    PRINTD("~ %p", sis);
 
     BARRIER
 
