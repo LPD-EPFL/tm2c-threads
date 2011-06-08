@@ -68,7 +68,7 @@ void dsl_init(void) {
     // Create recv request for each possible (other) core.
     int i;
     for (i = 0; i < NUM_UES; i++) {
-        if (i != ID && (i % DSLNDPERNODES)) {
+        if (i % DSLNDPERNODES) { /*only for non DSL cores*/
             iRCCE_irecv(buf + i * 32, 32, i, &recv_requests[i]);
             iRCCE_add_to_wait_list(&waitlist, NULL, &recv_requests[i]);
         }
