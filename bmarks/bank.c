@@ -208,9 +208,9 @@ void test(void *data, double duration, int nb_accounts) {
     TM_INITs
 
     bank_t * bank = (bank_t *) RCCE_shmalloc(sizeof (bank_t));
+    bank->accounts = (account_t *) RCCE_shmalloc(nb_accounts * sizeof (account_t));
     ONCE
     {
-        bank->accounts = (account_t *) RCCE_shmalloc(nb_accounts * sizeof (account_t));
         bank->size = nb_accounts;
         int i;
         for (i = 0; i < bank->size; i++) {
@@ -420,7 +420,7 @@ TASKMAIN(int argc, char **argv) {
     assert(read_all >= 0 && write_all >= 0 && read_all + write_all <= 100);
     assert(read_cores + write_cores <= nb_app_cores);
 
-    //ONCE
+    ONCE
     {
         PRINTN("Nb accounts    : %d\n", nb_accounts);
         PRINTN("Duration       : %f\n", duration);
