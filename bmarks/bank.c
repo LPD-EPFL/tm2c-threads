@@ -241,7 +241,7 @@ void test(void *data, double duration) {
             }
         }
     }
-    
+
     //reset(d->bank);
 
     BARRIER
@@ -249,6 +249,23 @@ void test(void *data, double duration) {
     TM_END_STATS
 
     return;
+}
+
+inline void assign_abort_sig_handler() {
+    struct sigaction action;
+    action.sa_handler = catch_function;
+    action.sa_flags = 0;
+
+    if (sigaction(SIGABRT, &action, NULL) == -1) {
+        PRINTD("sigaction @ assign_abort_sig_handler");
+        //TODO: cleanup
+        EXIT(-1);
+    }
+}
+
+void catch_function(int signal) {
+    PRINT("SIGABRT");
+    EXIT(1);
 }
 
 TASKMAIN(int argc, char **argv) {
@@ -423,22 +440,24 @@ TASKMAIN(int argc, char **argv) {
     data->max_retries = 0;
     data->bank = bank;
 
-    ONCE {
-        PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\tBank total (before): %d\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n", 
+    ONCE
+    {
+        PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\tBank total (before): %d\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
                 total(data->bank, 0));
     }
-    
+
     test(data, duration);
-            
+
     printf("Core %d\n", RCCE_ue());
     printf("  #transfer   : %lu\n", data->nb_transfer);
     printf("  #read-all   : %lu\n", data->nb_read_all);
     printf("  #write-all  : %lu\n", data->nb_write_all);
     printf("  #aborts     : %lu\n", data->nb_aborts);
     FLUSH
-            
-    ONCE {
-        PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\tBank total (after): %d\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n", 
+
+    ONCE
+    {
+        PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\tBank total (after): %d\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
                 total(data->bank, 0));
     }
 
