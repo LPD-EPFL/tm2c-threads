@@ -116,7 +116,9 @@ extern "C" {
     ps_publish_all();                                   \
     PRINT(" | published all");\
     write_set_persist(stm_tx->write_set);               \
+    PRINT(" | persisted ws");\
     ps_finish_all();                                    \
+    PRINT(" | ps_finished all");\
     stm_tx->state = COMMITED;                           \
     stm_tx_node->tx_starts += stm_tx->retries;          \
     stm_tx_node->tx_commited++;                         \
