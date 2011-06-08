@@ -92,7 +92,7 @@ void iRCCE_init_wait_list(iRCCE_WAIT_LIST *list)
 	list->last = NULL;
 }
 
-static void iRCCE_add_wait_list_generic(iRCCE_WAIT_LIST *list, iRCCE_WAIT_LISTELEM * elem)
+static void inline iRCCE_add_wait_list_generic(iRCCE_WAIT_LIST *list, iRCCE_WAIT_LISTELEM * elem)
 {
 	iRCCE_WAIT_LISTELEM *pElem;
 	if (list->first == NULL) {
