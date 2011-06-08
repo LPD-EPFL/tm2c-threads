@@ -279,13 +279,13 @@ bank_t * test(void *data, double duration, int nb_accounts) {
                 assert(dst >= 0);
                 if (dst == src)
                     dst = ((src + 1) % rand_max) + rand_min;
-                PRINT("before transfer (src %d, dst: %d)", chk++, src, dst);
+                PRINT("before transfer (src %d, dst: %d)", src, dst);
                 //PRINTN("Transfering: [%5d] (%d) to [%5d] (%d) | ", src, bank->accounts[src].balance, dst, bank->accounts[dst].balance);
 /*
                 PRINT("Transfering: [%5d] (%d) to [%5d] (%d)", src, bank->accounts[src].balance, dst, bank->accounts[dst].balance);
 */
                 transfer(&bank->accounts[src], &bank->accounts[dst], 1);
-                PRINT("after transfer (src %d, dst: %d)", chk++, src, dst);
+                PRINT("after transfer (src %d, dst: %d)", src, dst);
                 //PRINTN("After: [%5d] (%d) - [%5d] (%d)\n", src, bank->accounts[src].balance, dst, bank->accounts[dst].balance);
                 d->nb_transfer++;
             }
