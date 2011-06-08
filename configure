@@ -44,3 +44,7 @@ cat Makefile.in >> Makefile
 echo "RCCEPATH=${RCCEPATH}" > apps/Makefile
 echo "SYMBOLSPATH=${SYMBOLSPATH}" >> apps/Makefile
 cat apps/Makefile.in >> apps/Makefile
+
+echo "RCCEPATH=${RCCEPATH}" > bmarks/Makefile
+echo "SYMBOLSPATH=${SYMBOLSPATH}" >> bmarks/Makefile
+cat bmarks/Makefile.in >> bmarks/Makefile
