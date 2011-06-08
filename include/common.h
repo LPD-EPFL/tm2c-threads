@@ -11,6 +11,8 @@
 #ifdef	__cplusplus
 extern "C" {
 #endif
+    
+#define DSL
 
 #define DSLNDPERNODES 2 /* 1 dedicated DS-Locking core per DSLNDPERNODES cores*/
 
@@ -69,6 +71,7 @@ extern "C" {
 #include <stddef.h>
 #include <unistd.h>
 
+#define TASKMAIN MAIN
 #define MAIN int main
 #define EXIT(reason) exit(reason);
 #define EXITALL(reason) exit((reason))
