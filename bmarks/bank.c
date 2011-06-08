@@ -418,6 +418,11 @@ TASKMAIN(int argc, char **argv) {
 
 
     BARRIERW
+            
+    ONCE {
+        PRINTF("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\tBank total: %d\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n", 
+                total(data->bank, 0));
+    }
 
     /* Delete bank and accounts */
 
