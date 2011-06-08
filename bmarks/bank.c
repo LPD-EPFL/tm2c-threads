@@ -237,9 +237,9 @@ void test(void *data, double duration) {
                 assert(dst >= 0);
                 if (dst == src)
                     dst = ((src + 1) % rand_max) + rand_min;
-                printf("Transfering: [%5d] (%d) to [%5d] (%d) | ", src, d->bank->accounts[src].balance, dst, d->bank->accounts[dst].balance);
+                //printf("Transfering: [%5d] (%d) to [%5d] (%d) | ", src, d->bank->accounts[src].balance, dst, d->bank->accounts[dst].balance);
                 transfer(&d->bank->accounts[src], &d->bank->accounts[dst], 1);
-                printf("After: [%5d] (%d) - [%5d] (%d)\n", src, d->bank->accounts[src].balance, dst, d->bank->accounts[dst].balance);
+                //printf("After: [%5d] (%d) - [%5d] (%d)\n", src, d->bank->accounts[src].balance, dst, d->bank->accounts[dst].balance);
                 d->nb_transfer++;
             }
         }
