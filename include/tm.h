@@ -41,7 +41,14 @@ extern "C" {
     iRCCE_init();                                                       \
     RCCE_COMM RCCE_COMM_APP;                                            \
     RCCE_comm_split(color, NULL, &RCCE_COMM_APP);                       \
-int comsz; RCCE_comm_size(RCCE_COMM_APP, &comsz);PRINTD("size of comm_app is %d", comsz);\
+    {                                                                   \
+        unsigned int ID = RCCE_ue();                                    \
+        unsigned int NUM_UES = RCCE_num_ues();                          \
+        tm_init(argc, argv, ID);
+
+#define TM_INITs                                                        \
+    RCCE_COMM RCCE_COMM_APP;                                            \
+    RCCE_comm_split(color, NULL, &RCCE_COMM_APP);                       \
     {                                                                   \
         unsigned int ID = RCCE_ue();                                    \
         unsigned int NUM_UES = RCCE_num_ues();                          \
