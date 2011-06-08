@@ -76,7 +76,8 @@ int transfer(account_t *src, account_t *dst, int amount) {
     /* Allow overdrafts */
     TX_START
     PRINT("in transfer : before load");
-    i = *(int *) TX_LOAD(&src->balance);
+    i = 0 ; //*(int *)
+    TX_LOAD(&src->balance);
     PRINT("in transfer : after load");
     i -= amount;
     TX_STORE(&src->balance, &i, TYPE_INT); //NEED TX_STOREI
