@@ -238,6 +238,7 @@ void test(void *data, double duration) {
         }
     }
 
+    BARRIER
     /* Free transaction */
     TM_END_STATS
 
@@ -415,9 +416,6 @@ TASKMAIN(int argc, char **argv) {
     data->bank = bank;
 
     test(data, duration);
-
-
-    BARRIERW
             
     ONCE {
         PRINTF("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\tBank total: %d\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n", 
