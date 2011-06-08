@@ -208,7 +208,16 @@ void test(void *data, double duration, int nb_accounts) {
     TM_INITs
 
     bank_t * bank = (bank_t *) RCCE_shmalloc(sizeof (bank_t));
+    if (bank == NULL) {
+        PRINT("malloc bank");
+        EXIT(1);
+    }
     bank->accounts = (account_t *) RCCE_shmalloc(nb_accounts * sizeof (account_t));
+    if (bank == NULL) {
+        PRINT("malloc bank->accounts");
+        EXIT(1);
+    }
+    
     ONCE
     {
         bank->size = nb_accounts;
