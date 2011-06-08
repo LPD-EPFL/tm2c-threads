@@ -32,6 +32,8 @@
  * stm_get_env() and only call sigsetjmp() if it is not null.
  */
 
+    int chk = 0;//TODO: remove
+
 #define DEFAULT_DURATION                10
 #define DEFAULT_NB_ACCOUNTS             1024
 #define DEFAULT_NB_THREADS              1
@@ -183,8 +185,12 @@ void test(void *data, double duration) {
     int rand_max, rand_min;
     thread_data_t *d = (thread_data_t *) data;
 
+        PRINT("chk %d", chk++);
+    
     /* Initialize seed (use rand48 as rand is poor) */
     srand_core();
+    
+        PRINT("chk %d", chk++);
 
     /* Prepare for disjoint access */
     if (d->disjoint) {
@@ -306,8 +312,6 @@ TASKMAIN(int argc, char **argv) {
     int write_cores = DEFAULT_WRITE_THREADS;
     int disjoint = DEFAULT_DISJOINT;
 
-    int chk = 0;
-    PRINT("chk %d", chk++);
 
     while (1) {
         i = 0;
@@ -382,15 +386,12 @@ TASKMAIN(int argc, char **argv) {
         }
     }
 
-    PRINT("chk %d", chk++);
 
     assert(duration >= 0);
     assert(nb_accounts >= 2);
     assert(nb_app_cores > 0);
     assert(read_all >= 0 && write_all >= 0 && read_all + write_all <= 100);
     assert(read_cores + write_cores <= nb_app_cores);
-
-    PRINT("chk %d", chk++);
 
     ONCE
     {
@@ -408,14 +409,10 @@ TASKMAIN(int argc, char **argv) {
                 );
     }
 
-    PRINT("chk %d", chk++);
-
     if ((data = (thread_data_t *) malloc(sizeof (thread_data_t))) == NULL) {
         perror("malloc");
         exit(1);
     }
-
-    PRINT("chk %d", chk++);
 
     bank = (bank_t *) RCCE_shmalloc(sizeof (bank_t));
     ONCE
@@ -428,11 +425,9 @@ TASKMAIN(int argc, char **argv) {
         }
     }
 
-    PRINT("chk %d", chk++);
     /* Init STM */
     BARRIERW
 
-    PRINT("chk %d", chk++);
 
     data->id = RCCE_ue() / 2;
     data->read_all = read_all;
