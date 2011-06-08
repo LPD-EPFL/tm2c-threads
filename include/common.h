@@ -78,6 +78,7 @@ extern "C" {
 #define EXITALL(reason) exit((reason))
 
 #define BARRIER RCCE_barrier(&RCCE_COMM_APP);
+#define BARRIERW RCCE_barrier(&RCCE_COMM_WORLD);
 
 #ifdef	__cplusplus
 }
