@@ -105,7 +105,7 @@ extern "C" {
 
 
 #define TX_ABORT(reason)                                \
-    PRINTD("|| aborting tx");                           \
+    PRINT("|| aborting tx");                           \
     handle_abort(stm_tx, reason);                       \
     siglongjmp(stm_tx->env, reason);
 
