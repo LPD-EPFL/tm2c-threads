@@ -150,7 +150,6 @@ inline void srand_core() {
 
 typedef struct thread_data {
     bank_t *bank;
-    barrier_t *barrier;
     unsigned long nb_transfer;
     unsigned long nb_read_all;
     unsigned long nb_write_all;
@@ -201,9 +200,8 @@ void test(void *data, double duration) {
     }
 
     /* Create transaction */
-    TM_INIT
+    TM_INITs
     /* Wait on barrier */
-    barrier_cross(d->barrier);
 
     FOR(duration) {
         if (d->id < d->read_cores) {
@@ -247,6 +245,9 @@ void test(void *data, double duration) {
 }
 
 TASKMAIN(int argc, char **argv) {
+    RCCE_init(&argc, &argv);
+    iRCCE_init();
+
     struct option long_options[] = {
         // These options don't set a flag
         {"help", no_argument, NULL, 'h'},
@@ -419,7 +420,7 @@ TASKMAIN(int argc, char **argv) {
     BARRIER
 
     /* Delete bank and accounts */
-            
+
     RCCE_shfree(bank->accounts);
     RCCE_shfree(bank);
 
