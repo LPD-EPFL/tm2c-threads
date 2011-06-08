@@ -75,7 +75,9 @@ int transfer(account_t *src, account_t *dst, int amount) {
 
     /* Allow overdrafts */
     TX_START
+    PRINT("in transfer : before load");
     i = *(int *) TX_LOAD(&src->balance);
+    PRINT("in transfer : after load");
     i -= amount;
     TX_STORE(&src->balance, &i, TYPE_INT); //NEED TX_STOREI
     j = *(int *) TX_LOAD(&dst->balance);
@@ -245,57 +247,46 @@ bank_t * test(void *data, double duration, int nb_accounts) {
 
 
     FOR(duration) {
-        PRINT("chk1 %d", chk++);
         if (d->id < d->read_cores) {
             /* Read all */
             total(bank, 1);
             d->nb_read_all++;
         }
         else if (d->id < d->read_cores + d->write_cores) {
-            PRINT("chk2 %d", chk++);
             /* Write all */
             reset(bank);
             d->nb_write_all++;
         }
         else {
-            PRINT("chk3 %d", chk++);
             nb = (int) (rand_range(100) - 1);
             if (nb < d->read_all) {
-                PRINT("chk4 %d", chk++);
                 /* Read all */
                 total(bank, 1);
                 d->nb_read_all++;
             }
             else if (nb < d->read_all + d->write_all) {
-                PRINT("chk5 %d", chk++);
                 /* Write all */
                 reset(bank);
                 d->nb_write_all++;
             }
             else {
-                PRINT("chk6 %d", chk++);
                 /* Choose random accounts */
                 src = (int) (rand_range(rand_max) - 1) + rand_min;
-                PRINT("chk6a %d", chk++);
                 assert(src < (rand_max + rand_min));
-                PRINT("chk6b %d", chk++);
                 assert(src >= 0);
-                PRINT("chk6c %d", chk++);
                 dst = (int) (rand_range(rand_max) - 1) + rand_min;
-                PRINT("chk6d %d", chk++);
                 assert(dst < (rand_max + rand_min));
-                PRINT("chk6e %d", chk++);
                 assert(dst >= 0);
-                PRINT("chk6f %d", chk++);
                 if (dst == src)
                     dst = ((src + 1) % rand_max) + rand_min;
-                PRINT("chk6g %d (src %d, dst: %d)", chk++, src, dst);
+                PRINT("before transfer (src %d, dst: %d)", chk++, src, dst);
                 //PRINTN("Transfering: [%5d] (%d) to [%5d] (%d) | ", src, bank->accounts[src].balance, dst, bank->accounts[dst].balance);
 /*
                 PRINT("Transfering: [%5d] (%d) to [%5d] (%d)", src, bank->accounts[src].balance, dst, bank->accounts[dst].balance);
 */
                 transfer(&bank->accounts[src], &bank->accounts[dst], 1);
-                PRINTN("After: [%5d] (%d) - [%5d] (%d)\n", src, bank->accounts[src].balance, dst, bank->accounts[dst].balance);
+                PRINT("after transfer (src %d, dst: %d)", chk++, src, dst);
+                //PRINTN("After: [%5d] (%d) - [%5d] (%d)\n", src, bank->accounts[src].balance, dst, bank->accounts[dst].balance);
                 d->nb_transfer++;
             }
         }
