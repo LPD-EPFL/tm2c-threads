@@ -32,12 +32,12 @@ CONFLICT_TYPE ps_response; //TODO: make it more sophisticated
 PS_COMMAND *ps_command, *ps_remote, *psc;
 
 static void dsl_communication();
-static void ps_send(unsigned short int target, PS_COMMAND_TYPE operation, unsigned int address, CONFLICT_TYPE response);
+static inline void ps_send(unsigned short int target, PS_COMMAND_TYPE operation, unsigned int address, CONFLICT_TYPE response);
 
-inline CONFLICT_TYPE try_subscribe(int nodeId, int shmem_address);
-inline CONFLICT_TYPE try_publish(int nodeId, int shmem_address);
-inline void unsubscribe(int nodeId, int shmem_address);
-inline void publish_finish(int nodeId, int shmem_address);
+static inline CONFLICT_TYPE try_subscribe(int nodeId, int shmem_address);
+static inline CONFLICT_TYPE try_publish(int nodeId, int shmem_address);
+static inline void unsubscribe(int nodeId, int shmem_address);
+static inline void publish_finish(int nodeId, int shmem_address);
 
 void dsl_init(void) {
     ID = RCCE_ue();
@@ -80,7 +80,6 @@ void dsl_init(void) {
 }
 
 static void dsl_communication() {
-   // char local[PS_BUFFER_SIZE];
     int sender;
     char *base;
 
@@ -100,9 +99,6 @@ static void dsl_communication() {
             //the sender of the message
             sender = recv_current->source;
             base = buf + sender * 32;
-            //memcpy(&local, base, PS_BUFFER_SIZE);
-
-
             ps_remote = (PS_COMMAND *) base;
 
             switch (ps_remote->type) {
@@ -127,7 +123,7 @@ static void dsl_communication() {
     }
 }
 
-static void ps_send(unsigned short int target, PS_COMMAND_TYPE command, unsigned int address, CONFLICT_TYPE response) {
+static inline void ps_send(unsigned short int target, PS_COMMAND_TYPE command, unsigned int address, CONFLICT_TYPE response) {
 
     iRCCE_SEND_REQUEST *s = (iRCCE_SEND_REQUEST *) malloc(sizeof (iRCCE_SEND_REQUEST));
     if (s == NULL) {
@@ -155,22 +151,22 @@ static void ps_send(unsigned short int target, PS_COMMAND_TYPE command, unsigned
     }
 }
 
-inline CONFLICT_TYPE try_subscribe(int nodeId, int shmem_address) {
+static inline CONFLICT_TYPE try_subscribe(int nodeId, int shmem_address) {
 
     ps_hashtable_insert(ps_hashtable, nodeId, shmem_address, READ);
     return ps_conflict_type;
 }
 
-inline CONFLICT_TYPE try_publish(int nodeId, int shmem_address) {
+static inline CONFLICT_TYPE try_publish(int nodeId, int shmem_address) {
 
     ps_hashtable_insert(ps_hashtable, nodeId, shmem_address, WRITE);
     return ps_conflict_type;
 }
 
-inline void unsubscribe(int nodeId, int shmem_address) {
+static inline void unsubscribe(int nodeId, int shmem_address) {
     ps_hashtable_delete(ps_hashtable, nodeId, shmem_address, READ);
 }
 
-inline void publish_finish(int nodeId, int shmem_address) {
+static inline void publish_finish(int nodeId, int shmem_address) {
     ps_hashtable_delete(ps_hashtable, nodeId, shmem_address, WRITE);
 }
