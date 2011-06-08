@@ -135,6 +135,8 @@ void iRCCE_print_sendlist(iRCCE_WAIT_LIST *list, unsigned int sender);
 void iRCCE_print_waitlist(iRCCE_WAIT_LIST *list, unsigned int sender);
 void  iRCCE_init_wait_list(iRCCE_WAIT_LIST*);
 void  iRCCE_add_to_wait_list(iRCCE_WAIT_LIST*, iRCCE_SEND_REQUEST *, iRCCE_RECV_REQUEST *);
+void  iRCCE_add_send_to_wait_list(iRCCE_WAIT_LIST* list, iRCCE_SEND_REQUEST* req);
+void  iRCCE_add_recv_to_wait_list(iRCCE_WAIT_LIST* list, iRCCE_RECV_REQUEST* req);
 int   iRCCE_test_all(iRCCE_WAIT_LIST*, int *);
 int   iRCCE_wait_all(iRCCE_WAIT_LIST*);
 int   iRCCE_test_any(iRCCE_WAIT_LIST*, iRCCE_SEND_REQUEST **, iRCCE_RECV_REQUEST **);
