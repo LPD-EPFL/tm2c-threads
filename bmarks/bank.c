@@ -274,13 +274,20 @@ bank_t * test(void *data, double duration, int nb_accounts) {
                 PRINT("chk6 %d", chk++);
                 /* Choose random accounts */
                 src = (int) (rand_range(rand_max) - 1) + rand_min;
+                PRINT("chk6a %d", chk++);
                 assert(src < (rand_max + rand_min));
+                PRINT("chk6b %d", chk++);
                 assert(src >= 0);
+                PRINT("chk6c %d", chk++);
                 dst = (int) (rand_range(rand_max) - 1) + rand_min;
+                PRINT("chk6d %d", chk++);
                 assert(dst < (rand_max + rand_min));
+                PRINT("chk6e %d", chk++);
                 assert(dst >= 0);
+                PRINT("chk6f %d", chk++);
                 if (dst == src)
                     dst = ((src + 1) % rand_max) + rand_min;
+                PRINT("chk6g %d", chk++);
                 PRINTN("Transfering: [%5d] (%d) to [%5d] (%d) | ", src, bank->accounts[src].balance, dst, bank->accounts[dst].balance);
 /*
                 PRINT("Transfering: [%5d] (%d) to [%5d] (%d)", src, bank->accounts[src].balance, dst, bank->accounts[dst].balance);
