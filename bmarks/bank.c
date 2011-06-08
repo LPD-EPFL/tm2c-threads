@@ -230,10 +230,10 @@ void test(void *data, double duration) {
             else {
                 /* Choose random accounts */
                 src = (int) (rand_range(rand_max + 1) - 1) + rand_min;
-                assert(src < rand_max);
+                assert(src < (rand_max + rand_min));
                 assert(src >= 0);
                 dst = (int) (rand_range(rand_max + 1) - 1) + rand_min;
-                assert(dst < rand_max);
+                assert(dst < (rand_max + rand_min));
                 assert(dst >= 0);
                 if (dst == src)
                     dst = ((src + 1) % rand_max) + rand_min;
