@@ -165,55 +165,56 @@ inline void write_entry_persist(write_entry_t *we) {
 inline void write_entry_print(write_entry_t *we) {
     switch (we->datatype) {
         case TYPE_CHAR:
-            PRINTD("%p : %c", (we->address_shmem), we->c);
+            PRINTS("%p : %c", (we->address_shmem), we->c);
             break;
         case TYPE_DOUBLE:
-            PRINTD("%p : %f", (we->address_shmem), we->d);
+            PRINTS("%p : %f", (we->address_shmem), we->d);
             break;
         case TYPE_FLOAT:
-            PRINTD("%p : %f", (we->address_shmem), we->f);
+            PRINTS("%p : %f", (we->address_shmem), we->f);
             break;
         case TYPE_INT:
-            PRINTD("%p : %d", (we->address_shmem), we->i);
+            PRINTS("%p : %d", (we->address_shmem), we->i);
             break;
         case TYPE_LONG:
-            PRINTD("%p : %ld", (we->address_shmem), we->li);
+            PRINTS("%p : %ld", (we->address_shmem), we->li);
             break;
         case TYPE_LONGLONG:
-            PRINTD("%p : %lld", (we->address_shmem), we->lli);
+            PRINTS("%p : %lld", (we->address_shmem), we->lli);
             break;
         case TYPE_SHORT:
-            PRINTD("%p : %i", (we->address_shmem), we->s);
+            PRINTS("%p : %i", (we->address_shmem), we->s);
             break;
         case TYPE_UCHAR:
-            PRINTD("%p : %c", (we->address_shmem), we->uc);
+            PRINTS("%p : %c", (we->address_shmem), we->uc);
             break;
         case TYPE_UINT:
-            PRINTD("%p : %u", (we->address_shmem), we->ui);
+            PRINTS("%p : %u", (we->address_shmem), we->ui);
             break;
         case TYPE_ULONG:
-            PRINTD("%p : %lu", (we->address_shmem), we->uli);
+            PRINTS("%p : %lu", (we->address_shmem), we->uli);
             break;
         case TYPE_ULONGLONG:
-            PRINTD("%p : %llu", (we->address_shmem), we->ulli);
+            PRINTS("%p : %llu", (we->address_shmem), we->ulli);
             break;
         case TYPE_USHORT:
-            PRINTD("%p : %us", (we->address_shmem), we->us);
+            PRINTS("%p : %us", (we->address_shmem), we->us);
             break;
         case TYPE_POINTER:
-            PRINTD("%p : %p", we->address_shmem, we->p);
+            PRINTS("%p : %p", we->address_shmem, we->p);
             break;
         default:
-            PRINTD("%p : %s", (char *) we->address_shmem, (const char *) we->p);
+            PRINTS("%p : %s", (char *) we->address_shmem, (const char *) we->p);
     }
 }
 
 inline void write_set_print(write_set_t *write_set) {
-    PRINTD("WRITE SET (elements: %d, size: %d) --------------", write_set->nb_entries, write_set->size);
+    PRINTS("WRITE SET (elements: %d, size: %d) --------------\n", write_set->nb_entries, write_set->size);
     int i;
     for (i = 0; i < write_set->nb_entries; i++) {
         write_entry_print(&write_set->write_entries[i]);
     }
+    FLUSH
 }
 
 inline void write_set_persist(write_set_t *write_set) {
