@@ -44,7 +44,7 @@ extern "C" {
     {                                                                   \
         unsigned int ID = RCCE_ue();                                    \
         unsigned int NUM_UES = RCCE_num_ues();                          \
-        tm_init(argc, argv, ID);
+        tm_init(ID);
 
 #define TM_INITs                                                        \
     RCCE_COMM RCCE_COMM_APP;                                            \
@@ -52,14 +52,14 @@ extern "C" {
     {                                                                   \
         unsigned int ID = RCCE_ue();                                    \
         unsigned int NUM_UES = RCCE_num_ues();                          \
-        tm_init(argc, argv, ID);
+        tm_init(ID);
 
 
     int color(int id, void *aux) {
         return !(id % DSLNDPERNODES);
     }
     
-    inline void tm_init(int argc, char **argv, unsigned int ID) {
+    inline void tm_init(unsigned int ID) {
         if (ID % DSLNDPERNODES == 0) {
             //dsl node
             PRINTD("[DSL NODE]");
