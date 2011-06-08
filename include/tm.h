@@ -115,6 +115,7 @@ extern "C" {
     PRINT("|| commiting tx");                          \
     ps_publish_all();                                   \
     PRINT(" | published all");\
+write_set_print(stm_tx->write_set);\
     write_set_persist(stm_tx->write_set);               \
     PRINT(" | persisted ws");\
     ps_finish_all();                                    \
