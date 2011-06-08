@@ -229,10 +229,10 @@ void test(void *data, double duration) {
             }
             else {
                 /* Choose random accounts */
-                src = (int) (rand_range(rand_max + 1) - 1) + rand_min;
+                src = (int) (rand_range(rand_max) - 1) + rand_min;
                 assert(src < (rand_max + rand_min));
                 assert(src >= 0);
-                dst = (int) (rand_range(rand_max + 1) - 1) + rand_min;
+                dst = (int) (rand_range(rand_max) - 1) + rand_min;
                 assert(dst < (rand_max + rand_min));
                 assert(dst >= 0);
                 if (dst == src)
@@ -273,6 +273,7 @@ inline void assign_abort_sig_handler() {
 
 TASKMAIN(int argc, char **argv) {
     dup2(STDOUT_FILENO, STDERR_FILENO);
+    assign_abort_sig_handler();
 
     RCCE_init(&argc, &argv);
     iRCCE_init();
