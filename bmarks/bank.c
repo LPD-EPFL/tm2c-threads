@@ -70,13 +70,13 @@ typedef struct bank {
 
 int transfer(account_t *src, account_t *dst, int amount) {
     PRINT("in transfer");
-    
+
     int i, j;
 
     /* Allow overdrafts */
     TX_START
     PRINT("in transfer : before load 1");
-    i = 0 ; //*(int *)
+    i = 0; //*(int *)
     TX_LOAD(&src->balance);
     PRINT("in transfer : after load 1");
     i -= amount;
@@ -88,9 +88,9 @@ int transfer(account_t *src, account_t *dst, int amount) {
     j += amount;
     TX_STORE(&dst->balance, &j, TYPE_INT);
 
-        PRINT("in transfer : before commit");
+    PRINT("in transfer : before commit");
     TX_COMMIT
-
+    PRINT("in transfer : after commit");
     return amount;
 }
 
@@ -228,7 +228,7 @@ bank_t * test(void *data, double duration, int nb_accounts) {
         PRINT("malloc bank->accounts");
         EXIT(1);
     }
-    
+
     ONCE
     {
         bank->size = nb_accounts;
@@ -245,7 +245,6 @@ bank_t * test(void *data, double duration, int nb_accounts) {
                 total(bank, 0));
     }
 
-    
     /* Wait on barrier */
     BARRIER
 
@@ -287,9 +286,9 @@ bank_t * test(void *data, double duration, int nb_accounts) {
                     dst = ((src + 1) % rand_max) + rand_min;
                 PRINT("before transfer (src %d, dst: %d)", src, dst);
                 //PRINTN("Transfering: [%5d] (%d) to [%5d] (%d) | ", src, bank->accounts[src].balance, dst, bank->accounts[dst].balance);
-/*
-                PRINT("Transfering: [%5d] (%d) to [%5d] (%d)", src, bank->accounts[src].balance, dst, bank->accounts[dst].balance);
-*/
+                /*
+                                PRINT("Transfering: [%5d] (%d) to [%5d] (%d)", src, bank->accounts[src].balance, dst, bank->accounts[dst].balance);
+                 */
                 transfer(&bank->accounts[src], &bank->accounts[dst], 1);
                 PRINT("after transfer (src %d, dst: %d)", src, dst);
                 //PRINTN("After: [%5d] (%d) - [%5d] (%d)\n", src, bank->accounts[src].balance, dst, bank->accounts[dst].balance);
@@ -496,7 +495,7 @@ TASKMAIN(int argc, char **argv) {
     data->locked_reads_ok = 0;
     data->locked_reads_failed = 0;
     data->max_retries = 0;
-    
+
     bank = test(data, duration, nb_accounts);
 
     printf("Core %d\n", RCCE_ue());
