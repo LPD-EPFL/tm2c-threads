@@ -415,10 +415,15 @@ TASKMAIN(int argc, char **argv) {
     data->max_retries = 0;
     data->bank = bank;
 
+    ONCE {
+        PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\tBank total (before): %d\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n", 
+                total(data->bank, 0));
+    }
+    
     test(data, duration);
             
     ONCE {
-        PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\tBank total: %d\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n", 
+        PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\tBank total (after): %d\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n", 
                 total(data->bank, 0));
     }
 
