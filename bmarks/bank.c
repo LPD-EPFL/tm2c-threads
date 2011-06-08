@@ -213,6 +213,7 @@ void test(void *data, double duration) {
 
             
     FOR(duration) {
+        PRINT("chk %d", chk++);
         if (d->id < d->read_cores) {
             /* Read all */
             total(d->bank, 1);
