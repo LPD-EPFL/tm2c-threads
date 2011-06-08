@@ -421,8 +421,8 @@ TASKMAIN(int argc, char **argv) {
 
     /* Delete bank and accounts */
 
-    RCCE_shfree(bank->accounts);
-    RCCE_shfree(bank);
+    RCCE_shfree((volatile unsigned char *) bank->accounts);
+    RCCE_shfree((volatile unsigned char *) bank);
 
     free(data);
 
