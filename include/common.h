@@ -20,6 +20,8 @@ extern "C" {
 
 #define PRINT(args...) printf("[%02d] ", RCCE_ue()); printf(args); printf("\n"); fflush(stdout)
 #define PRINTN(args...) printf("[%02d] ", RCCE_ue()); printf(args); fflush(stdout)
+#define PRINTS(args...)  printf(args);
+    
 #define FLUSH fflush(stdout);
 #ifdef DEBUG
 #define FLUSHD fflush(stdout);
