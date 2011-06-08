@@ -84,9 +84,11 @@ int transfer(account_t *src, account_t *dst, int amount) {
     j = 0; //*(int *) 
     PRINT("in transfer : before load 2");
     TX_LOAD(&dst->balance);
-    PRINT("in transfer : before load 2");
+    PRINT("in transfer : after load 2");
     j += amount;
     TX_STORE(&dst->balance, &j, TYPE_INT);
+
+        PRINT("in transfer : before commit");
     TX_COMMIT
 
     return amount;
