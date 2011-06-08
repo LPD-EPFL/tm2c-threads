@@ -185,12 +185,10 @@ void test(void *data, double duration) {
     int rand_max, rand_min;
     thread_data_t *d = (thread_data_t *) data;
 
-        PRINT("chk %d", chk++);
     
     /* Initialize seed (use rand48 as rand is poor) */
     srand_core();
     
-        PRINT("chk %d", chk++); //1
 
     /* Prepare for disjoint access */
     if (d->disjoint) {
@@ -209,7 +207,11 @@ void test(void *data, double duration) {
     /* Create transaction */
     TM_INITs
     /* Wait on barrier */
+    BARRIER
+    
+    PRINT("chk %d", chk++); //0
 
+            
     FOR(duration) {
         if (d->id < d->read_cores) {
             /* Read all */
