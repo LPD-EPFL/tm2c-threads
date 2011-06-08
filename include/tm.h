@@ -112,8 +112,9 @@ extern "C" {
     //ps_hashtable_print(ps_hashtable);                   \
     
 #define TX_COMMIT                                       \
-    PRINTD("|| commiting tx");                          \
+    PRINT("|| commiting tx");                          \
     ps_publish_all();                                   \
+    PRINT(" | published all");\
     write_set_persist(stm_tx->write_set);               \
     ps_finish_all();                                    \
     stm_tx->state = COMMITED;                           \
