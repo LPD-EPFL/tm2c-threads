@@ -387,7 +387,7 @@ TASKMAIN(int argc, char **argv) {
     }
 
     /* Init STM */
-    BARRIER;
+    BARRIERW
 
     data->id = i;
     data->read_all = read_all;
@@ -417,7 +417,7 @@ TASKMAIN(int argc, char **argv) {
     test(data, duration);
 
 
-    BARRIER
+    BARRIERW
 
     /* Delete bank and accounts */
 
