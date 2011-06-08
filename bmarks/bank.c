@@ -190,7 +190,7 @@ void test(void *data, double duration) {
     /* Initialize seed (use rand48 as rand is poor) */
     srand_core();
     
-        PRINT("chk %d", chk++);
+        PRINT("chk %d", chk++); //1
 
     /* Prepare for disjoint access */
     if (d->disjoint) {
@@ -428,8 +428,11 @@ TASKMAIN(int argc, char **argv) {
     /* Init STM */
     BARRIERW
 
-
-    data->id = RCCE_ue() / 2;
+#ifdef DSL
+    data->id = (RCCE_ue() - 1) / 2;
+#else
+    data->id = RCCE_ue();
+#endif
     data->read_all = read_all;
     data->read_cores = read_cores;
     data->write_all = write_all;
