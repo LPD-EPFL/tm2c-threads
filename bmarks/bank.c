@@ -32,7 +32,7 @@
  * stm_get_env() and only call sigsetjmp() if it is not null.
  */
 
-    int chk = 0;//TODO: remove
+int chk = 0; //TODO: remove
 
 #define DEFAULT_DURATION                10
 #define DEFAULT_NB_ACCOUNTS             1024
@@ -180,19 +180,19 @@ typedef struct thread_data {
     char padding[64];
 } thread_data_t;
 
-void test(void *data, double duration) {
+void test(void *data, double duration, int nb_accounts) {
     int src, dst, nb;
     int rand_max, rand_min;
     thread_data_t *d = (thread_data_t *) data;
 
-    
+
     /* Initialize seed (use rand48 as rand is poor) */
     srand_core();
-    
+
 
     /* Prepare for disjoint access */
     if (d->disjoint) {
-        rand_max = d->bank->size / d->nb_app_cores;
+        rand_max = nb_accounts / d->nb_app_cores;
         rand_min = rand_max * d->id;
         if (rand_max <= 2) {
             fprintf(stderr, "can't have disjoint account accesses");
@@ -200,40 +200,60 @@ void test(void *data, double duration) {
         }
     }
     else {
-        rand_max = d->bank->size;
+        rand_max = nb_accounts;
         rand_min = 0;
     }
 
     /* Create transaction */
     TM_INITs
+
+    bank_t * bank = (bank_t *) RCCE_shmalloc(sizeof (bank_t));
+    ONCE
+    {
+        bank->accounts = (account_t *) RCCE_shmalloc(nb_accounts * sizeof (account_t));
+        bank->size = nb_accounts;
+        int i;
+        for (i = 0; i < bank->size; i++) {
+            bank->accounts[i].number = i;
+            bank->accounts[i].balance = 0;
+        }
+    }
+
+    ONCE
+    {
+        PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\tBank total (before): %d\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+                total(bank, 0));
+    }
+
+    
     /* Wait on barrier */
     BARRIER
-    
-   // PRINT("chk %d", chk++); //0
 
-            
+    // PRINT("chk %d", chk++); //0
+
+
     FOR(duration) {
-       // PRINT("chk %d", chk++);
+        // PRINT("chk %d", chk++);
         if (d->id < d->read_cores) {
             /* Read all */
-            total(d->bank, 1);
+            total(bank, 1);
             d->nb_read_all++;
         }
         else if (d->id < d->read_cores + d->write_cores) {
             /* Write all */
-            reset(d->bank);
+            reset(bank);
             d->nb_write_all++;
         }
         else {
             nb = (int) (rand_range(100) - 1);
             if (nb < d->read_all) {
                 /* Read all */
-                total(d->bank, 1);
+                total(bank, 1);
                 d->nb_read_all++;
             }
             else if (nb < d->read_all + d->write_all) {
                 /* Write all */
-                reset(d->bank);
+                reset(bank);
                 d->nb_write_all++;
             }
             else {
@@ -246,15 +266,15 @@ void test(void *data, double duration) {
                 assert(dst >= 0);
                 if (dst == src)
                     dst = ((src + 1) % rand_max) + rand_min;
-                //printf("Transfering: [%5d] (%d) to [%5d] (%d) | ", src, d->bank->accounts[src].balance, dst, d->bank->accounts[dst].balance);
-                transfer(&d->bank->accounts[src], &d->bank->accounts[dst], 1);
-                //printf("After: [%5d] (%d) - [%5d] (%d)\n", src, d->bank->accounts[src].balance, dst, d->bank->accounts[dst].balance);
+                //printf("Transfering: [%5d] (%d) to [%5d] (%d) | ", src, bank->accounts[src].balance, dst, bank->accounts[dst].balance);
+                transfer(&bank->accounts[src], &bank->accounts[dst], 1);
+                //printf("After: [%5d] (%d) - [%5d] (%d)\n", src, bank->accounts[src].balance, dst, bank->accounts[dst].balance);
                 d->nb_transfer++;
             }
         }
     }
 
-    //reset(d->bank);
+    //reset(bank);
 
     BARRIER
     /* Free transaction */
@@ -308,7 +328,11 @@ TASKMAIN(int argc, char **argv) {
 
     double duration = DEFAULT_DURATION;
     int nb_accounts = DEFAULT_NB_ACCOUNTS;
+#ifdef DSL
     int nb_app_cores = RCCE_num_ues() / 2;
+#else
+    int nb_app_cores = RCCE_num_ues();
+#endif
     int read_all = DEFAULT_READ_ALL;
     int read_cores = DEFAULT_READ_THREADS;
     int write_all = DEFAULT_WRITE_ALL;
@@ -417,24 +441,14 @@ TASKMAIN(int argc, char **argv) {
         exit(1);
     }
 
-    bank = (bank_t *) RCCE_shmalloc(sizeof (bank_t));
-    ONCE
-    {
-        bank->accounts = (account_t *) RCCE_shmalloc(nb_accounts * sizeof (account_t));
-        bank->size = nb_accounts;
-        for (i = 0; i < bank->size; i++) {
-            bank->accounts[i].number = i;
-            bank->accounts[i].balance = 0;
-        }
-    }
 
     /* Init STM */
     BARRIERW
 
 #ifdef DSL
-    data->id = (RCCE_ue() - 1) / 2;
+            data->id = (RCCE_ue() - 1) / 2;
 #else
-    data->id = RCCE_ue();
+            data->id = RCCE_ue();
 #endif
     data->read_all = read_all;
     data->read_cores = read_cores;
@@ -458,15 +472,8 @@ TASKMAIN(int argc, char **argv) {
     data->locked_reads_ok = 0;
     data->locked_reads_failed = 0;
     data->max_retries = 0;
-    data->bank = bank;
-
-    ONCE
-    {
-        PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\tBank total (before): %d\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
-                total(data->bank, 0));
-    }
-
-    test(data, duration);
+    
+    test(data, duration, nb_accounts);
 
     printf("Core %d\n", RCCE_ue());
     printf("  #transfer   : %lu\n", data->nb_transfer);
