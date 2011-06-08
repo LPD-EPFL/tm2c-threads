@@ -422,6 +422,13 @@ TASKMAIN(int argc, char **argv) {
     
     test(data, duration);
             
+    printf("Core %d\n", RCCE_ue());
+    printf("  #transfer   : %lu\n", data->nb_transfer);
+    printf("  #read-all   : %lu\n", data->nb_read_all);
+    printf("  #write-all  : %lu\n", data->nb_write_all);
+    printf("  #aborts     : %lu\n", data->nb_aborts);
+    FLUSH
+            
     ONCE {
         PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\tBank total (after): %d\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n", 
                 total(data->bank, 0));
