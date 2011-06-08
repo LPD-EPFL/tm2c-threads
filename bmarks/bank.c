@@ -252,6 +252,8 @@ void test(void *data, double duration) {
 }
 
 TASKMAIN(int argc, char **argv) {
+    dup2(STDOUT_FILENO, STDERR_FILENO);
+
     RCCE_init(&argc, &argv);
     iRCCE_init();
 
