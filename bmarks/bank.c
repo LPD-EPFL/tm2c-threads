@@ -306,6 +306,9 @@ TASKMAIN(int argc, char **argv) {
     int write_cores = DEFAULT_WRITE_THREADS;
     int disjoint = DEFAULT_DISJOINT;
 
+    int chk = 0;
+    PRINT("chk %d", chk++);
+
     while (1) {
         i = 0;
         c = getopt_long(argc, argv, "ha:d:r:R:w:W:j", long_options, &i);
@@ -379,11 +382,15 @@ TASKMAIN(int argc, char **argv) {
         }
     }
 
+    PRINT("chk %d", chk++);
+
     assert(duration >= 0);
     assert(nb_accounts >= 2);
     assert(nb_app_cores > 0);
     assert(read_all >= 0 && write_all >= 0 && read_all + write_all <= 100);
     assert(read_cores + write_cores <= nb_app_cores);
+
+    PRINT("chk %d", chk++);
 
     ONCE
     {
@@ -400,10 +407,15 @@ TASKMAIN(int argc, char **argv) {
                 (int) sizeof (void *)
                 );
     }
+
+    PRINT("chk %d", chk++);
+
     if ((data = (thread_data_t *) malloc(sizeof (thread_data_t))) == NULL) {
         perror("malloc");
         exit(1);
     }
+
+    PRINT("chk %d", chk++);
 
     bank = (bank_t *) RCCE_shmalloc(sizeof (bank_t));
     ONCE
@@ -416,10 +428,13 @@ TASKMAIN(int argc, char **argv) {
         }
     }
 
+    PRINT("chk %d", chk++);
     /* Init STM */
     BARRIERW
 
-    data->id = i;
+    PRINT("chk %d", chk++);
+
+    data->id = RCCE_ue() / 2;
     data->read_all = read_all;
     data->read_cores = read_cores;
     data->write_all = write_all;
