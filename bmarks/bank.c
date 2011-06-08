@@ -229,7 +229,9 @@ void test(void *data, double duration) {
             else {
                 /* Choose random accounts */
                 src = (int) (rand_range(rand_max + 1) - 1) + rand_min;
+                assert(src < rand_max && src >= 0);
                 dst = (int) (rand_range(rand_max + 1) - 1) + rand_min;
+                assert(dst < rand_max && dst >= 0);
                 if (dst == src)
                     dst = ((src + 1) % rand_max) + rand_min;
                 transfer(&d->bank->accounts[src], &d->bank->accounts[dst], 1);
