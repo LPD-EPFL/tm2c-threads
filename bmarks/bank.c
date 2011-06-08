@@ -274,7 +274,7 @@ TASKMAIN(int argc, char **argv) {
     int i, c;
     thread_data_t *data;
 
-    int duration = DEFAULT_DURATION;
+    double duration = DEFAULT_DURATION;
     int nb_accounts = DEFAULT_NB_ACCOUNTS;
     int nb_app_cores = RCCE_num_ues();
     int read_all = DEFAULT_READ_ALL;
@@ -327,7 +327,7 @@ TASKMAIN(int argc, char **argv) {
                 nb_accounts = atoi(optarg);
                 break;
             case 'd':
-                duration = atoi(optarg);
+                duration = atof(optarg);
                 break;
             case 'r':
                 read_all = atoi(optarg);
