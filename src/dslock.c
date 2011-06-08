@@ -90,6 +90,7 @@ static void dsl_communication() {
         if (send_current != NULL) {
             free(send_current->privbuf);
             free(send_current);
+            continue;
         }
         //test if any send or recv completed
         iRCCE_test_any(&waitlist, NULL, &recv_current);
