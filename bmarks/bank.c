@@ -75,7 +75,7 @@ int transfer(account_t *src, account_t *dst, int amount) {
     TX_STORE(&src->balance, &i, TYPE_INT); //NEED TX_STOREI
     j = (int) TX_LOAD(&dst->balance);
     j += amount;
-    TX_STORE(&dst->balance, &i, TYPE_INT);
+    TX_STORE(&dst->balance, &j, TYPE_INT);
     TX_COMMIT
 
     return amount;
@@ -238,7 +238,7 @@ void test(void *data, double duration) {
         }
     }
     
-    reset(d->bank);
+    //reset(d->bank);
 
     BARRIER
     /* Free transaction */
