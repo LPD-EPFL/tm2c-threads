@@ -310,7 +310,7 @@ TASKMAIN(int argc, char **argv) {
                         "        Print this message\n"
                         "  -a, --accounts <int>\n"
                         "        Number of accounts in the bank (default=" XSTR(DEFAULT_NB_ACCOUNTS) ")\n"
-                        "  -d, --duration <int>\n"
+                        "  -d, --duration <double>\n"
                         "        Test duration in milliseconds (0=infinite, default=" XSTR(DEFAULT_DURATION) ")\n"
                         "  -r, --read-all-rate <int>\n"
                         "        Percentage of read-all transactions (default=" XSTR(DEFAULT_READ_ALL) ")\n"
@@ -365,7 +365,7 @@ TASKMAIN(int argc, char **argv) {
     ONCE
     {
         PRINTN("Nb accounts    : %d\n", nb_accounts);
-        PRINTN("Duration       : %d\n", duration);
+        PRINTN("Duration       : %f\n", duration);
         PRINTN("Nb threads     : %d\n", nb_app_cores);
         PRINTN("Read-all rate  : %d\n", read_all);
         PRINTN("Read threads   : %d\n", read_cores);
