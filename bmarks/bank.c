@@ -180,7 +180,7 @@ typedef struct thread_data {
     char padding[64];
 } thread_data_t;
 
-void test(void *data, double duration, int nb_accounts) {
+bank_t * test(void *data, double duration, int nb_accounts) {
     int src, dst, nb;
     int rand_max, rand_min;
     thread_data_t *d = (thread_data_t *) data;
@@ -196,7 +196,7 @@ void test(void *data, double duration, int nb_accounts) {
         rand_min = rand_max * d->id;
         if (rand_max <= 2) {
             fprintf(stderr, "can't have disjoint account accesses");
-            return;
+            return NULL;
         }
     }
     else {
@@ -292,7 +292,7 @@ void test(void *data, double duration, int nb_accounts) {
     /* Free transaction */
     TM_END_STATS
 
-    return;
+    return bank;
 }
 
 void catch_function(int signal) {
@@ -485,7 +485,7 @@ TASKMAIN(int argc, char **argv) {
     data->locked_reads_failed = 0;
     data->max_retries = 0;
     
-    test(data, duration, nb_accounts);
+    bank = test(data, duration, nb_accounts);
 
     printf("Core %d\n", RCCE_ue());
     printf("  #transfer   : %lu\n", data->nb_transfer);
