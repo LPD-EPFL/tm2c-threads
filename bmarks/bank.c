@@ -243,30 +243,35 @@ bank_t * test(void *data, double duration, int nb_accounts) {
 
 
     FOR(duration) {
-        // PRINT("chk %d", chk++);
+        PRINT("chk1 %d", chk++);
         if (d->id < d->read_cores) {
             /* Read all */
             total(bank, 1);
             d->nb_read_all++;
         }
         else if (d->id < d->read_cores + d->write_cores) {
+            PRINT("chk2 %d", chk++);
             /* Write all */
             reset(bank);
             d->nb_write_all++;
         }
         else {
+            PRINT("chk3 %d", chk++);
             nb = (int) (rand_range(100) - 1);
             if (nb < d->read_all) {
+                PRINT("chk4 %d", chk++);
                 /* Read all */
                 total(bank, 1);
                 d->nb_read_all++;
             }
             else if (nb < d->read_all + d->write_all) {
+                PRINT("chk5 %d", chk++);
                 /* Write all */
                 reset(bank);
                 d->nb_write_all++;
             }
             else {
+                PRINT("chk6 %d", chk++);
                 /* Choose random accounts */
                 src = (int) (rand_range(rand_max) - 1) + rand_min;
                 assert(src < (rand_max + rand_min));
