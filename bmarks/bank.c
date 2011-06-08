@@ -418,7 +418,7 @@ TASKMAIN(int argc, char **argv) {
     test(data, duration);
             
     ONCE {
-        PRINTF("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\tBank total: %d\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n", 
+        PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\tBank total: %d\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n", 
                 total(data->bank, 0));
     }
 
@@ -429,6 +429,6 @@ TASKMAIN(int argc, char **argv) {
 
     free(data);
 
-    return 0;
+    EXIT(0);
 }
 
