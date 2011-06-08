@@ -142,8 +142,8 @@ static inline void ps_send(unsigned short int target, PS_COMMAND_TYPE command, u
 
     memcpy(data, psc, sizeof (PS_COMMAND));
     if (iRCCE_isend(data, 32, target, s) != iRCCE_SUCCESS) {
-
-        iRCCE_add_to_wait_list(&sendlist, s, NULL);
+        iRCCE_add_send_to_wait_list(&sendlist, s);
+        //iRCCE_add_to_wait_list(&sendlist, s, NULL);
     }
     else {
         free(s);
