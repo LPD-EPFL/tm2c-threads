@@ -69,6 +69,8 @@ typedef struct bank {
 } bank_t;
 
 int transfer(account_t *src, account_t *dst, int amount) {
+    PRINT("in transfer");
+    
     int i, j;
 
     /* Allow overdrafts */
@@ -288,7 +290,7 @@ bank_t * test(void *data, double duration, int nb_accounts) {
                 if (dst == src)
                     dst = ((src + 1) % rand_max) + rand_min;
                 PRINT("chk6g %d (src %d, dst: %d)", chk++, src, dst);
-                PRINTN("Transfering: [%5d] (%d) to [%5d] (%d) | ", src, bank->accounts[src].balance, dst, bank->accounts[dst].balance);
+                //PRINTN("Transfering: [%5d] (%d) to [%5d] (%d) | ", src, bank->accounts[src].balance, dst, bank->accounts[dst].balance);
 /*
                 PRINT("Transfering: [%5d] (%d) to [%5d] (%d)", src, bank->accounts[src].balance, dst, bank->accounts[dst].balance);
 */
