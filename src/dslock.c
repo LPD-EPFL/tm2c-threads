@@ -70,7 +70,7 @@ void dsl_init(void) {
     for (i = 0; i < NUM_UES; i++) {
         if (i % DSLNDPERNODES) { /*only for non DSL cores*/
             iRCCE_irecv(buf + i * 32, 32, i, &recv_requests[i]);
-            iRCCE_add_to_wait_list(&waitlist, NULL, &recv_requests[i]);
+            iRCCE_add_recv_to_wait_list(&waitlist, &recv_requests[i]);
         }
     }
 
@@ -117,7 +117,7 @@ static void dsl_communication() {
 
             // Create request for new message from this core, add to waitlist
             iRCCE_irecv(base, PS_BUFFER_SIZE, sender, &recv_requests[sender]);
-            iRCCE_add_to_wait_list(&waitlist, NULL, &recv_requests[sender]);
+            iRCCE_add_recv_to_wait_list(&waitlist, &recv_requests[sender]);
 
         }
     }
