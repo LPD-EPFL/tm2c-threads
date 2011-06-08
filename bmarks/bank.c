@@ -420,7 +420,7 @@ TASKMAIN(int argc, char **argv) {
     assert(read_all >= 0 && write_all >= 0 && read_all + write_all <= 100);
     assert(read_cores + write_cores <= nb_app_cores);
 
-    ONCE
+    //ONCE
     {
         PRINTN("Nb accounts    : %d\n", nb_accounts);
         PRINTN("Duration       : %f\n", duration);
