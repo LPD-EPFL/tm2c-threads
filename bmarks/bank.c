@@ -230,9 +230,11 @@ void test(void *data, double duration) {
             else {
                 /* Choose random accounts */
                 src = (int) (rand_range(rand_max + 1) - 1) + rand_min;
-                assert(src < rand_max && src >= 0);
+                assert(src < rand_max);
+                assert(src >= 0);
                 dst = (int) (rand_range(rand_max + 1) - 1) + rand_min;
-                assert(dst < rand_max && dst >= 0);
+                assert(dst < rand_max);
+                assert(dst >= 0);
                 if (dst == src)
                     dst = ((src + 1) % rand_max) + rand_min;
                 printf("Transfering: [%5d] (%d) to [%5d] (%d) | ", src, d->bank->accounts[src].balance, dst, d->bank->accounts[dst].balance);
