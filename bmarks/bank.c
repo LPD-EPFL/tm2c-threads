@@ -320,7 +320,7 @@ inline void assign_abort_sig_handler() {
 
 TASKMAIN(int argc, char **argv) {
     dup2(STDOUT_FILENO, STDERR_FILENO);
-    assign_abort_sig_handler();
+    //assign_abort_sig_handler();
 
     RCCE_init(&argc, &argv);
     iRCCE_init();
