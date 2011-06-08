@@ -24,6 +24,7 @@
 #include <assert.h>
 #include <getopt.h>
 #include <limits.h>
+#include <signal.h>
 
 /*
  * Useful macros to work with transactions. Note that, to use nested
@@ -251,6 +252,11 @@ void test(void *data, double duration) {
     return;
 }
 
+void catch_function(int signal) {
+    PRINT("SIGABRT");
+    EXIT(1);
+}
+
 inline void assign_abort_sig_handler() {
     struct sigaction action;
     action.sa_handler = catch_function;
@@ -261,11 +267,6 @@ inline void assign_abort_sig_handler() {
         //TODO: cleanup
         EXIT(-1);
     }
-}
-
-void catch_function(int signal) {
-    PRINT("SIGABRT");
-    EXIT(1);
 }
 
 TASKMAIN(int argc, char **argv) {
