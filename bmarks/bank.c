@@ -209,11 +209,11 @@ void test(void *data, double duration) {
     /* Wait on barrier */
     BARRIER
     
-    PRINT("chk %d", chk++); //0
+   // PRINT("chk %d", chk++); //0
 
             
     FOR(duration) {
-        PRINT("chk %d", chk++);
+       // PRINT("chk %d", chk++);
         if (d->id < d->read_cores) {
             /* Read all */
             total(d->bank, 1);
