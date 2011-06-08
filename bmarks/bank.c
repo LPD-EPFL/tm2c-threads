@@ -237,6 +237,8 @@ void test(void *data, double duration) {
             }
         }
     }
+    
+    reset(d->bank);
 
     BARRIER
     /* Free transaction */
