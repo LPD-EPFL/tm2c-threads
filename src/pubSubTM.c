@@ -8,9 +8,6 @@
 
 #include "../include/common.h"
 #include "../include/pubSubTM.h"
-#include <stdio.h> //TODO: clean the includes
-#include <unistd.h>
-#include <math.h>
 
 #define SENDLIST
 
@@ -28,8 +25,8 @@ PS_COMMAND *psc;
 
 int subscribing_address;
 
-static void ps_sendb(unsigned short int target, PS_COMMAND_TYPE operation, unsigned int address, CONFLICT_TYPE response);
-static void ps_recvb(unsigned short int from);
+static inline void ps_sendb(unsigned short int target, PS_COMMAND_TYPE operation, unsigned int address, CONFLICT_TYPE response);
+static inline void ps_recvb(unsigned short int from);
 
 inline BOOLEAN shmem_init_start_address();
 inline void unsubscribe(int nodeId, int shmem_address);
@@ -68,7 +65,7 @@ void ps_init_(void) {
     PRINT("[APP NODE] Initialized pub-sub..");
 }
 
-static void ps_sendb(unsigned short int target, PS_COMMAND_TYPE command, unsigned int address, CONFLICT_TYPE response) {
+static inline void ps_sendb(unsigned short int target, PS_COMMAND_TYPE command, unsigned int address, CONFLICT_TYPE response) {
 
     psc->type = command;
     psc->address = address;
@@ -80,7 +77,7 @@ static void ps_sendb(unsigned short int target, PS_COMMAND_TYPE command, unsigne
     iRCCE_isend(data, PS_BUFFER_SIZE, target, NULL);
 }
 
-static void ps_recvb(unsigned short int from) {
+static inline void ps_recvb(unsigned short int from) {
     char data[PS_BUFFER_SIZE];
     iRCCE_irecv(data, PS_BUFFER_SIZE, from, NULL);
     PS_COMMAND * cmd = (PS_COMMAND *) data;
