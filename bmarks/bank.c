@@ -503,7 +503,7 @@ TASKMAIN(int argc, char **argv) {
     ONCE
     {
         PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\tBank total (after): %d\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
-                total(data->bank, 0));
+                total(bank, 0));
     }
 
     /* Delete bank and accounts */
