@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
         if (start == NULL) {
             PRINTD("shmalloc shmem_init_start_address");
         }
-        shmem_start_address = (SHMEM_START_ADDRESS) start;
+        shmem_start_address = (unsigned int) start;
         RCCE_shfree((volatile unsigned char *) start);
     }
 
