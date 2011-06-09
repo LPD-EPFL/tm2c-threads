@@ -16,7 +16,7 @@ typedef struct account {
 } account_t;
 
 typedef struct bank {
-    account_t *accounts;
+    volatile account_t *accounts;
     int size;
 } bank_t;
 
@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
             RCCE_shfree((volatile unsigned char *) start);
         }
 
-        bank_t * bank = (bank_t *) RCCE_shmalloc(sizeof (bank_t));
+        volatile bank_t * bank = (bank_t *) RCCE_shmalloc(sizeof (bank_t));
         if (bank == NULL) {
             PRINTD("bank null");
             exit(1);
