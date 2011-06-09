@@ -36,13 +36,13 @@ int main(int argc, char **argv) {
             RCCE_shfree((volatile unsigned char *) start);
         }
 
-        volatile bank_t * bank = (bank_t *) RCCE_shmalloc(sizeof (bank_t));
+        volatile bank_t * bank = (volatile bank_t *) RCCE_shmalloc(sizeof (bank_t));
         if (bank == NULL) {
             PRINTD("bank null");
             exit(1);
         }
 
-        bank->accounts = (account_t *) RCCE_shmalloc(NBACC * sizeof (account_t));
+        bank->accounts = (volatile account_t *) RCCE_shmalloc(NBACC * sizeof (account_t));
         if (bank->accounts == NULL) {
             PRINTD("bank->accounts null");
             exit(1);
