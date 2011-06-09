@@ -3,6 +3,7 @@
 #include "stddef.h"
 #include "../include/iRCCE.h"
 
+#define ME              printf("[%02d]", RCCE_ue());
 #define PRINTD(args...) ME; printf(args); printf("\n"); fflush(stdout)
 
 #define NBACC 100
@@ -30,7 +31,6 @@ int main(int argc, char **argv) {
         }
         shmem_start_address = (SHMEM_START_ADDRESS) start;
         RCCE_shfree((volatile unsigned char *) start);
-        return TRUE;
     }
 
     bank_t * bank = (bank_t *) RCCE_shmalloc(sizeof(bank_t));
