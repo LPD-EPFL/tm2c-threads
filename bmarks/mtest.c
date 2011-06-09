@@ -103,9 +103,7 @@ int main(int argc, char **argv) {
             else {
                 int total = 0;
                 for (i = 0; i < bank->size; i++) {
-                    /*
                                         total += 
-                     */
                     bank->accounts[i].balance;
                 }
                 PRINTD("-- Total: %d", total);
