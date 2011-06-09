@@ -24,59 +24,66 @@ int main(int argc, char **argv) {
     RCCE_init(&argc, &argv);
     iRCCE_init();
 
-    unsigned int shmem_start_address;
+    if (RCCE_ue() % 2 == 1) {
+        unsigned int shmem_start_address;
 
-    if (!shmem_start_address) {
-        char *start = (char *) RCCE_shmalloc(sizeof (char));
-        if (start == NULL) {
-            PRINTD("shmalloc shmem_init_start_address");
+        if (!shmem_start_address) {
+            char *start = (char *) RCCE_shmalloc(sizeof (char));
+            if (start == NULL) {
+                PRINTD("shmalloc shmem_init_start_address");
+            }
+            shmem_start_address = (unsigned int) start;
+            RCCE_shfree((volatile unsigned char *) start);
         }
-        shmem_start_address = (unsigned int) start;
-        RCCE_shfree((volatile unsigned char *) start);
-    }
 
-    bank_t * bank = (bank_t *) RCCE_shmalloc(sizeof (bank_t));
-    if (bank == NULL) {
-        PRINTD("bank null");
-        exit(1);
-    }
+        bank_t * bank = (bank_t *) RCCE_shmalloc(sizeof (bank_t));
+        if (bank == NULL) {
+            PRINTD("bank null");
+            exit(1);
+        }
 
-    bank->accounts = (account_t *) RCCE_shmalloc(NBACC * sizeof (account_t));
-    if (bank->accounts == NULL) {
-        PRINTD("bank->accounts null");
-        exit(1);
-    }
+        bank->accounts = (account_t *) RCCE_shmalloc(NBACC * sizeof (account_t));
+        if (bank->accounts == NULL) {
+            PRINTD("bank->accounts null");
+            exit(1);
+        }
 
-    PRINTD("bank->accounts - bank = %d", *(int *) &bank->accounts - *(int *) &bank);
-    
-    ONCE
-    {
-        PRINTD("setting bank->size %d", NBACC);
-        bank->size = NBACC;
+        PRINTD("bank->accounts - bank = %d", *(int *) &bank->accounts - *(int *) &bank);
+
+        ONCE
+        {
+            PRINTD("setting bank->size %d", NBACC);
+            bank->size = NBACC;
+            int i;
+            for (i = 0; i < bank->size; i++) {
+                bank->accounts[i].number = i;
+                bank->accounts[i].balance = 0;
+            }
+        }
+
+
+
+        BARRIER
+
+        PRINTD("bank->size = %d", bank->size);
         int i;
-        for (i = 0; i < bank->size; i++) {
-            bank->accounts[i].number = i;
-            bank->accounts[i].balance = 0;
+        if (RCCE_ue()) {
+            for (i = 0; i < bank->size; i++);
         }
+        else {
+            for (i = 0; i < bank->size; i++);
+        }
+
+        BARRIER
+
+        RCCE_shfree((t_vcharp) bank->accounts);
+        RCCE_shfree((t_vcharp) bank);
     }
     
+    BARRIER;
+    BARRIER;
     
-    
-    BARRIER
-
-    PRINTD("bank->size = %d", bank->size);
-    int i;
-    if (RCCE_ue()) {
-        for (i = 0; i < bank->size; i++);
-    }
-    else {
-        for (i = 0; i < bank->size; i++);
-    }
-
-    BARRIER
-
-    RCCE_shfree((t_vcharp) bank->accounts);
-    RCCE_shfree((t_vcharp) bank);
     RCCE_finalize();
     return 0;
+}
 }
