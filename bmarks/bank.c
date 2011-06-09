@@ -264,7 +264,7 @@ bank_t * test(void *data, double duration, int nb_accounts) {
     FOR(duration) {
         if (d->id < d->read_cores) {
             /* Read all */
-            PRINT("READ ALL1");
+          //  PRINT("READ ALL1");
             total(bank, 1);
             d->nb_read_all++;
         }
@@ -276,14 +276,14 @@ bank_t * test(void *data, double duration, int nb_accounts) {
         else {
             nb = (int) (rand_range(100) - 1);
             if (nb < d->read_all) {
-                 PRINT("READ ALL2");
+            //     PRINT("READ ALL2");
                 /* Read all */
                 total(bank, 1);
                 d->nb_read_all++;
             }
             else if (nb < d->read_all + d->write_all) {
                 /* Write all */
-                PRINT("WRITE ALL");
+           //     PRINT("WRITE ALL");
                 reset(bank);
                 d->nb_write_all++;
             }
@@ -297,15 +297,15 @@ bank_t * test(void *data, double duration, int nb_accounts) {
                 assert(dst >= 0);
                 if (dst == src)
                     dst = ((src + 1) % rand_max) + rand_min;
-                PRINTN("before transfer ||");
-                PRINT("before transfer (src %d/%d, dst: %d/%d)", src, dst,
-                        bank->accounts[src].number, bank->accounts[dst].number);
+             //   PRINTN("before transfer ||");
+             //   PRINT("before transfer (src %d/%d, dst: %d/%d)", src, dst,
+                  //      bank->accounts[src].number, bank->accounts[dst].number);
                 //PRINTN("Transfering: [%5d] (%d) to [%5d] (%d) | ", src, bank->accounts[src].balance, dst, bank->accounts[dst].balance);
                 /*
                                 PRINT("Transfering: [%5d] (%d) to [%5d] (%d)", src, bank->accounts[src].balance, dst, bank->accounts[dst].balance);
                  */
                 transfer(&bank->accounts[src], &bank->accounts[dst], 1);
-                PRINT("after transfer (src %d, dst: %d)", src, dst);
+            //    PRINT("after transfer (src %d, dst: %d)", src, dst);
                 //PRINTN("After: [%5d] (%d) - [%5d] (%d)\n", src, bank->accounts[src].balance, dst, bank->accounts[dst].balance);
                 d->nb_transfer++;
             }
