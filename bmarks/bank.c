@@ -236,6 +236,7 @@ bank_t * test(void *data, double duration, int nb_accounts) {
     
     ONCE
     {
+        PRINT("initalizing balances to 0");
         bank->size = nb_accounts;
         int i;
         for (i = 0; i < bank->size; i++) {
