@@ -25,6 +25,7 @@ int main(int argc, char **argv) {
     iRCCE_init();
 
     if (RCCE_ue() % 2 == 1) {
+/*
         unsigned int shmem_start_address;
 
         if (!shmem_start_address) {
@@ -35,6 +36,7 @@ int main(int argc, char **argv) {
             shmem_start_address = (unsigned int) start;
             RCCE_shfree((volatile unsigned char *) start);
         }
+*/
 
         volatile bank_t * bank = (volatile bank_t *) RCCE_shmalloc(sizeof (bank_t));
         if (bank == NULL) {
