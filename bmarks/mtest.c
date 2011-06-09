@@ -86,7 +86,7 @@ int main(int argc, char **argv) {
         BARRIER
         
         int i = 0;
-        PRINTD("bank->accounts[%d].balance = %d", i, bank->accounts[i]->balance);
+        PRINTD("bank->accounts[%d].balance = %d", i, bank->accounts[i].balance);
 
 /*
         PRINTD("bank->size = %d", bank->size);
@@ -102,7 +102,7 @@ int main(int argc, char **argv) {
             }
             else {
                 int total = 0;
-                for (i = 0; i < bank->size; i++) {
+                for (i = 0; i < bank->size; i++) {      
                                         total += 
                     bank->accounts[i].balance;
                 }
