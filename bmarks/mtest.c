@@ -54,21 +54,27 @@ int main(int argc, char **argv) {
             exit(1);
         }
 
-        PRINTD("[start addr: %p] bank->accounts (%p : %d) - bank(%p : %d) = %d", (void *) shmem_start_address,
-                bank->accounts, AO(bank->accounts), bank, AO(bank), AO(bank->accounts) - AO(bank));
 
         BARRIER
 
         ONCE
         {
-            PRINTD("setting bank->size %d", NBACC);
             bank->size = NBACC;
+            PRINTD("set bank->size %d", NBACC);
             int i;
             for (i = 0; i < bank->size; i++) {
                 bank->accounts[i].number = i;
                 bank->accounts[i].balance = 542;
             }
         }
+        
+        PRINTD("init balances");
+        
+        BARRIER
+        
+        
+        PRINTD("[start addr: %p] bank->accounts (%p : %d) - bank(%p : %d) = %d", (void *) shmem_start_address,
+                bank->accounts, AO(bank->accounts), bank, AO(bank), AO(bank->accounts) - AO(bank));
 
 /*
         ONCE
