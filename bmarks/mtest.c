@@ -66,10 +66,11 @@ int main(int argc, char **argv) {
             int i;
             for (i = 0; i < bank->size; i++) {
                 bank->accounts[i].number = i;
-                bank->accounts[i].balance = 0;
+                bank->accounts[i].balance = 542;
             }
         }
 
+/*
         ONCE
         {
             int i, total = 0;
@@ -78,11 +79,16 @@ int main(int argc, char **argv) {
             }
             PRINTD("Total: %d", total);
         }
+*/
 
 
 
         BARRIER
+        
+        int i = 0;
+        PRINTD("bank->accounts[%d].balance = %d", i, bank->accounts[i]->balance);
 
+/*
         PRINTD("bank->size = %d", bank->size);
 
         int l = 2;
@@ -105,6 +111,7 @@ int main(int argc, char **argv) {
                 PRINTD("-- Total: %d", total);
             }
         }
+*/
 
         BARRIER
 
