@@ -49,6 +49,7 @@ int main(int argc, char **argv) {
 
     ONCE
     {
+        PRINTD("setting bank->size %d", NBACC);
         bank->size = NBACC;
         int i;
         for (i = 0; i < bank->size; i++) {
