@@ -47,8 +47,8 @@ int main(int argc, char **argv) {
     
     
     
-    RCCE_free((t_vcharp) bank->accounts);
-    RCCE_free((t_vcharp) bank);
+    RCCE_shfree((t_vcharp) bank->accounts);
+    RCCE_shfree((t_vcharp) bank);
     RCCE_finalize();
     return 0;
 }
