@@ -54,6 +54,10 @@ int main(int argc, char **argv) {
             exit(1);
         }
 
+        BARRIER
+
+        PRINTD("(1)[start addr: %p] bank->accounts (%p : %d) - bank(%p : %d) = %d", (void *) shmem_start_address,
+                bank->accounts, AO(bank->accounts), bank, AO(bank), AO(bank->accounts) - AO(bank));
 
         BARRIER
 
@@ -66,57 +70,57 @@ int main(int argc, char **argv) {
                 bank->accounts[i].number = i;
                 bank->accounts[i].balance = 542;
             }
-                    PRINTD("init balances");
+            PRINTD("init balances");
 
         }
-        
-        
+
+
         BARRIER
-        
-        
-        PRINTD("[start addr: %p] bank->accounts (%p : %d) - bank(%p : %d) = %d", (void *) shmem_start_address,
+
+
+        PRINTD("(2)[start addr: %p] bank->accounts (%p : %d) - bank(%p : %d) = %d", (void *) shmem_start_address,
                 bank->accounts, AO(bank->accounts), bank, AO(bank), AO(bank->accounts) - AO(bank));
 
-/*
-        ONCE
-        {
-            int i, total = 0;
-            for (i = 0; i < bank->size; i++) {
-                total += bank->accounts[i].balance;
-            }
-            PRINTD("Total: %d", total);
-        }
-*/
+        /*
+                ONCE
+                {
+                    int i, total = 0;
+                    for (i = 0; i < bank->size; i++) {
+                        total += bank->accounts[i].balance;
+                    }
+                    PRINTD("Total: %d", total);
+                }
+         */
 
 
 
         BARRIER
-        
-        int index = 0;
+
+                int index = 0;
         PRINTD("bank->size = %d | bank->accounts[%d].balance = %d", bank->size, index, bank->accounts[index].balance);
 
-/*
-        PRINTD("bank->size = %d", bank->size);
+        /*
+                PRINTD("bank->size = %d", bank->size);
 
-        int l = 2;
-        while (l--) {
-            PRINTD("round %2d", l);
-            int i;
-            if (RCCE_ue() == 1) {
-                for (i = 0; i < bank->size; i++) {
-                    bank->accounts[i].balance = i;
+                int l = 2;
+                while (l--) {
+                    PRINTD("round %2d", l);
+                    int i;
+                    if (RCCE_ue() == 1) {
+                        for (i = 0; i < bank->size; i++) {
+                            bank->accounts[i].balance = i;
+                        }
+                    }
+                    else {
+                        int total = 0;
+                        for (i = 0; i < bank->size; i++) {      
+                                                total += 
+                            bank->accounts[i].balance;
+                        }
+                        PRINTD("-- Total: %d", total);
+                    }
                 }
-            }
-            else {
-                int total = 0;
-                for (i = 0; i < bank->size; i++) {      
-                                        total += 
-                    bank->accounts[i].balance;
-                }
-                PRINTD("-- Total: %d", total);
-            }
-        }
-*/
+         */
 
         BARRIER
 
