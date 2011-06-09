@@ -3,9 +3,10 @@
 #include "stddef.h"
 #include "../include/iRCCE.h"
 
-#define ME              printf("[%02d]", RCCE_ue());
+#define ME              printf("[%02d] ", RCCE_ue());
 #define PRINTD(args...) ME; printf(args); printf("\n"); fflush(stdout)
-#define BARRIER RCCE_barrier(&RCCE_COMM_WORLD);
+#define BARRIER         RCCE_barrier(&RCCE_COMM_WORLD);
+#define ONCE            if (RCCE_ue() == 1)
 
 #define NBACC 100
 
@@ -46,12 +47,19 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    bank->size = NBACC;
-    
+    ONCE
+    {
+        bank->size = NBACC;
+        int i;
+        for (i = 0; i < bank->size; i++) {
+            bank->accounts[i].number = i;
+            bank->accounts[i].balance = 0;
+        }
+    }
     BARRIER
 
-    PRINTD("bank->size = %d", bank->size); //
-            int i;
+    PRINTD("bank->size = %d", bank->size);
+    int i;
     if (RCCE_ue()) {
         for (i = 0; i < bank->size; i++);
     }
