@@ -48,8 +48,8 @@ int chk = 0; //TODO: remove
 #define FOR(seconds)                    double starting__ = RCCE_wtime(), duration__;\
                                             while ((duration__ =\
                                             (RCCE_wtime() - starting__)) < (seconds))
-#define ONCE                            if (RCCE_ue() == 1)
-#define                                 CAST_VOIDP(addr) ((void *) (addr))
+#define ONCE                            if (RCCE_ue() == 1 || RCCE_num_ues() == 1)
+#define CAST_VOIDP(addr)                ((void *) (addr))
 
 
 /* ################################################################### *
