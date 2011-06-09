@@ -254,6 +254,7 @@ bank_t * test(void *data, double duration, int nb_accounts) {
     FOR(duration) {
         if (d->id < d->read_cores) {
             /* Read all */
+            PRINT("READ ALL");
             total(bank, 1);
             d->nb_read_all++;
         }
@@ -265,6 +266,7 @@ bank_t * test(void *data, double duration, int nb_accounts) {
         else {
             nb = (int) (rand_range(100) - 1);
             if (nb < d->read_all) {
+                 PRINT("READ ALL");
                 /* Read all */
                 total(bank, 1);
                 d->nb_read_all++;
