@@ -25,18 +25,18 @@ int main(int argc, char **argv) {
     iRCCE_init();
 
     if (RCCE_ue() % 2 == 1) {
-/*
-        unsigned int shmem_start_address;
+        /*
+                unsigned int shmem_start_address;
 
-        if (!shmem_start_address) {
-            char *start = (char *) RCCE_shmalloc(sizeof (char));
-            if (start == NULL) {
-                PRINTD("shmalloc shmem_init_start_address");
-            }
-            shmem_start_address = (unsigned int) start;
-            RCCE_shfree((volatile unsigned char *) start);
-        }
-*/
+                if (!shmem_start_address) {
+                    char *start = (char *) RCCE_shmalloc(sizeof (char));
+                    if (start == NULL) {
+                        PRINTD("shmalloc shmem_init_start_address");
+                    }
+                    shmem_start_address = (unsigned int) start;
+                    RCCE_shfree((volatile unsigned char *) start);
+                }
+         */
 
         volatile bank_t * bank = (volatile bank_t *) RCCE_shmalloc(sizeof (bank_t));
         if (bank == NULL) {
@@ -50,10 +50,10 @@ int main(int argc, char **argv) {
             exit(1);
         }
 
-        PRINTD("bank->accounts - bank = %d", *(int *) &bank->accounts - *(int *) &bank);
+        PRINTD("&bank->accounts (%p) - &bank(%p) = %d", &bank->accounts, &bank, *(int *) &bank->accounts - *(int *) &bank);
 
         BARRIER
-        
+
         ONCE
         {
             PRINTD("setting bank->size %d", NBACC);
