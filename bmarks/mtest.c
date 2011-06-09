@@ -5,6 +5,7 @@
 
 #define ME              printf("[%02d]", RCCE_ue());
 #define PRINTD(args...) ME; printf(args); printf("\n"); fflush(stdout)
+#define BARRIER RCCE_barrier(&RCCE_COMM_WORLD);
 
 #define NBACC 100
 
@@ -21,9 +22,9 @@ typedef struct bank {
 int main(int argc, char **argv) {
     RCCE_init(&argc, &argv);
     iRCCE_init();
-    
+
     unsigned int shmem_start_address;
-    
+
     if (!shmem_start_address) {
         char *start = (char *) RCCE_shmalloc(sizeof (char));
         if (start == NULL) {
@@ -33,20 +34,32 @@ int main(int argc, char **argv) {
         RCCE_shfree((volatile unsigned char *) start);
     }
 
-    bank_t * bank = (bank_t *) RCCE_shmalloc(sizeof(bank_t));
+    bank_t * bank = (bank_t *) RCCE_shmalloc(sizeof (bank_t));
     if (bank == NULL) {
         PRINTD("bank null");
         exit(1);
     }
-    
-    bank->accounts = (account_t *) RCCE_shmalloc(NBACC * sizeof(account_t));
+
+    bank->accounts = (account_t *) RCCE_shmalloc(NBACC * sizeof (account_t));
     if (bank->accounts == NULL) {
         PRINTD("bank->accounts null");
         exit(1);
     }
+
+    bank->size = NBACC;
     
-    
-    
+    BARRIER
+
+            int i;
+    if (RCCE_ue()) {
+        for (i = 0; i < bank->size; i++);
+    }
+    else {
+        for (i = 0; i < bank->size; i++);
+    }
+
+    BARRIER
+
     RCCE_shfree((t_vcharp) bank->accounts);
     RCCE_shfree((t_vcharp) bank);
     RCCE_finalize();
