@@ -241,6 +241,7 @@ bank_t * test(void *data, double duration, int nb_accounts) {
         PRINT("setting size %d", nb_accounts);
         int i;
         for (i = 0; i < bank->size; i++) {
+            PRINTN("(s %d)", i);
             bank->accounts[i].number = i;
             bank->accounts[i].balance = 0;
         }
