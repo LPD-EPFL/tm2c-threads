@@ -76,11 +76,16 @@ int main(int argc, char **argv) {
 
         PRINTD("bank->size = %d", bank->size);
         int i;
-        if (RCCE_ue()) {
-            for (i = 0; i < bank->size; i++);
+        if (RCCE_ue() == 1) {
+            for (i = 0; i < bank->size; i++) {
+                bank->accounts[i].balance = i;
+            }
         }
         else {
-            for (i = 0; i < bank->size; i++);
+            int total = 0;
+            for (i = 0; i < bank->size; i++) {
+                total += bank->accounts[i].balance;
+            }
         }
 
         BARRIER
