@@ -9,6 +9,7 @@ TMH := $(iRCCEINCLUDE)/../src/pubSubTM.c $(iRCCEINCLUDE)/../src/rwhash.c $(iRCCE
 	$(iRCCEINCLUDE)/hashtable.h $(iRCCEINCLUDE)/rwhash.h $(iRCCEINCLUDE)/log.h
 
 BANKOBJS  := bank.o   $(ARCHIVE)
+MTESTOBJS  := mtest.o   $(ARCHIVE)
 
 .PHONY: all default clean bank
 
@@ -23,6 +24,12 @@ bank: $(BANKOBJS)
 
 bank.o: bank.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h $(TMH)
 	$(CCOMPILE) -c $(CFLAGS) bank.c
+
+mtest: $(MTESTOBJS)
+	$(CCOMPILE) -o mtest $(MTESTOBJS) $(CFLAGS)
+
+mtest.o: bank.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h $(TMH)
+	$(CCOMPILE) -c $(CFLAGS) mtest.c
 
 
 clean:
