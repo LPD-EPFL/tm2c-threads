@@ -47,6 +47,8 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
+    PRINTD("bank->accounts - bank = %d", *(int *) &bank->accounts, *(int *) &bank);
+    
     ONCE
     {
         PRINTD("setting bank->size %d", NBACC);
@@ -57,6 +59,9 @@ int main(int argc, char **argv) {
             bank->accounts[i].balance = 0;
         }
     }
+    
+    
+    
     BARRIER
 
     PRINTD("bank->size = %d", bank->size);
