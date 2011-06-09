@@ -165,46 +165,46 @@ inline void write_entry_persist(write_entry_t *we) {
 inline void write_entry_print(write_entry_t *we) {
     switch (we->datatype) {
         case TYPE_CHAR:
-            PRINTSME("%p : %c", (we->address_shmem), we->c);
+            PRINTSME("[%p :  %c]", (we->address_shmem), we->c);
             break;
         case TYPE_DOUBLE:
-            PRINTSME("%p : %f", (we->address_shmem), we->d);
+            PRINTSME("[%p :  %f]", (we->address_shmem), we->d);
             break;
         case TYPE_FLOAT:
-            PRINTSME("%p : %f", (we->address_shmem), we->f);
+            PRINTSME("[%p :  %f]", (we->address_shmem), we->f);
             break;
         case TYPE_INT:
-            PRINTSME("%p : %d", (we->address_shmem), we->i);
+            PRINTSME("[%p :  %d]", (we->address_shmem), we->i);
             break;
         case TYPE_LONG:
-            PRINTSME("%p : %ld", (we->address_shmem), we->li);
+            PRINTSME("[%p :  %ld]", (we->address_shmem), we->li);
             break;
         case TYPE_LONGLONG:
-            PRINTSME("%p : %lld", (we->address_shmem), we->lli);
+            PRINTSME("[%p :  %lld]", (we->address_shmem), we->lli);
             break;
         case TYPE_SHORT:
-            PRINTSME("%p : %i", (we->address_shmem), we->s);
+            PRINTSME("[%p :  %i]", (we->address_shmem), we->s);
             break;
         case TYPE_UCHAR:
-            PRINTSME("%p : %c", (we->address_shmem), we->uc);
+            PRINTSME("[%p :  %c]", (we->address_shmem), we->uc);
             break;
         case TYPE_UINT:
-            PRINTSME("%p : %u", (we->address_shmem), we->ui);
+            PRINTSME("[%p :  %u]", (we->address_shmem), we->ui);
             break;
         case TYPE_ULONG:
-            PRINTSME("%p : %lu", (we->address_shmem), we->uli);
+            PRINTSME("[%p :  %lu]", (we->address_shmem), we->uli);
             break;
         case TYPE_ULONGLONG:
-            PRINTSME("%p : %llu", (we->address_shmem), we->ulli);
+            PRINTSME("[%p :  %llu]", (we->address_shmem), we->ulli);
             break;
         case TYPE_USHORT:
-            PRINTSME("%p : %us", (we->address_shmem), we->us);
+            PRINTSME("[%p :  %us]", (we->address_shmem), we->us);
             break;
         case TYPE_POINTER:
-            PRINTSME("%p : %p", we->address_shmem, we->p);
+            PRINTSME("[%p :  %p]", we->address_shmem, we->p);
             break;
         default:
-            PRINTSME("%p : %s", (char *) we->address_shmem, (const char *) we->p);
+            PRINTSME("[%p :  %s]", (char *) we->address_shmem, (const char *) we->p);
     }
 }
 
