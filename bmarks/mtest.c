@@ -92,8 +92,8 @@ int main(int argc, char **argv) {
 
         BARRIER
         
-        int i = 0;
-        PRINTD("bank->size = %d | bank->accounts[%d].balance = %d", i, bank->size, bank->accounts[i].balance);
+        int index = 0;
+        PRINTD("bank->size = %d | bank->accounts[%d].balance = %d", index, bank->size, bank->accounts[index].balance);
 
 /*
         PRINTD("bank->size = %d", bank->size);
