@@ -316,7 +316,7 @@ bank_t * test(void *data, double duration, int nb_accounts) {
 
     BARRIER
     /* Free transaction */
-    TM_END
+    TM_END_STATS
 
     return bank;
 }
