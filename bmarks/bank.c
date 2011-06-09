@@ -107,9 +107,9 @@ int total(bank_t *bank, int transactional) {
         TX_START
         total = 0;
         for (i = 0; i < bank->size; i++) {
-            total += (int) TX_LOAD(&bank->accounts[i].balance);
+            total += *(int*) TX_LOAD(&bank->accounts[i].balance);
         }
-        TX_COMMIT;
+        TX_COMMIT
     }
 
     return total;
