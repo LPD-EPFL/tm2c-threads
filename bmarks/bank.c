@@ -461,17 +461,12 @@ TASKMAIN(int argc, char **argv) {
     ONCE
     {
         PRINTN("Nb accounts    : %d\n", nb_accounts);
-        PRINTN("Duration       : %f\n", duration);
-        PRINTN("Nb threads     : %d\n", nb_app_cores);
-        PRINTN("Read-all rate  : %d\n", read_all);
-        PRINTN("Read threads   : %d\n", read_cores);
-        PRINTN("Write-all rate : %d\n", write_all);
-        PRINTN("Write threads  : %d\n", write_cores);
-        PRINTN("Type sizes     : int=%d/long=%d/ptr=%d\n",
-                (int) sizeof (int),
-                (int) sizeof (long),
-                (int) sizeof (void *)
-                );
+        PRINTN("Duration       : %fs\n", duration);
+        PRINTN("Nb cores       : %d\n", nb_app_cores);
+        PRINTN("Read-all rate  : %d%\n", read_all);
+        PRINTN("Read cores     : %d\n", read_cores);
+        PRINTN("Write-all rate : %d%\n", write_all);
+        PRINTN("Write cores    : %d\n", write_cores);
     }
 
     if ((data = (thread_data_t *) malloc(sizeof (thread_data_t))) == NULL) {
@@ -513,11 +508,10 @@ TASKMAIN(int argc, char **argv) {
 
     bank = test(data, duration, nb_accounts);
 
-    printf("Core %d\n", RCCE_ue());
+    printf("---Core %d\n", RCCE_ue());
     printf("  #transfer   : %lu\n", data->nb_transfer);
     printf("  #read-all   : %lu\n", data->nb_read_all);
     printf("  #write-all  : %lu\n", data->nb_write_all);
-    printf("  #aborts     : %lu\n", data->nb_aborts);
     FLUSH
 
     ONCE
