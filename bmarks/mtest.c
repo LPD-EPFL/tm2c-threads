@@ -50,6 +50,7 @@ int main(int argc, char **argv) {
     
     BARRIER
 
+    PRINTD("bank->size = %d", bank->size);
             int i;
     if (RCCE_ue()) {
         for (i = 0; i < bank->size; i++);
