@@ -20,11 +20,11 @@ typedef struct bank {
     int size;
 } bank_t;
 
+unsigned int shmem_start_address;
+
 inline unsigned int shmem_address_offset(void *shmem_address) {
     return ((int) shmem_address) -shmem_start_address;
 }
-
-unsigned int shmem_start_address;
 
 int main(int argc, char **argv) {
     RCCE_init(&argc, &argv);
