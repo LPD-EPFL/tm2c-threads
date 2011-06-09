@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
             exit(1);
         }
 
-        PRINTD("&bank->accounts (%p) - &bank(%p) = %d", &bank->accounts, &bank, (int *) &bank->accounts - (int *) &bank);
+        PRINTD("&bank->accounts (%p) - &bank(%p) = %d", &bank->accounts, &bank, (int *) bank->accounts - (int *) &bank);
 
         BARRIER
 
