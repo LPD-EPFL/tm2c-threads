@@ -52,6 +52,8 @@ int main(int argc, char **argv) {
 
         PRINTD("bank->accounts - bank = %d", *(int *) &bank->accounts - *(int *) &bank);
 
+        BARRIER
+        
         ONCE
         {
             PRINTD("setting bank->size %d", NBACC);
@@ -105,6 +107,7 @@ int main(int argc, char **argv) {
         RCCE_shfree((t_vcharp) bank);
     }
     else {
+        BARRIER
         BARRIER
         BARRIER
     }
