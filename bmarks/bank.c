@@ -35,7 +35,7 @@
 int chk = 0; //TODO: remove
 
 #define DEFAULT_DURATION                10
-#define DEFAULT_NB_ACCOUNTS             100
+#define DEFAULT_NB_ACCOUNTS             1024
 #define DEFAULT_NB_THREADS              1
 #define DEFAULT_READ_ALL                20
 #define DEFAULT_WRITE_ALL               0
