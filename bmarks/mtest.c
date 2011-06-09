@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    PRINTD("bank->accounts - bank = %d", *(int *) &bank->accounts, *(int *) &bank);
+    PRINTD("bank->accounts - bank = %d", *(int *) &bank->accounts - *(int *) &bank);
     
     ONCE
     {
