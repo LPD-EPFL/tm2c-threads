@@ -75,7 +75,9 @@ int transfer(account_t *src, account_t *dst, int amount) {
 
     /* Allow overdrafts */
     TX_START
-    PRINT("in transfer : before load 1 (%d)", CAST_INT((void *) &src->balance));
+    PRINTN("in transfer : bal pointer %p - ", (void *) &src->balance);
+    PRINTSF("before load 1 (%d)", CAST_INT((void *) &src->balance));
+    
     i = *(int *) TX_LOAD(&src->balance);
     PRINT("in transfer : after load 1");
     i -= amount;
