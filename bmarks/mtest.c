@@ -78,6 +78,7 @@ int main(int argc, char **argv) {
 
         int l = 10;
         while (l--) {
+            PRINTD("round %2d", l);
             int i;
             if (RCCE_ue() == 1) {
                 for (i = 0; i < bank->size; i++) {
