@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
         }
 
 
-        bank_t * bank = (bank_t *) RCCE_shmalloc(sizeof (bank_t));
+        bank_t * bank = (bank_t *) malloc(sizeof (bank_t));
         if (bank == NULL) {
             PRINTD("bank null");
             exit(1);
@@ -56,14 +56,18 @@ int main(int argc, char **argv) {
 
         BARRIER
 
-        PRINTD("(1)[start addr: %p] bank->accounts (%p : %d) - bank(%p : %d) = %d", (void *) shmem_start_address,
-                bank->accounts, AO(bank->accounts), bank, AO(bank), AO(bank->accounts) - AO(bank));
+
+        PRINTD("(1)[start addr: %p] bank->accounts (%p : %d)", (void *) shmem_start_address,
+                bank->accounts, AO(bank->accounts));
+
 
         BARRIER
 
+        bank->size = NBACC;
+        
         ONCE
         {
-            bank->size = NBACC;
+            
             PRINTD("set bank->size %d", bank->size);
             int i;
             for (i = 0; i < bank->size; i++) {
@@ -78,8 +82,8 @@ int main(int argc, char **argv) {
         BARRIER
 
 
-        PRINTD("(2)[start addr: %p] bank->accounts (%p : %d) - bank(%p : %d) = %d", (void *) shmem_start_address,
-                bank->accounts, AO(bank->accounts), bank, AO(bank), AO(bank->accounts) - AO(bank));
+        PRINTD("(2)[start addr: %p] bank->accounts (%p : %d)", (void *) shmem_start_address,
+                bank->accounts, AO(bank->accounts));
 
         /*
                 ONCE
@@ -129,7 +133,7 @@ int main(int argc, char **argv) {
         BARRIER
 
         RCCE_shfree((t_vcharp) bank->accounts);
-        RCCE_shfree((t_vcharp) bank);
+        free(bank);
     }
     else {
         BARRIER
