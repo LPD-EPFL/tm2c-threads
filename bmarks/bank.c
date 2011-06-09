@@ -231,7 +231,7 @@ bank_t * test(void *data, double duration, int nb_accounts) {
         EXIT(1);
     }
 
-    PRINT("bank->accounts - bank = %d", CAST_VOIDP(bank->accounts) - CAST_VOIDP(bank));
+    PRINT("bank->accounts - bank = %d", CAST_INT(&bank->accounts) - CAST_INT(&bank));
     
     ONCE
     {
