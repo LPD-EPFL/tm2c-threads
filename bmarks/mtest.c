@@ -54,8 +54,8 @@ int main(int argc, char **argv) {
             exit(1);
         }
 
-        PRINTD("bank->accounts (%p : %d) - bank(%p : %d) = %d", bank->accounts, AO(bank->accounts), bank, AO(bank),  
-            AO(bank->accounts) - AO(bank));
+        PRINTD("[start addr: %p] bank->accounts (%p : %d) - bank(%p : %d) = %d", (void *) shmem_start_address,
+                bank->accounts, AO(bank->accounts), bank, AO(bank), AO(bank->accounts) - AO(bank));
 
         BARRIER
 
@@ -85,7 +85,7 @@ int main(int argc, char **argv) {
 
         PRINTD("bank->size = %d", bank->size);
 
-        int l = 10;
+        int l = 2;
         while (l--) {
             PRINTD("round %2d", l);
             int i;
