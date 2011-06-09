@@ -28,7 +28,7 @@ bank.o: bank.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h $(TMH)
 mtest: $(MTESTOBJS)
 	$(CCOMPILE) -o mtest $(MTESTOBJS) $(CFLAGS)
 
-mtest.o: bank.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h $(TMH)
+mtest.o: mtest.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h $(TMH)
 	$(CCOMPILE) -c $(CFLAGS) mtest.c
 
 
