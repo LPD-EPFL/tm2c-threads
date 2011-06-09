@@ -79,9 +79,10 @@ int main(int argc, char **argv) {
         RCCE_shfree((t_vcharp) bank->accounts);
         RCCE_shfree((t_vcharp) bank);
     }
-
-    BARRIER
-    BARRIER
+    else {
+        BARRIER
+        BARRIER
+    }
 
     RCCE_finalize();
     return 0;
