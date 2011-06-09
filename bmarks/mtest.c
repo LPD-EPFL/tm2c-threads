@@ -16,7 +16,7 @@ typedef struct account {
 } account_t;
 
 typedef struct bank {
-    volatile account_t *accounts;
+    account_t *accounts;
     int size;
 } bank_t;
 
@@ -42,13 +42,13 @@ int main(int argc, char **argv) {
         }
 
 
-        volatile bank_t * bank = (volatile bank_t *) RCCE_shmalloc(sizeof (bank_t));
+        bank_t * bank = (bank_t *) RCCE_shmalloc(sizeof (bank_t));
         if (bank == NULL) {
             PRINTD("bank null");
             exit(1);
         }
 
-        bank->accounts = (volatile account_t *) RCCE_shmalloc(NBACC * sizeof (account_t));
+        bank->accounts = (account_t *) RCCE_shmalloc(NBACC * sizeof (account_t));
         if (bank->accounts == NULL) {
             PRINTD("bank->accounts null");
             exit(1);
@@ -66,9 +66,10 @@ int main(int argc, char **argv) {
                 bank->accounts[i].number = i;
                 bank->accounts[i].balance = 542;
             }
+                    PRINTD("init balances");
+
         }
         
-        PRINTD("init balances");
         
         BARRIER
         
