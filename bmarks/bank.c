@@ -49,6 +49,8 @@ int chk = 0; //TODO: remove
                                             while ((duration__ =\
                                             (RCCE_wtime() - starting__)) < (seconds))
 #define ONCE                            if (RCCE_ue() == 1)
+#define                                 CAST_VOIDP(addr) ((void *) (addr))
+
 
 /* ################################################################### *
  * GLOBALS
