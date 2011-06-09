@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
         ONCE
         {
             bank->size = NBACC;
-            PRINTD("set bank->size %d", NBACC);
+            PRINTD("set bank->size %d", bank->size);
             int i;
             for (i = 0; i < bank->size; i++) {
                 bank->accounts[i].number = i;
