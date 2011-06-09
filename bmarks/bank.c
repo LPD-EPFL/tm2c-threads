@@ -321,26 +321,8 @@ bank_t * test(void *data, double duration, int nb_accounts) {
     return bank;
 }
 
-void catch_function(int signal) {
-    PRINT("SIGABRT");
-    EXIT(1);
-}
-
-inline void assign_abort_sig_handler() {
-    struct sigaction action;
-    action.sa_handler = catch_function;
-    action.sa_flags = 0;
-
-    if (sigaction(SIGABRT, &action, NULL) == -1) {
-        PRINTD("sigaction @ assign_abort_sig_handler");
-        //TODO: cleanup
-        EXIT(-1);
-    }
-}
-
 TASKMAIN(int argc, char **argv) {
     dup2(STDOUT_FILENO, STDERR_FILENO);
-    //assign_abort_sig_handler();
 
     RCCE_init(&argc, &argv);
     iRCCE_init();
