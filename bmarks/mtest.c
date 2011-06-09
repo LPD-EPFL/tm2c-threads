@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
                     /*
                                         total += 
                      */
-                    int jjjj = bank->accounts[i].balance;
+                    bank->accounts[i].balance;
                 }
                 PRINTD("-- Total: %d", total);
             }
