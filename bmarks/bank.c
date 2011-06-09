@@ -71,28 +71,28 @@ typedef struct bank {
 } bank_t;
 
 int transfer(account_t *src, account_t *dst, int amount) {
-    PRINT("in transfer");
+   // PRINT("in transfer");
 
     int i, j;
 
     /* Allow overdrafts */
     TX_START
-    PRINTN("in transfer : bal pointer %p - %d - p", (void *) &src->balance, src->balance);//, (int *) ((void *) &src->balance));
-    PRINTSF("before load 1 (%d)", CAST_INT((void *) &src->balance));
+   // PRINTN("in transfer : bal pointer %p - %d - p", (void *) &src->balance, src->balance);//, (int *) ((void *) &src->balance));
+   // PRINTSF("before load 1 (%d)", CAST_INT((void *) &src->balance));
     
     i = *(int *) TX_LOAD(&src->balance);
-    PRINT("in transfer : after load 1");
+   // PRINT("in transfer : after load 1");
     i -= amount;
     TX_STORE(&src->balance, &i, TYPE_INT); //NEED TX_STOREI
-    PRINT("in transfer : before load 2");
+   // PRINT("in transfer : before load 2");
     j = *(int *) TX_LOAD(&dst->balance);
-    PRINT("in transfer : after load 2");
+   // PRINT("in transfer : after load 2");
     j += amount;
     TX_STORE(&dst->balance, &j, TYPE_INT);
 
-    PRINT("in transfer : before commit");
+   // PRINT("in transfer : before commit");
     TX_COMMIT
-    PRINT("in transfer : after commit");
+   // PRINT("in transfer : after commit");
     return amount;
 }
 
