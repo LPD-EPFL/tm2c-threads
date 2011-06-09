@@ -126,6 +126,7 @@ int main(int argc, char **argv) {
         BARRIER
         BARRIER
         BARRIER
+        BARRIER
     }
 
     RCCE_finalize();
