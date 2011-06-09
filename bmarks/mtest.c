@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include "stddef.h"
 #include "../include/iRCCE.h"
@@ -7,6 +6,7 @@
 #define PRINTD(args...) ME; printf(args); printf("\n"); fflush(stdout)
 #define BARRIER         RCCE_barrier(&RCCE_COMM_WORLD);
 #define ONCE            if (RCCE_ue() == 1)
+#define AO(addr)        shmem_address_offset((void*) addr)
 
 #define NBACC 100
 
@@ -20,13 +20,17 @@ typedef struct bank {
     int size;
 } bank_t;
 
+inline unsigned int shmem_address_offset(void *shmem_address) {
+    return ((int) shmem_address) -shmem_start_address;
+}
+
+unsigned int shmem_start_address;
+
 int main(int argc, char **argv) {
     RCCE_init(&argc, &argv);
     iRCCE_init();
 
     if (RCCE_ue() % 2 == 1) {
-
-        unsigned int shmem_start_address;
 
         if (!shmem_start_address) {
             char *start = (char *) RCCE_shmalloc(sizeof (char));
@@ -50,7 +54,8 @@ int main(int argc, char **argv) {
             exit(1);
         }
 
-        PRINTD("bank->accounts (%p) - bank(%p) = %d", bank->accounts, bank, (int *) bank->accounts - (int *) bank);
+        PRINTD("bank->accounts (%p : %d) - bank(%p : %d) = %d", bank->accounts, AO(bank->accounts), bank, AO(bank),  
+            AO(bank->accounts) - AO(bank));
 
         BARRIER
 
