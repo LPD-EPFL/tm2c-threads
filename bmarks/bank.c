@@ -463,9 +463,9 @@ TASKMAIN(int argc, char **argv) {
         PRINTN("Nb accounts    : %d\n", nb_accounts);
         PRINTN("Duration       : %fs\n", duration);
         PRINTN("Nb cores       : %d\n", nb_app_cores);
-        PRINTN("Read-all rate  : %d%\n", read_all);
+        PRINTN("Read-all rate  : %d\%\n", read_all);
         PRINTN("Read cores     : %d\n", read_cores);
-        PRINTN("Write-all rate : %d%\n", write_all);
+        PRINTN("Write-all rate : %d\%\n", write_all);
         PRINTN("Write cores    : %d\n", write_cores);
     }
 
