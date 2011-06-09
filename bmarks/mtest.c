@@ -8,7 +8,7 @@
 #define ONCE            if (RCCE_ue() == 1)
 #define AO(addr)        shmem_address_offset((void*) addr)
 
-#define NBACC 100
+#define NBACC 10
 
 typedef struct account {
     int number;
