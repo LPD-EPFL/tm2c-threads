@@ -109,6 +109,7 @@ int total(bank_t *bank, int transactional) {
         TX_START
         total = 0;
         for (i = 0; i < bank->size; i++) {
+            PRINTN("(l %d)", i);
             total += *(int*) TX_LOAD(&bank->accounts[i].balance);
         }
         TX_COMMIT
@@ -258,7 +259,7 @@ bank_t * test(void *data, double duration, int nb_accounts) {
     FOR(duration) {
         if (d->id < d->read_cores) {
             /* Read all */
-            PRINT("READ ALL");
+            PRINT("READ ALL1");
             total(bank, 1);
             d->nb_read_all++;
         }
@@ -270,13 +271,14 @@ bank_t * test(void *data, double duration, int nb_accounts) {
         else {
             nb = (int) (rand_range(100) - 1);
             if (nb < d->read_all) {
-                 PRINT("READ ALL");
+                 PRINT("READ ALL2");
                 /* Read all */
                 total(bank, 1);
                 d->nb_read_all++;
             }
             else if (nb < d->read_all + d->write_all) {
                 /* Write all */
+                PRINT("WRITE ALL");
                 reset(bank);
                 d->nb_write_all++;
             }
