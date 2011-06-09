@@ -97,7 +97,7 @@ int main(int argc, char **argv) {
         BARRIER
 
                 int index = 0;
-        PRINTD("bank->size = %d" bank->size);
+        PRINTD("bank->size = %d", bank->size);
         
         BARRIER
                 
