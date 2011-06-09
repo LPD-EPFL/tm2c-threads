@@ -62,11 +62,9 @@ extern "C" {
     inline void tm_init(unsigned int ID) {
         if (ID % DSLNDPERNODES == 0) {
             //dsl node
-            PRINTD("[DSL NODE]");
             dsl_init();
         }
         else { //app node
-            PRINTD("[APP NODE]");
             ps_init_();
             stm_tx_node = tx_metadata_node_new();
             stm_tx = tx_metadata_new(IDLE);
@@ -112,14 +110,10 @@ extern "C" {
     //ps_hashtable_print(ps_hashtable);                   \
     
 #define TX_COMMIT                                       \
-    PRINT("|| commiting tx");                          \
+    PRINTD("|| commiting tx");                          \
     ps_publish_all();                                   \
-    PRINT(" | published all");\
-write_set_print(stm_tx->write_set);\
     write_set_persist(stm_tx->write_set);               \
-    PRINT(" | persisted ws");\
     ps_finish_all();                                    \
-    PRINT(" | ps_finished all");\
     stm_tx->state = COMMITED;                           \
     stm_tx_node->tx_starts += stm_tx->retries;          \
     stm_tx_node->tx_commited++;                         \
