@@ -318,7 +318,7 @@ bank_t * test(void *data, double duration, int nb_accounts) {
                 }
                 transfer(&bank->accounts[src], &bank->accounts[dst], 1);
                 if (!ID) {
-                    PRINT("8", src, dst);
+                    PRINT("8");
                 }
 
                 d->nb_transfer++;
