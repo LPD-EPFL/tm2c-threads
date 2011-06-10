@@ -235,12 +235,6 @@ bank_t * test(void *data, double duration, int nb_accounts) {
     bank->size = nb_accounts;
     ONCE
     {
-/*
-        PRINT("initalizing balances to 0");
-
-        
-        PRINT("setting size %d", nb_accounts);
- * */
         int i;
         for (i = 0; i < bank->size; i++) {
      //       PRINTN("(s %d)", i);
@@ -262,6 +256,7 @@ bank_t * test(void *data, double duration, int nb_accounts) {
 
 
     FOR(duration) {
+        if (!ID){PRINT("in for");}
         if (d->id < d->read_cores) {
             /* Read all */
           //  PRINT("READ ALL1");
@@ -297,16 +292,7 @@ bank_t * test(void *data, double duration, int nb_accounts) {
                 assert(dst >= 0);
                 if (dst == src)
                     dst = ((src + 1) % rand_max) + rand_min;
-             //   PRINTN("before transfer ||");
-             //   PRINT("before transfer (src %d/%d, dst: %d/%d)", src, dst,
-                  //      bank->accounts[src].number, bank->accounts[dst].number);
-                //PRINTN("Transfering: [%5d] (%d) to [%5d] (%d) | ", src, bank->accounts[src].balance, dst, bank->accounts[dst].balance);
-                /*
-                                PRINT("Transfering: [%5d] (%d) to [%5d] (%d)", src, bank->accounts[src].balance, dst, bank->accounts[dst].balance);
-                 */
                 transfer(&bank->accounts[src], &bank->accounts[dst], 1);
-            //    PRINT("after transfer (src %d, dst: %d)", src, dst);
-                //PRINTN("After: [%5d] (%d) - [%5d] (%d)\n", src, bank->accounts[src].balance, dst, bank->accounts[dst].balance);
                 d->nb_transfer++;
             }
         }
