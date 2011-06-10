@@ -88,8 +88,8 @@ extern "C" {
     short int reason;                                                   \
     if (reason = sigsetjmp(stm_tx->env, 0)) {                           \
         PRINTD("|| restarting due to %s", conflict_reasons[reason]);    \
-        stm_tx->write_set = write_set_new();                            \
-        stm_tx->read_set = read_set_new();                              \
+        stm_tx->write_set = write_set_empty(stm_tx->write_set);         \
+        stm_tx->read_set = read_set_empty(stm_tx->read_set);            \
         if (stm_tx->write_set == NULL || stm_tx->read_set == NULL) {    \
             PRINTD("Could not alloc r/w sets @ TX_START");              \
             PRINTD("  | FAKE: freeing memory");                         \
@@ -125,7 +125,7 @@ extern "C" {
     stm_tx_node->aborts_war += stm_tx->aborts_war;      \
     stm_tx_node->aborts_raw += stm_tx->aborts_raw;      \
     stm_tx_node->aborts_waw += stm_tx->aborts_waw;      \
-    tx_metadata_free(&stm_tx); }
+    stm_tx = tx_metadata_empty(stm_tx); }
 
 
 #define TM_END                                          \
@@ -166,8 +166,8 @@ extern "C" {
                 stm_tx->aborts_waw++;
         }
         //PRINTD("  | read/write_set_free");
-        write_set_free(stm_tx->write_set);
-        read_set_free(stm_tx->read_set);
+        write_set_empty(stm_tx->write_set);
+        read_set_empty(stm_tx->read_set);
     }
 
     inline void * tx_load(write_set_t *ws, read_set_t *rs, void *addr) {

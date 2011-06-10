@@ -32,6 +32,25 @@ inline void write_set_free(write_set_t *write_set) {
     free(write_set);
 }
 
+inline write_set_t * write_set_empty(write_set_t *write_set) {
+    
+    if (write_set->size > WRITE_SET_SIZE) {
+        write_entry_t * temp;
+        if ((temp = (write_entry_t *) realloc(write_set->write_entries, WRITE_SET_SIZE * sizeof(write_entry_t))) == NULL) {
+            free(write_set->write_entries);
+            PRINT("realloc @ write_set_empty failed");
+            write_set->write_entries = (write_entry_t *) malloc(WRITE_SET_SIZE * sizeof(write_entry_t));
+            if (write_set->write_entries == NULL) {
+                PRINT("malloc write_set->write_entries @ write_set_empty");
+                return NULL;
+            }
+        }
+    }
+    write_set->size = WRITE_SET_SIZE;
+    write_set->nb_entries = 0;
+    return write_set;
+}
+
 inline write_entry_t * write_set_entry(write_set_t *write_set) {
     if (write_set->nb_entries == write_set->size) {
         //PRINTD("WRITE set max sized (%d)", write_set->size);
@@ -264,6 +283,25 @@ inline read_set_t * read_set_new() {
 inline void read_set_free(read_set_t *read_set) {
     free(read_set->read_entries);
     free(read_set);
+}
+
+inline read_set_t * read_set_empty(read_set_t *read_set) {
+    
+    if (read_set->size > READ_SET_SIZE) {
+        read_entry_l_t * temp;
+        if ((temp = (read_entry_l_t *) realloc(read_set->read_entries, READ_SET_SIZE * sizeof(read_entry_l_t))) == NULL) {
+            free(read_set->read_entries);
+            PRINT("realloc @ read_set_empty failed");
+            read_set->read_entries = (read_entry_l_t *) malloc(READ_SET_SIZE * sizeof(read_entry_l_t));
+            if (read_set->read_entries == NULL) {
+                PRINT("malloc read_set->read_entries @ read_set_empty");
+                return NULL;
+            }
+        }
+    }
+    read_set->size = READ_SET_SIZE;
+    read_set->nb_entries = 0;
+    return read_set;
 }
 
 inline read_entry_l_t * read_set_entry(read_set_t *read_set) {

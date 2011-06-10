@@ -86,6 +86,8 @@ extern "C" {
 
     extern void write_set_free(write_set_t *write_set);
 
+    extern write_set_t * write_set_empty(write_set_t *write_set);
+
     inline write_entry_t * write_set_entry(write_set_t *write_set);
 
     inline void write_entry_set_value(write_entry_t *we, void *value);
@@ -128,6 +130,8 @@ extern "C" {
     extern read_set_t * read_set_new();
     
     extern void read_set_free(read_set_t *read_set);
+
+    extern read_set_t * read_set_empty(read_set_t *read_set);
 
     inline read_entry_l_t * read_set_entry(read_set_t *read_set);
 

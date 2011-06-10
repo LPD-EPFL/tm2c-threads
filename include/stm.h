@@ -119,6 +119,22 @@ extern "C" {
         return stm_tx_temp;
     }
 
+    inline stm_tx_t * tx_metadata_empty(stm_tx_t *stm_tx_temp) {
+
+        stm_tx_temp->read_set = read_set_empty(stm_tx_temp->read_set);
+        stm_tx_temp->write_set = write_set_empty(stm_tx_temp->write_set);
+        //stm_tx_temp->mem_info = mem_info_new();
+        //TODO: what about the env?
+        stm_tx_temp->retries = 0;
+        stm_tx_temp->aborts = 0;
+        stm_tx_temp->aborts_war = 0;
+        stm_tx_temp->aborts_raw = 0;
+        stm_tx_temp->aborts_waw = 0;
+        stm_tx_temp->max_retries = 0;
+
+        return stm_tx_temp;
+    }
+
     inline void tx_metadata_free(stm_tx_t **stm_tx) {
         //TODO: "clear" insted of freeing the stm_tx
         
