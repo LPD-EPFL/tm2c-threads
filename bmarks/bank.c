@@ -79,12 +79,12 @@ int transfer(account_t *src, account_t *dst, int amount) {
         PRINT("tx started");
     }
     i = *(int *) TX_LOAD(&src->balance);
-    // PRINT("in transfer : after load 1");
+    if(!RCCE_ue()) { PRINT("in transfer : after load 1"); }
     i -= amount;
     TX_STORE(&src->balance, &i, TYPE_INT); //NEED TX_STOREI
-    // PRINT("in transfer : before load 2");
+    if(!RCCE_ue()) { PRINT("in transfer : before load 2"); }
     j = *(int *) TX_LOAD(&dst->balance);
-    // PRINT("in transfer : after load 2");
+    if(!RCCE_ue()) {PRINT("in transfer : after load 2"); }
     j += amount;
     TX_STORE(&dst->balance, &j, TYPE_INT);
     if (!RCCE_ue()) {
