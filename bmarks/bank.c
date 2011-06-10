@@ -75,21 +75,12 @@ int transfer(account_t *src, account_t *dst, int amount) {
 
     /* Allow overdrafts */
     TX_START
-    if (!RCCE_ue()) {
-        PRINT("tx started");
-    }
     i = *(int *) TX_LOAD(&src->balance);
-    if(!RCCE_ue()) { PRINT("in transfer : after load 1"); }
     i -= amount;
     TX_STORE(&src->balance, &i, TYPE_INT); //NEED TX_STOREI
-    if(!RCCE_ue()) { PRINT("in transfer : before load 2"); }
     j = *(int *) TX_LOAD(&dst->balance);
-    if(!RCCE_ue()) {PRINT("in transfer : after load 2"); }
     j += amount;
     TX_STORE(&dst->balance, &j, TYPE_INT);
-    if (!RCCE_ue()) {
-        PRINT("in transfer : before commit");
-    }
     TX_COMMIT
             // PRINT("in transfer : after commit");
     return amount;
@@ -202,12 +193,8 @@ bank_t * test(void *data, double duration, int nb_accounts) {
     /* Initialize seed (use rand48 as rand is poor) */
     srand_core();
 
-
-    PRINT("Inside test fun");
-
     /* Prepare for disjoint access */
     if (d->disjoint) {
-        PRINT("disjoing?");
         rand_max = nb_accounts / d->nb_app_cores;
         rand_min = rand_max * d->id;
         if (rand_max <= 2) {
@@ -258,53 +245,32 @@ bank_t * test(void *data, double duration, int nb_accounts) {
 
 
     FOR(duration) {
-        if (!ID) {
-            PRINT("in for");
-        }
         if (d->id < d->read_cores) {
-            if (!ID) {
-                PRINT("1");
-            }
             /* Read all */
             //  PRINT("READ ALL1");
             total(bank, 1);
             d->nb_read_all++;
         }
         else if (d->id < d->read_cores + d->write_cores) {
-            if (!ID) {
-                PRINT("2");
-            }
             /* Write all */
             reset(bank);
             d->nb_write_all++;
         }
         else {
-            if (!ID) {
-                PRINT("3");
-            }
             nb = (int) (rand_range(100) - 1);
             if (nb < d->read_all) {
-                if (!ID) {
-                    PRINT("4");
-                }
                 //     PRINT("READ ALL2");
                 /* Read all */
                 total(bank, 1);
                 d->nb_read_all++;
             }
             else if (nb < d->read_all + d->write_all) {
-                if (!ID) {
-                    PRINT("5");
-                }
                 /* Write all */
                 //     PRINT("WRITE ALL");
                 reset(bank);
                 d->nb_write_all++;
             }
             else {
-                if (!ID) {
-                    PRINT("6");
-                }
                 /* Choose random accounts */
                 src = (int) (rand_range(rand_max) - 1) + rand_min;
                 assert(src < (rand_max + rand_min));
@@ -314,13 +280,7 @@ bank_t * test(void *data, double duration, int nb_accounts) {
                 assert(dst >= 0);
                 if (dst == src)
                     dst = ((src + 1) % rand_max) + rand_min;
-                if (!ID) {
-                    PRINT("7 - from %d to %d", src, dst);
-                }
                 transfer(&bank->accounts[src], &bank->accounts[dst], 1);
-                if (!ID) {
-                    PRINT("8");
-                }
 
                 d->nb_transfer++;
             }
