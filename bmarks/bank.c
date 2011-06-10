@@ -75,7 +75,9 @@ int transfer(account_t *src, account_t *dst, int amount) {
 
     /* Allow overdrafts */
     TX_START
-    PRINT("tx started");
+    if (!ID) {
+        PRINT("tx started");
+    }
     i = *(int *) TX_LOAD(&src->balance);
     // PRINT("in transfer : after load 1");
     i -= amount;
@@ -85,8 +87,9 @@ int transfer(account_t *src, account_t *dst, int amount) {
     // PRINT("in transfer : after load 2");
     j += amount;
     TX_STORE(&dst->balance, &j, TYPE_INT);
-
-    PRINT("in transfer : before commit");
+    if (!ID) {
+        PRINT("in transfer : before commit");
+    }
     TX_COMMIT
             // PRINT("in transfer : after commit");
     return amount;
