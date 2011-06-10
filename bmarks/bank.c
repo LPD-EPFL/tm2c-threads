@@ -258,17 +258,20 @@ bank_t * test(void *data, double duration, int nb_accounts) {
     FOR(duration) {
         if (!ID){PRINT("in for");}
         if (d->id < d->read_cores) {
+            if (!ID){PRINT("1");}
             /* Read all */
           //  PRINT("READ ALL1");
             total(bank, 1);
             d->nb_read_all++;
         }
         else if (d->id < d->read_cores + d->write_cores) {
+            if (!ID){PRINT("2");}
             /* Write all */
             reset(bank);
             d->nb_write_all++;
         }
         else {
+            if (!ID){PRINT("3");}
             nb = (int) (rand_range(100) - 1);
             if (nb < d->read_all) {
             //     PRINT("READ ALL2");
