@@ -298,6 +298,7 @@ bank_t * test(void *data, double duration, int nb_accounts) {
                 assert(dst >= 0);
                 if (dst == src)
                     dst = ((src + 1) % rand_max) + rand_min;
+                if (!ID){PRINT("7 - from %d to %d", src, dst);}
                 transfer(&bank->accounts[src], &bank->accounts[dst], 1);
                 d->nb_transfer++;
             }
