@@ -206,6 +206,7 @@ bank_t * test(void *data, double duration, int nb_accounts) {
 
     /* Prepare for disjoint access */
     if (d->disjoint) {
+        PRINT("disjoing?");
         rand_max = nb_accounts / d->nb_app_cores;
         rand_min = rand_max * d->id;
         if (rand_max <= 2) {
