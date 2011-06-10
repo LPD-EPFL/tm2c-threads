@@ -75,9 +75,7 @@ int transfer(account_t *src, account_t *dst, int amount) {
 
     /* Allow overdrafts */
     TX_START
-    // PRINTN("in transfer : bal pointer %p - %d - p", (void *) &src->balance, src->balance);//, (int *) ((void *) &src->balance));
-    // PRINTSF("before load 1 (%d)", CAST_INT((void *) &src->balance));
-
+    PRINT("tx started");
     i = *(int *) TX_LOAD(&src->balance);
     // PRINT("in transfer : after load 1");
     i -= amount;
@@ -88,7 +86,7 @@ int transfer(account_t *src, account_t *dst, int amount) {
     j += amount;
     TX_STORE(&dst->balance, &j, TYPE_INT);
 
-    // PRINT("in transfer : before commit");
+    PRINT("in transfer : before commit");
     TX_COMMIT
             // PRINT("in transfer : after commit");
     return amount;
