@@ -32,8 +32,6 @@
  * stm_get_env() and only call sigsetjmp() if it is not null.
  */
 
-int chk = 0; //TODO: remove
-
 #define DEFAULT_DURATION                10
 #define DEFAULT_NB_ACCOUNTS             1024
 #define DEFAULT_NB_THREADS              1
@@ -204,6 +202,8 @@ bank_t * test(void *data, double duration, int nb_accounts) {
     srand_core();
 
 
+    PRINT("Inside test fun");
+    
     /* Prepare for disjoint access */
     if (d->disjoint) {
         rand_max = nb_accounts / d->nb_app_cores;
