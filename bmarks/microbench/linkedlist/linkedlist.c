@@ -261,3 +261,14 @@ int set_remove(intset_t *set, val_t val, int transactional) {
 
     return result;
 }
+
+void set_print(intset_t* set) {
+    node_t *node = set->head;
+    
+    while (node->nextp != NULL) {
+        printf("%d -> ", node->val);
+        node = ND(node->next);
+    }
+    PRINTSF("NULL\n");
+    
+}
