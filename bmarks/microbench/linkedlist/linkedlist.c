@@ -251,7 +251,8 @@ int set_remove(intset_t *set, val_t val, int transactional) {
     result = (v == val);
     if (result) {
         n = ND(*(nxt_t *) TX_LOAD(&next->next));
-        TX_STORE(&prev->next, OF(n), TYPE_UINT);
+        nxt_t nxt = OF(n);
+        TX_STORE(&prev->next, &nxt, TYPE_UINT);
         TX_SHFREE(next);
     }
     TX_COMMIT
