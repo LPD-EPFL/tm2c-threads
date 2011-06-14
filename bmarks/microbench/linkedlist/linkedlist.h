@@ -62,8 +62,8 @@ typedef struct intset {
 #define N2O(set, node)                  (nxt_t) ((nxt_t) (node) - (nxt_t) (set))
 #define O2N(set, offset)                ((void *) (offset) == NULL ? NULL : (node_t *) ((nxt_t) (set) + (offset)))
 #define SET                             set
-#define ND(offs)                        O2N(SET, offs)
-#define OF(node)                        N2O(SET, node)
+#define ND(offs)                        O2N(SET, (offs))
+#define OF(node)                        N2O(SET, (node))
 
 
 node_t *new_node(val_t val, nxt_t next, int transactional);
