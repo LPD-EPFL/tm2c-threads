@@ -177,7 +177,6 @@ void *test(void *data) {
 }
 
 TASKMAIN(int argc, char **argv) {
-    PRINT("Starting");
     
     dup2(STDOUT_FILENO, STDERR_FILENO);
 
