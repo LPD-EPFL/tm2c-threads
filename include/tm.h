@@ -30,15 +30,15 @@ extern "C" {
 #define BACKOFF_MAX 3
 #define BACKOFF_DELAY 400
 
-    extern stm_tx_t *stm_tx = NULL;
-    extern stm_tx_node_t *stm_tx_node = NULL;
+    extern stm_tx_t *stm_tx;
+    extern stm_tx_node_t *stm_tx_node;
 
-    const char *conflict_reasons[4] = {
-        "NO_CONFLICT",
-        "READ_AFTER_WRITE",
-        "WRITE_AFTER_READ",
-        "WRITE_AFTER_WRITE"
-    };
+//    const char *conflict_reasons[4] = {
+//        "NO_CONFLICT",
+//        "READ_AFTER_WRITE",
+//        "WRITE_AFTER_READ",
+//        "WRITE_AFTER_WRITE"
+//    };
 
     /*______________________________________________________________________________________________________
      * TM Interface                                                                                         |
@@ -64,7 +64,7 @@ extern "C" {
         unsigned int NUM_UES = RCCE_num_ues();                          \
         tm_init(ID);
 
-    int color(int id, void *aux) {
+    inline int color(int id, void *aux) {
         return !(id % DSLNDPERNODES);
     }
 
@@ -96,7 +96,7 @@ extern "C" {
     }                                                                   \
     short int reason;                                                   \
     if (reason = sigsetjmp(stm_tx->env, 0)) {                           \
-        PRINTD("|| restarting due to %s", conflict_reasons[reason]);    \
+        PRINTD("|| restarting due to %d", reason);                      \
         stm_tx->write_set = write_set_empty(stm_tx->write_set);         \
         stm_tx->read_set = read_set_empty(stm_tx->read_set);            \
         if (stm_tx->write_set == NULL || stm_tx->read_set == NULL) {    \
