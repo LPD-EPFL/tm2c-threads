@@ -386,12 +386,14 @@ TASKMAIN(int argc, char **argv) {
     
     set_print(set);
     
+    TM_INIT
     i = 3;
-    PRINT("set contains %d? %d", i, set_contains(set, i, 0));
+    PRINT("set contains %d? %d", i, set_contains(set, i, 1));
     i = 6;
-    PRINT("set contains %d? %d", i, set_contains(set, i, 0));
+    PRINT("set contains %d? %d", i, set_contains(set, i, 1));
     i = 13;
-    PRINT("set contains %d? %d", i, set_contains(set, i, 0));
+    PRINT("set contains %d? %d", i, set_contains(set, i, 1));
+    TM_END
     
     set_delete(set);
 
