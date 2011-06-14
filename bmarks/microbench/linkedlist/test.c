@@ -177,10 +177,14 @@ void *test(void *data) {
 }
 
 TASKMAIN(int argc, char **argv) {
+    PRINT("Starting");
+    
     dup2(STDOUT_FILENO, STDERR_FILENO);
 
     RCCE_init(&argc, &argv);
     iRCCE_init();
+
+    PRINT("Initialized");
 
     struct option long_options[] = {
         // These options don't set a flag
@@ -214,7 +218,6 @@ TASKMAIN(int argc, char **argv) {
     int unit_tx = DEFAULT_ELASTICITY;
     int alternate = DEFAULT_ALTERNATE;
     int effective = DEFAULT_EFFECTIVE;
-    sigset_t block_set;
 
     while (1) {
         i = 0;
