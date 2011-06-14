@@ -43,10 +43,7 @@
 
 #define XSTR(s)                         STR(s)
 #define STR(s)                          #s
-#define FOR(seconds)                    double starting__ = RCCE_wtime(), duration__;\
-                                            while ((duration__ =\
-                                            (RCCE_wtime() - starting__)) < (seconds))
-#define ONCE                            if (RCCE_ue() == 1 || RCCE_num_ues() == 1)
+
 #define CAST_VOIDP(addr)                ((void *) (addr))
 
 
@@ -172,7 +169,6 @@ typedef struct thread_data {
     unsigned long locked_reads_ok;
     unsigned long locked_reads_failed;
     unsigned long max_retries;
-    unsigned int seed;
     int id;
     int read_all;
     int read_cores;
