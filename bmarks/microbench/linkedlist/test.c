@@ -69,15 +69,6 @@ typedef struct thread_data {
     unsigned long nb_removed;
     unsigned long nb_contains;
     unsigned long nb_found;
-    unsigned long nb_aborts;
-    unsigned long nb_aborts_locked_read;
-    unsigned long nb_aborts_locked_write;
-    unsigned long nb_aborts_validate_read;
-    unsigned long nb_aborts_validate_write;
-    unsigned long nb_aborts_validate_commit;
-    unsigned long nb_aborts_invalid_memory;
-    unsigned long nb_aborts_double_write;
-    unsigned long max_retries;
     intset_t *set;
     unsigned long failures_because_contention;
 } thread_data_t;
@@ -346,21 +337,11 @@ TASKMAIN(int argc, char **argv) {
     data->nb_removed = 0;
     data->nb_contains = 0;
     data->nb_found = 0;
-    data->nb_aborts = 0;
-    data->nb_aborts_locked_read = 0;
-    data->nb_aborts_locked_write = 0;
-    data->nb_aborts_validate_read = 0;
-    data->nb_aborts_validate_write = 0;
-    data->nb_aborts_validate_commit = 0;
-    data->nb_aborts_invalid_memory = 0;
-    data->nb_aborts_double_write = 0;
-    data->max_retries = 0;
     data->set = set;
     data->failures_because_contention = 0;
-    
+
     /* Start */
-    PRINT("staring test");
-    test(data , duration);
+    test(data, duration);
 
     printf("-- Core %d\n", RCCE_ue());
     printf("  #add        : %lu\n", data->nb_add);
@@ -369,22 +350,12 @@ TASKMAIN(int argc, char **argv) {
     printf("    #removed  : %lu\n", data->nb_removed);
     printf("  #contains   : %lu\n", data->nb_contains);
     printf("    #found    : %lu\n", data->nb_found);
-    printf("  #aborts     : %lu\n", data->nb_aborts);
-    printf("    #lock-r   : %lu\n", data->nb_aborts_locked_read);
-    printf("    #lock-w   : %lu\n", data->nb_aborts_locked_write);
-    printf("    #val-r    : %lu\n", data->nb_aborts_validate_read);
-    printf("    #val-w    : %lu\n", data->nb_aborts_validate_write);
-    printf("    #val-c    : %lu\n", data->nb_aborts_validate_commit);
-    printf("    #inv-mem  : %lu\n", data->nb_aborts_invalid_memory);
-    printf("    #inv-mem  : %lu\n", data->nb_aborts_double_write);
-    printf("    #failures : %lu\n", data->failures_because_contention);
-    printf("  Max retries : %lu\n", data->max_retries);
-
+    printf("---------------------------------------------------");
     FLUSH;
     /* Delete set */
-    
-    
-    
+
+
+
     set_delete(set);
 
     /* Cleanup STM */
