@@ -50,8 +50,8 @@ typedef struct node {
 
 typedef struct intset {
     union {
-        nxt_t headi;
-        node_t *head;
+        nxt_t head;
+        node_t *headp;
     };
     
 } intset_t;
