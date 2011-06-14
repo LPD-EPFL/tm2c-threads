@@ -30,6 +30,9 @@ extern "C" {
 #define BACKOFF_MAX 3
 #define BACKOFF_DELAY 400
 
+    stm_tx_t *stm_tx = NULL;
+    stm_tx_node_t *stm_tx_node = NULL;
+
     const char *conflict_reasons[4] = {
         "NO_CONFLICT",
         "READ_AFTER_WRITE",

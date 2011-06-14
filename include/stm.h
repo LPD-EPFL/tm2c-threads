@@ -54,8 +54,6 @@ extern "C" {
         unsigned long aborts_waw;
     } stm_tx_node_t;
 
-    stm_tx_t *stm_tx = NULL;
-    stm_tx_node_t *stm_tx_node = NULL;
 
     inline void tx_metadata_node_print(stm_tx_node_t * stm_tx_node) {
         printf("TXs Statistics for node --------------------------------------\n");
