@@ -12,7 +12,7 @@ MB_LL := microbench/linkedlist
 
 BANKOBJS  := bank.o   $(ARCHIVE)
 MTESTOBJS  := mtest.o   $(ARCHIVE)
-MBLLOBJS := $(MB_LL)/linkedlist.o $(MB_LL)/intset.o $(MB_LL)/test.o $(ARCHIVE)
+MBLLOBJS := $(MB_LL)/linkedlist.o $(MB_LL)/test.o $(ARCHIVE)
 
 .PHONY: all default clean bank
 

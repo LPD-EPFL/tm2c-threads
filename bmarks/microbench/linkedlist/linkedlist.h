@@ -60,3 +60,8 @@ node_t *new_node(val_t val, nxt_t next, int transactional);
 intset_t *set_new();
 void set_delete(intset_t *set);
 int set_size(intset_t *set);
+
+/*intset.c*/
+int set_contains(intset_t *set, val_t val, int transactional);
+int set_add(intset_t *set, val_t val, int transactional);
+int set_remove(intset_t *set, val_t val, int transactional);

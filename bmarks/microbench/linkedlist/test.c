@@ -21,7 +21,7 @@
  * GNU General Public License for more details.
  */
 
-#include "intset.h"
+#include "linkedlist.h"
 
 /* ################################################################### *
  * RANDOM
