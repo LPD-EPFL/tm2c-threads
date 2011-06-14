@@ -114,7 +114,7 @@ int set_contains(intset_t *set, val_t val, int transactional) {
     }
     result = (next->val == val);
 
-#elif defined STM			
+#elif defined STM		
 
     node_t *prev, *next;
     val_t v = 0;
