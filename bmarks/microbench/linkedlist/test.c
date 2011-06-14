@@ -82,7 +82,7 @@ typedef struct thread_data {
     unsigned long failures_because_contention;
 } thread_data_t;
 
-void *test(void *data) {
+void *test(void *data, double duration) {
     int unext, last = -1;
     val_t val = 0;
 
@@ -97,7 +97,7 @@ void *test(void *data) {
     /* Is the first op an update? */
     unext = (rand_range(100) - 1 < d->update);
 
-    FOR(10) {
+    FOR(duration) {
         if (unext) { // update
 
             if (last < 0) { // add
@@ -200,7 +200,7 @@ TASKMAIN(int argc, char **argv) {
     val_t last = 0;
     val_t val = 0;
     thread_data_t *data;
-    int duration = DEFAULT_DURATION;
+    double duration = DEFAULT_DURATION;
     int initial = DEFAULT_INITIAL;
 #ifdef DSL
     int nb_app_cores = (RCCE_num_ues() / 2) + ((RCCE_num_ues() % 2) ? 1 : 0);
@@ -241,7 +241,7 @@ TASKMAIN(int argc, char **argv) {
                         "        Consecutive insert/remove target the same value\n"
                         "  -f, --effective <int>\n"
                         "        update txs must effectively write (0=trial, 1=effective, default=" XSTR(DEFAULT_EFFECTIVE) ")\n"
-                        "  -d, --duration <int>\n"
+                        "  -d, --duration secs<double>\n"
                         "        Test duration in milliseconds (0=infinite, default=" XSTR(DEFAULT_DURATION) ")\n"
                         "  -i, --initial-size <int>\n"
                         "        Number of elements to insert before test (default=" XSTR(DEFAULT_INITIAL) ")\n"
@@ -267,7 +267,7 @@ TASKMAIN(int argc, char **argv) {
                 effective = atoi(optarg);
                 break;
             case 'd':
-                duration = atoi(optarg);
+                duration = atof(optarg);
                 break;
             case 'i':
                 initial = atoi(optarg);
@@ -298,7 +298,7 @@ TASKMAIN(int argc, char **argv) {
     ONCE
     {
         printf("Bench type   : linked list\n");
-        printf("Duration     : %d\n", duration);
+        printf("Duration     : %f\n", duration);
         printf("Initial size : %d\n", initial);
         printf("Nb cores     : %d\n", nb_app_cores);
         printf("Value range  : %ld\n", range);
@@ -359,7 +359,8 @@ TASKMAIN(int argc, char **argv) {
     data->failures_because_contention = 0;
     
     /* Start */
-    test(data);
+    PRINT("staring test");
+    test(data , duration);
 
     printf("-- Core %d\n", RCCE_ue());
     printf("  #add        : %lu\n", data->nb_add);
