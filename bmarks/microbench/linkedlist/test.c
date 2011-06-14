@@ -178,7 +178,8 @@ void *test(void *data) {
 }
 
 TASKMAIN(int argc, char **argv) {
-    printf("safdddddddd"); fflush(stdout);
+    printf("safdddddddd");
+    fflush(stdout);
     dup2(STDOUT_FILENO, STDERR_FILENO);
 
     RCCE_init(&argc, &argv);
@@ -201,10 +202,6 @@ TASKMAIN(int argc, char **argv) {
     int i, c, size;
     val_t last = 0;
     val_t val = 0;
-    unsigned long reads, effreads, updates, effupds, aborts, aborts_locked_read,
-            aborts_locked_write, aborts_validate_read, aborts_validate_write,
-            aborts_validate_commit, aborts_invalid_memory, aborts_double_write,
-            max_retries, failures_because_contention;
     thread_data_t *data;
     int duration = DEFAULT_DURATION;
     int initial = DEFAULT_INITIAL;
@@ -340,7 +337,6 @@ TASKMAIN(int argc, char **argv) {
     }
 
     /* Access set from all threads */
-    printf("Creating thread %d\n", i);
     data->first = last;
     data->range = range;
     data->update = update;
@@ -367,22 +363,7 @@ TASKMAIN(int argc, char **argv) {
 
     /* Start threads */
 
-    aborts = 0;
-    aborts_locked_read = 0;
-    aborts_locked_write = 0;
-    aborts_validate_read = 0;
-    aborts_validate_write = 0;
-    aborts_validate_commit = 0;
-    aborts_invalid_memory = 0;
-    aborts_double_write = 0;
-    failures_because_contention = 0;
-    reads = 0;
-    effreads = 0;
-    updates = 0;
-    effupds = 0;
-    max_retries = 0;
-
-    printf("Thread %d\n", i);
+    printf("-- Core %d\n", RCCE_ue());
     printf("  #add        : %lu\n", data->nb_add);
     printf("    #added    : %lu\n", data->nb_added);
     printf("  #remove     : %lu\n", data->nb_remove);
@@ -399,72 +380,13 @@ TASKMAIN(int argc, char **argv) {
     printf("    #inv-mem  : %lu\n", data->nb_aborts_double_write);
     printf("    #failures : %lu\n", data->failures_because_contention);
     printf("  Max retries : %lu\n", data->max_retries);
-    aborts += data->nb_aborts;
-    aborts_locked_read += data->nb_aborts_locked_read;
-    aborts_locked_write += data->nb_aborts_locked_write;
-    aborts_validate_read += data->nb_aborts_validate_read;
-    aborts_validate_write += data->nb_aborts_validate_write;
-    aborts_validate_commit += data->nb_aborts_validate_commit;
-    aborts_invalid_memory += data->nb_aborts_invalid_memory;
-    aborts_double_write += data->nb_aborts_double_write;
-    failures_because_contention += data->failures_because_contention;
-    reads += data->nb_contains;
-    effreads += data->nb_contains +
-            (data->nb_add - data->nb_added) +
-            (data->nb_remove - data->nb_removed);
-    updates += (data->nb_add + data->nb_remove);
-    effupds += data->nb_removed + data->nb_added;
-    size += data->nb_added - data->nb_removed;
-    if (max_retries < data->max_retries)
-        max_retries = data->max_retries;
-    printf("Set size      : %d (expected: %d)\n", set_size(set), size);
-    printf("Duration      : %d (ms)\n", duration);
-    printf("#txs          : %lu (%f / s)\n", reads + updates,
-            (reads + updates) * 1000.0 / duration);
-
-    printf("#read txs     : ");
-    if (effective) {
-        printf("%lu (%f / s)\n", effreads, effreads * 1000.0 / duration);
-        printf("  #contains   : %lu (%f / s)\n", reads, reads * 1000.0 / duration);
-    }
-    else printf("%lu (%f / s)\n", reads, reads * 1000.0 / duration);
-
-    printf("#eff. upd rate: %f \n", 100.0 * effupds / (effupds + effreads));
-
-    printf("#update txs   : ");
-    if (effective) {
-        printf("%lu (%f / s)\n", effupds, effupds * 1000.0 / duration);
-        printf("  #upd trials : %lu (%f / s)\n", updates, updates * 1000.0 /
-                duration);
-    }
-    else printf("%lu (%f / s)\n", updates, updates * 1000.0 / duration);
-
-
-    printf("#aborts       : %lu (%f / s)\n", aborts,
-            aborts * 1000.0 / duration);
-    printf("  #lock-r     : %lu (%f / s)\n", aborts_locked_read,
-            aborts_locked_read * 1000.0 / duration);
-    printf("  #lock-w     : %lu (%f / s)\n", aborts_locked_write,
-            aborts_locked_write * 1000.0 / duration);
-    printf("  #val-r      : %lu (%f / s)\n", aborts_validate_read,
-            aborts_validate_read * 1000.0 / duration);
-    printf("  #val-w      : %lu (%f / s)\n", aborts_validate_write,
-            aborts_validate_write * 1000.0 / duration);
-    printf("  #val-c      : %lu (%f / s)\n", aborts_validate_commit,
-            aborts_validate_commit * 1000.0 / duration);
-    printf("  #inv-mem    : %lu (%f / s)\n", aborts_invalid_memory,
-            aborts_invalid_memory * 1000.0 / duration);
-    printf("  #dup-w      : %lu (%f / s)\n", aborts_double_write,
-            aborts_double_write * 1000.0 / duration);
-    printf("  #failures   : %lu\n", failures_because_contention);
-    printf("Max retries   : %lu\n", max_retries);
 
     /* Delete set */
     set_delete(set);
 
     /* Cleanup STM */
 
-    RCCE_shfree((t_vcharp) data);
+    free(data);
 
     RCCE_finalize();
     EXIT(0);
