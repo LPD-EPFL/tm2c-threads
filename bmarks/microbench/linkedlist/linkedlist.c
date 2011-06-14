@@ -205,8 +205,6 @@ int set_add(intset_t *set, val_t val, int transactional) {
     return result;
 }
 
-
-
 int set_remove(intset_t *set, val_t val, int transactional) {
     int result = 0;
 
@@ -264,11 +262,17 @@ int set_remove(intset_t *set, val_t val, int transactional) {
 
 void set_print(intset_t* set) {
     node_t *node = set->head;
-    
+
+    if (node->nextp == NULL) {
+        goto null;
+    }
+
     while (node->nextp != NULL) {
         printf("%d -> ", node->val);
         node = ND(node->next);
     }
+
+null:
     PRINTSF("NULL\n");
-    
+
 }
