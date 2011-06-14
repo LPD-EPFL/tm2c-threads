@@ -326,13 +326,11 @@ TASKMAIN(int argc, char **argv) {
         i = 0;
         while (i < initial) {
             val = rand_range(range);
-            PRINTS("%d -> ", val);
             if (set_add(set, val, 0)) {
                 last = val;
                 i++;
             }
         }
-        PRINTSF("NULL\n");
         size = set_size(set);
         printf("Set size     : %d\n", size);
         FLUSH
@@ -387,6 +385,13 @@ TASKMAIN(int argc, char **argv) {
     /* Delete set */
     
     set_print(set);
+    
+    i = 3;
+    PRINT("set contains %d? %d", i, set_contains(set, i, 0));
+    i = 6;
+    PRINT("set contains %d? %d", i, set_contains(set, i, 0));
+    i = 13;
+    PRINT("set contains %d? %d", i, set_contains(set, i, 0));
     
     set_delete(set);
 
