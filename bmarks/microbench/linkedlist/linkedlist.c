@@ -45,7 +45,7 @@ intset_t *set_new() {
     }
     max = new_node(VAL_MAX, NULL, 0);
     min = new_node(VAL_MIN, N2O(set, max), 0);
-    set->head = min;
+    set->headi = OF(min);
 
     return set;
 }
@@ -53,7 +53,7 @@ intset_t *set_new() {
 void set_delete(intset_t *set) {
     node_t *node, *next;
 
-    node = set->head;
+    node = ND(set->headi);
     while (node != NULL) {
         next = O2N(set, node->next);
         RCCE_shfree((t_vcharp) node);
@@ -67,10 +67,11 @@ int set_size(intset_t *set) {
     node_t *node;
 
     /* We have at least 2 elements */
-    node = O2N(set, set->head->next);
+    node = ND(set->headi);
+    node = ND(node->next);
     while (node->nextp != NULL) {
         size++;
-        node = O2N(set, node->next);
+        node = ND(node->next);
     }
 
     return size;
@@ -106,7 +107,7 @@ int set_contains(intset_t *set, val_t val, int transactional) {
 #ifdef SEQUENTIAL
     node_t *prev, *next;
 
-    prev = set->head;
+    prev = ND(set->headi);
     next = ND(prev->next);
     while (next->val < val) {
         prev = next;
@@ -121,7 +122,7 @@ int set_contains(intset_t *set, val_t val, int transactional) {
     val_t v = 0;
 
     TX_START
-    prev = set->head;
+    prev = ND(set->headi);
     next = ND(*(nxt_t *) TX_LOAD(&prev->next));
     while (1) {
         v = *(val_t *) TX_LOAD(&next->val);
@@ -144,7 +145,7 @@ inline int set_seq_add(intset_t *set, val_t val) {
     int result;
     node_t *prev, *next;
 
-    prev = set->head;
+    prev = ND(set->headi);
     next = ND(prev->next);
     while (next->val < val) {
         prev = next;
@@ -182,7 +183,7 @@ int set_add(intset_t *set, val_t val, int transactional) {
         node_t *prev, *next;
         val_t v;
         TX_START
-        prev = set->head;
+        prev = ND(set->headi);
         next = ND(*(nxt_t *) TX_LOAD(&prev->next));
         while (1) {
             v = *(val_t *) TX_LOAD(&next->val);
@@ -219,7 +220,7 @@ int set_remove(intset_t *set, val_t val, int transactional) {
 
     node_t *prev, *next;
 
-    prev = set->head;
+    prev = ND(set->headi);
     next = ND(prev->next);
     while (next->val < val) {
         prev = next;
@@ -239,7 +240,7 @@ int set_remove(intset_t *set, val_t val, int transactional) {
     val_t v;
     node_t *n;
     TX_START
-    prev = set->head;
+    prev = ND(set->headi);
     next = ND(*(nxt_t *) TX_LOAD(&prev->next));
     while (1) {
         v = *(val_t *) TX_LOAD(&next->val);
@@ -265,7 +266,9 @@ int set_remove(intset_t *set, val_t val, int transactional) {
 }
 
 void set_print(intset_t* set) {
-    node_t *node = ND(set->head->next);
+
+    node_t *node = ND(set->headi);
+    node = ND(node->next);
 
     if (node == NULL) {
         goto null;

@@ -43,15 +43,20 @@ typedef unsigned int nxt_t;
 #define VAL_MAX                         INT_MAX
 
 typedef struct node {
-	val_t val;
-        union {
-                struct node *nextp;
-                nxt_t next;
-        };
+    val_t val;
+
+    union {
+        struct node *nextp;
+        nxt_t next;
+    };
 } node_t;
 
 typedef struct intset {
-	node_t *head;
+    union {
+        nxt_t *headi;
+        node_t *head;
+    };
+    
 } intset_t;
 
 #define N2O(set, node)                    (nxt_t) ((nxt_t) (node) - (nxt_t) (set))
