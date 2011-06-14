@@ -22,6 +22,7 @@
  */
 
 #include "linkedlist.h"
+#include <unistd.h>
 
 /* ################################################################### *
  * RANDOM
@@ -178,7 +179,7 @@ void *test(void *data) {
 
 TASKMAIN(int argc, char **argv) {
     printf("safdddddddd"); fflush(stdout);
-    dup2(STDOUT_FILENO, STDERR_FILENO);
+    dup22(STDOUT_FILENO, STDERR_FILENO);
 
     RCCE_init(&argc, &argv);
     iRCCE_init();
