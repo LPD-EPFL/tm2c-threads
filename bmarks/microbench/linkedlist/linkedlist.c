@@ -56,10 +56,10 @@ void set_delete(intset_t *set) {
     node = set->head;
     while (node != NULL) {
         next = O2N(set, node->next);
-        free(node);
+        RCCE_shfree((t_vcharp) node);
         node = next;
     }
-    free(set);
+    RCCE_shfree((t_vcharp) set);
 }
 
 int set_size(intset_t *set) {
@@ -229,7 +229,7 @@ int set_remove(intset_t *set, val_t val, int transactional) {
     if (result) {
         node_t * t = ND(prev->next);
         t = ND(next->next);
-        free(next);
+        RCCE_shfree((t_vcharp) next);
     }
 
 #elif defined STM
