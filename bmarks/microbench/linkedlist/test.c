@@ -326,11 +326,13 @@ TASKMAIN(int argc, char **argv) {
         i = 0;
         while (i < initial) {
             val = rand_range(range);
+            PRINTS("%d -> ", val);
             if (set_add(set, val, 0)) {
                 last = val;
                 i++;
             }
         }
+        PRINTSF("NULL\n");
         size = set_size(set);
         printf("Set size     : %d\n", size);
         FLUSH
