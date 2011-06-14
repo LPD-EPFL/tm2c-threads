@@ -88,6 +88,8 @@ int set_size(intset_t *set) {
  *
  */
 
+stm_tx_t *stm_tx = NULL;
+stm_tx_node_t *stm_tx_node = NULL;
 
 #define SET             set
 #define ND(offs)        O2N(SET, (offs))
