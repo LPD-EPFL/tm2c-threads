@@ -23,6 +23,9 @@
 
 #include "linkedlist.h"
 
+stm_tx_t *stm_tx;
+stm_tx_node_t *stm_tx_node;
+
 /* ################################################################### *
  * RANDOM
  * ################################################################### */
@@ -373,7 +376,7 @@ TASKMAIN(int argc, char **argv) {
     updates = 0;
     effupds = 0;
     max_retries = 0;
-    
+
     printf("Thread %d\n", i);
     printf("  #add        : %lu\n", data->nb_add);
     printf("    #added    : %lu\n", data->nb_added);
