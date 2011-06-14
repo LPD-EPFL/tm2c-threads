@@ -357,8 +357,9 @@ TASKMAIN(int argc, char **argv) {
     data->max_retries = 0;
     data->set = set;
     data->failures_because_contention = 0;
-
-    /* Start threads */
+    
+    /* Start */
+    test(data);
 
     printf("-- Core %d\n", RCCE_ue());
     printf("  #add        : %lu\n", data->nb_add);
