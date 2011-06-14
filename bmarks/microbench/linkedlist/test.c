@@ -383,6 +383,9 @@ TASKMAIN(int argc, char **argv) {
 
     FLUSH;
     /* Delete set */
+    
+    set_print(set);
+    
     set_delete(set);
 
     /* Cleanup STM */
