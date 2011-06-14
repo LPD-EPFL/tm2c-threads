@@ -21,15 +21,12 @@
 #include "tm.h"
 
 #define DEFAULT_DURATION                10
-#define DEFAULT_INITIAL                 10
-//256
-#define DEFAULT_NB_THREADS              1
-#define DEFAULT_RANGE                   10
-//0x7FFFFFFF
+#define DEFAULT_INITIAL                 256
+#define DEFAULT_RANGE                   0x7FFFFFFF
 #define DEFAULT_UPDATE                  20
-#define DEFAULT_ELASTICITY							4
-#define DEFAULT_ALTERNATE								0
-#define DEFAULT_EFFECTIVE								1
+#define DEFAULT_ELASTICITY		4
+#define DEFAULT_ALTERNATE		0
+#define DEFAULT_EFFECTIVE		1
 
 #define XSTR(s)                         STR(s)
 #define STR(s)                          #s
