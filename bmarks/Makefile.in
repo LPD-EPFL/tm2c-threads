@@ -36,16 +36,16 @@ mtest.o: mtest.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h $(TMH)
 	$(CCOMPILE) -c $(CFLAGS) mtest.c
 
 $(MB_LL)/linkedlist.o: 
-	$(CCOMPILE) $(CFLAGS) -c -o $(MB_LL)/linkedlist.o $(MB_LL)/linkedlist.c
+	$(CCOMPILE) -c $(CFLAGS) -o $(MB_LL)/linkedlist.o $(MB_LL)/linkedlist.c
 
 $(MB_LL)/intset.o: $(MB_LL)/linkedlist.h $(MB_LL)/harris.h
-	$(CCOMPILE) $(CFLAGS) -c -o $(MB_LL)/intset.o $(MB_LL)/intset.c
+	$(CCOMPILE) -c $(CFLAGS) -o $(MB_LL)/intset.o $(MB_LL)/intset.c
 
 $(MB_LL)/test.o: $(MB_LL)/linkedlist.h $(MB_LL)/harris.h $(MB_LL)/intset.h
-	$(CCOMPILE) $(CFLAGS) -c -o $(MB_LL)/test.o $(MB_LL)/test.c
+	$(CCOMPILE) -c $(CFLAGS) -o $(MB_LL)/test.o $(MB_LL)/test.c
 
 mbll:  $(MBLLOBJS) $(TMH)
-	$(CCOMPILE) $(CFLAGS) $(MBLLOBJS) -o
+	$(CCOMPILE) -o mbll $(CFLAGS) $(MBLLOBJS)
 
 
 clean:
