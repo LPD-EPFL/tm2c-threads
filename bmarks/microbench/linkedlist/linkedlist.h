@@ -53,7 +53,7 @@ typedef struct node {
 
 typedef struct intset {
     union {
-        nxt_t *headi;
+        nxt_t headi;
         node_t *head;
     };
     
