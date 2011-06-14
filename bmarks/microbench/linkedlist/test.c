@@ -387,7 +387,7 @@ TASKMAIN(int argc, char **argv) {
     set_print(set);
     
     PRINT("Initializing DTM");
-    TM_INIT
+    TM_INITs
     i = 3;
     PRINT("set contains %d? %d", i, set_contains(set, i, 1));
     i = 6;
