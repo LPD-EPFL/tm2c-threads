@@ -65,12 +65,12 @@ inline long get_marked_ref(long w) {
  */
 node_t *harris_search(intset_t *set, val_t val, node_t **left_node) {
 	node_t *left_node_next, *right_node;
-	left_node_next = set->head;
+	left_node_next = set->headp;
 	
 search_again:
 	do {
-		node_t *t = set->head;
-		node_t *t_next = set->head->next;
+		node_t *t = set->headp;
+		node_t *t_next = set->headp->next;
 		
 		/* Find left_node and right_node */
 		do {
@@ -108,7 +108,7 @@ search_again:
  */
 int harris_find(intset_t *set, val_t val) {
 	node_t *right_node, *left_node;
-	left_node = set->head;
+	left_node = set->headp;
 	
 	right_node = harris_search(set, val, &left_node);
 	if ((!right_node->next) || right_node->val != val)
@@ -123,7 +123,7 @@ int harris_find(intset_t *set, val_t val) {
  */
 int harris_insert(intset_t *set, val_t val) {
 	node_t *newnode, *right_node, *left_node;
-	left_node = set->head;
+	left_node = set->headp;
 	
 	do {
 		right_node = harris_search(set, val, &left_node);
@@ -144,7 +144,7 @@ int harris_insert(intset_t *set, val_t val) {
  */
 int harris_delete(intset_t *set, val_t val) {
 	node_t *right_node, *right_node_next, *left_node;
-	left_node = set->head;
+	left_node = set->headp;
 	
 	do {
 		right_node = harris_search(set, val, &left_node);
