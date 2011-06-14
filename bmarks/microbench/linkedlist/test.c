@@ -173,8 +173,6 @@ TASKMAIN(int argc, char **argv) {
     RCCE_init(&argc, &argv);
     iRCCE_init();
 
-    PRINT("Initialized");
-
     struct option long_options[] = {
         // These options don't set a flag
         {"help", no_argument, NULL, 'h'},

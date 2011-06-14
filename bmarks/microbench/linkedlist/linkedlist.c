@@ -112,7 +112,6 @@ int set_contains(intset_t *set, val_t val, int transactional) {
     result = (next->val == val);
 
 #elif defined STM
-    PRINT("contains STM");
 
     node_t *prev, *next;
     val_t v = 0;
@@ -174,7 +173,6 @@ int set_add(intset_t *set, val_t val, int transactional) {
         result = set_seq_add(set, val);
 
 #elif defined STM
-        PRINT("add STM");
 
         node_t *prev, *next;
         val_t v;
@@ -230,7 +228,6 @@ int set_remove(intset_t *set, val_t val, int transactional) {
     }
 
 #elif defined STM
-    PRINT("remove STM");
 
     node_t *prev, *next;
     val_t v;
