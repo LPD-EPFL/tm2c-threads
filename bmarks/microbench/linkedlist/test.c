@@ -464,7 +464,7 @@ TASKMAIN(int argc, char **argv) {
 
     /* Cleanup STM */
 
-    free(data);
+    RCCE_shfree(data);
 
     RCCE_finalize();
     EXIT(0);
