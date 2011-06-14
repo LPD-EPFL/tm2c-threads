@@ -177,6 +177,11 @@ void *test(void *data) {
 }
 
 TASKMAIN(int argc, char **argv) {
+    dup2(STDOUT_FILENO, STDERR_FILENO);
+
+    RCCE_init(&argc, &argv);
+    iRCCE_init();
+
     struct option long_options[] = {
         // These options don't set a flag
         {"help", no_argument, NULL, 'h'},
@@ -458,5 +463,6 @@ TASKMAIN(int argc, char **argv) {
 
     free(data);
 
+    RCCE_finalize();
     EXIT(0);
 }
