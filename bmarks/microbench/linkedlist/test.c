@@ -381,6 +381,7 @@ TASKMAIN(int argc, char **argv) {
     printf("    #failures : %lu\n", data->failures_because_contention);
     printf("  Max retries : %lu\n", data->max_retries);
 
+    FLUSH;
     /* Delete set */
     set_delete(set);
 
