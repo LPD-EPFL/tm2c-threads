@@ -217,6 +217,8 @@ TASKMAIN(int argc, char **argv) {
                 /* Flag is automatically set */
                 break;
             case 'h':
+                ONCE
+            {
                 printf("intset -- STM stress test "
                         "(linked list)\n"
                         "\n"
@@ -248,6 +250,7 @@ TASKMAIN(int argc, char **argv) {
                         "        5 = all recursive elastic-tx,\n"
                         "        6 = harris lock-free\n"
                         );
+            }
                 exit(0);
             case 'A':
                 alternate = 1;
@@ -271,7 +274,10 @@ TASKMAIN(int argc, char **argv) {
                 unit_tx = atoi(optarg);
                 break;
             case '?':
+                ONCE
+            {
                 printf("Use -h or --help for help\n");
+            }
                 exit(0);
             default:
                 exit(1);
