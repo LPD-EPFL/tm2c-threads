@@ -394,6 +394,10 @@ TASKMAIN(int argc, char **argv) {
     PRINT("set contains %d? %d", i, set_contains(set, i, 1));
     i = 13;
     PRINT("set contains %d? %d", i, set_contains(set, i, 1));
+    i = 3;
+    PRINT("deleting %d? %d", i, set_remove(set, i, 1));
+    set_print(set);
+    PRINT("adding %d? %d", i, set_add(set, i, 1));
     TM_END_STATS
     
     set_delete(set);
