@@ -11,11 +11,9 @@
 #include "linkedlist.h"
 
 
-/*
 #define STM
-*/
 
-#define SEQUENTIAL
+//#define SEQUENTIAL
 
 node_t *new_node(val_t val, nxt_t next, int transactional) {
     node_t *node;
