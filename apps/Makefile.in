@@ -6,7 +6,7 @@ CFLAGS := $(CFLAGS) -I$(iRCCEINCLUDE)
 CFLAGSP := $(CFLAGS) -I$(iRCCEINCLUDE) -pthread
 TMH := $(iRCCEINCLUDE)/../src/pubSubTM.c $(iRCCEINCLUDE)/../src/rwhash.c $(iRCCEINCLUDE)/../src/log.c $(iRCCEINCLUDE)/pubSubTM.h \
 	$(iRCCEINCLUDE)/common.h $(iRCCEINCLUDE)/tm.h $(iRCCEINCLUDE)/stm.h \
-	$(iRCCEINCLUDE)/hashtable.h $(iRCCEINCLUDE)/rwhash.h $(iRCCEINCLUDE)/log.h
+	$(iRCCEINCLUDE)/hashtable.h $(iRCCEINCLUDE)/rwhash.h $(iRCCEINCLUDE)/log.h $(iRCCEINCLUDE)/mem.h
 
 PINGPONGOBJS  := iRCCE_pingpong.o   $(ARCHIVE)
 RCVALLOBJS  := iRCCE_recv_all.o   $(ARCHIVE)

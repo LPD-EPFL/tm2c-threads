@@ -14,10 +14,17 @@
 #include "common.h"
 #include "pubSubTM.h"
 #include "stm.h"
+#include "mem.h"
 
 #ifdef	__cplusplus
 extern "C" {
 #endif
+
+#define FOR(seconds)                    double starting__ = RCCE_wtime(), duration__;\
+                                            while ((duration__ =\
+                                            (RCCE_wtime() - starting__)) < (seconds))
+#define ONCE                            if (RCCE_ue() == 1 || RCCE_num_ues() == 1)
+
 
 #define BACKOFF
 #define BACKOFF_MAX 3
@@ -54,11 +61,10 @@ extern "C" {
         unsigned int NUM_UES = RCCE_num_ues();                          \
         tm_init(ID);
 
-
     int color(int id, void *aux) {
         return !(id % DSLNDPERNODES);
     }
-    
+
     inline void tm_init(unsigned int ID) {
         if (ID % DSLNDPERNODES == 0) {
             //dsl node
@@ -115,6 +121,7 @@ extern "C" {
     write_set_persist(stm_tx->write_set);               \
     ps_finish_all();                                    \
     stm_tx->state = COMMITED;                           \
+    mem_info_on_commit(stm_tx->mem_info);               \
     stm_tx_node->tx_starts += stm_tx->retries;          \
     stm_tx_node->tx_commited++;                         \
     stm_tx_node->tx_aborted += stm_tx->aborts;          \
@@ -168,7 +175,25 @@ extern "C" {
         //PRINTD("  | read/write_set_free");
         write_set_empty(stm_tx->write_set);
         read_set_empty(stm_tx->read_set);
+        mem_info_on_abort(stm_tx->mem_info);
     }
+
+    /*__________________________________________________________________________________________
+     * TRANSACTIONAL MEMORY ALLOCATION
+     * _________________________________________________________________________________________
+     */
+
+#define TX_MALLOC(size)                                                   \
+    stm_malloc(stm_tx->mem_info, (size_t) size)
+
+#define TX_SHMALLOC(size)                                                 \
+    stm_shmalloc(stm_tx->mem_info, (size_t) size)
+
+#define TX_FREE(addr)                                                     \
+    stm_free(stm_tx->mem_info, (void *) addr)
+
+#define TX_SHFREE(addr)                                                   \
+    stm_shfree(stm_tx->mem_info, (t_vcharp) addr)
 
     inline void * tx_load(write_set_t *ws, read_set_t *rs, void *addr) {
         write_entry_t *we;

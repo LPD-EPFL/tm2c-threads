@@ -15,6 +15,7 @@ extern "C" {
 #endif
 
 #include "log.h"
+#include "mem.h"
 
     typedef enum {
         IDLE,
@@ -29,6 +30,7 @@ extern "C" {
         //        stm_word_t end; /* End timestamp (validity range) */
         read_set_t *read_set; /* Read set */
         write_set_t *write_set; /* Write set */
+        mem_info_t *mem_info; /* Transactional mem alloc lists*/
         sigjmp_buf env; /* Environment for setjmp/longjmp */
         sigjmp_buf *jmp; /* Pointer to environment (NULL when not using setjmp/longjmp) */
         //        int nesting; /* Nesting level */
@@ -108,6 +110,7 @@ extern "C" {
         stm_tx_temp->state = state;
         stm_tx_temp->read_set = read_set_new();
         stm_tx_temp->write_set = write_set_new();
+        stm_tx_temp->mem_info = mem_info_new();
         //TODO: what about the env?
         stm_tx_temp->retries = 0;
         stm_tx_temp->aborts = 0;
@@ -140,6 +143,7 @@ extern "C" {
         
         write_set_free((*stm_tx)->write_set);
         read_set_free((*stm_tx)->read_set);
+        mem_info_free((*stm_tx)->mem_info);
         free((*stm_tx));
         *stm_tx = NULL;
     }
