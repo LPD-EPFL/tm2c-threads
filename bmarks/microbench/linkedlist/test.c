@@ -172,7 +172,6 @@ void *test(void *data) {
         }
     }
 
-    /* Free transaction */
     TM_END_STATS
     return NULL;
 }
@@ -382,34 +381,7 @@ TASKMAIN(int argc, char **argv) {
     FLUSH;
     /* Delete set */
     
-    set_print(set);
     
-    PRINT("Initializing DTM");
-    TM_INITs
-    i = 3;
-    PRINT("set contains %d? %d", i, set_contains(set, i, 1));
-    i = 6;
-    PRINT("set contains %d? %d", i, set_contains(set, i, 1));
-    i = 13;
-    PRINT("set contains %d? %d", i, set_contains(set, i, 1));
-    i = 3;
-    PRINT("deleting %d? %d", i, set_remove(set, i, 1));
-    set_print(set);
-    PRINT("adding %d? %d", i, set_add(set, i, 1));
-    set_print(set);
-    i = 3;
-    PRINT("deleting %d? %d", i, set_remove(set, i, 1));
-    set_print(set);
-    i = 4;
-    PRINT("deleting %d? %d", i, set_remove(set, i, 1));
-    i = 4;
-    PRINT("deleting %d? %d", i, set_remove(set, i, 1));
-    i = 5;
-    PRINT("deleting %d? %d", i, set_remove(set, i, 1));
-    set_print(set);
-    PRINT("adding %d? %d", i, set_add(set, i, 0));
-    set_print(set);
-    TM_END_STATS
     
     set_delete(set);
 
