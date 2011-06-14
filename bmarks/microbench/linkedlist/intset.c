@@ -152,7 +152,8 @@ int set_remove(intset_t *set, val_t val, int transactional) {
     }
     result = (next->val == val);
     if (result) {
-        ND(prev->next) = ND(next->next);
+        node_t * t = ND(prev->next);
+        t = ND(next->next);
         free(next);
     }
 
