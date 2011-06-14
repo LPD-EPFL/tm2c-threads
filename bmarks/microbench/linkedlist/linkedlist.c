@@ -92,10 +92,6 @@ int set_size(intset_t *set) {
 extern stm_tx_t *stm_tx = NULL;
 extern stm_tx_node_t *stm_tx_node = NULL;
 
-#define SET             set
-#define ND(offs)        O2N(SET, (offs))
-#define OF(node)        N2O(SET, (node))
-
 int set_contains(intset_t *set, val_t val, int transactional) {
     int result;
 
