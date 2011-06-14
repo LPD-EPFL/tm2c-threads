@@ -398,6 +398,19 @@ TASKMAIN(int argc, char **argv) {
     PRINT("deleting %d? %d", i, set_remove(set, i, 1));
     set_print(set);
     PRINT("adding %d? %d", i, set_add(set, i, 1));
+    set_print(set);
+    i = 3;
+    PRINT("deleting %d? %d", i, set_remove(set, i, 1));
+    set_print(set);
+    i = 4;
+    PRINT("deleting %d? %d", i, set_remove(set, i, 1));
+    i = 4;
+    PRINT("deleting %d? %d", i, set_remove(set, i, 1));
+    i = 5;
+    PRINT("deleting %d? %d", i, set_remove(set, i, 1));
+    set_print(set);
+    PRINT("seq adding %d? %d", i, set_seq_add(set, i));
+    set_print(set);
     TM_END_STATS
     
     set_delete(set);
