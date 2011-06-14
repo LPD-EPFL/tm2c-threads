@@ -23,8 +23,8 @@
 
 #include "linkedlist.h"
 
-stm_tx_t *stm_tx = NULL;
-stm_tx_node_t *stm_tx_node = NULL;
+extern stm_tx_t *stm_tx = NULL;
+extern stm_tx_node_t *stm_tx_node = NULL;
 
 /* ################################################################### *
  * RANDOM
