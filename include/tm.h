@@ -57,6 +57,7 @@ extern "C" {
         tm_init(ID);
 
 #define TM_INITs                                                        \
+    stm_tx = NULL; stm_tx_node = NULL;                                  \
     RCCE_COMM RCCE_COMM_APP;                                            \
     RCCE_comm_split(color, NULL, &RCCE_COMM_APP);                       \
     {                                                                   \
