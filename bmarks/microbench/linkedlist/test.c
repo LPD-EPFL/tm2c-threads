@@ -312,7 +312,7 @@ TASKMAIN(int argc, char **argv) {
     set = set_new();
 
     BARRIERW;
-    
+
     ONCE
     {
         /* Populate set */
@@ -333,11 +333,9 @@ TASKMAIN(int argc, char **argv) {
         assert(size == initial);
         FLUSH
     }
-    else {
-        void * offs = shmem_init((initial + (RCCE_ue() * 1000)) * sizeof(node_t));
-        PRINT("Starting shmalloc from offset %d", OF(offs));
-    }
-    PRINT("Next shmalloc gives %d", OF(RCCE_shmalloc(4)));
+    
+    void * offs = shmem_init((initial + (RCCE_ue() * 1000)) * sizeof (node_t));
+    PRINT("Starting shmalloc from offset %5d / %5d / %5d", OF(offs), OF(RCCE_shmalloc(4)), OF(RCCE_shmalloc(4)));
 
     /* Access set from all threads */
     data->first = last;
