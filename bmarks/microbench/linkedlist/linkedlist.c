@@ -137,7 +137,7 @@ int set_contains(intset_t *set, val_t val, int transactional) {
     return result;
 }
 
-inline int set_seq_add(intset_t *set, val_t val) {
+static int set_seq_add(intset_t *set, val_t val) {
     int result;
     node_t *prev, *next;
 
