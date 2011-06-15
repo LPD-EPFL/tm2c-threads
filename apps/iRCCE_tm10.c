@@ -55,8 +55,7 @@ MAIN(int argc, char **argv) {
             /*
              * Benchmark SIS_SIZE reads
              */
-            double duration = 0;
-    double start_;
+    duration = 0;
     TX_START
             int i;
     for (i = 0; i < SIS_SIZE; i++) {
@@ -72,7 +71,7 @@ MAIN(int argc, char **argv) {
     BMSTART(s1)
     TX_RRLS(rl)
     BMEND
-    *rl = sis + (223 * sizeof(int));
+    rl = sis + (223 * sizeof(int));
     sprintf(s1, "TX_RRLS(%p)", rl);
     BMSTART(s1)
     TX_RRLS(rl)
