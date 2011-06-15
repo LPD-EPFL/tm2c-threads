@@ -105,7 +105,6 @@ extern "C" {
         mb->next = stm_mem_info->allocated_shmem;
         stm_mem_info->allocated_shmem = mb;
 
-        PRINT("//alocated %p", mb->addr);
         return mb->addr;
     }
 
