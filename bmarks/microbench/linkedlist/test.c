@@ -319,10 +319,12 @@ TASKMAIN(int argc, char **argv) {
         while (i < initial) {
             val = rand_range(range);
             if (set_add(set, val, 0)) {
+                PRINTS("%d -> ", val);
                 last = val;
                 i++;
             }
         }
+        PRINTSF("NULL\n");
         size = set_size(set);
         printf("Set size     : %d\n", size);
         set_print(set);
