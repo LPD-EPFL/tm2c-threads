@@ -125,6 +125,7 @@ int set_contains(intset_t *set, val_t val, int transactional) {
             break;
         prev = next;
         next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+        TX_RRLS(prev);
     }
     TX_COMMIT
     result = (v == val);
@@ -174,7 +175,7 @@ int set_add(intset_t *set, val_t val, int transactional) {
 
 #elif defined STM
 
-        node_t *prev, *next;
+        node_t *prev, *next, *prevprev;
         val_t v;
         TX_START
         prev = ND(set->head);
@@ -183,8 +184,12 @@ int set_add(intset_t *set, val_t val, int transactional) {
             v = *(val_t *) TX_LOAD(&next->val);
             if (v >= val)
                 break;
+            prevprev = prev;
             prev = next;
             next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+            if (prevprev != ND(set->head)) {
+                TX_RRLS(prevprev);
+            }
         }
         result = (v != val);
         if (result) {
@@ -229,7 +234,7 @@ int set_remove(intset_t *set, val_t val, int transactional) {
 
 #elif defined STM
 
-    node_t *prev, *next;
+    node_t *prev, *next, *prevprev;
     val_t v;
     node_t *n;
     TX_START
@@ -239,8 +244,12 @@ int set_remove(intset_t *set, val_t val, int transactional) {
         v = *(val_t *) TX_LOAD(&next->val);
         if (v >= val)
             break;
+        prevprev = prev;
         prev = next;
         next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+        if (prevprev != ND(set->head)) {
+            TX_RRLS(prevprev);
+        }
     }
     result = (v == val);
     if (result) {
