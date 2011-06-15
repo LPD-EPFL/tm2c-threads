@@ -65,6 +65,12 @@ void ps_init_(void) {
     PRINT("[APP NODE] Initialized pub-sub..");
 }
 
+static inline void ps_send(unsigned short int target, PS_COMMAND_TYPE command, unsigned int address,
+        iRCCE_SEND_REQUEST *s, char * data) {
+
+
+}
+
 static inline void ps_sendb(unsigned short int target, PS_COMMAND_TYPE command, unsigned int address, CONFLICT_TYPE response) {
 
     psc->type = command;
@@ -123,9 +129,9 @@ void ps_unsubscribe(void *address) {
 
     unsigned int address_offs;
     unsigned short int responsible_node = DHT_get_responsible_node(address, &address_offs);
-    
+
     nodes_contacted[responsible_node]--;
-    
+
     ps_sendb(responsible_node, PS_UNSUBSCRIBE, address_offs, NO_CONFLICT);
 }
 
@@ -133,21 +139,33 @@ void ps_publish_finish(void *address) {
 
     unsigned int address_offs;
     unsigned short int responsible_node = DHT_get_responsible_node(address, &address_offs);
-    
+
     nodes_contacted[responsible_node]--;
-    
+
     ps_sendb(responsible_node, PS_PUBLISH_FINISH, address_offs, NO_CONFLICT);
 }
 
 void ps_finish_all() {
 
     int i;
+    iRCCE_SEND_REQUEST sends[NUM_UES];
+    char data[PS_BUFFER_SIZE];
+    psc->type = PS_REMOVE_NODE;
+    memcpy(data, psc, sizeof (PS_COMMAND));
     for (i = 0; i < NUM_UES; i++) {
         if (nodes_contacted[i] != 0) { //can be changed to non-blocking
+#define FINISH_ALL_PARALLEL
+#ifndef FINISH_ALL_PARALLEL
             ps_sendb(i, PS_REMOVE_NODE, 0, NO_CONFLICT);
+#else
+            if (iRCCE_isend(data, PS_BUFFER_SIZE, i, &sends[i]) != iRCCE_SUCCESS) {
+                iRCCE_add_send_to_wait_list(&waitlist, &sends[i]);
+            }
+#endif
             nodes_contacted[i] = 0;
         }
     }
+    iRCCE_wait_all(&waitlist);
 }
 
 /*
@@ -171,7 +189,7 @@ inline BOOLEAN shmem_init_start_address() {
 }
 
 static inline unsigned int shmem_address_offset(void *shmem_address) {
-    return ((int) shmem_address) - shmem_start_address;
+    return ((int) shmem_address) -shmem_start_address;
 }
 
 static inline unsigned int DHT_get_responsible_node(void *shmem_address, unsigned int *address_offset) {
