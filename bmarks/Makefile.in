@@ -35,13 +35,10 @@ mtest: $(MTESTOBJS)
 mtest.o: mtest.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h $(TMH)
 	$(CCOMPILE) -c $(CFLAGS) mtest.c
 
-$(MB_LL)/linkedlist.o: $(MB_LL)/test.c $(MB_LL)/linkedlist.h $(MB_LL)/linkedlist.c $(MB_LL)/harris.h $(MB_LL)/intset.h
+$(MB_LL)/linkedlist.o: $(MB_LL)/test.c $(MB_LL)/linkedlist.h $(MB_LL)/linkedlist.c $(MB_LL)/harris.h
 	$(CCOMPILE) -c $(CFLAGS) -o $(MB_LL)/linkedlist.o $(MB_LL)/linkedlist.c
 
-$(MB_LL)/intset.o: $(MB_LL)/linkedlist.h $(MB_LL)/harris.h
-	$(CCOMPILE) -c $(CFLAGS) -o $(MB_LL)/intset.o $(MB_LL)/intset.c
-
-$(MB_LL)/test.o: $(MB_LL)/test.c $(MB_LL)/linkedlist.h $(MB_LL)/linkedlist.c $(MB_LL)/harris.h $(MB_LL)/intset.h
+$(MB_LL)/test.o: $(MB_LL)/test.c $(MB_LL)/linkedlist.h $(MB_LL)/linkedlist.c $(MB_LL)/harris.h
 	$(CCOMPILE) -c $(CFLAGS) -o $(MB_LL)/test.o $(MB_LL)/test.c
 
 mbll:  $(MBLLOBJS) $(TMH)
