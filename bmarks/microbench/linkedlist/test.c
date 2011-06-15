@@ -311,6 +311,8 @@ TASKMAIN(int argc, char **argv) {
 
     set = set_new();
 
+    BARRIERW;
+    
     ONCE
     {
         /* Populate set */
