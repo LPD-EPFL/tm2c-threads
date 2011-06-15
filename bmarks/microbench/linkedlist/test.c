@@ -334,7 +334,8 @@ TASKMAIN(int argc, char **argv) {
         FLUSH
     }
     else {
-        shmem_init((initial + (RCCE_ue() * 1000)) * sizeof(node_t));   
+        void * offs = shmem_init((initial + (RCCE_ue() * 1000)) * sizeof(node_t));
+        PRINT("Starting shmalloc from offset %d", OF(offs));
     }
 
     /* Access set from all threads */
