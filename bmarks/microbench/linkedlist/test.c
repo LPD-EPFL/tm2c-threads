@@ -165,6 +165,11 @@ void *test(void *data, double duration) {
 
     TM_END_STATS
     BARRIER
+    ONCE
+    {
+        set_print(d->set);
+    }
+    BARRIER
     return NULL;
 }
 
@@ -334,7 +339,8 @@ TASKMAIN(int argc, char **argv) {
         assert(size == initial);
         FLUSH
     }
-    void * offs = shmem_init((initial + (RCCE_ue() * 1000)) * sizeof (node_t));
+
+    shmem_init((initial + (RCCE_ue() * 1000)) * sizeof (node_t));
 
     /* Access set from all threads */
     data->first = last;
