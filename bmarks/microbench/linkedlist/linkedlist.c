@@ -10,13 +10,8 @@
 
 #include "linkedlist.h"
 
-
-#define STM
-
-//#define SEQUENTIAL
-
 void *shmem_init(size_t offset) {
-    return (void *)(RCCE_shmalloc(offset) + offset);
+    return (void *) (RCCE_shmalloc(offset) + offset);
 }
 
 node_t *new_node(val_t val, nxt_t next, int transactional) {
@@ -128,7 +123,9 @@ int set_contains(intset_t *set, val_t val, int transactional) {
             break;
         prev = next;
         next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+#ifdef EARLY_RELEASE
         TX_RRLS(prev);
+#endif
     }
     TX_COMMIT
     result = (v == val);
@@ -178,7 +175,10 @@ int set_add(intset_t *set, val_t val, int transactional) {
 
 #elif defined STM
 
-        node_t *prev, *next, *prevprev;
+        node_t *prev, *next;
+#ifdef EARLY_RELEASE
+        node_t *prevprev;
+#endif
         val_t v;
         TX_START
         prev = ND(set->head);
@@ -190,9 +190,11 @@ int set_add(intset_t *set, val_t val, int transactional) {
             prevprev = prev;
             prev = next;
             next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+#ifdef EARLY_RELEASE
             if (prevprev != ND(set->head)) {
                 TX_RRLS(prevprev);
             }
+#endif
         }
         result = (v != val);
         if (result) {
@@ -238,7 +240,10 @@ int set_remove(intset_t *set, val_t val, int transactional) {
 
 #elif defined STM
 
-    node_t *prev, *next, *prevprev;
+    node_t *prev, *next;
+#ifdef EARLY_RELEASE
+    node_t *prevprev;
+#endif
     val_t v;
     node_t *n;
     TX_START
@@ -251,9 +256,11 @@ int set_remove(intset_t *set, val_t val, int transactional) {
         prevprev = prev;
         prev = next;
         next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+#ifdef EARLY_RELEASE
         if (prevprev != ND(set->head)) {
             TX_RRLS(prevprev);
         }
+#endif
     }
     result = (v == val);
     if (result) {
