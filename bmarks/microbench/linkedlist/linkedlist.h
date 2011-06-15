@@ -20,6 +20,13 @@
 
 #include "tm.h"
 
+/*______________________________________________________________________________
+ * SETTINGS
+ * _____________________________________________________________________________
+ */
+#define STM
+#define EARLY_RELEASE
+
 #define DEFAULT_DURATION                10
 #define DEFAULT_INITIAL                 256
 #define DEFAULT_RANGE                   0x7FFFFFFF
