@@ -111,6 +111,12 @@ static void dsl_communication() {
                 case PS_REMOVE_NODE:
                     ps_hashtable_delete_node(ps_hashtable, sender);
                     break;
+                case PS_UNSUBSCRIBE:
+                    ps_hashtable_delete(ps_hashtable, sender, ps_remote->address, READ);
+                    break;
+                case PS_PUBLISH_FINISH:
+                    ps_hashtable_delete(ps_hashtable, sender, ps_remote->address, WRITE);
+                    break;
                 default:
                     PRINTD("REMOTE MSG: ??");
             }

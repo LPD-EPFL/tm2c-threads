@@ -154,6 +154,14 @@ extern "C" {
 
 #define TX_STORE(addr, ptr, datatype)                   \
     write_set_update(stm_tx->write_set, datatype, ((void *) (ptr)), ((void *) (addr)))
+    
+    /*early release of READ lock -- TODO: the entry remains in read-set, so one
+     SHOULD NOT try to re-read the address cause the tx things it keeps the lock*/
+#define TX_RRLS(addr)                                   \
+    ps_unsubscribe((void*) (addr));
+
+#define TX_WRLS(addr)                                   \
+    ps_publish_finish((void*) (addr));
 
     inline void udelay(unsigned int micros) {
         double __ts_end = RCCE_wtime() + ((double) micros / 1000000);

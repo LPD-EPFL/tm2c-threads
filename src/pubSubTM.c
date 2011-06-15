@@ -30,8 +30,8 @@ static inline void ps_recvb(unsigned short int from);
 
 inline BOOLEAN shmem_init_start_address();
 inline void unsubscribe(int nodeId, int shmem_address);
-inline unsigned int shmem_address_offset(void *shmem_address);
-inline unsigned int DHT_get_responsible_node(void *shmem_address, unsigned int *address_offset);
+static inline unsigned int shmem_address_offset(void *shmem_address);
+static inline unsigned int DHT_get_responsible_node(void *shmem_address, unsigned int *address_offset);
 inline void publish_finish(int nodeId, int shmem_address);
 
 void ps_init_(void) {
@@ -123,6 +123,9 @@ void ps_unsubscribe(void *address) {
 
     unsigned int address_offs;
     unsigned short int responsible_node = DHT_get_responsible_node(address, &address_offs);
+    
+    nodes_contacted[responsible_node]--;
+    
     ps_sendb(responsible_node, PS_UNSUBSCRIBE, address_offs, NO_CONFLICT);
 }
 
@@ -130,6 +133,9 @@ void ps_publish_finish(void *address) {
 
     unsigned int address_offs;
     unsigned short int responsible_node = DHT_get_responsible_node(address, &address_offs);
+    
+    nodes_contacted[responsible_node]--;
+    
     ps_sendb(responsible_node, PS_PUBLISH_FINISH, address_offs, NO_CONFLICT);
 }
 
@@ -164,11 +170,11 @@ inline BOOLEAN shmem_init_start_address() {
     return FALSE;
 }
 
-inline unsigned int shmem_address_offset(void *shmem_address) {
+static inline unsigned int shmem_address_offset(void *shmem_address) {
     return ((int) shmem_address) - shmem_start_address;
 }
 
-inline unsigned int DHT_get_responsible_node(void *shmem_address, unsigned int *address_offset) {
+static inline unsigned int DHT_get_responsible_node(void *shmem_address, unsigned int *address_offset) {
     /* shift right by DHT_ADDRESS_MASK, thus making 2^DHT_ADDRESS_MASK continuous
         address handled by the same node*/
     *address_offset = shmem_address_offset(shmem_address);
