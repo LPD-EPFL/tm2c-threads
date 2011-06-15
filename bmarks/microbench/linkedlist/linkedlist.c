@@ -261,6 +261,7 @@ int set_remove(intset_t *set, val_t val, int transactional) {
         nxt_t nxt = OF(n);
         TX_STORE(&prev->next, &nxt, TYPE_UINT);
         TX_SHFREE(next);
+        PRINT("Freed node %5d. Value: %d", OF(next), next->val);
     }
     TX_COMMIT
 
