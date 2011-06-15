@@ -62,6 +62,7 @@ typedef struct intset {
 #define ND(offs)                        O2N(SET, (offs))
 #define OF(node)                        N2O(SET, (node))
 
+void *shmem_init(size_t offset);
 
 node_t *new_node(val_t val, nxt_t next, int transactional);
 intset_t *set_new();

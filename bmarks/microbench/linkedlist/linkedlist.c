@@ -15,6 +15,10 @@
 
 //#define SEQUENTIAL
 
+void *shmem_init(size_t offset) {
+    return (void *)(RCCE_shmalloc(offset) + offset);
+}
+
 node_t *new_node(val_t val, nxt_t next, int transactional) {
     node_t *node;
 

@@ -333,6 +333,9 @@ TASKMAIN(int argc, char **argv) {
         assert(size == initial);
         FLUSH
     }
+    else {
+        shmem_init((initial + (RCCE_ue() * 1000)) * sizeof(node_t));   
+    }
 
     /* Access set from all threads */
     data->first = last;
