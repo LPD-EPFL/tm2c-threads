@@ -64,10 +64,11 @@ void set_delete(intset_t *set) {
 
 int set_size(intset_t *set) {
     int size = 0;
-    node_t *node;
+    node_t *node, head;
 
     /* We have at least 2 elements */
-    node = ND(ND(set->head));
+    head = ND(set->head);
+    node = ND(head);
     while (node->nextp != NULL) {
         size++;
         node = ND(node->next);
