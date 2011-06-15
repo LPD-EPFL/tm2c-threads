@@ -13,6 +13,7 @@ RCVALLOBJS  := iRCCE_recv_all.o   $(ARCHIVE)
 ALL2ALLOBJS  := iRCCE_all2all.o   $(ARCHIVE)
 ALLOBJS  := iRCCE_all.o   $(ARCHIVE)
 TMOBJS  := iRCCE_tm.o   $(ARCHIVE)
+TMO10BJS  := iRCCE_tm10.o   $(ARCHIVE)
 TM9OBJS  := iRCCE_tm9.o   $(ARCHIVE)
 TMO8BJS  := iRCCE_tm8.o   $(ARCHIVE)
 TM7OBJS  := iRCCE_tm7.o   $(ARCHIVE)
@@ -77,6 +78,9 @@ all: $(ALLOBJS)
 
 tm: $(TMOBJS)
 	$(CCOMPILE) -o tm $(TMOBJS) $(CFLAGS)
+
+tm10: $(TMO10BJS)
+	$(CCOMPILE) -o tm10 $(TMO10BJS) $(CFLAGS)
 
 tm9: $(TM9OBJS)
 	$(CCOMPILE) -o tm9 $(TM9OBJS) $(CFLAGS)
@@ -169,6 +173,9 @@ iRCCE_all.o: iRCCE_all.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h
 
 iRCCE_tm.o: iRCCE_tm.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h $(TMH)
 	$(CCOMPILE) -c $(CFLAGS) iRCCE_tm.c
+
+iRCCE_tm10.o: iRCCE_tm10.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h $(TMH)
+	$(CCOMPILE) -c $(CFLAGS) iRCCE_tm10.c
 
 iRCCE_tm9.o: iRCCE_tm9.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h $(TMH)
 	$(CCOMPILE) -c $(CFLAGS) iRCCE_tm9.c
