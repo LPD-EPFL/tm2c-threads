@@ -11,7 +11,7 @@
 #ifdef	__cplusplus
 extern "C" {
 #endif
-    
+
 #define DSL
 
 #define DSLNDPERNODES 2 /* 1 dedicated DS-Locking core per DSLNDPERNODES cores*/
@@ -23,7 +23,12 @@ extern "C" {
 #define PRINTS(args...)  printf(args);
 #define PRINTSF(args...)  printf(args); fflush(stdout)
 #define PRINTSME(args...)  printf("[%02d] ", RCCE_ue()); printf(args);
-    
+
+#define BMSTART(what) {const char *__bchm_target = what; double __start_time = RCCE_wtime();
+#define BMEND double __end_time = RCCE_wtime(); ME; printf("[benchmarking] "); printf("%s", __bchm_target);\
+        printf(" | %f secs\n", __end_time - __start_time); fflush(stdout);}
+
+
 #define FLUSH fflush(stdout);
 #ifdef DEBUG
 #define FLUSHD fflush(stdout);
@@ -33,9 +38,6 @@ extern "C" {
 #define PRINTDNN(args...) ME; printf(args); fflush(stdout)
 #define PRINTD1(UE, args...) if(RCCE_ue() == (UE)) { ME; printf(args); printf("\n"); fflush(stdout); }
 #define TS printf("[%f] ", RCCE_wtime())
-#define BMSTART(what) {const char *__bchm_target = what; double __start_time = RCCE_wtime();
-#define BMEND double __end_time = RCCE_wtime(); ME; printf("[benchmarking] "); printf("%s", __bchm_target);\
-        printf(" | %f secs\n", __end_time - __start_time); fflush(stdout);}
 #else
 #define FLUSHD
 #define ME
@@ -44,8 +46,6 @@ extern "C" {
 #define PRINTDNN(args...)
 #define PRINTD1(UE, args...)
 #define TS
-#define BMSTART(what)
-#define BMEND
 #endif
 
     typedef enum {
