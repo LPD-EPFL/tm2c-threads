@@ -50,7 +50,6 @@ intset_t *set_new() {
     max = new_node(VAL_MAX, NULL, 0);
     min = new_node(VAL_MIN, OF(max), 0);
     set->head = OF(min);
-    PRINT("offsets: min: %d, max: %d", OF(min), OF(max));
     return set;
 }
 
