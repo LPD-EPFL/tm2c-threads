@@ -301,6 +301,9 @@ TASKMAIN(int argc, char **argv) {
     ONCE
     {
         printf("Bench type   : linked list\n");
+#ifdef EARLY_RELEASE 
+        printf("                using early-release\n");
+#endif
         printf("Duration     : %f\n", duration);
         printf("Initial size : %d\n", initial);
         printf("Nb cores     : %d\n", nb_app_cores);
