@@ -187,7 +187,9 @@ int set_add(intset_t *set, val_t val, int transactional) {
             v = *(val_t *) TX_LOAD(&next->val);
             if (v >= val)
                 break;
-            prevprev = prev;
+#ifdef EARLY_RELEASE
+        prevprev = prev;
+#endif
             prev = next;
             next = ND(*(nxt_t *) TX_LOAD(&prev->next));
 #ifdef EARLY_RELEASE
@@ -253,7 +255,9 @@ int set_remove(intset_t *set, val_t val, int transactional) {
         v = *(val_t *) TX_LOAD(&next->val);
         if (v >= val)
             break;
+#ifdef EARLY_RELEASE
         prevprev = prev;
+#endif
         prev = next;
         next = ND(*(nxt_t *) TX_LOAD(&prev->next));
 #ifdef EARLY_RELEASE
@@ -273,7 +277,7 @@ int set_remove(intset_t *set, val_t val, int transactional) {
     TX_COMMIT
 
 #elif defined LOCKFREE
-    result = harris_delete(set, val);
+        result = harris_delete(set, val);
 #endif
 
     return result;
