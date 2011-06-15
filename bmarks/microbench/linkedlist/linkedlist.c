@@ -197,7 +197,7 @@ int set_add(intset_t *set, val_t val, int transactional) {
         result = (v != val);
         if (result) {
             nxt_t nxt = OF(new_node(val, OF(next), transactional));
-            PRINT("Created node %5d. Value: %d", nxt, val);
+            PRINTD("Created node %5d. Value: %d", nxt, val);
             TX_STORE(&prev->next, &nxt, TYPE_UINT);
         }
         TX_COMMIT
@@ -261,7 +261,7 @@ int set_remove(intset_t *set, val_t val, int transactional) {
         nxt_t nxt = OF(n);
         TX_STORE(&prev->next, &nxt, TYPE_UINT);
         TX_SHFREE(next);
-        PRINT("Freed node   %5d. Value: %d", OF(next), next->val);
+        PRINTD("Freed node   %5d. Value: %d", OF(next), next->val);
     }
     TX_COMMIT
 
