@@ -194,6 +194,7 @@ int set_add(intset_t *set, val_t val, int transactional) {
         result = (v != val);
         if (result) {
             nxt_t nxt = OF(new_node(val, OF(next), transactional));
+            PRINT("Created node %3d. Value: %d", nxt, val);
             TX_STORE(&prev->next, &nxt, TYPE_UINT);
         }
         TX_COMMIT
