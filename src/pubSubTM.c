@@ -146,15 +146,19 @@ void ps_publish_finish(void *address) {
 }
 
 void ps_finish_all() {
-
+#define FINISH_ALL_PARALLEL
     int i;
+
+#ifdef FINISH_ALL_PARALLEL
     iRCCE_SEND_REQUEST sends[NUM_UES];
     char data[PS_BUFFER_SIZE];
     psc->type = PS_REMOVE_NODE;
     memcpy(data, psc, sizeof (PS_COMMAND));
+#endif
+    
     for (i = 0; i < NUM_UES; i++) {
         if (nodes_contacted[i] != 0) { //can be changed to non-blocking
-#define FINISH_ALL_PARALLEL
+
 #ifndef FINISH_ALL_PARALLEL
             ps_sendb(i, PS_REMOVE_NODE, 0, NO_CONFLICT);
 #else
@@ -165,7 +169,11 @@ void ps_finish_all() {
             nodes_contacted[i] = 0;
         }
     }
+
+#ifdef FINISH_ALL_PARALLEL
     iRCCE_wait_all(&waitlist);
+#endif
+
 }
 
 /*
