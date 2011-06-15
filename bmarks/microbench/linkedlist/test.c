@@ -333,7 +333,7 @@ TASKMAIN(int argc, char **argv) {
         assert(size == initial);
         FLUSH
     }
-    
+    //
     void * offs = shmem_init((initial + (RCCE_ue() * 1000)) * sizeof (node_t));
     PRINT("Starting shmalloc from offset %5d / %5d / %5d", OF(offs), OF(RCCE_shmalloc(4)), OF(RCCE_shmalloc(4)));
 
