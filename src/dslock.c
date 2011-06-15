@@ -113,7 +113,6 @@ static void dsl_communication() {
                     break;
                 case PS_UNSUBSCRIBE:
                     ps_hashtable_delete(ps_hashtable, sender, ps_remote->address, READ);
-                    ps_hashtable_print(ps_hashtable);
                     break;
                 case PS_PUBLISH_FINISH:
                     ps_hashtable_delete(ps_hashtable, sender, ps_remote->address, WRITE);
