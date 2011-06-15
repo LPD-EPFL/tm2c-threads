@@ -93,13 +93,13 @@ inline void rw_entry_print_readers(rw_entry_t *rwe) {
     int i;
     for (i = 0; i < 48; i++) {
         if (convert.lli & 0x01) {
-            PRINTF("%d -> ", i);
+            PRINTS("%d -> ", i);
         }
         convert.lli >>= 1;
     }
 
-    PRINTF("NULL\n");
-    FLUSHD;
+    PRINTS("NULL\n");
+    FLUSH;
 }
 
 /*  insert a reader or a writer for the bucket_entry->address address to the bucket_entry.
