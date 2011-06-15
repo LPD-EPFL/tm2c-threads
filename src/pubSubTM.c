@@ -146,7 +146,7 @@ void ps_publish_finish(void *address) {
 }
 
 void ps_finish_all() {
-#define FINISH_ALL_PARALLEL
+#define FINISH_ALL_PARALLEL__
     int i;
 
 #ifdef FINISH_ALL_PARALLEL
