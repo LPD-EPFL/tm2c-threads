@@ -344,20 +344,20 @@ inline void ps_hashtable_delete_node(ps_hashtable_t ps_hashtable, unsigned int n
  */
 inline void ps_hashtable_print(ps_hashtable_t ps_hashtable) {
 
-    PRINTF("__PRINT PS_HASHTABLE________________________________________________\n");
+    PRINTS("__PRINT PS_HASHTABLE________________________________________________\n");
     int i;
     for (i = 0; i < NUM_OF_BUCKETS; i++) {
         bucket_t *bucket = ps_hashtable[i];
-        PRINTF("Bucket %-3d | #Entries: %-3d\n", i, bucket->nb_entries);
+        PRINTS("Bucket %-3d | #Entries: %-3d\n", i, bucket->nb_entries);
         bucket_entry_t *curbe = bucket->head;
         while (curbe != NULL) {
             rw_entry_t *rwe = curbe->rw_entry;
-            PRINTF(" [%-3d]: Write: %-3d\n   ", curbe->address, rwe->shorts[3]);
+            PRINTS(" [%-3d]: Write: %-3d\n   ", curbe->address, rwe->shorts[3]);
             rw_entry_print_readers(rwe);
 
 
             curbe = curbe->next;
         }
     }
-    FLUSHD;
+    FLUSH;
 }
