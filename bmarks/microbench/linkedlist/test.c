@@ -330,6 +330,7 @@ TASKMAIN(int argc, char **argv) {
         size = set_size(set);
         printf("Set size     : %d\n", size);
         set_print(set);
+        assert(size == initial);
         FLUSH
     }
 
