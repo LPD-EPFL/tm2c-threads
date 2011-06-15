@@ -64,7 +64,7 @@ void set_delete(intset_t *set) {
 
 int set_size(intset_t *set) {
     int size = 0;
-    node_t *node, head;
+    node_t *node, *head;
 
     /* We have at least 2 elements */
     head = ND(set->head);
