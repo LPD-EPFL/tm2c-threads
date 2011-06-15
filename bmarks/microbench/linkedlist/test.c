@@ -164,6 +164,7 @@ void *test(void *data, double duration) {
     }
 
     TM_END_STATS
+    BARRIER
     return NULL;
 }
 
