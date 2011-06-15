@@ -65,13 +65,13 @@ MAIN(int argc, char **argv) {
     }
 
     
-    int *rl = sis + (100 * sizeof(int));
+    int *rl = sis + 100;
     char * s1;
     sprintf(s1, "TX_RRLS(%p)", rl);
     BMSTART(s1)
     TX_RRLS(rl)
     BMEND
-    rl = sis + (223 * sizeof(int));//
+    rl = sis + 223;//
     sprintf(s1, "TX_RRLS(%p)", rl);
     BMSTART(s1)
     TX_RRLS(rl)
