@@ -67,8 +67,7 @@ int set_size(intset_t *set) {
     node_t *node;
 
     /* We have at least 2 elements */
-    node = ND(set->head);
-    node = ND(node->next);
+    node = ND(ND(set->head));
     while (node->nextp != NULL) {
         size++;
         node = ND(node->next);
