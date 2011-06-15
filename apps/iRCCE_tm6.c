@@ -5,6 +5,8 @@
 
 #include "tm.h"
 
+stm_tx_t stm_tx;
+stm_tx_node_t stm_tx_node;
 
 MAIN(int argc, char **argv) {
     unsigned int SIS_SIZE = 4800;
