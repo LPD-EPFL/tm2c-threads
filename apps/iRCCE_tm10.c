@@ -71,7 +71,7 @@ MAIN(int argc, char **argv) {
     BMSTART(s1)
     TX_RRLS(rl)
     BMEND
-    rl = sis + (223 * sizeof(int));
+    rl = sis + (223 * sizeof(int));//
     sprintf(s1, "TX_RRLS(%p)", rl);
     BMSTART(s1)
     TX_RRLS(rl)
