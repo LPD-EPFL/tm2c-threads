@@ -345,6 +345,7 @@ TASKMAIN(int argc, char **argv) {
     data->set = set;
     data->failures_because_contention = 0;
 
+    BARRIER;
     /* Start */
     test(data, duration);
 
