@@ -160,6 +160,8 @@ extern "C" {
         while (RCCE_wtime() < __ts_end);
     }
 
+    void handle_abort(stm_tx_t *stm_tx, CONFLICT_TYPE reason);
+
     inline void * tx_load(write_set_t *ws, read_set_t *rs, void *addr) {
         write_entry_t *we;
         if ((we = write_set_contains(ws, addr)) != NULL) {
@@ -194,8 +196,6 @@ retry:
 #define taskudelay udelay
 
     void ps_unsubscribe_all();
-
-    void handle_abort(stm_tx_t *stm_tx, CONFLICT_TYPE reason);
 
     int color(int id, void *aux);
 
