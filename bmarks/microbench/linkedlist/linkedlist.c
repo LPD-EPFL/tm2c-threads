@@ -75,7 +75,6 @@ int set_size(intset_t *set) {
     return size;
 }
 
-
 /*
  *  intset.c
  *  
@@ -174,6 +173,7 @@ int set_add(intset_t *set, val_t val, int transactional) {
 #elif defined STM
 
         node_t *prev, *next;
+
 #ifdef EARLY_RELEASE
         node_t *prevprev;
 #endif
@@ -186,7 +186,7 @@ int set_add(intset_t *set, val_t val, int transactional) {
             if (v >= val)
                 break;
 #ifdef EARLY_RELEASE
-        prevprev = prev;
+            prevprev = prev;
 #endif
             prev = next;
             next = ND(*(nxt_t *) TX_LOAD(&prev->next));
@@ -194,9 +194,11 @@ int set_add(intset_t *set, val_t val, int transactional) {
             if (prevprev != ND(set->head)) {
                 PRINTD("Releasing: %d", OF(prevprev));
                 TX_RRLS(prevprev);
+                TX_RRLS(&next->val);
             }
 #endif
         }
+done:
         result = (v != val);
         if (result) {
             nxt_t nxt = OF(new_node(val, OF(next), transactional));
@@ -263,6 +265,7 @@ int set_remove(intset_t *set, val_t val, int transactional) {
         if (prevprev != ND(set->head)) {
             PRINTD("Releasing: %d", OF(prevprev));
             TX_RRLS(prevprev);
+            TX_RRLS(&next->val);
         }
 #endif
     }
@@ -277,7 +280,7 @@ int set_remove(intset_t *set, val_t val, int transactional) {
     TX_COMMIT
 
 #elif defined LOCKFREE
-        result = harris_delete(set, val);
+    result = harris_delete(set, val);
 #endif
 
     return result;
