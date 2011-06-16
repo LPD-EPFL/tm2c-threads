@@ -182,15 +182,18 @@ int set_add(intset_t *set, val_t val, int transactional) {
         prev = ND(set->head);
         next = ND(*(nxt_t *) TX_LOAD(&prev->next));
 
-        v = *(val_t *) TX_LOAD(&next->val);
+        //v = *(val_t *) TX_LOAD(&next->val);
+        v = next->val;
         if (v >= val)
             goto done;
-        TX_RRLS(&next->val);
+#ifdef EARLY_RELEASE
+        //TX_RRLS(&next->val);
+#endif
         prev = next;
         next = ND(*(nxt_t *) TX_LOAD(&prev->next));
 
         while (1) {
-            v = *(val_t *) TX_LOAD(&next->val);
+            v = next->val;
             if (v >= val)
                 break;
 #ifdef EARLY_RELEASE
@@ -201,7 +204,7 @@ int set_add(intset_t *set, val_t val, int transactional) {
 #ifdef EARLY_RELEASE
             PRINTD("Releasing: %d", OF(prevprev));
             TX_RRLS(prevprev);
-            TX_RRLS(&next->val);
+            //TX_RRLS(&next->val);
 #endif
         }
 done:
@@ -254,15 +257,19 @@ int set_remove(intset_t *set, val_t val, int transactional) {
     prev = ND(set->head);
     next = ND(*(nxt_t *) TX_LOAD(&prev->next));
 
-    v = *(val_t *) TX_LOAD(&next->val);
+    //v = *(val_t *) TX_LOAD(&next->val);
+    v = next->val;
     if (v >= val)
         goto done;
-    TX_RRLS(&next->val);
+#ifdef EARLY_RELEASE
+    //TX_RRLS(&next->val);
+#endif
     prev = next;
     next = ND(*(nxt_t *) TX_LOAD(&prev->next));
 
     while (1) {
-        v = *(val_t *) TX_LOAD(&next->val);
+        //v = *(val_t *) TX_LOAD(&next->val);
+        v = next->val;
         if (v >= val)
             break;
         prevprev = prev;
@@ -271,7 +278,7 @@ int set_remove(intset_t *set, val_t val, int transactional) {
 #ifdef EARLY_RELEASE
         PRINTD("Releasing: %d", OF(prevprev));
         TX_RRLS(prevprev);
-        TX_RRLS(&next->val);
+        //TX_RRLS(&next->val);
 #endif
     }
 done:
@@ -285,7 +292,7 @@ done:
     }
     TX_COMMIT
 #endif
-    return result;
+            return result;
 }
 
 void set_print(intset_t* set) {
