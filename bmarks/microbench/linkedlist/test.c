@@ -165,13 +165,11 @@ void *test(void *data, double duration) {
 
     TM_END_STATS
     BARRIER
-/*
     ONCE
     {
         set_print(d->set);
     }
     BARRIER
-*/
     return NULL;
 }
 
@@ -338,9 +336,7 @@ TASKMAIN(int argc, char **argv) {
         }
         size = set_size(set);
         printf("Set size     : %d\n", size);
-/*
         set_print(set);
-*/
         assert(size == initial);
         FLUSH
     }
