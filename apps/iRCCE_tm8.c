@@ -20,8 +20,6 @@ MAIN(int argc, char **argv) {
         EXIT(-1);
     }
 
-    shmem_start_address1 = (unsigned int) sis;
-    
     int i;
     for (i = ID; i < SIS_SIZE; i += NUM_UES) {
         sis[i] = -1;
