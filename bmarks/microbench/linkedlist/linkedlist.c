@@ -211,7 +211,7 @@ done:
         result = (v != val);
         if (result) {
             nxt_t nxt = OF(new_node(val, OF(next), transactional));
-            PRINT("Created node %5d. Value: %d", nxt, val);
+            PRINTD("Created node %5d. Value: %d", nxt, val);
             TX_STORE(&prev->next, &nxt, TYPE_UINT);
         }
         TX_COMMIT
@@ -288,7 +288,7 @@ done:
         nxt_t nxt = OF(n);
         TX_STORE(&prev->next, &nxt, TYPE_UINT);
         TX_SHFREE(next);
-        PRINT("Freed node   %5d. Value: %d", OF(next), next->val);
+        PRINTD("Freed node   %5d. Value: %d", OF(next), next->val);
     }
     TX_COMMIT
 #endif
