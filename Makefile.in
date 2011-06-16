@@ -7,7 +7,7 @@ include $(SYMBOLSPATH)
 CFLAGS := $(CFLAGS) -I$(iRCCEINCLUDE)
 
 ARCHIVEOBJS= iRCCE_isend.o iRCCE_irecv.o iRCCE_isend32.o iRCCE_irecv32.o iRCCE_admin.o iRCCE_synch.o iRCCE_send.o iRCCE_recv.o iRCCE_get.o iRCCE_put.o iRCCE_waitlist.o \
-	 pubSubTM.o dslock.o rwhash.o log.o
+	 pubSubTM.o rwhash.o log.o tm.o
 	
 TMH := $(iRCCEINCLUDE)/pubSubTM.h $(iRCCEINCLUDE)/common.h $(iRCCEINCLUDE)/tm.h $(iRCCEINCLUDE)/stm.h \
 	$(iRCCEINCLUDE)/hashtable.h $(iRCCEINCLUDE)/rwhash.h $(iRCCEINCLUDE)/log.h
@@ -59,14 +59,16 @@ dslock.o: $(iRCCESRC)/dslock.c $(RCCEINCLUDE)/RCCE.h $(RCCEINCLUDE)/RCCE_lib.h $
 	$(CCOMPILE) -c $(CFLAGS) $(iRCCESRC)/dslock.c
 
 rwhash.o: $(iRCCESRC)/rwhash.c $(RCCEINCLUDE)/RCCE.h $(RCCEINCLUDE)/RCCE_lib.h $(iRCCEINCLUDE)/iRCCE.h $(iRCCEINCLUDE)/rwhash.h \
-	$(iRCCEINCLUDE)/common.h
+	$(iRCCEINCLUDE)/common.h $(TMH)
 	$(CCOMPILE) -c $(CFLAGS) $(iRCCESRC)/rwhash.c
 
-log.o: $(iRCCESRC)/log.c $(RCCEINCLUDE)/RCCE.h $(RCCEINCLUDE)/RCCE_lib.h $(iRCCEINCLUDE)/iRCCE.h $(iRCCEINCLUDE)/log.h
+log.o: $(iRCCESRC)/log.c $(RCCEINCLUDE)/RCCE.h $(RCCEINCLUDE)/RCCE_lib.h $(iRCCEINCLUDE)/iRCCE.h $(iRCCEINCLUDE)/log.h $(TMH)
 	$(CCOMPILE) -c $(CFLAGS) $(iRCCESRC)/log.c
 
-pubSubTM.o: $(iRCCESRC)/pubSubTM.c  $(RCCEINCLUDE)/RCCE.h $(RCCEINCLUDE)/RCCE_lib.h $(iRCCEINCLUDE)/iRCCE.h $(iRCCEINCLUDE)/iRCCE_lib.h \
-	$(TMH)
+tm.o: $(iRCCESRC)/tm.c $(RCCEINCLUDE)/RCCE.h $(RCCEINCLUDE)/RCCE_lib.h $(iRCCEINCLUDE)/iRCCE.h $(iRCCEINCLUDE)/tm.h
+	$(CCOMPILE) -c $(CFLAGS) $(iRCCESRC)/tm.c
+
+pubSubTM.o: $(iRCCESRC)/pubSubTM.c  $(RCCEINCLUDE)/RCCE.h $(RCCEINCLUDE)/RCCE_lib.h $(iRCCEINCLUDE)/iRCCE.h $(iRCCEINCLUDE)/iRCCE_lib.h $(TMH)
 	$(CCOMPILE) -c $(CFLAGS) $(iRCCESRC)/pubSubTM.c
 
 clean:
