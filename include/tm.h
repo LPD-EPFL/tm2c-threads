@@ -163,6 +163,7 @@ extern "C" {
 #define TX_WRLS(addr)                                   \
     ps_publish_finish((void*) (addr));
 
+#define taskudelay udelay
     inline void udelay(unsigned int micros) {
         double __ts_end = RCCE_wtime() + ((double) micros / 1000000);
         while (RCCE_wtime() < __ts_end);
