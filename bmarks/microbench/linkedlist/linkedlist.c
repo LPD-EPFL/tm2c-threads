@@ -272,7 +272,9 @@ int set_remove(intset_t *set, val_t val, int transactional) {
         v = next->val;
         if (v >= val)
             break;
+#ifdef EARLY_RELEASE
         prevprev = prev;
+#endif
         prev = next;
         next = ND(*(nxt_t *) TX_LOAD(&prev->next));
 #ifdef EARLY_RELEASE
