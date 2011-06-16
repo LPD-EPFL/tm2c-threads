@@ -155,6 +155,11 @@ extern "C" {
 #define TX_SHFREE(addr)                                                   \
     stm_shfree(stm_tx->mem_info, (t_vcharp) addr)
 
+    inline void udelay(unsigned int micros) {
+        double __ts_end = RCCE_wtime() + ((double) micros / 1000000);
+        while (RCCE_wtime() < __ts_end);
+    }
+
     inline void * tx_load(write_set_t *ws, read_set_t *rs, void *addr) {
         write_entry_t *we;
         if ((we = write_set_contains(ws, addr)) != NULL) {
@@ -187,11 +192,6 @@ retry:
     }
 
 #define taskudelay udelay
-
-    inline void udelay(unsigned int micros) {
-        double __ts_end = RCCE_wtime() + ((double) micros / 1000000);
-        while (RCCE_wtime() < __ts_end);
-    }
 
     void ps_unsubscribe_all();
 
