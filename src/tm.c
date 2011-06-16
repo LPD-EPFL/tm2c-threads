@@ -42,7 +42,7 @@ void tm_init(unsigned int ID) {
     }
 }
 
-inline void handle_abort(stm_tx_t *stm_tx, CONFLICT_TYPE reason) {
+void handle_abort(stm_tx_t *stm_tx, CONFLICT_TYPE reason) {
     ps_finish_all();
     stm_tx->state = ABORTED;
     stm_tx->aborts++;
@@ -62,38 +62,7 @@ inline void handle_abort(stm_tx_t *stm_tx, CONFLICT_TYPE reason) {
     mem_info_on_abort(stm_tx->mem_info);
 }
 
-inline void * tx_load(write_set_t *ws, read_set_t *rs, void *addr) {
-    write_entry_t *we;
-    if ((we = write_set_contains(ws, addr)) != NULL) {
-        read_set_update(rs, addr);
-        return (void *) &we->i;
-    }
-    else {
-        if (!read_set_update(rs, addr)) {
-            //the node is NOT already subscribed for the address
-            CONFLICT_TYPE conflict;
-#ifdef BACKOFF
-            unsigned int num_delays = 0;
-            unsigned int delay = BACKOFF_DELAY;
-
-retry:
-#endif
-            if ((conflict = ps_subscribe((void *) addr)) != NO_CONFLICT) {
-#ifdef BACKOFF
-                if (num_delays++ < BACKOFF_MAX) {
-                    udelay(delay);
-                    delay *= 2;
-                    goto retry;
-                }
-#endif
-                TX_ABORT(conflict);
-            }
-        }
-        return addr;
-    }
-}
-
-inline void ps_publish_finish_all(unsigned int locked) {
+void ps_publish_finish_all(unsigned int locked) {
     locked = (locked != 0) ? locked : stm_tx->write_set->nb_entries;
     write_entry_t *we_current = stm_tx->write_set->write_entries;
     while (locked-- > 0) {
@@ -101,7 +70,7 @@ inline void ps_publish_finish_all(unsigned int locked) {
     }
 }
 
-inline void ps_publish_all() {
+void ps_publish_all() {
     unsigned int locked = 0;
     write_entry_t *write_entries = stm_tx->write_set->write_entries;
     unsigned int nb_entries = stm_tx->write_set->nb_entries;
@@ -127,7 +96,7 @@ retry:
     }
 }
 
-inline void ps_unsubscribe_all() {
+void ps_unsubscribe_all() {
     read_entry_l_t *read_entries = stm_tx->read_set->read_entries;
     int i;
     for (i = 0; i < stm_tx->read_set->nb_entries; i++) {
