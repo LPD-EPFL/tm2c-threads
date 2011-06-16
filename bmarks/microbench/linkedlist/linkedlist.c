@@ -213,7 +213,7 @@ done:
         }
         TX_COMMIT
     }
-
+#endif
     return result;
 }
 
@@ -284,7 +284,7 @@ done:
         PRINTD("Freed node   %5d. Value: %d", OF(next), next->val);
     }
     TX_COMMIT
-
+#endif
     return result;
 }
 
