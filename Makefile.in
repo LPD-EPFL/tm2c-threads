@@ -6,8 +6,8 @@ include $(SYMBOLSPATH)
 
 CFLAGS := $(CFLAGS) -I$(iRCCEINCLUDE)
 
-ARCHIVEOBJS= iRCCE_isend.o iRCCE_irecv.o iRCCE_isend32.o iRCCE_irecv32.o iRCCE_admin.o iRCCE_synch.o iRCCE_send.o iRCCE_recv.o iRCCE_get.o iRCCE_put.o iRCCE_waitlist.o \
-	 pubSubTM.o rwhash.o log.o tm.o
+ARCHIVEOBJS= iRCCE_isend.o iRCCE_irecv.o iRCCE_isend32.o iRCCE_irecv32.o iRCCE_admin.o iRCCE_synch.o iRCCE_send.o iRCCE_recv.o iRCCE_get.o \
+    iRCCE_put.o iRCCE_waitlist.o pubSubTM.o dslock.o rwhash.o log.o tm.o
 	
 TMH := $(iRCCEINCLUDE)/pubSubTM.h $(iRCCEINCLUDE)/common.h $(iRCCEINCLUDE)/tm.h $(iRCCEINCLUDE)/stm.h \
 	$(iRCCEINCLUDE)/hashtable.h $(iRCCEINCLUDE)/rwhash.h $(iRCCEINCLUDE)/log.h
