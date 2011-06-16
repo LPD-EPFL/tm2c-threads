@@ -181,6 +181,14 @@ int set_add(intset_t *set, val_t val, int transactional) {
         TX_START
         prev = ND(set->head);
         next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+
+        v = *(val_t *) TX_LOAD(&next->val);
+        if (v >= val)
+            goto done;
+        TX_RRLS(&next->val);
+        prev = next;
+        next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+
         while (1) {
             v = *(val_t *) TX_LOAD(&next->val);
             if (v >= val)
@@ -191,11 +199,9 @@ int set_add(intset_t *set, val_t val, int transactional) {
             prev = next;
             next = ND(*(nxt_t *) TX_LOAD(&prev->next));
 #ifdef EARLY_RELEASE
-            if (prevprev != ND(set->head)) {
-                PRINTD("Releasing: %d", OF(prevprev));
-                TX_RRLS(prevprev);
-                TX_RRLS(&next->val);
-            }
+            PRINTD("Releasing: %d", OF(prevprev));
+            TX_RRLS(prevprev);
+            TX_RRLS(&next->val);
 #endif
         }
 done:
@@ -206,11 +212,6 @@ done:
             TX_STORE(&prev->next, &nxt, TYPE_UINT);
         }
         TX_COMMIT
-
-#elif defined LOCKFREE
-        result = harris_insert(set, val);
-#endif
-
     }
 
     return result;
@@ -243,32 +244,37 @@ int set_remove(intset_t *set, val_t val, int transactional) {
 
 #elif defined STM
 
-    node_t *prev, *next;
+    node_t *prev, *next, *n;
 #ifdef EARLY_RELEASE
     node_t *prevprev;
 #endif
     val_t v;
-    node_t *n;
+
     TX_START
     prev = ND(set->head);
     next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+
+    v = *(val_t *) TX_LOAD(&next->val);
+    if (v >= val)
+        goto done;
+    TX_RRLS(&next->val);
+    prev = next;
+    next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+
     while (1) {
         v = *(val_t *) TX_LOAD(&next->val);
         if (v >= val)
             break;
-#ifdef EARLY_RELEASE
         prevprev = prev;
-#endif
         prev = next;
         next = ND(*(nxt_t *) TX_LOAD(&prev->next));
 #ifdef EARLY_RELEASE
-        if (prevprev != ND(set->head)) {
-            PRINTD("Releasing: %d", OF(prevprev));
-            TX_RRLS(prevprev);
-            TX_RRLS(&next->val);
-        }
+        PRINTD("Releasing: %d", OF(prevprev));
+        TX_RRLS(prevprev);
+        TX_RRLS(&next->val);
 #endif
     }
+done:
     result = (v == val);
     if (result) {
         n = ND(*(nxt_t *) TX_LOAD(&next->next));
@@ -278,10 +284,6 @@ int set_remove(intset_t *set, val_t val, int transactional) {
         PRINTD("Freed node   %5d. Value: %d", OF(next), next->val);
     }
     TX_COMMIT
-
-#elif defined LOCKFREE
-    result = harris_delete(set, val);
-#endif
 
     return result;
 }
