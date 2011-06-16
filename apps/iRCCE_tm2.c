@@ -6,6 +6,9 @@
 
 #define SIS_SIZE 4800
 
+stm_tx_t *stm_tx;
+stm_tx_node_t *stm_tx_node;
+
 MAIN(int argc, char **argv) {
 
     TM_INIT
