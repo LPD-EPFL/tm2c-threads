@@ -9,16 +9,19 @@ TMH := $(iRCCEINCLUDE)/../src/pubSubTM.c $(iRCCEINCLUDE)/../src/rwhash.c $(iRCCE
 	$(iRCCEINCLUDE)/hashtable.h $(iRCCEINCLUDE)/rwhash.h $(iRCCEINCLUDE)/log.h
 
 MB_LL := microbench/linkedlist
+MB_HT := microbench/hashtable
 
 BANKOBJS  := bank.o   $(ARCHIVE)
 MTESTOBJS  := mtest.o   $(ARCHIVE)
-MBLLOBJS := $(MB_LL)/linkedlist.o $(MB_LL)/test.o $(ARCHIVE)
+MBLLOBJS := $(MB_LL)/linkedlist.o $(MB_LL)/test.o $(ARCHIVE)	
+MBHTOBJS := $(MB_LL)/linkedlist.o $(MB_HT)/test.o $(MB_HT)/intset.o $(ARCHIVE)
 
 .PHONY: all default clean bank
 
 default:
 	@echo "Usage: make bank"
 	@echo "       make mbll "
+	@echo "       make mbht "
 	@echo "       make all "
 
 all: bank
@@ -44,9 +47,22 @@ $(MB_LL)/test.o: $(MB_LL)/test.c $(MB_LL)/linkedlist.h $(MB_LL)/linkedlist.c $(M
 mbll:  $(MBLLOBJS) $(TMH)
 	$(CCOMPILE) -o mbll $(CFLAGS) $(MBLLOBJS)
 
+$(MB_HT)/hashtable.o: $(MB_LL)/linkedlist.o $(MB_HT)/hashtable.c $(MB_HT)/hashtable.h $(MB_HT)/linkedlist.c \
+	$(MB_HT)/harris.h $(MB_LL)/linkedlist.h
+	$(CCOMPILE) -c $(CFLAGS) -o $(MB_HT)/hashtable.o $(MB_HT)/hashtable.c
+
+$(MB_HT)/intset.o: $(MB_LL)/linkedlist.o $(MB_HT)/intset.c $(MB_HT)/hashtable.h $(MB_HT)/linkedlist.c $(MB_HT)/harris.h $(MB_LL)/linkedlist.h
+	$(CCOMPILE) -c $(CFLAGS) -o $(MB_HT)/intset.o $(MB_HT)/intset.c
+
+$(MB_HT)/test.o: $(MB_LL)/linkedlist.o $(MB_HT)/test.c $(MB_LL)/linkedlist.h $(MB_HT)/intset.c $(MB_HT)/hashtable.c
+	$(CCOMPILE) -c $(CFLAGS) -o $(MB_HT)/test.o $(MB_HT)/test.c
+
+mbht:  $(MBHTOBJS) $(TMH)
+	$(CCOMPILE) -o mbht $(CFLAGS) $(MBHTOBJS)
+
 
 clean:
-	@ rm -f *.o $(MB_LL)/*.o bank mbll
+	@ rm -f *.o $(MB_LL)/*.o bank mbll $(MB_HT)/*.o mbht
 
 
 
