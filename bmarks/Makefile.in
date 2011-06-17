@@ -48,10 +48,10 @@ mbll:  $(MBLLOBJS) $(TMH)
 	$(CCOMPILE) -o mbll $(CFLAGS) $(MBLLOBJS)
 
 $(MB_HT)/hashtable.o: $(MB_LL)/linkedlist.o $(MB_HT)/hashtable.c $(MB_HT)/hashtable.h $(MB_LL)/linkedlist.c \
-	$(MB_HT)/harris.h $(MB_LL)/linkedlist.h
+	$(MB_LL)/harris.h $(MB_LL)/linkedlist.h
 	$(CCOMPILE) -c $(CFLAGS) -o $(MB_HT)/hashtable.o $(MB_HT)/hashtable.c
 
-$(MB_HT)/intset.o: $(MB_LL)/linkedlist.o $(MB_HT)/intset.c $(MB_HT)/hashtable.h $(MB_LL)/linkedlist.c $(MB_HT)/harris.h $(MB_LL)/linkedlist.h
+$(MB_HT)/intset.o: $(MB_LL)/linkedlist.o $(MB_HT)/intset.c $(MB_HT)/hashtable.h $(MB_LL)/linkedlist.c $(MB_LL)/harris.h $(MB_LL)/linkedlist.h
 	$(CCOMPILE) -c $(CFLAGS) -o $(MB_HT)/intset.o $(MB_HT)/intset.c
 
 $(MB_HT)/test.o: $(MB_LL)/linkedlist.o $(MB_HT)/test.c $(MB_LL)/linkedlist.h $(MB_HT)/intset.c $(MB_HT)/hashtable.c
