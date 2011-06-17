@@ -49,7 +49,8 @@ int ht_size(ht_intset_t *set) {
     int i;
 
     for (i = 0; i < maxhtlength; i++) {
-        node = ND(set->buckets[i]->head->next);
+        node_t *hd = ND(set->buckets[i]->head);
+        node = ND(hd->next);
         while ((void *) node->next) {
             size++;
             node = ND(node->next);
