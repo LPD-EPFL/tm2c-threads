@@ -541,7 +541,6 @@ int main(int argc, char **argv) {
     // Delete set 
     ht_delete(set);
 
-    free(threads);
     free(data);
 
     return 0;
