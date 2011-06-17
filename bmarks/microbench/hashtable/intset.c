@@ -301,10 +301,11 @@ int ht_snapshot(ht_intset_t *set, int transactional) {
     TX_START
     sum = 0;
     for (i = 0; i < maxhtlength; i++) {
-        next = ND(*(nxt_t *) TX_LOAD(&set->buckets[i]->head->next));
+        node_t *hd = ND(set->buckets[i]->head);
+        next = ND(*(nxt_t *) TX_LOAD(&hd->next));
         while (next->next) {
             //sum += TX_LOAD(&next->val);
-            sum += next->val
+            sum += next->val;
             next = ND(*(nxt_t *) TX_LOAD(&next->next));
         }
     }
