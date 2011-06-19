@@ -512,6 +512,10 @@ int main(int argc, char **argv) {
         printf("Set size     : %d\n", size);
         printf("Bucket amount: %d\n", maxhtlength);
         printf("Load         : %d\n", load_factor);
+        
+        print_ht(set);
+        
+        FLUSH
     }
     
     data->first = last;
