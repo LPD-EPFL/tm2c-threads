@@ -554,7 +554,7 @@ int main(int argc, char **argv) {
     FLUSH;
 
     // Delete set 
-    //ht_delete(set);
+    ht_delete(set);
 
     free(data);
 
