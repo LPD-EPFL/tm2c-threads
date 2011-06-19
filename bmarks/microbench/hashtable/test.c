@@ -292,12 +292,12 @@ void *test2(void *data) {
 void print_set(intset_t *set) {
     node_t *curr, *tmp;
 
-    curr = ND(set->head);
+    curr = O2N(set, set->head);
     tmp = curr;
     do {
         printf(" - v%d", (int) curr->val);
         tmp = curr;
-        curr = ND(tmp->next);
+        curr = O2N(set, tmp->next);
     } while (curr->val != VAL_MAX);
     printf(" - v%d", (int) curr->val);
     printf("\n");
