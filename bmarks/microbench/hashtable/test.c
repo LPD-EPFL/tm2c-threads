@@ -290,16 +290,21 @@ void *test2(void *data) {
 }
 
 void print_set(intset_t *set) {
-    node_t *curr, *tmp;
+    intset_t *offset = set;
+    
+    node_t *node = ND(set->head);
+    node = ND(node->next);
 
-    curr = O2N(set, set->head);
-    tmp = curr;
-    do {
-        printf("%d -> ", (int) curr->val);
-        tmp = curr;
-        curr = O2N(set, tmp->next);
-    } while (curr->val != VAL_MAX);
-    printf("%d\n", (int) curr->val);
+    if (node == NULL) {
+        goto null;
+    }
+    while (node->nextp != NULL) {
+        printf("%d -> ", node->val);
+        node = ND(node->next);
+    }
+
+null:
+    PRINTS("NULL\n");
 }
 
 void print_ht(ht_intset_t *set) {
@@ -313,7 +318,7 @@ void print_ht(ht_intset_t *set) {
 int main(int argc, char **argv) {
     RCCE_init(&argc, &argv);
     iRCCE_init();
-    
+
     struct option long_options[] = {
         // These options don't set a flag
         {"help", no_argument, NULL, 'h'},
@@ -491,7 +496,7 @@ int main(int argc, char **argv) {
     // Populate set 
 
     BARRIERW
-    
+
     ONCE
     {
         srand_core();
@@ -511,20 +516,21 @@ int main(int argc, char **argv) {
         printf("Set size     : %d\n", size);
         printf("Bucket amount: %d\n", maxhtlength);
         printf("Load         : %d\n", load_factor);
-        
-        //print_ht(set);
-        
+
+        print_ht(set);
+
         FLUSH
-                
-        
+
+
     }
-    
+
     TM_INITs
-    ONCE {
+    ONCE
+    {
         ht_add(set, 1312, 4);
     }
     TM_END_STATS
-    
+
     data->first = last;
     data->range = range;
     data->update = update;
@@ -547,7 +553,7 @@ int main(int argc, char **argv) {
     data->set = set;
 
     return 0;
-    
+
     printf("---------------------------Thread %d\n", RCCE_ue());
     printf("  #add        : %lu\n", data->nb_add);
     printf("    #added    : %lu\n", data->nb_added);
