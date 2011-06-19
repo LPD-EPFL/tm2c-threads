@@ -305,7 +305,7 @@ void print_set(intset_t *set) {
 void print_ht(ht_intset_t *set) {
     int i;
     for (i = 0; i < maxhtlength; i++) {
-        printf("[%3d] :: ");
+        printf("[%3d] :: ", i);
         print_set(set->buckets[i]);
     }
 }
