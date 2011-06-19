@@ -352,7 +352,6 @@ int main(int argc, char **argv) {
     int unit_tx = DEFAULT_ELASTICITY;
     int alternate = DEFAULT_ALTERNATE;
     int effective = DEFAULT_EFFECTIVE;
-    sigset_t block_set;
 
     while (1) {
         i = 0;
@@ -392,8 +391,6 @@ int main(int argc, char **argv) {
                         "        Number of threads (default=" XSTR(DEFAULT_NB_THREADS) ")\n"
                         "  -r, --range <int>\n"
                         "        Range of integer values inserted in set (default=" XSTR(DEFAULT_RANGE) ")\n"
-                        "  -s, --seed <int>\n"
-                        "        RNG seed (0=time-based, default=" XSTR(DEFAULT_SEED) ")\n"
                         "  -u, --update-rate <int>\n"
                         "        Percentage of update transactions (default=" XSTR(DEFAULT_UPDATE) ")\n"
                         "  -m , --move-rate <int>\n"
@@ -489,8 +486,10 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
+/*
     maxhtlength = (unsigned int) initial / load_factor;
-
+*/
+    maxhtlength = 10;
 
     set = ht_new();
     // Populate set 
@@ -528,7 +527,12 @@ int main(int argc, char **argv) {
     ONCE
     {
         ht_add(set, 1312, 4);
+        ht_add(set, 1313, 4);
+        ht_add(set, 1314, 4);
+        ht_add(set, 1315, 4);
+        print_ht(set);
     }
+    
     TM_END_STATS
 
     data->first = last;
