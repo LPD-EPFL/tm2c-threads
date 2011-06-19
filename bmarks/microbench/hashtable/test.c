@@ -512,7 +512,7 @@ int main(int argc, char **argv) {
         printf("Bucket amount: %d\n", maxhtlength);
         printf("Load         : %d\n", load_factor);
         
-        print_ht(set);
+        //print_ht(set);
         
         FLUSH
     }
@@ -538,6 +538,8 @@ int main(int argc, char **argv) {
     data->nb_found = 0;
     data->set = set;
 
+    return 0;
+    
     printf("---------------------------Thread %d\n", RCCE_ue());
     printf("  #add        : %lu\n", data->nb_add);
     printf("    #added    : %lu\n", data->nb_added);
