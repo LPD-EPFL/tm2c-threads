@@ -26,10 +26,15 @@
 
 #include "hashtable.h"
 
+#ifdef SET
+#undef SET
+#define set (set->buckets[0]))
+#endif
+
 void ht_delete(ht_intset_t *set) {
     node_t *node, *next;
     int i;
-
+    
     for (i = 0; i < maxhtlength; i++) {
         node = ND(set->buckets[i]->head);
         while (node != NULL) {
@@ -42,6 +47,19 @@ void ht_delete(ht_intset_t *set) {
     free(set->buckets);
     free(set);
 }
+
+/*void set_delete(intset_t *set) {
+    node_t *node, *next;
+
+    node = ND(set->head);
+    while (node != NULL) {
+        next = ND(node->next);
+        RCCE_shfree((t_vcharp) node);
+        node = next;
+    }
+    RCCE_shfree((t_vcharp) set);
+}
+ */
 
 int ht_size(ht_intset_t *set) {
     int size = 0;
