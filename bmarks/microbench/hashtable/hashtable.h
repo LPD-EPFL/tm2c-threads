@@ -32,11 +32,6 @@
 
 #define MAXHTLENGTH                     65536
 
-#ifdef SET
-#undef SET
-#define SET (set->buckets[0])
-#endif
-
 /* Hashtable length (# of buckets) */
 extern unsigned int maxhtlength;
 

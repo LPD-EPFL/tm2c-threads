@@ -23,6 +23,8 @@
 
 #include "intset.h"
 
+intset_t *offset;
+
 int ht_contains(ht_intset_t *set, int val, int transactional) {
     int addr;
 
@@ -80,6 +82,7 @@ int ht_move_naive(ht_intset_t *set, int val1, int val2, int transactional) {
 
     TX_START
     addr1 = val1 % maxhtlength;
+    OFFSET(set->buckets[addr1]);
     prev = ND(*(nxt_t *) TX_LOAD(&set->buckets[addr1]->head));
     next = ND(*(nxt_t *) TX_LOAD(&prev->next));
     while (1) {
@@ -97,6 +100,7 @@ int ht_move_naive(ht_intset_t *set, int val1, int val2, int transactional) {
         TX_SHFREE(next);
         /* Inserting */
         addr2 = val2 % maxhtlength;
+        OFFSET(set->buckets[addr2]);
         prev = ND(*(nxt_t *) TX_LOAD(&set->buckets[addr2]->head));
         next = ND(*(nxt_t *) TX_LOAD(&prev->next));
         while (1) {
@@ -151,6 +155,7 @@ int ht_move(ht_intset_t *set, int val1, int val2, int transactional) {
 
     TX_START
     addr1 = val1 % maxhtlength;
+    OFFSET(set->buckets[addr1]);
     prev = ND(*(nxt_t *) TX_LOAD(&set->buckets[addr1]->head));
     next = ND(*(nxt_t *) TX_LOAD(&prev->next));
     while (1) {
@@ -166,6 +171,7 @@ int ht_move(ht_intset_t *set, int val1, int val2, int transactional) {
     if (v == val1) {
         /* Inserting */
         addr2 = val2 % maxhtlength;
+        OFFSET(set->buckets[addr2]);
         prev = ND(*(nxt_t *) TX_LOAD(&set->buckets[addr2]->head));
         next = ND(*(nxt_t *) TX_LOAD(&prev->next));
         while (1) {
@@ -219,6 +225,7 @@ int ht_move_orrollback(ht_intset_t *set, int val1, int val2, int transactional) 
 
     TX_START
     addr1 = val1 % maxhtlength;
+    OFFSET(set->buckets[addr1]);
     prev = ND(*(nxt_t *) TX_LOAD(&set->buckets[addr1]->head));
     next = ND(*(nxt_t *) TX_LOAD(&prev->next));
     while (1) {
@@ -237,6 +244,7 @@ int ht_move_orrollback(ht_intset_t *set, int val1, int val2, int transactional) 
         TX_STORE(&prev->next, OF(n), TYPE_UINT);
         /* Inserting */
         addr2 = val2 % maxhtlength;
+        OFFSET(set->buckets[addr2]);
         prev = ND(*(nxt_t *) TX_LOAD(&set->buckets[addr2]->head));
         next = ND(*(nxt_t *) TX_LOAD(&prev->next));
         while (1) {

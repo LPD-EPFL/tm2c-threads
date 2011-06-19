@@ -24,6 +24,13 @@
 
 #include "hashtable.h"
 
+#ifdef SET
+#undef SET
+#define SET             (offset)
+#define OFFSET(offs)    offset = (offs);
+#endif
+
+
 int ht_contains(ht_intset_t *set, int val, int transactional);
 int ht_add(ht_intset_t *set, int val, int transactional);
 int ht_remove(ht_intset_t *set, int val, int transactional);
