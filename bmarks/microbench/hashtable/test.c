@@ -515,7 +515,15 @@ int main(int argc, char **argv) {
         //print_ht(set);
         
         FLUSH
+                
+        
     }
+    
+    TM_INITs
+    ONCE {
+        ht_add(set, 1312, 4);
+    }
+    TM_END_STATS
     
     data->first = last;
     data->range = range;
