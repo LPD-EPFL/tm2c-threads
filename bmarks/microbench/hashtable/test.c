@@ -312,6 +312,9 @@ void print_ht(ht_intset_t *set) {
 }
 
 int main(int argc, char **argv) {
+    RCCE_init(&argc, &argv);
+    iRCCE_init();
+    
     struct option long_options[] = {
         // These options don't set a flag
         {"help", no_argument, NULL, 'h'},
@@ -330,8 +333,6 @@ int main(int argc, char **argv) {
     val_t last = 0;
     val_t val = 0;
     thread_data_t *data;
-    struct timeval start, end;
-    struct timespec timeout;
     int duration = DEFAULT_DURATION;
     int initial = DEFAULT_INITIAL;
 #ifdef DSL
