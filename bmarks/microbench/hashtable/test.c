@@ -489,21 +489,30 @@ int main(int argc, char **argv) {
 
     set = ht_new();
     // Populate set 
-    printf("Adding %d entries to set\n", initial);
-    i = 0;
-    maxhtlength = (int) (initial / load_factor);
-    while (i < initial) {
-        val = rand_range(range);
-        if (ht_add(set, val, 0)) {
-            last = val;
-            i++;
-        }
-    }
-    size = ht_size(set);
-    printf("Set size     : %d\n", size);
-    printf("Bucket amount: %d\n", maxhtlength);
-    printf("Load         : %d\n", load_factor);
 
+    BARRIERW
+    
+    ONCE
+    {
+        srand_core();
+        udelay(rand_range(123));
+        srand_core();
+        printf("Adding %d entries to set\n", initial);
+        i = 0;
+        maxhtlength = (int) (initial / load_factor);
+        while (i < initial) {
+            val = rand_range(range);
+            if (ht_add(set, val, 0)) {
+                last = val;
+                i++;
+            }
+        }
+        size = ht_size(set);
+        printf("Set size     : %d\n", size);
+        printf("Bucket amount: %d\n", maxhtlength);
+        printf("Load         : %d\n", load_factor);
+    }
+    
     data->first = last;
     data->range = range;
     data->update = update;
