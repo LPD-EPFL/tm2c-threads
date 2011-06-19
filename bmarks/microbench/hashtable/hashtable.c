@@ -31,12 +31,8 @@ void ht_delete(ht_intset_t *set) {
     int i;
     
     for (i = 0; i < maxhtlength; i++) {
-        node = ND(set->buckets[i]->head);
-        while (node != NULL) {
-            next = ND(node->next);
-            RCCE_shfree((t_vcharp) node);
-            node = next;
-        }
+        intset_t *iset = set->buckets[i];
+        set_delete(iset);
         free(set->buckets[i]);
     }
     free(set->buckets);
