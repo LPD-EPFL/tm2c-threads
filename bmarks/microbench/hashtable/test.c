@@ -295,18 +295,17 @@ void print_set(intset_t *set) {
     curr = O2N(set, set->head);
     tmp = curr;
     do {
-        printf(" - v%d", (int) curr->val);
+        printf("%d -> ", (int) curr->val);
         tmp = curr;
         curr = O2N(set, tmp->next);
     } while (curr->val != VAL_MAX);
-    printf(" - v%d", (int) curr->val);
-    printf("\n");
-    FLUSH;
+    printf("%d\n", (int) curr->val);
 }
 
 void print_ht(ht_intset_t *set) {
     int i;
     for (i = 0; i < maxhtlength; i++) {
+        printf("[%3d] :: ");
         print_set(set->buckets[i]);
     }
 }
