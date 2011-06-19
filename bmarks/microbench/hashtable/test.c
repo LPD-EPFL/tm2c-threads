@@ -503,7 +503,7 @@ int main(int argc, char **argv) {
         srand_core();
         printf("Adding %d entries to set\n", initial);
         i = 0;
-        maxhtlength = (int) (initial / load_factor);
+        //maxhtlength = (int) (initial / load_factor);
         while (i < initial) {
             val = rand_range(range);
             if (ht_add(set, val, 0)) {
