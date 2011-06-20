@@ -537,6 +537,10 @@ int main(int argc, char **argv) {
         PRINTS("contains %d = %d\n", j, ht_contains(set, j, 1));
         ht_remove(set, 11111, 1);
         
+        ht_move(set, 1312, 6, 1);
+        ht_move_naive(set, 1314, 7, 1);
+        ht_move_orrollback(set, 1315, 8, 1);
+        ht_snapshot(set, 1);
         print_ht(set);
     }
 
