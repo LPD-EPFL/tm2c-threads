@@ -472,7 +472,7 @@ int main(int argc, char **argv) {
     }
 
     if (seed == 0)
-        srand((RCCE_ue() + 1)(int) time(0));
+        srand((RCCE_ue() + 1) * (int) time(0));
     else
         srand(seed);
 
