@@ -513,7 +513,7 @@ int main(int argc, char **argv) {
         printf("Bucket amount: %d\n", maxhtlength);
         printf("Load         : %d\n", load_factor);
 
-        print_ht(set);
+        //print_ht(set);
 
         FLUSH
 
@@ -541,7 +541,7 @@ int main(int argc, char **argv) {
         PRINTSF("performed move");
         ht_snapshot(set, 1);
         PRINTSF("performed snapshot");
-        print_ht(set);
+        //print_ht(set);
     }
 
     TM_END_STATS
