@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
 
     RCCE_release_lock(ID);
     P("RCCE_release_lock : explicitely");
-    P("RCCE_test_lock : %d", RCCE_test_lock(ID));
+    //P("RCCE_test_lock : %d", RCCE_test_lock(ID));
     P("RCCE_acquire_lock");
     RCCE_acquire_lock(ID);
     P("RCCE_test_lock : %d", RCCE_test_lock(ID));
