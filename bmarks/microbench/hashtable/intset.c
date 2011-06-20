@@ -156,7 +156,10 @@ int ht_move(ht_intset_t *set, int val1, int val2, int transactional) {
     TX_START
     addr1 = val1 % maxhtlength;
     OFFSET(set->buckets[addr1]);
+    PRINT("head: %d", set->buckets[addr1]->head);
     prev = ND(*(nxt_t *) TX_LOAD(&set->buckets[addr1]->head));
+    PRINT("next: %d", prev->next);
+
     next = ND(*(nxt_t *) TX_LOAD(&prev->next));
     while (1) {
         v = next->val; //was TX
