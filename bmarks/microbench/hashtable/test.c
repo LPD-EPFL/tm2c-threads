@@ -48,6 +48,19 @@ inline long rand_range(long r) {
     return v;
 }
 
+/* Re-entrant version of rand_range(r) */
+inline long rand_range_re(unsigned int *seed, long r) {
+    int m = RAND_MAX;
+    long d, v = 0;
+
+    do {
+        d = (m > r ? r : m);
+        v += 1 + (long) (d * ((double) rand_r(seed) / ((double) (m) + 1.0)));
+        r -= m;
+    } while (r > 0);
+    return v;
+}
+
 /*
  * Seeding the rand()
  */
@@ -80,6 +93,7 @@ typedef struct thread_data {
     unsigned long nb_snapshoted;
     /* end: added for HashTables */
     unsigned long nb_found;
+    unsigned int seed;
     ht_intset_t *set;
 } thread_data_t;
 
@@ -95,7 +109,7 @@ void *test(void *data, double duration) {
     TM_INITs
 
     /* Is the first op an update, a move? */
-    r = rand_range(100) - 1;
+    r = rand_range_re(&d->seed, 100) - 1;
     unext = (r < d->update);
     mnext = (r < d->move);
     cnext = (r >= d->update + d->snapshot);
@@ -106,9 +120,9 @@ void *test(void *data, double duration) {
 
             if (mnext) { // move
 
-                if (last == -1) val = rand_range(d->range);
+                if (last == -1) val = rand_range_re(&d->seed, d->range);
                 else val = last;
-                val2 = rand_range(d->range);
+                val2 = rand_range_re(&d->seed, d->range);
                 if (ht_move(d->set, val, val2, TRANSACTIONAL)) {
                     d->nb_moved++;
                     last = -1;
@@ -118,7 +132,7 @@ void *test(void *data, double duration) {
             }
             else if (last < 0) { // add
 
-                val = rand_range(d->range);
+                val = rand_range_re(&d->seed, d->range);
                 if (ht_add(d->set, val, TRANSACTIONAL)) {
                     d->nb_added++;
                     last = val;
@@ -136,7 +150,7 @@ void *test(void *data, double duration) {
                 }
                 else {
                     /* Random computation only in non-alternated cases */
-                    val = rand_range(d->range);
+                    val = rand_range_re(&d->seed, d->range);
                     /* Remove one random value */
                     if (ht_remove(d->set, val, TRANSACTIONAL)) {
                         d->nb_removed++;
@@ -159,13 +173,13 @@ void *test(void *data, double duration) {
                             last = val;
                         }
                         else { // last >= 0
-                            val = rand_range(d->range);
+                            val = rand_range_re(&d->seed, d->range);
                             last = -1;
                         }
                     }
                     else { // update != 0
                         if (last < 0) {
-                            val = rand_range(d->range);
+                            val = rand_range_re(&d->seed, d->range);
                             //last = val;
                         }
                         else {
@@ -173,7 +187,7 @@ void *test(void *data, double duration) {
                         }
                     }
                 }
-                else val = rand_range(d->range);
+                else val = rand_range_re(&d->seed, d->range);
 
                 if (ht_contains(d->set, val, TRANSACTIONAL))
                     d->nb_found++;
@@ -197,7 +211,7 @@ void *test(void *data, double duration) {
             cnext = !((100.0 * d->nb_snapshoted) < (d->snapshot * numtx));
         }
         else { // remove/add (even failed) is considered as an update
-            r = rand_range(100) - 1;
+            r = rand_range_re(&d->seed, 100) - 1;
             unext = (r < d->update);
             mnext = (r < d->move);
             cnext = (r >= d->update + d->snapshot);
@@ -224,69 +238,68 @@ void *test2(void *data) {
 
     last = 0; // to avoid warning
 
-    FOR(10) {
-        val = rand_range(100) - 1;
-        /* added for HashTables */
-        if (val < d->update) {
-            if (val >= d->move) { /* update without move */
-                if (flag) {
-                    /* Add random value */
-                    val = (rand_range(d->range)) + 1;
-                    if (ht_add(d->set, val, TRANSACTIONAL)) {
-                        d->nb_added++;
-                        last = val;
-                        flag = 0;
-                    }
-                    d->nb_add++;
+    val = rand_range_re(&d->seed, 100) - 1;
+    /* added for HashTables */
+    if (val < d->update) {
+        if (val >= d->move) { /* update without move */
+            if (flag) {
+                /* Add random value */
+                val = (rand_r(&d->seed) % d->range) + 1;
+                if (ht_add(d->set, val, TRANSACTIONAL)) {
+                    d->nb_added++;
+                    last = val;
+                    flag = 0;
+                }
+                d->nb_add++;
+            }
+            else {
+                if (d->alternate) {
+                    /* Remove last value */
+                    if (ht_remove(d->set, last, TRANSACTIONAL))
+                        d->nb_removed++;
+                    d->nb_remove++;
+                    flag = 1;
                 }
                 else {
-                    if (d->alternate) {
-                        /* Remove last value */
-                        if (ht_remove(d->set, last, TRANSACTIONAL))
-                            d->nb_removed++;
-                        d->nb_remove++;
+                    /* Random computation only in non-alternated cases */
+                    newval = rand_range_re(&d->seed, d->range);
+                    if (ht_remove(d->set, newval, TRANSACTIONAL)) {
+                        d->nb_removed++;
+                        /* Repeat until successful, to avoid size variations */
                         flag = 1;
                     }
-                    else {
-                        /* Random computation only in non-alternated cases */
-                        newval = rand_range(d->range);
-                        if (ht_remove(d->set, newval, TRANSACTIONAL)) {
-                            d->nb_removed++;
-                            /* Repeat until successful, to avoid size variations */
-                            flag = 1;
-                        }
-                        d->nb_remove++;
-                    }
+                    d->nb_remove++;
                 }
-            }
-            else { /* move */
-                val = rand_range(d->range);
-                if (ht_move(d->set, last, val, TRANSACTIONAL)) {
-                    d->nb_moved++;
-                    last = val;
-                }
-                d->nb_move++;
             }
         }
-        else {
-            if (val >= d->update + d->snapshot) { /* read-only without snapshot */
-                /* Look for random value */
-                val = rand_range(d->range);
-                if (ht_contains(d->set, val, TRANSACTIONAL))
-                    d->nb_found++;
-                d->nb_contains++;
+        else { /* move */
+            val = rand_range_re(&d->seed, d->range);
+            if (ht_move(d->set, last, val, TRANSACTIONAL)) {
+                d->nb_moved++;
+                last = val;
             }
-            else { /* snapshot */
-                if (ht_snapshot(d->set, TRANSACTIONAL))
-                    d->nb_snapshoted++;
-                d->nb_snapshot++;
-            }
+            d->nb_move++;
         }
     }
+    else {
+        if (val >= d->update + d->snapshot) { /* read-only without snapshot */
+            /* Look for random value */
+            val = rand_range_re(&d->seed, d->range);
+            if (ht_contains(d->set, val, TRANSACTIONAL))
+                d->nb_found++;
+            d->nb_contains++;
+        }
+        else { /* snapshot */
+            if (ht_snapshot(d->set, TRANSACTIONAL))
+                d->nb_snapshoted++;
+            d->nb_snapshot++;
+        }
+    }
+}
 
-    /* Free transaction */
-    TM_END
-    return NULL;
+/* Free transaction */
+TM_END
+return NULL;
 }
 
 void print_set(intset_t *set) {
@@ -352,6 +365,7 @@ int main(int argc, char **argv) {
     int unit_tx = DEFAULT_ELASTICITY;
     int alternate = DEFAULT_ALTERNATE;
     int effective = DEFAULT_EFFECTIVE;
+    unsigned int seed = 0;
 
     while (1) {
         i = 0;
@@ -454,6 +468,11 @@ int main(int argc, char **argv) {
         }
     }
 
+    if (seed == 0)
+        srand((RCCE_ue() + 1)(int) time(0));
+    else
+        srand(seed);
+
     assert(duration >= 0);
     assert(initial >= 0);
     assert(nb_app_cores > 0);
@@ -519,7 +538,7 @@ int main(int argc, char **argv) {
 
 
     }
-    
+
     BARRIERW
 
     data->first = last;
@@ -545,9 +564,9 @@ int main(int argc, char **argv) {
 
 
     test(data, duration);
-    
+
     BARRIER
-    
+
     printf("---------------------------Thread %d\n", RCCE_ue());
     printf("  #add        : %lu\n", data->nb_add);
     printf("    #added    : %lu\n", data->nb_added);
@@ -562,9 +581,9 @@ int main(int argc, char **argv) {
     FLUSH;
 
     // Delete set 
-/*
-    ht_delete(set);
-*/
+    /*
+        ht_delete(set);
+     */
 
     free(data);
 
