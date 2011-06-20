@@ -42,6 +42,7 @@ APINGPONGOBJS  := iRCCE_async_pingpong.o   $(ARCHIVE)
 PINGPINGOBJS  := iRCCE_pingping.o   $(ARCHIVE)
 MADMONKEYOBJS := iRCCE_madmonkey.o  $(ARCHIVE)
 IRCCESPAMOBJS := iRCCE_spam.o  $(ARCHIVE)
+LOCKOBJS := RCCE_locks.o  $(ARCHIVE)
 
 .PHONY: all default clean iRCCE_pingpong iRCCE_pingping iRCCE_madmonkey iRCCE_spam
 
@@ -151,6 +152,9 @@ bmrams: $(BMRAMSOBJS)
 gcl: $(GCLOBJS)
 	$(CCOMPILE) -o gcl $(GCLOBJS) $(CFLAGS)
 
+locks: $(LOCKOBJS)
+	$(CCOMPILE) -o locks $(LOCKOBJS) $(CFLAGS)
+
 ihashtable: $(IHASHTABLEOBJS)
 	$(CCOMPILE) -o ihashtable $(IHASHTABLEOBJS) $(CFLAGS)
 
@@ -251,6 +255,9 @@ iRCCE_ps_hashtable.o: iRCCE_ps_hashtable.c $(iRCCEINCLUDE)/pubSubTM.h $(iRCCEINC
 
 iRCCE_async_pingpong.o: iRCCE_async_pingpong.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h
 	$(CCOMPILE) -c $(CFLAGS) iRCCE_async_pingpong.c
+
+RCCE_locks.o: RCCE_locks.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h
+	$(CCOMPILE) -c $(CFLAGS) RCCE_locks.c
 
 pingping: $(PINGPINGOBJS)
 	$(CCOMPILE) -o pingping $(PINGPINGOBJS) $(CFLAGS)
