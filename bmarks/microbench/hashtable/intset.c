@@ -156,9 +156,7 @@ int ht_move(ht_intset_t *set, int val1, int val2, int transactional) {
     TX_START
     addr1 = val1 % maxhtlength;
     OFFSET(set->buckets[addr1]);
-    PRINT("head: %d", set->buckets[addr1]->head);
     prev = ND(*(nxt_t *) TX_LOAD(&set->buckets[addr1]->head));
-    PRINT("next: %d", prev->next);
 
     next = ND(*(nxt_t *) TX_LOAD(&prev->next));
     while (1) {
@@ -169,19 +167,14 @@ int ht_move(ht_intset_t *set, int val1, int val2, int transactional) {
         prev = next;
         next = ND(*(nxt_t *) TX_LOAD(&prev->next));
     }
-    PRINT("parsing done");
     prev1 = prev;
     next1 = next;
     if (v == val1) {
-        PRINT("%d found", v);
-
         /* Inserting */
         addr2 = val2 % maxhtlength;
         OFFSET(set->buckets[addr2]);
-        PRINT("head: %d", set->buckets[addr2]->head);
         prev = ND(*(nxt_t *) TX_LOAD(&set->buckets[addr2]->head));
         next = ND(*(nxt_t *) TX_LOAD(&prev->next));
-        PRINT("next: %d", prev->next);
 
         while (1) {
             v = next->val; //was TX
@@ -189,7 +182,6 @@ int ht_move(ht_intset_t *set, int val1, int val2, int transactional) {
             prev = next;
             next = ND(*(nxt_t *) TX_LOAD(&prev->next));
         }
-        PRINT("parsing2 done");
 
         if (v != val2 && prev != prev1 && prev != next1) {
             /* Even if the key is already in, the operation succeeds */
@@ -199,7 +191,6 @@ int ht_move(ht_intset_t *set, int val1, int val2, int transactional) {
             nxt_t *nxt1 = (nxt_t *) TX_LOAD(&next1->next);
             TX_STORE(&prev1->next, nxt1, TYPE_UINT);
             nxt_t nxt2 = OF(new_node(val2, OF(next), transactional));
-            PRINTD("Created node %5d. Value: %d", nxt2, val);
             TX_STORE(&prev->next, &nxt2, TYPE_UINT);
             TX_SHFREE(next1);
         }
