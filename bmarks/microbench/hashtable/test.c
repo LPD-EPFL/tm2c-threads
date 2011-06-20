@@ -528,17 +528,19 @@ int main(int argc, char **argv) {
         ht_add(set, 1314, 4);
         ht_add(set, 1315, 4);
         int j = 1314;
-        PRINTS("contains %d = %d\n", j, ht_contains(set, j, 1));
+        PRINTSF("contains %d = %d\n", j, ht_contains(set, j, 1));
         j = 1333;
-        PRINTS("contains %d = %d\n", j, ht_contains(set, j, 1));
+        PRINTSF("contains %d = %d\n", j, ht_contains(set, j, 1));
         j = 1313;
-        PRINTS("contains %d = %d\n", j, ht_contains(set, j, 1));
+        PRINTSF("contains %d = %d\n", j, ht_contains(set, j, 1));
         ht_remove(set, j, 1);
-        PRINTS("contains %d = %d\n", j, ht_contains(set, j, 1));
+        PRINTSF("contains %d = %d\n", j, ht_contains(set, j, 1));
         ht_remove(set, 11111, 1);
         
         ht_move(set, 1312, 6, 1);
+        PRINTSF("performed move");
         ht_snapshot(set, 1);
+        PRINTSF("performed snapshot");
         print_ht(set);
     }
 
