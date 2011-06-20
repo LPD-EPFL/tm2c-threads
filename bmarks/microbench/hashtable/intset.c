@@ -189,13 +189,17 @@ int ht_move(ht_intset_t *set, int val1, int val2, int transactional) {
             prev = next;
             next = ND(*(nxt_t *) TX_LOAD(&prev->next));
         }
+        PRINT("parsing2 done");
+
         if (v != val2 && prev != prev1 && prev != next1) {
             /* Even if the key is already in, the operation succeeds */
             result = 1;
 
-            /* Physically removing */
+            /* Physically removing */    
+            OFFSET(set->buckets[addr1]);
             n = ND(*(nxt_t *) TX_LOAD(&next1->next));
             TX_STORE(&prev1->next, OF(n), TYPE_UINT);
+            OFFSET(set->buckets[addr2]);
             nxt_t nxt = OF(new_node(val2, OF(next), transactional));
             PRINTD("Created node %5d. Value: %d", nxt, val);
             TX_STORE(&prev->next, &nxt, TYPE_UINT);
