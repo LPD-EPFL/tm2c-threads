@@ -16,7 +16,7 @@ extern const char *conflict_reasons[4] = {
     "WRITE_AFTER_READ",
     "WRITE_AFTER_WRITE"
 };
-extern RCCE_COMM RCCE_COMM_APP;
+RCCE_COMM RCCE_COMM_APP;
 
 /*______________________________________________________________________________________________________
  * TM Interface                                                                                         |
