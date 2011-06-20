@@ -16,6 +16,7 @@ extern const char *conflict_reasons[4] = {
     "WRITE_AFTER_READ",
     "WRITE_AFTER_WRITE"
 };
+extern RCCE_COMM RCCE_COMM_APP;
 
 /*______________________________________________________________________________________________________
  * TM Interface                                                                                         |
@@ -27,6 +28,8 @@ int color(int id, void *aux) {
 }
 
 void tm_init(unsigned int ID) {
+    RCCE_comm_split(color, NULL, &RCCE_COMM_APP);
+
     if (ID % DSLNDPERNODES == 0) {
         //dsl node
         dsl_init();

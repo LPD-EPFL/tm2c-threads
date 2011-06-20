@@ -34,6 +34,7 @@ extern "C" {
     extern stm_tx_node_t *stm_tx_node;
 
     extern const char *conflict_reasons[4];
+    extern RCCE_COMM RCCE_COMM_APP;
 
     /*______________________________________________________________________________________________________
      * TM Interface                                                                                         |
@@ -44,17 +45,12 @@ extern "C" {
 #define TM_INIT                                                         \
     RCCE_init(&argc, &argv);                                            \
     iRCCE_init();                                                       \
-    RCCE_COMM RCCE_COMM_APP;                                            \
-    RCCE_comm_split(color, NULL, &RCCE_COMM_APP);                       \
     {                                                                   \
         unsigned int ID = RCCE_ue();                                    \
         unsigned int NUM_UES = RCCE_num_ues();                          \
         tm_init(ID);
 
 #define TM_INITs                                                        \
-    stm_tx = NULL; stm_tx_node = NULL;                                  \
-    RCCE_COMM RCCE_COMM_APP;                                            \
-    RCCE_comm_split(color, NULL, &RCCE_COMM_APP);                       \
     {                                                                   \
         unsigned int ID = RCCE_ue();                                    \
         unsigned int NUM_UES = RCCE_num_ues();                          \
