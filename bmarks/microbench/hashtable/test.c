@@ -564,6 +564,7 @@ int main(int argc, char **argv) {
     data->nb_contains = 0;
     data->nb_found = 0;
     data->set = set;
+    data->seed = seed;
 
 
     test(data, duration);
