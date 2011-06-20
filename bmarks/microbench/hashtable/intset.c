@@ -169,6 +169,7 @@ int ht_move(ht_intset_t *set, int val1, int val2, int transactional) {
         prev = next;
         next = ND(*(nxt_t *) TX_LOAD(&prev->next));
     }
+    PRINT("parsing done");
     prev1 = prev;
     next1 = next;
     if (v == val1) {
