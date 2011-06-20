@@ -519,32 +519,8 @@ int main(int argc, char **argv) {
 
 
     }
-
-    TM_INITs
-    ONCE
-    {
-        ht_add(set, 1312, 4);
-        ht_add(set, 1313, 4);
-        ht_add(set, 1314, 4);
-        ht_add(set, 1315, 4);
-        int j = 1314;
-        PRINTSF("contains %d = %d\n", j, ht_contains(set, j, 1));
-        j = 1333;
-        PRINTSF("contains %d = %d\n", j, ht_contains(set, j, 1));
-        j = 1313;
-        PRINTSF("contains %d = %d\n", j, ht_contains(set, j, 1));
-        ht_remove(set, j, 1);
-        PRINTSF("contains %d = %d\n", j, ht_contains(set, j, 1));
-        ht_remove(set, 11111, 1);
-        
-        ht_move(set, 1312, 6, 1);
-        PRINTSF("performed move");
-        ht_snapshot(set, 1);
-        PRINTSF("performed snapshot");
-        //print_ht(set);
-    }
-
-    TM_END_STATS
+    
+    BARRIERW
 
     data->first = last;
     data->range = range;
@@ -567,8 +543,9 @@ int main(int argc, char **argv) {
     data->nb_found = 0;
     data->set = set;
 
-    return 0;
 
+    test(data, duration);
+    
     printf("---------------------------Thread %d\n", RCCE_ue());
     printf("  #add        : %lu\n", data->nb_add);
     printf("    #added    : %lu\n", data->nb_added);
