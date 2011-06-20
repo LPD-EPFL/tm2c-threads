@@ -39,19 +39,6 @@ void ht_delete(ht_intset_t *set) {
     free(set);
 }
 
-/*void set_delete(intset_t *set) {
-    node_t *node, *next;
-
-    node = ND(set->head);
-    while (node != NULL) {
-        next = ND(node->next);
-        RCCE_shfree((t_vcharp) node);
-        node = next;
-    }
-    RCCE_shfree((t_vcharp) set);
-}
- */
-
 int ht_size(ht_intset_t *set) {
     int size = 0;
     node_t *node;
