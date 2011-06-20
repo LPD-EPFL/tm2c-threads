@@ -544,6 +544,8 @@ int main(int argc, char **argv) {
 
     BARRIERW
 
+    shmem_init((initial + (RCCE_ue() * 1000)) * sizeof (node_t));
+
     data->first = last;
     data->range = range;
     data->update = update;
