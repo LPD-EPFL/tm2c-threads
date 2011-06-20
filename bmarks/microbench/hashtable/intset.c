@@ -145,7 +145,7 @@ int ht_move(ht_intset_t *set, int val1, int val2, int transactional) {
 
     if (set_remove(set->buckets[addr1], val1, 0))
         result = 1;
-    set_seq_add(set->buckets[addr2], val2, 0);
+    set_add(set->buckets[addr2], val2, 0);
     return result;
 
 #elif defined STM
@@ -295,10 +295,12 @@ int ht_snapshot(ht_intset_t *set, int transactional) {
     node_t *next;
 
     for (i = 0; i < maxhtlength; i++) {
-        next = set->buckets[i]->head->next;
-        while (next->next) {
+        OFFSET(set->buckets[i]);
+        node_t *hd = ND(set->buckets[i]->head);
+        next = ND(hd->next);
+        while (next->nextp) {
             sum += next->val;
-            next = next->next;
+            next = ND(next->next);
         }
     }
     result = 1;
