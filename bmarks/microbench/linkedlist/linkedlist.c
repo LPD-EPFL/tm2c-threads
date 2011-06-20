@@ -120,7 +120,7 @@ int set_contains(intset_t *set, val_t val, int transactional) {
         prev = next;
         next = ND(*(nxt_t *) TX_LOAD(&prev->next));
 #ifdef EARLY_RELEASE
-        PRINT("Releasing: %d", OF(prev));
+        PRINTD("Releasing: %d", OF(prev));
         TX_RRLS(prev);
 #endif
     }
@@ -202,7 +202,7 @@ int set_add(intset_t *set, val_t val, int transactional) {
             prev = next;
             next = ND(*(nxt_t *) TX_LOAD(&prev->next));
 #ifdef EARLY_RELEASE
-            PRINT("Releasing: %d", OF(prevprev));
+            PRINTD("Releasing: %d", OF(prevprev));
             TX_RRLS(prevprev);
             //TX_RRLS(&next->val);
 #endif
