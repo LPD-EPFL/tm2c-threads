@@ -303,7 +303,7 @@ int ht_snapshot(ht_intset_t *set, int transactional) {
     }
     result = 1;
 
-#elif defined STM	
+#elif defined STM
 
     int i, sum;
     node_t *next;
@@ -311,6 +311,7 @@ int ht_snapshot(ht_intset_t *set, int transactional) {
     TX_START
     sum = 0;
     for (i = 0; i < maxhtlength; i++) {
+        OFFSET(set->buckets[i]);
         node_t *hd = ND(set->buckets[i]->head);
         next = ND(*(nxt_t *) TX_LOAD(&hd->next));
         while (next->next) {
