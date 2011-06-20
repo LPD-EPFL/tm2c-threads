@@ -19,21 +19,21 @@ int main(int argc, char** argv) {
     RCCE_init(&argc, &argv);
     ID = RCCE_ue();
 
-
+    RCCE_set_lock(ID);
 
     int i, is_free;
     BMS
     for (i = 0; i < atoi(argv[1]); i++) {
-        is_free = RCCE_is_lock_free(ID);
+        is_free = RCCE_touch_lock(ID);
     }
     BME
     P("is_lock_free ? %d", is_free);
     
-    RCCE_set_lock(ID);
+    RCCE_unset_lock(ID);
     
     BMS
     for (i = 0; i < atoi(argv[1]); i++) {
-        is_free = RCCE_is_lock_free(ID);
+        is_free = RCCE_touch_lock(ID);
     }
     BME
     P("is_lock_free ? %d", is_free);
