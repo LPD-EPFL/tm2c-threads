@@ -291,7 +291,7 @@ void *test2(void *data) {
 
 void print_set(intset_t *set) {
     intset_t *offset = set;
-    
+
     node_t *node = ND(set->head);
     node = ND(node->next);
 
@@ -527,9 +527,19 @@ int main(int argc, char **argv) {
         ht_add(set, 1313, 4);
         ht_add(set, 1314, 4);
         ht_add(set, 1315, 4);
+        int j = 1314;
+        PRINTS("contains %d = %d\n", j, ht_contains(set, j, 1));
+        j = 1333;
+        PRINTS("contains %d = %d\n", j, ht_contains(set, j, 1));
+        j = 1313;
+        PRINTS("contains %d = %d\n", j, ht_contains(set, j, 1));
+        ht_remove(set, j, 1);
+        PRINTS("contains %d = %d\n", j, ht_contains(set, j, 1));
+        ht_remove(set, 11111, 1);
+        
         print_ht(set);
     }
-    
+
     TM_END_STATS
 
     data->first = last;
