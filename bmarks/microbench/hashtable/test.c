@@ -546,6 +546,8 @@ int main(int argc, char **argv) {
 
     test(data, duration);
     
+    BARRIER
+    
     printf("---------------------------Thread %d\n", RCCE_ue());
     printf("  #add        : %lu\n", data->nb_add);
     printf("    #added    : %lu\n", data->nb_added);
