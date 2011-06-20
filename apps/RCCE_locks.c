@@ -19,19 +19,26 @@ int main(int argc, char** argv) {
     
     P("starting");
 
+    P("RCCE_release_lock : explicitely");
     RCCE_release_lock(ID);
+    P("RCCE_is_lock_free : %d", RCCE_is_lock_free(ID));
+    P("RCCE_is_lock_free : %d", RCCE_is_lock_free(ID));
+    
+    
+/*
     P("RCCE_release_lock : explicitely");
     //P("RCCE_test_lock : %d", RCCE_test_lock(ID));
     P("RCCE_acquire_lock");
     RCCE_acquire_lock(ID);
-    P("RCCE_test_lock : %d", RCCE_test_lock(ID));
+    P("RCCE_test_lock : %d", RCCE_is_lock_free(ID));
     P("RCCE_release_lock");
     RCCE_release_lock(ID);
-    P("RCCE_test_lock : %d", RCCE_test_lock(ID));
+    P("RCCE_test_lock : %d", RCCE_is_lock_free(ID));
     RCCE_set_lock(ID);
-    P("RCCE_test_lock : %d", RCCE_test_lock(ID));
+    P("RCCE_test_lock : %d", RCCE_is_lock_free(ID));
     RCCE_set_lock(ID);
-    P("RCCE_test_lock : %d", RCCE_test_lock(ID));
+    P("RCCE_test_lock : %d", RCCE_is_lock_free(ID));
+*/
 
 
     RCCE_finalize();
