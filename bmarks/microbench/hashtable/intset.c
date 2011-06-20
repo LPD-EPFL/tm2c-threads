@@ -173,11 +173,16 @@ int ht_move(ht_intset_t *set, int val1, int val2, int transactional) {
     prev1 = prev;
     next1 = next;
     if (v == val1) {
+        PRINT("%d found", v);
+
         /* Inserting */
         addr2 = val2 % maxhtlength;
         OFFSET(set->buckets[addr2]);
+        PRINT("head: %d", set->buckets[addr2]->head);
         prev = ND(*(nxt_t *) TX_LOAD(&set->buckets[addr2]->head));
         next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+        PRINT("next: %d", prev->next);
+
         while (1) {
             v = next->val; //was TX
             if (v >= val2) break;
