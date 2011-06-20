@@ -22,25 +22,11 @@ int main(int argc, char** argv) {
     P("starting");
 
     int i;
-    for (i = 0; i < RCCE_num_ues(); i++) {
-        int is_free;
-        P("is_free %02d", i);
-        BMS
-        is_free = RCCE_is_lock_free(i);
-        BME
-        P("set %02d", i);
-        BMS
-        RCCE_set_lock(i);
-        BME
-        P("is_free %02d", i);
-        BMS
-        is_free = RCCE_is_lock_free(i);
-        BME
-        P("rls %02d", i);
-        BMS
-        is_free = RCCE_release_lock(i);
-        BME
+    BMS
+    for (i = 0; i < atoi(argv[1]); i++) {
+        RCCE_is_lock_free(ID);
     }
+    BME
 
 
 
