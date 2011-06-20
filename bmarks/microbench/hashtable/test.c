@@ -226,7 +226,7 @@ void *test(void *data, double duration) {
     return NULL;
 }
 
-void *test2(void *data) {
+void *test2(void *data, double duration) {
     int val, newval, last, flag = 1;
     thread_data_t *d = (thread_data_t *) data;
 
@@ -239,67 +239,70 @@ void *test2(void *data) {
     last = 0; // to avoid warning
 
     val = rand_range_re(&d->seed, 100) - 1;
+
     /* added for HashTables */
-    if (val < d->update) {
-        if (val >= d->move) { /* update without move */
-            if (flag) {
-                /* Add random value */
-                val = (rand_r(&d->seed) % d->range) + 1;
-                if (ht_add(d->set, val, TRANSACTIONAL)) {
-                    d->nb_added++;
-                    last = val;
-                    flag = 0;
-                }
-                d->nb_add++;
-            }
-            else {
-                if (d->alternate) {
-                    /* Remove last value */
-                    if (ht_remove(d->set, last, TRANSACTIONAL))
-                        d->nb_removed++;
-                    d->nb_remove++;
-                    flag = 1;
+
+    FOR(duration) {
+        if (val < d->update) {
+            if (val >= d->move) { /* update without move */
+                if (flag) {
+                    /* Add random value */
+                    val = (rand_r(&d->seed) % d->range) + 1;
+                    if (ht_add(d->set, val, TRANSACTIONAL)) {
+                        d->nb_added++;
+                        last = val;
+                        flag = 0;
+                    }
+                    d->nb_add++;
                 }
                 else {
-                    /* Random computation only in non-alternated cases */
-                    newval = rand_range_re(&d->seed, d->range);
-                    if (ht_remove(d->set, newval, TRANSACTIONAL)) {
-                        d->nb_removed++;
-                        /* Repeat until successful, to avoid size variations */
+                    if (d->alternate) {
+                        /* Remove last value */
+                        if (ht_remove(d->set, last, TRANSACTIONAL))
+                            d->nb_removed++;
+                        d->nb_remove++;
                         flag = 1;
                     }
-                    d->nb_remove++;
+                    else {
+                        /* Random computation only in non-alternated cases */
+                        newval = rand_range_re(&d->seed, d->range);
+                        if (ht_remove(d->set, newval, TRANSACTIONAL)) {
+                            d->nb_removed++;
+                            /* Repeat until successful, to avoid size variations */
+                            flag = 1;
+                        }
+                        d->nb_remove++;
+                    }
                 }
             }
-        }
-        else { /* move */
-            val = rand_range_re(&d->seed, d->range);
-            if (ht_move(d->set, last, val, TRANSACTIONAL)) {
-                d->nb_moved++;
-                last = val;
+            else { /* move */
+                val = rand_range_re(&d->seed, d->range);
+                if (ht_move(d->set, last, val, TRANSACTIONAL)) {
+                    d->nb_moved++;
+                    last = val;
+                }
+                d->nb_move++;
             }
-            d->nb_move++;
+        }
+        else {
+            if (val >= d->update + d->snapshot) { /* read-only without snapshot */
+                /* Look for random value */
+                val = rand_range_re(&d->seed, d->range);
+                if (ht_contains(d->set, val, TRANSACTIONAL))
+                    d->nb_found++;
+                d->nb_contains++;
+            }
+            else { /* snapshot */
+                if (ht_snapshot(d->set, TRANSACTIONAL))
+                    d->nb_snapshoted++;
+                d->nb_snapshot++;
+            }
         }
     }
-    else {
-        if (val >= d->update + d->snapshot) { /* read-only without snapshot */
-            /* Look for random value */
-            val = rand_range_re(&d->seed, d->range);
-            if (ht_contains(d->set, val, TRANSACTIONAL))
-                d->nb_found++;
-            d->nb_contains++;
-        }
-        else { /* snapshot */
-            if (ht_snapshot(d->set, TRANSACTIONAL))
-                d->nb_snapshoted++;
-            d->nb_snapshot++;
-        }
-    }
-}
 
-/* Free transaction */
-TM_END
-return NULL;
+    /* Free transaction */
+    TM_END
+    return NULL;
 }
 
 void print_set(intset_t *set) {
