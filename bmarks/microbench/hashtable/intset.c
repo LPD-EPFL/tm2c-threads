@@ -95,8 +95,8 @@ int ht_move_naive(ht_intset_t *set, int val1, int val2, int transactional) {
     }
     if (v == val1) {
         /* Physically removing */
-        n = ND(*(nxt_t *) TX_LOAD(&next->next));
-        TX_STORE(&prev->next, OF(n), TYPE_UINT);
+        nxt_t *nxt = (nxt_t *) TX_LOAD(&next->next);
+        TX_STORE(&prev->next, nxt, TYPE_UINT);
         TX_SHFREE(next);
         /* Inserting */
         addr2 = val2 % maxhtlength;
@@ -151,7 +151,7 @@ int ht_move(ht_intset_t *set, int val1, int val2, int transactional) {
 #elif defined STM
 
     int v, addr1, addr2;
-    node_t *n, *prev, *next, *prev1, *next1;
+    node_t *prev, *next, *prev1, *next1;
 
     TX_START
     addr1 = val1 % maxhtlength;
@@ -196,14 +196,11 @@ int ht_move(ht_intset_t *set, int val1, int val2, int transactional) {
             result = 1;
 
             /* Physically removing */    
-            //OFFSET(set->buckets[addr1]);
-            nxt_t nxt1 = *(nxt_t *) TX_LOAD(&next1->next);
-            //n = ND(*(nxt_t *) TX_LOAD(&next1->next));
-            TX_STORE(&prev1->next, &nxt1, TYPE_UINT);
-            //OFFSET(set->buckets[addr2]);
-            nxt_t nxt = OF(new_node(val2, OF(next), transactional));
-            PRINTD("Created node %5d. Value: %d", nxt, val);
-            TX_STORE(&prev->next, &nxt, TYPE_UINT);
+            nxt_t *nxt1 = (nxt_t *) TX_LOAD(&next1->next);
+            TX_STORE(&prev1->next, nxt1, TYPE_UINT);
+            nxt_t nxt2 = OF(new_node(val2, OF(next), transactional));
+            PRINTD("Created node %5d. Value: %d", nxt2, val);
+            TX_STORE(&prev->next, &nxt2, TYPE_UINT);
             TX_SHFREE(next1);
         }
     }
@@ -235,7 +232,7 @@ int ht_move_orrollback(ht_intset_t *set, int val1, int val2, int transactional) 
 #elif defined STM
 
     int v, addr1, addr2;
-    node_t *n, *prev, *next, *prev1, *next1;
+    node_t *prev, *next, *prev1, *next1;
 
     TX_START
     addr1 = val1 % maxhtlength;
@@ -254,8 +251,8 @@ int ht_move_orrollback(ht_intset_t *set, int val1, int val2, int transactional) 
     next1 = next;
     if (v == val1) {
         /* Physically removing */
-        n = ND(*(nxt_t *) TX_LOAD(&next->next));
-        TX_STORE(&prev->next, OF(n), TYPE_UINT);
+        nxt_t *nxt = (nxt_t *) TX_LOAD(&next->next);
+        TX_STORE(&prev->next, nxt, TYPE_UINT);
         /* Inserting */
         addr2 = val2 % maxhtlength;
         OFFSET(set->buckets[addr2]);
