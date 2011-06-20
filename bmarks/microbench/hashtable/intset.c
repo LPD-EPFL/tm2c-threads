@@ -196,10 +196,11 @@ int ht_move(ht_intset_t *set, int val1, int val2, int transactional) {
             result = 1;
 
             /* Physically removing */    
-            OFFSET(set->buckets[addr1]);
-            n = ND(*(nxt_t *) TX_LOAD(&next1->next));
-            TX_STORE(&prev1->next, OF(n), TYPE_UINT);
-            OFFSET(set->buckets[addr2]);
+            //OFFSET(set->buckets[addr1]);
+            nxt_t nxt1 = *(nxt_t *) TX_LOAD(&next1->next);
+            //n = ND(*(nxt_t *) TX_LOAD(&next1->next));
+            TX_STORE(&prev1->next, &nxt1, TYPE_UINT);
+            //OFFSET(set->buckets[addr2]);
             nxt_t nxt = OF(new_node(val2, OF(next), transactional));
             PRINTD("Created node %5d. Value: %d", nxt, val);
             TX_STORE(&prev->next, &nxt, TYPE_UINT);
