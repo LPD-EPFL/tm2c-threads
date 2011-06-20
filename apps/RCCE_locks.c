@@ -30,6 +30,8 @@ int main(int argc, char** argv) {
     P("is_lock_free ? %d", is_free);
     
     RCCE_unset_lock(ID);
+    P("just used RCCE_unset_lock() : now touch gives: %d", RCCE_touch_lock(ID));
+    P("  then touch gives: %d", RCCE_touch_lock(ID));
     
     BMS
     for (i = 0; i < atoi(argv[1]); i++) {
