@@ -22,6 +22,7 @@
  */
 
 #include "intset.h"
+#include <stdlib.h>
 
 /* Hashtable length (# of buckets) */
 unsigned int maxhtlength;
