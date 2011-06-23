@@ -286,8 +286,11 @@ bank_t * test(void *data, double duration, int nb_accounts) {
     //reset(bank);
 
     BARRIER
+    PRINT("Duration: %f", duration__);
+    BARRIER
     /* Free transaction */
     TM_END_STATS
+    BARRIER
 
     return bank;
 }
