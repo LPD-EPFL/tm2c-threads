@@ -518,8 +518,12 @@ int main(int argc, char **argv) {
 
     ONCE
     {
+        printf("srand 1");
+        FLUSH
         srand_core();
         udelay(rand_range(123));
+        printf("srand 2");
+        FLUSH
         srand_core();
         printf("Adding %d entries to set\n", initial);
         FLUSH
