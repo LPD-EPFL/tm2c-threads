@@ -510,8 +510,11 @@ int main(int argc, char **argv) {
 
     maxhtlength = (unsigned int) initial / load_factor;
 
+    PRINT("before creating set");
+
     set = ht_new();
     // Populate set 
+    PRINT("after creating set");
 
     BARRIERW
 
