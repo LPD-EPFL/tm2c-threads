@@ -9,6 +9,7 @@
 
 extern stm_tx_t *stm_tx = NULL;
 extern stm_tx_node_t *stm_tx_node = NULL;
+double duration__ = 0;
 
 extern const char *conflict_reasons[4] = {
     "NO_CONFLICT",
