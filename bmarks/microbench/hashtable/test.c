@@ -513,12 +513,8 @@ int main(int argc, char **argv) {
 
     set = ht_new();
     // Populate set 
-    PRINT("after creating set");
 
     BARRIERW
-
-    PRINT("after barrier");
-
 
     ONCE
     {
@@ -526,6 +522,7 @@ int main(int argc, char **argv) {
         udelay(rand_range(123));
         srand_core();
         printf("Adding %d entries to set\n", initial);
+        FLUSH
         i = 0;
         maxhtlength = (int) (initial / load_factor);
         while (i < initial) {
