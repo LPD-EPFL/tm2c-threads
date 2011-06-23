@@ -523,8 +523,9 @@ int main(int argc, char **argv) {
         srand_core();
         printf("srand 1 done");
         FLUSH
-        int micros = rand_range(123);
+                int micros = rand_range(123);
         printf("sleeping %d micros", micros);
+        FLUSH
         udelay(micros);
         printf("srand 2");
         FLUSH
