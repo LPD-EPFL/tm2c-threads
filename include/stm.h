@@ -14,6 +14,7 @@
 extern "C" {
 #endif
 
+#include <setjmp.h>
 #include "log.h"
 #include "mem.h"
 
