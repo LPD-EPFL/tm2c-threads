@@ -42,6 +42,7 @@ static inline CONFLICT_TYPE try_subscribe(int nodeId, int shmem_address);
 static inline CONFLICT_TYPE try_publish(int nodeId, int shmem_address);
 static inline void unsubscribe(int nodeId, int shmem_address);
 static inline void publish_finish(int nodeId, int shmem_address);
+static void print_global_stats();
 
 void dsl_init(void) {
     ID = RCCE_ue();
