@@ -32,6 +32,7 @@ extern "C" {
 
     extern stm_tx_t *stm_tx;
     extern stm_tx_node_t *stm_tx_node;
+    extern double duration__;
 
     extern const char *conflict_reasons[4];
     extern RCCE_COMM RCCE_COMM_APP;
