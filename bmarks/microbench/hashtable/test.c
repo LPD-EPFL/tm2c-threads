@@ -518,20 +518,10 @@ int main(int argc, char **argv) {
 
     ONCE
     {
-        printf("srand 1");
-        FLUSH
         srand_core();
-        printf("srand 1 done");
         FLUSH
-                int micros = rand_range(123);
-        printf("sleeping %d micros", micros);
-        FLUSH
-        udelay(micros);
-        printf("srand 2");
-        FLUSH
+        udelay(rand_range(123));
         srand_core();
-        printf("Adding %d entries to set\n", initial);
-        FLUSH
         i = 0;
         maxhtlength = (int) (initial / load_factor);
         while (i < initial) {
