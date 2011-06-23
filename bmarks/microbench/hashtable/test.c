@@ -22,7 +22,6 @@
  */
 
 #include "intset.h"
-#include <stdlib.h>
 
 /* Hashtable length (# of buckets) */
 unsigned int maxhtlength;
@@ -524,7 +523,9 @@ int main(int argc, char **argv) {
         srand_core();
         printf("srand 1 done");
         FLUSH
-        udelay(rand_range(123));
+        int micros = rand_range(123);
+        printf("sleeping %d micros", micros);
+        udelay(micros);
         printf("srand 2");
         FLUSH
         srand_core();
