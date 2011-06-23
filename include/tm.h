@@ -20,7 +20,7 @@
 extern "C" {
 #endif
 
-#define FOR(seconds)                    double starting__ = RCCE_wtime(), duration__;\
+#define FOR(seconds)                    double starting__ = RCCE_wtime();\
                                             while ((duration__ =\
                                             (RCCE_wtime() - starting__)) < (seconds))
 #define ONCE                            if (RCCE_ue() == 1 || RCCE_num_ues() == 1)
@@ -110,11 +110,13 @@ extern "C" {
 
 #define TM_END                                                          \
     PRINTD("|| FAKE: TM ends");                                         \
+    ps_send_stats(stm_tx_node, duration__);                             \
     tx_metadata_free(&stm_tx);                                          \
     free(stm_tx_node); }
 
 #define TM_END_STATS                                                    \
     PRINTD("|| FAKE: TM ends");                                         \
+    ps_send_stats(stm_tx_node, duration__);                             \
     tx_metadata_free(&stm_tx);                                          \
     tx_metadata_node_print(stm_tx_node);                                \
     free(stm_tx_node); }                                  

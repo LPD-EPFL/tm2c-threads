@@ -14,6 +14,7 @@
 #define	PUBSUBTM_H
 
 #include "common.h"
+#include "stm.h"
 
 #ifdef OLDHASH
 #include "hashtable.h"
@@ -40,21 +41,48 @@ extern "C" {
         PS_SUBSCRIBE_RESPONSE, //4
         PS_PUBLISH_RESPONSE, //5
         PS_ABORTED, //6
-        PS_REMOVE_NODE //7
+        PS_REMOVE_NODE, //7
+        PS_STATS
     } PS_COMMAND_TYPE;
 
     //TODO: make it union with address normal int..
     //A command to the pub-sub
 
     typedef struct {
-        unsigned short int type; //PS_COMMAND_TYPE
+        unsigned int type; //PS_COMMAND_TYPE
 
         union {
-            unsigned short int response; //BOOLEAN
-            unsigned short int target; //nodeId
+
+            struct {
+
+                union {
+                    int response; //BOOLEAN
+                    unsigned int target; //nodeId
+                };
+                unsigned int address;
+            };
+
+            //stats collecting
+            struct {
+                unsigned short commits;
+                unsigned short aborts;
+                unsigned short max_retries;
+                unsigned short aborts_war;
+                unsigned short aborts_raw;
+                unsigned short aborts_waw;
+            };
         };
-        unsigned int address;
+
+        union {
+            double tx_duration;
+
+            struct {
+                unsigned int abrt_attacker;
+                unsigned int abrt_reason;
+            };
+        };
     } PS_COMMAND;
+
 
     typedef unsigned int SHMEM_START_ADDRESS;
 
@@ -102,6 +130,7 @@ extern "C" {
     //
     //    unsigned int DHT_get_responsible_node(void * shmem_address);
 
+    void ps_send_stats(stm_tx_node_t *, double duration);
 #ifdef	__cplusplus
 }
 #endif

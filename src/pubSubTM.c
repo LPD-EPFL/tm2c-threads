@@ -176,6 +176,23 @@ void ps_finish_all() {
 
 }
 
+void ps_send_stats(stm_tx_node_t* stats, double duration) {
+    psc->type = PS_STATS;
+    
+    psc->aborts = stats->tx_aborted;
+    psc->aborts_raw = stats->aborts_raw;
+    psc->aborts_war = stats->aborts_war;
+    psc->aborts_waw = stats->aborts_waw;
+    psc->commits = stats->tx_commited;
+    psc->max_retries = stats->max_retries;
+    psc->tx_duration = duration;
+    
+    char data[PS_BUFFER_SIZE];
+
+    memcpy(data, psc, sizeof (PS_COMMAND));
+    iRCCE_isend(data, PS_BUFFER_SIZE, 0, NULL);
+}
+
 /*
  * ____________________________________________________________________________________________
  "DHT"  functions _____________________________________________________________________________|
