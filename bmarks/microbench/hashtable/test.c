@@ -521,6 +521,8 @@ int main(int argc, char **argv) {
         printf("srand 1");
         FLUSH
         srand_core();
+        printf("srand 1 done");
+        FLUSH
         udelay(rand_range(123));
         printf("srand 2");
         FLUSH
