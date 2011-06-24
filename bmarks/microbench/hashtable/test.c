@@ -325,7 +325,7 @@ void print_ht(ht_intset_t *set) {
     }
 }
 
-int main(int argc, char **argv) {
+MAIN(int argc, char **argv) {
     TM_INIT
 
     struct option long_options[] = {
