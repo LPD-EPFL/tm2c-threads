@@ -46,6 +46,19 @@ inline long rand_range(long r) {
     return v;
 }
 
+/* Re-entrant version of rand_range(r) */
+inline long rand_range_re(unsigned int *seed, long r) {
+    int m = RAND_MAX;
+    long d, v = 0;
+
+    do {
+        d = (m > r ? r : m);
+        v += 1 + (long) (d * ((double) rand_r(seed) / ((double) (m) + 1.0)));
+        r -= m;
+    } while (r > 0);
+    return v;
+}
+
 /*
  * Seeding the rand()
  */
@@ -69,6 +82,7 @@ typedef struct thread_data {
     unsigned long nb_removed;
     unsigned long nb_contains;
     unsigned long nb_found;
+    unsigned int seed;
     intset_t *set;
     unsigned long failures_because_contention;
 } thread_data_t;
@@ -93,7 +107,7 @@ void *test(void *data, double duration) {
 
             if (last < 0) { // add
 
-                val = rand_range(d->range);
+				val = rand_range_re(&d->seed, d->range);
                 if (set_add(d->set, val, TRANSACTIONAL)) {
                     d->nb_added++;
                     last = val;
@@ -111,7 +125,7 @@ void *test(void *data, double duration) {
                 }
                 else {
                     /* Random computation only in non-alternated cases */
-                    val = rand_range(d->range);
+					val = rand_range_re(&d->seed, d->range);
                     /* Remove one random value */
                     if (set_remove(d->set, val, TRANSACTIONAL)) {
                         d->nb_removed++;
@@ -129,23 +143,21 @@ void *test(void *data, double duration) {
                     if (last < 0) {
                         val = d->first;
                         last = val;
-                    }
-                    else { // last >= 0
-                        val = rand_range(d->range);
+					} else { // last >= 0
+						val = rand_range_re(&d->seed, d->range);
                         last = -1;
                     }
                 }
                 else { // update != 0
                     if (last < 0) {
-                        val = rand_range(d->range);
+						val = rand_range_re(&d->seed, d->range);
                         //last = val;
                     }
                     else {
                         val = last;
                     }
                 }
-            }
-            else val = rand_range(d->range);
+			}	else val = rand_range_re(&d->seed, d->range);
 
             if (set_contains(d->set, val, TRANSACTIONAL))
                 d->nb_found++;
@@ -157,6 +169,8 @@ void *test(void *data, double duration) {
         if (d->effective) { // a failed remove/add is a read-only tx
             unext = ((100 * (d->nb_added + d->nb_removed))
                     < (d->update * (d->nb_add + d->nb_remove + d->nb_contains)));
+		} else { // remove/add (even failed) is considered as an update
+			unext = (rand_range_re(&d->seed, 100) - 1 < d->update);
         }
         else { // remove/add (even failed) is considered as an update
             unext = (rand_range(100) - 1 < d->update);
@@ -209,6 +223,7 @@ TASKMAIN(int argc, char **argv) {
     int unit_tx = DEFAULT_ELASTICITY;
     int alternate = DEFAULT_ALTERNATE;
     int effective = DEFAULT_EFFECTIVE;
+    unsigned int seed = 0;
 
     while (1) {
         i = 0;
@@ -292,6 +307,11 @@ TASKMAIN(int argc, char **argv) {
         }
     }
 
+    if (seed == 0)
+        srand((RCCE_ue() + 1) * (int) time(0));
+    else
+        srand(seed);
+
     assert(duration >= 0);
     assert(initial >= 0);
     assert(nb_app_cores > 0);
@@ -361,7 +381,7 @@ TASKMAIN(int argc, char **argv) {
     data->nb_contains = 0;
     data->nb_found = 0;
     data->set = set;
-    data->failures_because_contention = 0;
+    data->seed = seed;
 
     BARRIERW
     /* Start */
