@@ -175,14 +175,6 @@ void *test(void *data, double duration) {
         }
     }
 
-    BARRIER
-            /*
-                ONCE
-                {
-                    set_print(d->set);
-                }
-                BARRIER
-             */
     return NULL;
 }
 
