@@ -400,6 +400,9 @@ TASKMAIN(int argc, char **argv) {
     /* Cleanup STM */
 
     free(data);
+    
+    BARRIER
+    
     TM_END
 
     RCCE_finalize();
