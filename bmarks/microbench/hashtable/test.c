@@ -353,7 +353,7 @@ int main(int argc, char **argv) {
     val_t last = 0;
     val_t val = 0;
     thread_data_t *data;
-    int duration = DEFAULT_DURATION;
+    double duration = DEFAULT_DURATION;
     int initial = DEFAULT_INITIAL;
 #ifdef DSL
     int nb_app_cores = (RCCE_num_ues() / 2) + ((RCCE_num_ues() % 2) ? 1 : 0);
@@ -434,7 +434,7 @@ int main(int argc, char **argv) {
                 effective = atoi(optarg);
                 break;
             case 'd':
-                duration = atoi(optarg);
+                duration = atof(optarg);
                 break;
             case 'i':
                 initial = atoi(optarg);
