@@ -382,8 +382,6 @@ TASKMAIN(int argc, char **argv) {
     /* Start */
     test(data, duration);
     
-    TM_END
-
     printf("-- Core %d\n", RCCE_ue());
     printf("  #add        : %lu\n", data->nb_add);
     printf("    #added    : %lu\n", data->nb_added);
@@ -402,6 +400,7 @@ TASKMAIN(int argc, char **argv) {
     /* Cleanup STM */
 
     free(data);
+    TM_END
 
     RCCE_finalize();
     EXIT(0);
