@@ -227,16 +227,17 @@ static void print_global_stats() {
     printf("Aborts WAW  \t: %lu\t/s\n", stats_aborts_waw);
     printf("--------------------------------------------------------------\n");
 
-    stats_aborts /= NUM_UES_APP;
-    stats_aborts_raw /= NUM_UES_APP;
-    stats_aborts_war /= NUM_UES_APP;
-    stats_aborts_waw /= NUM_UES_APP;
-    stats_commits /= NUM_UES_APP;
-    stats_total /= NUM_UES_APP;
-
+    int stats_commits_app = stats_commits / NUM_UES_APP;
+    
+    stats_aborts /= NUM_UES;
+    stats_aborts_raw /= NUM_UES;
+    stats_aborts_war /= NUM_UES;
+    stats_aborts_waw /= NUM_UES;
+    stats_commits /= NUM_UES;
+    stats_total /= NUM_UES;
 
     double commit_rate = (stats_total - stats_aborts) / (double) stats_total;
-    double tx_latency = (1 / (double) stats_commits) * 1000; //micros
+    double tx_latency = (1 / (double) stats_commits_app) * 1000; //micros
 
     printf(":: PER SECOND PER NODE AVG -----------------------------------\n");
     printf("Starts      \t: %lu\t/s\n", stats_total);
