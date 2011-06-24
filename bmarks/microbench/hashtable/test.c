@@ -482,7 +482,7 @@ int main(int argc, char **argv) {
     ONCE
     {
         printf("Set type     : hash table\n");
-        printf("Duration     : %d\n", duration);
+        printf("Duration     : %f\n", duration);
         printf("Initial size : %d\n", initial);
         printf("Nb threads   : %d\n", nb_app_cores);
         printf("Value range  : %ld\n", range);
