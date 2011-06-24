@@ -589,8 +589,6 @@ TASKMAIN(int argc, char **argv) {
     
     BARRIER
             
-    PRINT("bef tm_end");
-    
     TM_END
 
     //RCCE_finalize();
