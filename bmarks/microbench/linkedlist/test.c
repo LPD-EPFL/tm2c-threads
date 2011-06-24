@@ -96,8 +96,6 @@ void *test(void *data, double duration) {
     srand_core();
 
     /* Create transaction */
-    TM_INITs
-    /* Wait on barrier */
 
     /* Is the first op an update? */
     unext = (rand_range(100) - 1 < d->update);
@@ -177,7 +175,6 @@ void *test(void *data, double duration) {
         }
     }
 
-    TM_END_STATS
     BARRIER
             /*
                 ONCE
@@ -191,9 +188,7 @@ void *test(void *data, double duration) {
 
 TASKMAIN(int argc, char **argv) {
     dup2(STDOUT_FILENO, STDERR_FILENO);
-
-    RCCE_init(&argc, &argv);
-    iRCCE_init();
+    TM_INIT
 
     struct option long_options[] = {
         // These options don't set a flag
@@ -386,6 +381,8 @@ TASKMAIN(int argc, char **argv) {
     BARRIERW
     /* Start */
     test(data, duration);
+    
+    TM_END
 
     printf("-- Core %d\n", RCCE_ue());
     printf("  #add        : %lu\n", data->nb_add);
