@@ -588,6 +588,8 @@ TASKMAIN(int argc, char **argv) {
     free(data);
     
     BARRIER
+            
+    PRINT("bef tm_end");
     
     TM_END
 
