@@ -337,7 +337,7 @@ TASKMAIN(int argc, char **argv) {
 
     set = set_new();
 
-    BARRIERW;
+    BARRIER;
 
     ONCE
     {
@@ -378,7 +378,7 @@ TASKMAIN(int argc, char **argv) {
     data->set = set;
     data->seed = seed;
 
-    BARRIERW
+    BARRIER
     /* Start */
     test(data, duration);
     
