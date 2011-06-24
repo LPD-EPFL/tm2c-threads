@@ -590,5 +590,5 @@ TASKMAIN(int argc, char **argv) {
     TM_END
 
     RCCE_finalize();
-    return 0;
+    EXIT(0);
 }
