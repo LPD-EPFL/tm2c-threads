@@ -587,6 +587,8 @@ TASKMAIN(int argc, char **argv) {
 
     free(data);
     
+    BARRIER
+    
     TM_END
 
     //RCCE_finalize();
