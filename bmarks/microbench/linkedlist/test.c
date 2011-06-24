@@ -107,7 +107,7 @@ void *test(void *data, double duration) {
 
             if (last < 0) { // add
 
-				val = rand_range_re(&d->seed, d->range);
+                val = rand_range_re(&d->seed, d->range);
                 if (set_add(d->set, val, TRANSACTIONAL)) {
                     d->nb_added++;
                     last = val;
@@ -125,7 +125,7 @@ void *test(void *data, double duration) {
                 }
                 else {
                     /* Random computation only in non-alternated cases */
-					val = rand_range_re(&d->seed, d->range);
+                    val = rand_range_re(&d->seed, d->range);
                     /* Remove one random value */
                     if (set_remove(d->set, val, TRANSACTIONAL)) {
                         d->nb_removed++;
@@ -143,21 +143,23 @@ void *test(void *data, double duration) {
                     if (last < 0) {
                         val = d->first;
                         last = val;
-					} else { // last >= 0
-						val = rand_range_re(&d->seed, d->range);
+                    }
+                    else { // last >= 0
+                        val = rand_range_re(&d->seed, d->range);
                         last = -1;
                     }
                 }
                 else { // update != 0
                     if (last < 0) {
-						val = rand_range_re(&d->seed, d->range);
+                        val = rand_range_re(&d->seed, d->range);
                         //last = val;
                     }
                     else {
                         val = last;
                     }
                 }
-			}	else val = rand_range_re(&d->seed, d->range);
+            }
+            else val = rand_range_re(&d->seed, d->range);
 
             if (set_contains(d->set, val, TRANSACTIONAL))
                 d->nb_found++;
@@ -169,23 +171,21 @@ void *test(void *data, double duration) {
         if (d->effective) { // a failed remove/add is a read-only tx
             unext = ((100 * (d->nb_added + d->nb_removed))
                     < (d->update * (d->nb_add + d->nb_remove + d->nb_contains)));
-		} else { // remove/add (even failed) is considered as an update
-			unext = (rand_range_re(&d->seed, 100) - 1 < d->update);
         }
         else { // remove/add (even failed) is considered as an update
-            unext = (rand_range(100) - 1 < d->update);
+            unext = (rand_range_re(&d->seed, 100) - 1 < d->update);
         }
     }
 
     TM_END_STATS
     BARRIER
-/*
-    ONCE
-    {
-        set_print(d->set);
-    }
-    BARRIER
-*/
+            /*
+                ONCE
+                {
+                    set_print(d->set);
+                }
+                BARRIER
+             */
     return NULL;
 }
 
@@ -358,9 +358,9 @@ TASKMAIN(int argc, char **argv) {
         }
         size = set_size(set);
         printf("Set size     : %d\n", size);
-/*
-        set_print(set);
-*/
+        /*
+                set_print(set);
+         */
         assert(size == initial);
         FLUSH
     }
