@@ -106,8 +106,6 @@ void *test(void *data, double duration) {
 
     srand_core();
 
-    TM_INITs
-
     /* Is the first op an update, a move? */
     r = rand_range_re(&d->seed, 100) - 1;
     unext = (r < d->update);
@@ -219,8 +217,6 @@ void *test(void *data, double duration) {
 
     }
 
-    TM_END_STATS
-
             /* Free transaction */
 
     return NULL;
@@ -233,7 +229,6 @@ void *test2(void *data, double duration) {
     srand_core();
 
     /* Create transaction */
-    TM_INITs
     /* Wait on barrier */
 
     last = 0; // to avoid warning
@@ -301,7 +296,6 @@ void *test2(void *data, double duration) {
     }
 
     /* Free transaction */
-    TM_END
     return NULL;
 }
 
@@ -332,8 +326,7 @@ void print_ht(ht_intset_t *set) {
 }
 
 int main(int argc, char **argv) {
-    RCCE_init(&argc, &argv);
-    iRCCE_init();
+    TM_INIT
 
     struct option long_options[] = {
         // These options don't set a flag
@@ -514,7 +507,7 @@ int main(int argc, char **argv) {
     set = ht_new();
     // Populate set 
 
-    BARRIERW
+    BARRIER
 
     ONCE
     {
@@ -543,7 +536,7 @@ int main(int argc, char **argv) {
 
     }
 
-    BARRIERW
+    BARRIER
 
     shmem_init((initial + (RCCE_ue() * 1000)) * sizeof (node_t));
 
@@ -593,6 +586,9 @@ int main(int argc, char **argv) {
      */
 
     free(data);
+    
+    TM_END
 
+    RCCE_finalize();
     return 0;
 }
