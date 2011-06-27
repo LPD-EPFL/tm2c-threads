@@ -113,19 +113,24 @@ int set_contains(intset_t *set, val_t val, int transactional) {
     TX_START
     prev = ND(set->head);
     next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+    printf("[%02d] ", RCCE_ue());
+    printf("[L(%d)] ", OF(next));
     while (1) {
         //v = *(val_t *) TX_LOAD(&next->val);
         v = next->val;
         if (v >= val)
             break;
+        
         prev = next;
         next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+        printf("[L(%d)] ", OF(next));
 #ifdef EARLY_RELEASE
-        PRINTD("Releasing: %d", OF(prev));
+        printf("[R(%d)] ", OF(prev));
         TX_RRLS(prev);
 #endif
     }
     TX_COMMIT
+    FLUSH;
     result = (v == val);
 
 #elif defined LOCKFREE			
