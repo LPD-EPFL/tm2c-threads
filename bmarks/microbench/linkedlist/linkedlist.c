@@ -113,24 +113,19 @@ int set_contains(intset_t *set, val_t val, int transactional) {
     TX_START
     prev = ND(set->head);
     next = ND(*(nxt_t *) TX_LOAD(&prev->next));
-    printf("[%02d] ", RCCE_ue());
-    printf("[L(%d)] ", OF(next));
     while (1) {
         //v = *(val_t *) TX_LOAD(&next->val);
         v = next->val;
         if (v >= val)
             break;
-        
+
         prev = next;
         next = ND(*(nxt_t *) TX_LOAD(&prev->next));
-        printf("[L(%d)] ", OF(next));
 #ifdef EARLY_RELEASE
-        printf("[R(%d)] ", OF(prev));
         TX_RRLS(prev);
 #endif
     }
     TX_COMMIT
-    FLUSH;
     result = (v == val);
 
 #elif defined LOCKFREE			
@@ -192,9 +187,7 @@ int set_add(intset_t *set, val_t val, int transactional) {
         v = next->val;
         if (v >= val)
             goto done;
-#ifdef EARLY_RELEASE
-        //TX_RRLS(&next->val);
-#endif
+
         prev = next;
         next = ND(*(nxt_t *) TX_LOAD(&prev->next));
 
@@ -210,7 +203,6 @@ int set_add(intset_t *set, val_t val, int transactional) {
 #ifdef EARLY_RELEASE
             PRINTD("Releasing: %d", OF(prevprev));
             TX_RRLS(prevprev);
-            //TX_RRLS(&next->val);
 #endif
         }
 done:
@@ -259,6 +251,8 @@ int set_remove(intset_t *set, val_t val, int transactional) {
 #endif
     val_t v;
 
+    printf("[%02d] ", RCCE_ue());
+
     TX_START
     prev = ND(set->head);
     next = ND(*(nxt_t *) TX_LOAD(&prev->next));
@@ -267,9 +261,7 @@ int set_remove(intset_t *set, val_t val, int transactional) {
     v = next->val;
     if (v >= val)
         goto done;
-#ifdef EARLY_RELEASE
-    //TX_RRLS(&next->val);
-#endif
+
     prev = next;
     next = ND(*(nxt_t *) TX_LOAD(&prev->next));
 
@@ -286,15 +278,13 @@ int set_remove(intset_t *set, val_t val, int transactional) {
 #ifdef EARLY_RELEASE
         PRINTD("Releasing: %d", OF(prevprev));
         TX_RRLS(prevprev);
-        //TX_RRLS(&next->val);
 #endif
     }
 done:
     result = (v == val);
     if (result) {
-        n = ND(*(nxt_t *) TX_LOAD(&next->next));
-        nxt_t nxt = OF(n);
-        TX_STORE(&prev->next, &nxt, TYPE_UINT);
+        nxt_t *nxt = (nxt_t *) TX_LOAD(&next->next);
+        TX_STORE(&prev->next, nxt, TYPE_UINT);
         TX_SHFREE(next);
         PRINTD("Freed node   %5d. Value: %d", OF(next), next->val);
     }
