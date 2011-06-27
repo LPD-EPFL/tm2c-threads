@@ -20,6 +20,7 @@ extern "C" {
 
 #define DEBUG_
 
+#define MED printf("[%02d] ", RCCE_ue());
 #define PRINT(args...) printf("[%02d] ", RCCE_ue()); printf(args); printf("\n"); fflush(stdout)
 #define PRINTN(args...) printf("[%02d] ", RCCE_ue()); printf(args); fflush(stdout)
 #define PRINTS(args...)  printf(args);
