@@ -114,7 +114,8 @@ int set_contains(intset_t *set, val_t val, int transactional) {
     prev = ND(set->head);
     next = ND(*(nxt_t *) TX_LOAD(&prev->next));
     while (1) {
-        v = *(val_t *) TX_LOAD(&next->val);
+        //v = *(val_t *) TX_LOAD(&next->val);
+        v = next->val;
         if (v >= val)
             break;
         prev = next;
