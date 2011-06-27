@@ -432,8 +432,11 @@ TASKMAIN(int argc, char **argv) {
 
 
     /* Init STM */
+    PRINT("before barrier");
     BARRIERW
+    PRINT("after barrier");
 
+            
 #ifdef DSL
             data->id = (RCCE_ue() - 1) / 2;
 #else
