@@ -177,6 +177,7 @@ int set_add(intset_t *set, val_t val, int transactional) {
 
 #elif defined STM
         set_print(set);
+        val = 3333;
         PRINT("-- Adding %d", val);
 
         node_t *prev, *next;
