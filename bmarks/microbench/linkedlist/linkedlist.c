@@ -121,7 +121,7 @@ int set_contains(intset_t *set, val_t val, int transactional) {
         prev = next;
         next = ND(*(nxt_t *) TX_LOAD(&prev->next));
 #ifdef EARLY_RELEASE
-        TX_RRLS(&prev);
+        TX_RRLS(OF(&prev));
 #endif
     }
     TX_COMMIT
