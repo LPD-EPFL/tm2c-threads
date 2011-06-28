@@ -108,6 +108,9 @@ int set_contains(intset_t *set, val_t val, int transactional) {
 #elif defined STM
 
     node_t *prev, *next;
+#ifdef EARLY_RELEASE
+    node_t *rls;
+#endif
     val_t v = 0;
 
     TX_START
@@ -117,11 +120,13 @@ int set_contains(intset_t *set, val_t val, int transactional) {
         v = next->val;
         if (v >= val)
             break;
-
+#ifdef EARLY_RELEASE
+        rls = prev;
+#endif
         prev = next;
         next = ND(*(nxt_t *) TX_LOAD(&prev->next));
 #ifdef EARLY_RELEASE
-        TX_RRLS(OF(&prev));
+        TX_RRLS(&rls->next);
 #endif
     }
     TX_COMMIT
