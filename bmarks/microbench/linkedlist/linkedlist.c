@@ -176,6 +176,8 @@ int set_add(intset_t *set, val_t val, int transactional) {
         result = set_seq_add(set, val);
 
 #elif defined STM
+        print_set(set);
+        PRINT("-- Adding %d", val);
 
         node_t *prev, *next;
 
