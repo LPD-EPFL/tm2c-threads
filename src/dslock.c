@@ -108,6 +108,7 @@ static void dsl_communication() {
 
             switch (ps_remote->type) {
                 case PS_SUBSCRIBE:
+                    PRINT("%02d SUB %u", sender, ps_remote->address);
                     ps_send(sender, PS_SUBSCRIBE_RESPONSE, ps_remote->address, try_subscribe(sender, ps_remote->address));
                     break;
                 case PS_PUBLISH:
@@ -117,6 +118,7 @@ static void dsl_communication() {
                     ps_hashtable_delete_node(ps_hashtable, sender);
                     break;
                 case PS_UNSUBSCRIBE:
+                    PRINT("%02d RLS %u", sender, ps_remote->address);
                     ps_hashtable_delete(ps_hashtable, sender, ps_remote->address, READ);
                     break;
                 case PS_PUBLISH_FINISH:
@@ -228,7 +230,7 @@ static void print_global_stats() {
     printf("--------------------------------------------------------------\n");
 
     int stats_commits_app = stats_commits / NUM_UES_APP;
-    
+
     stats_aborts /= NUM_UES;
     stats_aborts_raw /= NUM_UES;
     stats_aborts_war /= NUM_UES;
