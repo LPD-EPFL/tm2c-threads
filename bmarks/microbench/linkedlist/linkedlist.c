@@ -251,8 +251,6 @@ int set_remove(intset_t *set, val_t val, int transactional) {
 #endif
     val_t v;
 
-    printf("[%02d] ", RCCE_ue());
-
     TX_START
     prev = ND(set->head);
     next = ND(*(nxt_t *) TX_LOAD(&prev->next));
