@@ -250,9 +250,6 @@ int set_remove(intset_t *set, val_t val, int transactional) {
     }
 
 #elif defined STM
-    set_print(set);
-    PRINT(" -- Removing %d", val);
-
     node_t *prev, *next;
 #ifdef EARLY_RELEASE
     node_t *prls, *pprls;
