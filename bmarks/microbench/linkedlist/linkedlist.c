@@ -176,10 +176,6 @@ int set_add(intset_t *set, val_t val, int transactional) {
         result = set_seq_add(set, val);
 
 #elif defined STM
-        set_print(set);
-        val = 3333;
-        PRINT("-- Adding %d", val);
-
         node_t *prev, *next;
 
 #ifdef EARLY_RELEASE
@@ -254,10 +250,12 @@ int set_remove(intset_t *set, val_t val, int transactional) {
     }
 
 #elif defined STM
+    set_print(set);
+    PRINT(" -- Removing %d", val);
 
-    node_t *prev, *next, *n;
+    node_t *prev, *next;
 #ifdef EARLY_RELEASE
-    node_t *prevprev;
+    node_t *prls, *pprls;
 #endif
     val_t v;
 
@@ -270,22 +268,26 @@ int set_remove(intset_t *set, val_t val, int transactional) {
     if (v >= val)
         goto done;
 
+#ifdef EARLY_RELEASE
+    pprls = prev;
+#endif
+
     prev = next;
     next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+#ifdef EARLY_RELEASE
+    prls = prev;
+#endif
 
     while (1) {
-        //v = *(val_t *) TX_LOAD(&next->val);
         v = next->val;
         if (v >= val)
             break;
-#ifdef EARLY_RELEASE__
-        prevprev = prev;
-#endif
         prev = next;
         next = ND(*(nxt_t *) TX_LOAD(&prev->next));
-#ifdef EARLY_RELEASE__
-        PRINTD("Releasing: %d", OF(prevprev));
-        TX_RRLS(prevprev);
+#ifdef EARLY_RELEASE
+        TX_RRLS(&pprls->next);
+        pprls = prls;
+        prls = prev;
 #endif
     }
 done:
