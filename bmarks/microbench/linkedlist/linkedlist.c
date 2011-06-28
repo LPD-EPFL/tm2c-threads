@@ -180,33 +180,36 @@ int set_add(intset_t *set, val_t val, int transactional) {
         node_t *prev, *next;
 
 #ifdef EARLY_RELEASE
-        node_t *prevprev;
+        node_t *prls, *pprls;
 #endif
         val_t v;
         TX_START
         prev = ND(set->head);
         next = ND(*(nxt_t *) TX_LOAD(&prev->next));
 
-        //v = *(val_t *) TX_LOAD(&next->val);
         v = next->val;
         if (v >= val)
             goto done;
 
+#ifdef EARLY_RELEASE
+        pprls = prev;
+#endif
         prev = next;
         next = ND(*(nxt_t *) TX_LOAD(&prev->next));
 
+#ifdef EARLY_RELEASE
+        prls = prev;
+#endif
         while (1) {
             v = next->val;
             if (v >= val)
                 break;
-#ifdef EARLY_RELEASE
-            prevprev = prev;
-#endif
             prev = next;
             next = ND(*(nxt_t *) TX_LOAD(&prev->next));
 #ifdef EARLY_RELEASE
-            PRINTD("Releasing: %d", OF(prevprev));
-            TX_RRLS(prevprev);
+            TX_RRLS(&pprls->next);
+            pprls = prls;
+            prls = prev;
 #endif
         }
 done:
@@ -272,12 +275,12 @@ int set_remove(intset_t *set, val_t val, int transactional) {
         v = next->val;
         if (v >= val)
             break;
-#ifdef EARLY_RELEASE
+#ifdef EARLY_RELEASE__
         prevprev = prev;
 #endif
         prev = next;
         next = ND(*(nxt_t *) TX_LOAD(&prev->next));
-#ifdef EARLY_RELEASE
+#ifdef EARLY_RELEASE__
         PRINTD("Releasing: %d", OF(prevprev));
         TX_RRLS(prevprev);
 #endif
