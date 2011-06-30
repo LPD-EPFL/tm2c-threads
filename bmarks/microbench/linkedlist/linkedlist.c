@@ -257,8 +257,11 @@ done:
         TX_COMMIT
     }
 #else
-    node_t *prev, *next, *validate, *pvalidate;
-    nxt_t nextoffs, validateoffs, pvalidateoffs;
+        node_t *prev, *next, *validate, *pvalidate;
+        nxt_t nextoffs, validateoffs, pvalidateoffs;
+
+        set_print(set);
+        PRINT("-- Adding %d", val);
 
         val_t v;
         TX_START
@@ -269,14 +272,14 @@ done:
         v = next->val;
         if (v >= val)
             goto done;
-        
+
         pvalidate = prev;
         pvalidateoffs = nextoffs;
 
         prev = next;
         nextoffs = prev->next;
         next = ND(nextoffs);
-        
+
         validate = prev;
         validateoffs = nextoffs;
 
