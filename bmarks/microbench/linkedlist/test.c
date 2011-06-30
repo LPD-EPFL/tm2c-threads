@@ -410,7 +410,7 @@ TASKMAIN(int argc, char **argv) {
     BARRIER
     PRINT("saved my changes");
     ONCE {
-        PRINT(":: ~~ :: Set size: %d, expected: %d", size_after, initial + (int *) changes);
+        PRINT(":: ~~ :: Set size: %d, expected: %d", size_after, initial + *changes);
     }
 
 
