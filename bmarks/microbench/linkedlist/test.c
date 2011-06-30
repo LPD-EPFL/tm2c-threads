@@ -190,6 +190,7 @@ TASKMAIN(int argc, char **argv) {
         {"range", required_argument, NULL, 'r'},
         {"update-rate", required_argument, NULL, 'u'},
         {"elasticity", required_argument, NULL, 'x'},
+        {"effective", required_argument, NULL, 'f'},
         {NULL, 0, NULL, 0}
     };
 
