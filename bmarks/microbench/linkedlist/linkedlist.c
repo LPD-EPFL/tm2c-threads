@@ -146,8 +146,8 @@ int set_contains(intset_t *set, val_t val, int transactional) {
     prev = ND(prevoffs);
     nextoffs = prev->next;
     next = ND(nextoffs);
-    validate = set;
-    validateoffs = prevoffs;
+    validate = prev;
+    validateoffs = nextoffs;
     while (1) {
         v = next->val;
         if (v >= val)
