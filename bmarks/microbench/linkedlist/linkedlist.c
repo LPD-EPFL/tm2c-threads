@@ -258,7 +258,6 @@ done:
         node_t *prev, *next, *validate, *pvalidate;
         nxt_t nextoffs, validateoffs, pvalidateoffs;
 
-        set_print(set);
         PRINT("-- Adding %d", val);
 
         val_t v;
@@ -289,7 +288,7 @@ done:
             nextoffs = prev->next;
             next = ND(nextoffs);
             if (pvalidate->next != pvalidateoffs) {
-                PRINT("[A] Validate failed: expected nxt: %d, got %d", pvalidateoffs, pvalidate->next);
+                PRINT("[A1] Validate failed: expected nxt: %d, got %d", pvalidateoffs, pvalidate->next);
             }
             pvalidate = validate;
             pvalidateoffs = validateoffs;
@@ -303,7 +302,7 @@ done:
             PRINTD("Created node %5d. Value: %d", nxt, val);
             TX_STORE(&prev->next, &nxt, TYPE_UINT);
             if (pvalidate->next != pvalidateoffs) {
-                PRINT("[A] Validate failed: expected nxt: %d, got %d", pvalidateoffs, pvalidate->next);
+                PRINT("[A2] Validate failed: expected nxt: %d, got %d", pvalidateoffs, pvalidate->next);
             }
         }
         TX_COMMIT
