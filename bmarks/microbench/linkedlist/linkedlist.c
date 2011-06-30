@@ -390,6 +390,7 @@ done:
     val_t v;
 
     TX_START
+    prev = ND(set->head);
     nextoffs = prev->next;
     next = ND(nextoffs);
 
