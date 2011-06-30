@@ -141,11 +141,13 @@ int set_contains(intset_t *set, val_t val, int transactional) {
     val_t v = 0;
 
     TX_START
-            
+
     prevoffs = set->head;
     prev = ND(prevoffs);
     nextoffs = prev->next;
     next = ND(nextoffs);
+    validate = set->head;
+    validateoffs = prevoffs;
     while (1) {
         v = next->val;
         if (v >= val)
@@ -160,6 +162,10 @@ int set_contains(intset_t *set, val_t val, int transactional) {
             PRINT("Validate failed: expected nxt: %d, got %d", validateoffs, validate->next);
             TX_ABORT(READ_AFTER_WRITE);
         }
+    }
+    if (validate->next != validateoffs) {
+        PRINT("Validate failed: expected nxt: %d, got %d", validateoffs, validate->next);
+        TX_ABORT(READ_AFTER_WRITE);
     }
     TX_COMMIT
     result = (v == val);
