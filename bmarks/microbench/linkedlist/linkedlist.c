@@ -86,6 +86,8 @@ int set_size(intset_t *set) {
  *
  */
 
+#define READ_VALIDATION
+
 int set_contains(intset_t *set, val_t val, int transactional) {
     int result;
 
@@ -107,6 +109,7 @@ int set_contains(intset_t *set, val_t val, int transactional) {
 
 #elif defined STM
 
+#ifndef READ_VALIDATION
     node_t *prev, *next;
 #ifdef EARLY_RELEASE
     node_t *rls;
@@ -132,8 +135,35 @@ int set_contains(intset_t *set, val_t val, int transactional) {
     TX_COMMIT
     result = (v == val);
 
-#elif defined LOCKFREE			
-    result = harris_find(set, val);
+#else
+    node_t *prev, *next, *validate;
+    nxt_t prevoffs, nextoffs, validateoffs;
+    val_t v = 0;
+
+    TX_START
+            
+    prevoffs = set->head;
+    prev = ND(prevoffs);
+    nextoffs = prev->next;
+    next = ND(nextoffs);
+    while (1) {
+        v = next->val;
+        if (v >= val)
+            break;
+        validate = prev;
+        validateoffs = prevoffs;
+        prevoffs = nextoffs;
+        prev = next;
+        nextoffs = prev->next;
+        next = ND(nextoffs);
+        if (validate->next != validateoffs) {
+            PRINT("Validate failed: expected nxt: %d, got %d", validateoffs, validate->next);
+            TX_ABORT(READ_AFTER_WRITE);
+        }
+    }
+    TX_COMMIT
+    result = (v == val);
+#endif
 #endif	
 
     return result;
