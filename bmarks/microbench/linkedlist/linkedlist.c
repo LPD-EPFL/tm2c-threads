@@ -141,7 +141,6 @@ int set_contains(intset_t *set, val_t val, int transactional) {
     val_t v = 0;
 
     TX_START
-    PRINT("-- Contains %d", val);
     prevoffs = set->head;
     prev = ND(prevoffs);
     nextoffs = prev->next;
@@ -159,12 +158,12 @@ int set_contains(intset_t *set, val_t val, int transactional) {
         nextoffs = prev->next;
         next = ND(nextoffs);
         if (validate->next != validateoffs) {
-            PRINT("Validate failed: expected nxt: %d, got %d", validateoffs, validate->next);
+            PRINT("[C] Validate failed: expected nxt: %d, got %d", validateoffs, validate->next);
             //TX_ABORT(READ_AFTER_WRITE);
         }
     }
     if (validate->next != validateoffs) {
-        PRINT("Validate failed: expected nxt: %d, got %d", validateoffs, validate->next);
+        PRINT("[C] Validate failed: expected nxt: %d, got %d", validateoffs, validate->next);
         //TX_ABORT(READ_AFTER_WRITE);
     }
     TX_COMMIT
@@ -212,6 +211,7 @@ int set_add(intset_t *set, val_t val, int transactional) {
         result = set_seq_add(set, val);
 
 #elif defined STM
+#ifndef READ_VALIDATION
         node_t *prev, *next;
 
 #ifdef EARLY_RELEASE
@@ -256,6 +256,59 @@ done:
         }
         TX_COMMIT
     }
+#else
+    node_t *prev, *next, *validate, *pvalidate;
+    nxt_t prevoffs, nextoffs, validateoffs, pvalidateoffs;
+
+        val_t v;
+        TX_START
+        prev = ND(set->head);
+        nextoffs = prev->next;
+        next = ND(nextoffs);
+
+        v = next->val;
+        if (v >= val)
+            goto done;
+        
+        pvalidate = prev;
+        pvalidateoffs = nextoffs;
+
+        prev = next;
+        nextoffs = prev->next;
+        next = ND(nextoffs);
+        
+        validate = prev;
+        validateoffs = nextoffs;
+
+        while (1) {
+            v = next->val;
+            if (v >= val)
+                break;
+            prev = next;
+            nextoffs = prev->next;
+            next = ND(nextoffs);
+            if (pvalidate->next != pvalidateoffs) {
+                PRINT("[A] Validate failed: expected nxt: %d, got %d", pvalidateoffs, pvalidate->next);
+            }
+            pvalidate = validate;
+            pvalidateoffs = validateoffs;
+            validate = prev;
+            validateoffs = nextoffs;
+#endif
+        }
+done:
+        result = (v != val);
+        if (result) {
+            nxt_t nxt = OF(new_node(val, OF(next), transactional));
+            PRINTD("Created node %5d. Value: %d", nxt, val);
+            TX_STORE(&prev->next, &nxt, TYPE_UINT);
+            if (pvalidate->next != pvalidateoffs) {
+                PRINT("[A] Validate failed: expected nxt: %d, got %d", pvalidateoffs, pvalidate->next);
+            }
+        }
+        TX_COMMIT
+    }
+#endif
 #endif
     return result;
 }
