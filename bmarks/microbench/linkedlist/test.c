@@ -296,7 +296,7 @@ TASKMAIN(int argc, char **argv) {
     }
 
     if (seed == 0)
-        srand((RCCE_ue() + 1) * (int) time(0));
+        srand_core();
     else
         srand(seed);
 
