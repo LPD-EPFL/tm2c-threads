@@ -258,7 +258,7 @@ done:
     }
 #else
     node_t *prev, *next, *validate, *pvalidate;
-    nxt_t prevoffs, nextoffs, validateoffs, pvalidateoffs;
+    nxt_t nextoffs, validateoffs, pvalidateoffs;
 
         val_t v;
         TX_START
@@ -294,7 +294,6 @@ done:
             pvalidateoffs = validateoffs;
             validate = prev;
             validateoffs = nextoffs;
-#endif
         }
 done:
         result = (v != val);
