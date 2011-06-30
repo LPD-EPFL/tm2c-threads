@@ -157,12 +157,12 @@ int set_contains(intset_t *set, val_t val, int transactional) {
         next = ND(nextoffs);
         if (validate->next != validateoffs) {
             PRINT("[C1] Validate failed: expected nxt: %d, got %d", validateoffs, validate->next);
-            //TX_ABORT(READ_AFTER_WRITE);
+            TX_ABORT(READ_AFTER_WRITE);
         }
     }
     if (validate->next != validateoffs) {
         PRINT("[C2] Validate failed: expected nxt: %d, got %d", validateoffs, validate->next);
-        //TX_ABORT(READ_AFTER_WRITE);
+        TX_ABORT(READ_AFTER_WRITE);
     }
     TX_COMMIT
     result = (v == val);
@@ -287,6 +287,7 @@ done:
             next = ND(nextoffs);
             if (pvalidate->next != pvalidateoffs) {
                 PRINT("[A1] Validate failed: expected nxt: %d, got %d", pvalidateoffs, pvalidate->next);
+                TX_ABORT(READ_AFTER_WRITE);
             }
             pvalidate = validate;
             pvalidateoffs = validateoffs;
@@ -302,6 +303,7 @@ done:
             TX_STORE(&prev->next, &nxt, TYPE_UINT);
             if (pvalidate->next != pvalidateoffs) {
                 PRINT("[A2] Validate failed: expected nxt: %d, got %d", pvalidateoffs, pvalidate->next);
+                TX_ABORT(READ_AFTER_WRITE);
             }
         }
         TX_COMMIT
@@ -417,6 +419,7 @@ done:
         next = ND(nextoffs);
         if (pvalidate->next != pvalidateoffs) {
             PRINT("[R1] Validate failed: expected nxt: %d, got %d", pvalidateoffs, pvalidate->next);
+            TX_ABORT(READ_AFTER_WRITE);
         }
         pvalidate = validate;
         pvalidateoffs = validateoffs;
@@ -432,6 +435,7 @@ done:
         TX_SHFREE(next);
         if (pvalidate->next != pvalidateoffs) {
             PRINT("[R2] Validate failed: expected nxt: %d, got %d", pvalidateoffs, pvalidate->next);
+            TX_ABORT(READ_AFTER_WRITE);
         }
     }
     TX_COMMIT
