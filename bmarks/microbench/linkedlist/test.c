@@ -402,8 +402,8 @@ TASKMAIN(int argc, char **argv) {
     int mychanges = data->nb_added - data->nb_removed;
     PRINT("my changes :: \t\t%d", mychanges);
     TX_START
-    int cc = *(int *) TX_LOAD(changes);
-    int newc = cc + mychanges;
+    int *cc = (int *) TX_LOAD(changes);
+    int newc = *cc + mychanges;
     TX_STORE(changes, &newc, TYPE_INT);
     TX_COMMIT
             
