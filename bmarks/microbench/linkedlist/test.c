@@ -402,6 +402,7 @@ TASKMAIN(int argc, char **argv) {
     int * changes = (int *) ND(set->head);
     int mychanges = data->nb_added - data->nb_removed;
     PRINT("my changes :: \t\t%d", mychanges);
+    udelay(ID * 100);
     TX_START
     int *cc = (int *) TX_LOAD(changes);
     int newc = *cc + mychanges;
