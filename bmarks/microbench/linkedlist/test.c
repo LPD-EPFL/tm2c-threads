@@ -182,7 +182,7 @@ TASKMAIN(int argc, char **argv) {
     dup2(STDOUT_FILENO, STDERR_FILENO);
     TM_INIT
 
-    struct option long_options[] = {
+            struct option long_options[] = {
         // These options don't set a flag
         {"help", no_argument, NULL, 'h'},
         {"duration", required_argument, NULL, 'd'},
@@ -295,8 +295,11 @@ TASKMAIN(int argc, char **argv) {
         }
     }
 
-    if (seed == 0)
+    if (seed == 0) {
         srand_core();
+        seed = rand_range((ID + 17) * 123);
+        srand(seed);
+    }
     else
         srand(seed);
 
@@ -374,7 +377,7 @@ TASKMAIN(int argc, char **argv) {
     BARRIER
     /* Start */
     test(data, duration);
-    
+
     printf("-- Core %d\n", RCCE_ue());
     printf("  #add        : %lu\n", data->nb_add);
     printf("    #added    : %lu\n", data->nb_added);
@@ -393,9 +396,9 @@ TASKMAIN(int argc, char **argv) {
     /* Cleanup STM */
 
     free(data);
-    
+
     BARRIER
-    
+
     TM_END
 
     EXIT(0);
