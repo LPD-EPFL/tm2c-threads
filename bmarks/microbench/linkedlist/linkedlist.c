@@ -258,14 +258,12 @@ done:
         node_t *prev, *next, *validate, *pvalidate;
         nxt_t nextoffs, validateoffs, pvalidateoffs;
 
-        PRINT("-- Adding %d", val);
-
         val_t v;
         TX_START
         prev = ND(set->head);
         nextoffs = prev->next;
         next = ND(nextoffs);
-        
+
         pvalidate = prev;
         pvalidateoffs = nextoffs;
 
@@ -339,6 +337,7 @@ int set_remove(intset_t *set, val_t val, int transactional) {
     }
 
 #elif defined STM
+#ifndef READ_VALIDATION
     node_t *prev, *next;
 #ifdef EARLY_RELEASE
     node_t *prls, *pprls;
@@ -385,6 +384,57 @@ done:
         PRINTD("Freed node   %5d. Value: %d", OF(next), next->val);
     }
     TX_COMMIT
+#else
+    node_t *prev, *next, *validate, *pvalidate;
+    nxt_t nextoffs, validateoffs, pvalidateoffs;
+    val_t v;
+
+    TX_START
+    nextoffs = prev->next;
+    next = ND(nextoffs);
+
+    pvalidate = prev;
+    pvalidateoffs = nextoffs;
+
+    v = next->val;
+    if (v >= val)
+        goto done;
+
+    prev = next;
+    nextoffs = prev->next;
+    next = ND(nextoffs);
+
+    validate = prev;
+    validateoffs = nextoffs;
+
+    while (1) {
+        v = next->val;
+        if (v >= val)
+            break;
+        prev = next;
+        nextoffs = prev->next;
+        next = ND(nextoffs);
+        if (pvalidate->next != pvalidateoffs) {
+            PRINT("[R1] Validate failed: expected nxt: %d, got %d", pvalidateoffs, pvalidate->next);
+        }
+        pvalidate = validate;
+        pvalidateoffs = validateoffs;
+        validate = prev;
+        validateoffs = nextoffs;
+    }
+done:
+    result = (v == val);
+    if (result) {
+        TX_LOAD(&pvalidate->next);
+        nxt_t *nxt = (nxt_t *) TX_LOAD(&next->next);
+        TX_STORE(&prev->next, nxt, TYPE_UINT);
+        TX_SHFREE(next);
+        if (pvalidate->next != pvalidateoffs) {
+            PRINT("[R2] Validate failed: expected nxt: %d, got %d", pvalidateoffs, pvalidate->next);
+        }
+    }
+    TX_COMMIT
+#endif
 #endif
             return result;
 }
