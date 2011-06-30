@@ -25,7 +25,7 @@
  * _____________________________________________________________________________
  */
 #define STM
-#define EARLY_RELEASE
+#define EARLY_RELEASE_
 
 #define DEFAULT_DURATION                10
 #define DEFAULT_INITIAL                 256
