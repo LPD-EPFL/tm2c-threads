@@ -156,18 +156,6 @@ typedef struct thread_data {
     unsigned long nb_transfer;
     unsigned long nb_read_all;
     unsigned long nb_write_all;
-    unsigned long nb_aborts;
-    unsigned long nb_aborts_1;
-    unsigned long nb_aborts_2;
-    unsigned long nb_aborts_locked_read;
-    unsigned long nb_aborts_locked_write;
-    unsigned long nb_aborts_validate_read;
-    unsigned long nb_aborts_validate_write;
-    unsigned long nb_aborts_validate_commit;
-    unsigned long nb_aborts_invalid_memory;
-    unsigned long nb_aborts_killed;
-    unsigned long locked_reads_ok;
-    unsigned long locked_reads_failed;
     unsigned long max_retries;
     int id;
     int read_all;
@@ -362,7 +350,7 @@ TASKMAIN(int argc, char **argv) {
                         "  -a, --accounts <int>\n"
                         "        Number of accounts in the bank (default=" XSTR(DEFAULT_NB_ACCOUNTS) ")\n"
                         "  -d, --duration <double>\n"
-                        "        Test duration in milliseconds (0=infinite, default=" XSTR(DEFAULT_DURATION) ")\n"
+                        "        Test duration in seconds (0=infinite, default=" XSTR(DEFAULT_DURATION) ")\n"
                         "  -r, --read-all-rate <int>\n"
                         "        Percentage of read-all transactions (default=" XSTR(DEFAULT_READ_ALL) ")\n"
                         "  -R, --read-threads <int>\n"
@@ -432,9 +420,7 @@ TASKMAIN(int argc, char **argv) {
 
 
     /* Init STM */
-    PRINT("before barrier");
     BARRIERW
-    PRINT("after barrier");
 
             
 #ifdef DSL
@@ -451,18 +437,6 @@ TASKMAIN(int argc, char **argv) {
     data->nb_transfer = 0;
     data->nb_read_all = 0;
     data->nb_write_all = 0;
-    data->nb_aborts = 0;
-    data->nb_aborts_1 = 0;
-    data->nb_aborts_2 = 0;
-    data->nb_aborts_locked_read = 0;
-    data->nb_aborts_locked_write = 0;
-    data->nb_aborts_validate_read = 0;
-    data->nb_aborts_validate_write = 0;
-    data->nb_aborts_validate_commit = 0;
-    data->nb_aborts_invalid_memory = 0;
-    data->nb_aborts_killed = 0;
-    data->locked_reads_ok = 0;
-    data->locked_reads_failed = 0;
     data->max_retries = 0;
 
     bank = test(data, duration, nb_accounts);
