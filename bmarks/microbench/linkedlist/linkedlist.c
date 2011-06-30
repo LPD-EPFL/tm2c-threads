@@ -298,6 +298,7 @@ done:
 done:
         result = (v != val);
         if (result) {
+            TX_LOAD(&pvalidate->next);
             nxt_t nxt = OF(new_node(val, OF(next), transactional));
             PRINTD("Created node %5d. Value: %d", nxt, val);
             TX_STORE(&prev->next, &nxt, TYPE_UINT);
