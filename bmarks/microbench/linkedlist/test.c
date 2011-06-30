@@ -394,12 +394,12 @@ TASKMAIN(int argc, char **argv) {
     int size_after;
     ONCE {
         size_after = set_size(set);
-        *(int *) ND(set->head) = 0;
+        set->head = 0;
     }
     
     BARRIER
     
-    int * changes = (int *) ND(set->head);
+    int * changes = &set->head;
     int mychanges = data->nb_added - data->nb_removed;
     PRINT("my changes :: \t\t%d", mychanges);
     udelay(ID * 100);
