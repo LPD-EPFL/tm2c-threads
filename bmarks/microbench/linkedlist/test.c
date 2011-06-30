@@ -406,7 +406,12 @@ TASKMAIN(int argc, char **argv) {
     int newc = cc + mychanges;
     TX_STORE(changes, &newc, TYPE_INT);
     TX_COMMIT
+            
+    BARRIER
     PRINT("saved my changes");
+    ONCE {
+        PRINT(":: ~~ :: Set size: %d, expected: %d", size_after, initial + (int *) changes);
+    }
 
 
 
