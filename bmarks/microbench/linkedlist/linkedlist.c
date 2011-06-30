@@ -137,12 +137,11 @@ int set_contains(intset_t *set, val_t val, int transactional) {
 
 #else
     node_t *prev, *next, *validate;
-    nxt_t prevoffs, nextoffs, validateoffs;
+    nxt_t nextoffs, validateoffs;
     val_t v = 0;
 
     TX_START
-    prevoffs = set->head;
-    prev = ND(prevoffs);
+    prev = ND(set->head);
     nextoffs = prev->next;
     next = ND(nextoffs);
     validate = prev;
@@ -153,17 +152,16 @@ int set_contains(intset_t *set, val_t val, int transactional) {
             break;
         validate = prev;
         validateoffs = nextoffs;
-        prevoffs = nextoffs;
         prev = next;
         nextoffs = prev->next;
         next = ND(nextoffs);
         if (validate->next != validateoffs) {
-            PRINT("[C] Validate failed: expected nxt: %d, got %d", validateoffs, validate->next);
+            PRINT("[C1] Validate failed: expected nxt: %d, got %d", validateoffs, validate->next);
             //TX_ABORT(READ_AFTER_WRITE);
         }
     }
     if (validate->next != validateoffs) {
-        PRINT("[C] Validate failed: expected nxt: %d, got %d", validateoffs, validate->next);
+        PRINT("[C2] Validate failed: expected nxt: %d, got %d", validateoffs, validate->next);
         //TX_ABORT(READ_AFTER_WRITE);
     }
     TX_COMMIT
@@ -268,13 +266,13 @@ done:
         prev = ND(set->head);
         nextoffs = prev->next;
         next = ND(nextoffs);
+        
+        pvalidate = prev;
+        pvalidateoffs = nextoffs;
 
         v = next->val;
         if (v >= val)
             goto done;
-
-        pvalidate = prev;
-        pvalidateoffs = nextoffs;
 
         prev = next;
         nextoffs = prev->next;
