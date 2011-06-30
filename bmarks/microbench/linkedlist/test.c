@@ -394,7 +394,7 @@ TASKMAIN(int argc, char **argv) {
     int size_after;
     ONCE {
         size_after = set_size(set);
-        *(int *) set = 0;
+        *(int *) ND(set->head) = 0;
     }
     
     BARRIER
