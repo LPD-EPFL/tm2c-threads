@@ -314,6 +314,8 @@ TASKMAIN(int argc, char **argv) {
         printf("Bench type   : linked list\n");
 #ifdef EARLY_RELEASE 
         printf("                using early-release\n");
+#elif defined(READ_VALIDATION)
+        printf("                using read-validation\n");
 #endif
         printf("Duration     : %f\n", duration);
         printf("Initial size : %d\n", initial);
