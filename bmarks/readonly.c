@@ -140,7 +140,7 @@ MAIN(int argc, char** argv) {
     ONCE
     {
         printf("readonly --\n");
-        printf("Duration  \t: %d s\n", duration);
+        printf("Duration  \t: %f s\n", duration);
         printf("Reads     \t: %d\n", reads);
         printf("Mem size  \t: %d ints\n", memsize);
         printf("Mode      \t: %d s\n", sequential);
