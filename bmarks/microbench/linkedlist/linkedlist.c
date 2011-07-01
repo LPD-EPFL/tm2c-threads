@@ -297,7 +297,7 @@ done:
         if (result) {
             TX_LOAD(&pvalidate->next);
             if ((*(nxt_t *) TX_LOAD(&prev->next)) != validateoffs) {
-                PRINT("[A2] Validate failed: expected nxt: %d, got %d", pvalidateoffs, pvalidate->next);
+                PRINT("[A2] Validate failed: expected nxt: %d, got %d", validateoffs, prev->next);
                 TX_ABORT(READ_AFTER_WRITE);
             }
             nxt_t nxt = OF(new_node(val, OF(next), transactional));
@@ -433,7 +433,7 @@ done:
     if (result) {
         TX_LOAD(&pvalidate->next);
         if ((*(nxt_t *) TX_LOAD(&prev->next)) != validateoffs) {
-            PRINT("[R2] Validate failed: expected nxt: %d, got %d", pvalidateoffs, pvalidate->next);
+            PRINT("[R2] Validate failed: expected nxt: %d, got %d", validateoffs, prev->next);
             TX_ABORT(READ_AFTER_WRITE);
         }
         nxt_t *nxt = (nxt_t *) TX_LOAD(&next->next);
