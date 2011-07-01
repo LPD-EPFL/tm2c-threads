@@ -47,14 +47,14 @@ extern "C" {
     RCCE_init(&argc, &argv);                                            \
     iRCCE_init();                                                       \
     {                                                                   \
-        unsigned int ID = RCCE_ue();                                    \
-        unsigned int NUM_UES = RCCE_num_ues();                          \
+        ID = RCCE_ue();                                                 \
+        NUM_UES = RCCE_num_ues();                                       \
         tm_init(ID);
 
 #define TM_INITs                                                        \
     {                                                                   \
-        unsigned int ID = RCCE_ue();                                    \
-        unsigned int NUM_UES = RCCE_num_ues();                          \
+        RCCE_ue();                                                      \
+        NUM_UES = RCCE_num_ues();                                       \
         tm_init(ID);
 
 #define TX_START                                                        \

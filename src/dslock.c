@@ -22,8 +22,9 @@ iRCCE_WAIT_LIST sendlist;
 BOOLEAN tm_has_command;
 #endif
 ps_hashtable_t ps_hashtable;
-unsigned int ID; //=RCCE_ue()
-unsigned int NUM_UES, NUM_UES_APP;
+extern unsigned int ID; //=RCCE_ue()
+extern unsigned int NUM_UES;
+unsigned int NUM_UES_APP;
 char *buf;
 iRCCE_RECV_REQUEST *recv_requests;
 iRCCE_RECV_REQUEST *recv_current;
@@ -45,8 +46,6 @@ static inline void publish_finish(int nodeId, int shmem_address);
 static void print_global_stats();
 
 void dsl_init(void) {
-    ID = RCCE_ue();
-    NUM_UES = RCCE_num_ues();
     NUM_UES_APP = NUM_UES - NUM_DSL_UES;
 
     ps_command = (PS_COMMAND *) malloc(sizeof (PS_COMMAND)); //TODO: free at finalize + check for null

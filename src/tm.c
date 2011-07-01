@@ -7,6 +7,9 @@
 
 #include "tm.h"
 
+unsigned int ID; //=RCCE_ue()
+unsigned int NUM_UES;
+
 extern stm_tx_t *stm_tx = NULL;
 extern stm_tx_node_t *stm_tx_node = NULL;
 double duration__ = 0;

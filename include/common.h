@@ -70,8 +70,8 @@ extern "C" {
         WRITE
     } RW;
 
-    //extern unsigned int ID; //=RCCE_ue()
-    //extern unsigned int NUM_UES;
+    extern unsigned int ID; //=RCCE_ue()
+    extern unsigned int NUM_UES;
 
 #include "iRCCE.h"
 #include <stdlib.h>
