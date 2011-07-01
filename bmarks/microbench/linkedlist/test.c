@@ -430,7 +430,7 @@ TASKMAIN(int argc, char **argv) {
 
 
 
-    set_delete(set);
+    //set_delete(set);
 
     /* Cleanup STM */
 
