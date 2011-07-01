@@ -15,6 +15,7 @@ BANKOBJS  := bank.o   $(ARCHIVE)
 MTESTOBJS  := mtest.o   $(ARCHIVE)
 MBLLOBJS := $(MB_LL)/linkedlist.o $(MB_LL)/test.o $(ARCHIVE)	
 MBHTOBJS := $(MB_LL)/linkedlist.o $(MB_HT)/test.o $(MB_HT)/intset.o $(MB_HT)/hashtable.o $(ARCHIVE)
+ROOBJS  := readonly.o   $(ARCHIVE)
 
 .PHONY: all default clean bank
 
@@ -22,9 +23,10 @@ default:
 	@echo "Usage: make bank"
 	@echo "       make mbll "
 	@echo "       make mbht "
+	@echo "       make ro "
 	@echo "       make all "
 
-all: bank
+all: bank mbll mbht ro
 
 bank: $(BANKOBJS)
 	$(CCOMPILE) -o bank $(BANKOBJS) $(CFLAGS)
@@ -61,8 +63,14 @@ mbht:  $(MBHTOBJS) $(TMH)
 	$(CCOMPILE) -o mbht $(CFLAGS) $(MBHTOBJS)
 
 
+ro: $(ROOBJS)
+	$(CCOMPILE) -o ro $(ROOBJS) $(CFLAGS)
+
+readonly.o: ro.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h $(TMH)
+	$(CCOMPILE) -c $(CFLAGS) ro.c
+
 clean:
-	@ rm -f *.o $(MB_LL)/*.o bank mbll $(MB_HT)/*.o mbht
+	@ rm -f *.o $(MB_LL)/*.o bank mbll $(MB_HT)/*.o mbht ro
 
 
 
