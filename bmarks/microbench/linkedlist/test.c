@@ -402,7 +402,7 @@ TASKMAIN(int argc, char **argv) {
     {
         size_after = set_size(set);
         *changes = 0;
-        *sequencer = 0;
+        *sequencer = 1;
     }
 
     BARRIER
@@ -414,7 +414,7 @@ TASKMAIN(int argc, char **argv) {
         udelay(ID * 50);
         TX_ABORT(WRITE_AFTER_WRITE);
     }
-    int id1 = ID + 1;
+    int id1 = ID + 2;
     TX_STORE(sequencer, &id1, TYPE_INT);
     int cc = *(int *) TX_LOAD(changes);
     int newc = cc + mychanges;
