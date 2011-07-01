@@ -67,7 +67,7 @@ ro: $(ROOBJS)
 	$(CCOMPILE) -o ro $(ROOBJS) $(CFLAGS)
 
 readonly.o: ro.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h $(TMH)
-	$(CCOMPILE) -c $(CFLAGS) ro.c
+	$(CCOMPILE) -c $(CFLAGS) readonly.c
 
 clean:
 	@ rm -f *.o $(MB_LL)/*.o bank mbll $(MB_HT)/*.o mbht ro
