@@ -409,8 +409,6 @@ TASKMAIN(int argc, char **argv) {
 
     BARRIER
 
-    PRINT("my changes :: \t\t%d", mychanges);
-
     TX_START
     if ((*(int *) sequencer) != ID) {
         udelay(100);
@@ -424,7 +422,6 @@ TASKMAIN(int argc, char **argv) {
     TX_COMMIT
 
     BARRIER
-    PRINT("saved my changes");
     ONCE
     {
         PRINT(":: ~~ :: Set size: %d, expected: %d", size_after, initial + set->head);
