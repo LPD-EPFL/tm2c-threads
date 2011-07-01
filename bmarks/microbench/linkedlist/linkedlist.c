@@ -263,7 +263,7 @@ done:
         next = ND(nextoffs);
 
         pvalidate = prev;
-        pvalidateoffs = nextoffs;
+        pvalidateoffs = validateoffs = nextoffs;
 
         v = next->val;
         if (v >= val)
@@ -399,7 +399,7 @@ done:
     next = ND(nextoffs);
 
     pvalidate = prev;
-    pvalidateoffs = nextoffs;
+    pvalidateoffs = validateoffs = nextoffs;
 
     v = next->val;
     if (v >= val)
