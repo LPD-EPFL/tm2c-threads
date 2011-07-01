@@ -411,7 +411,7 @@ TASKMAIN(int argc, char **argv) {
 
     TX_START
     if ((*(int *) TX_LOAD(sequencer)) != ID) {
-        udelay(ID * 200);
+        udelay(ID * 1000);
         TX_ABORT(WRITE_AFTER_WRITE);
     }
     int id1 = ID + 2;
