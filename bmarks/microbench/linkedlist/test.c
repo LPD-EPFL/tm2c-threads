@@ -391,8 +391,10 @@ TASKMAIN(int argc, char **argv) {
 
     BARRIER
 
-            int *changes = (int *) set;
-    int *sequencer = changes + sizeof (int);
+            int *changes;
+    changes = (int *) set;
+    int *sequencer;
+    sequencer = changes + sizeof (int);
     int mychanges = data->nb_added - data->nb_removed;
 
     int size_after;
