@@ -302,7 +302,6 @@ done:
         }
     }
     TX_COMMIT
-}
 #endif
 #endif
 return result;
