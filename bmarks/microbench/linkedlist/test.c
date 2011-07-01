@@ -410,8 +410,8 @@ TASKMAIN(int argc, char **argv) {
     PRINT("my changes :: \t\t%d", mychanges);
 
     TX_START
+    udelay(ID * 1000);
     if ((*(int *) TX_LOAD(sequencer)) != ID) {
-        udelay(ID * 1000);
         TX_ABORT(WRITE_AFTER_WRITE);
     }
     int id1 = ID + 2;
