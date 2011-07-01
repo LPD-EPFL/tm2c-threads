@@ -328,8 +328,7 @@ int set_remove(intset_t *set, val_t val, int transactional) {
     }
     result = (next->val == val);
     if (result) {
-        node_t * t = ND(prev->next);
-        t = ND(next->next);
+        prev->next = next->next;
         RCCE_shfree((t_vcharp) next);
     }
 
