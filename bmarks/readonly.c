@@ -43,7 +43,7 @@ void run_uniq(int *);
 
 #define DEFAULT_DURATION        10
 #define DEFAULT_READS           1000
-#define DEFAULT_MEM_SIZE        1000000000
+#define DEFAULT_MEM_SIZE        1000000
 #define DEFAULT_SEQUENTIAL      1
 
 
