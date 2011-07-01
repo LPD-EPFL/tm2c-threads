@@ -429,6 +429,7 @@ done:
         validateoffs = nextoffs;
     }
 done:
+    PRINT("We have: %d -> %d -> %d", pvalidate->val, validate->val, next->val);
     result = (v == val);
     if (result) {
         TX_LOAD(&pvalidate->next);
