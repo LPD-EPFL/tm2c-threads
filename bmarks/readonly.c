@@ -6,6 +6,8 @@
  */
 
 #include "../include/tm.h"
+#include <getopt.h>
+#include "microbench/linkedlist/linkedlist.h"
 
 /* 
  * Returns a pseudo-random value in [1;range).
@@ -82,7 +84,7 @@ MAIN(int argc, char** argv) {
             case 'h':
                 ONCE
             {
-                PRINT("readonly -- Read-only TXs benchmarking\n"
+                printf("readonly -- Read-only TXs benchmarking\n"
                         "\n"
                         "Usage:\n"
                         "  ro [options...]\n"
@@ -99,6 +101,7 @@ MAIN(int argc, char** argv) {
                         "  -s, --mode<int>\n"
                         "        Accessing mem sequentially (0), randomly (1), or unique accesses (2) (default=" XSTR(DEFAULT_WRITE_ALL) ")\n"
                         );
+                FLUSH;
             }
                 exit(0);
             case 'd':
