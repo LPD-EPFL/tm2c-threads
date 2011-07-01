@@ -464,8 +464,11 @@ TASKMAIN(int argc, char **argv) {
         }
     }
 
-    if (seed == 0)
-        srand((RCCE_ue() + 1) * (int) time(0));
+    if (seed == 0) {
+        srand_core();
+        seed = rand_range((ID + 17) * 123);
+        srand(seed);
+    }
     else
         srand(seed);
 
