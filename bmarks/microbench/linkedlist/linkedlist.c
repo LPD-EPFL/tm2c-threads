@@ -432,7 +432,7 @@ done:
         TX_LOAD(&pvalidate->next);
         nxt_t *nxt = (nxt_t *) TX_LOAD(&next->next);
         TX_STORE(&prev->next, nxt, TYPE_UINT);
-        //TX_SHFREE(next);
+        TX_SHFREE(next);
         if (pvalidate->next != pvalidateoffs) {
             PRINTD("[R2] Validate failed: expected nxt: %d, got %d", pvalidateoffs, pvalidate->next);
             TX_ABORT(READ_AFTER_WRITE);
