@@ -296,11 +296,15 @@ done:
         result = (v != val);
         if (result) {
             TX_LOAD(&pvalidate->next);
+            if ((*(nxt_t *) TX_LOAD(&prev->next)) != validateoffs) {
+                PRINT("[A2] Validate failed: expected nxt: %d, got %d", pvalidateoffs, pvalidate->next);
+                TX_ABORT(READ_AFTER_WRITE);
+            }
             nxt_t nxt = OF(new_node(val, OF(next), transactional));
             PRINTD("Created node %5d. Value: %d", nxt, val);
             TX_STORE(&prev->next, &nxt, TYPE_UINT);
             if (pvalidate->next != pvalidateoffs) {
-                PRINTD("[A2] Validate failed: expected nxt: %d, got %d", pvalidateoffs, pvalidate->next);
+                PRINTD("[A3] Validate failed: expected nxt: %d, got %d", pvalidateoffs, pvalidate->next);
                 TX_ABORT(READ_AFTER_WRITE);
             }
         }
@@ -428,11 +432,15 @@ done:
     result = (v == val);
     if (result) {
         TX_LOAD(&pvalidate->next);
+        if ((*(nxt_t *) TX_LOAD(&prev->next)) != validateoffs) {
+            PRINT("[R2] Validate failed: expected nxt: %d, got %d", pvalidateoffs, pvalidate->next);
+            TX_ABORT(READ_AFTER_WRITE);
+        }
         nxt_t *nxt = (nxt_t *) TX_LOAD(&next->next);
         TX_STORE(&prev->next, nxt, TYPE_UINT);
         TX_SHFREE(next);
         if (pvalidate->next != pvalidateoffs) {
-            PRINTD("[R2] Validate failed: expected nxt: %d, got %d", pvalidateoffs, pvalidate->next);
+            PRINTD("[R3] Validate failed: expected nxt: %d, got %d", pvalidateoffs, pvalidate->next);
             TX_ABORT(READ_AFTER_WRITE);
         }
     }
