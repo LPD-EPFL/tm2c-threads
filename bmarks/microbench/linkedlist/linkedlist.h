@@ -26,6 +26,13 @@
  */
 #define STM
 #define EARLY_RELEASE
+#define READ_VALIDATION_
+
+#ifdef READ_VALIDATION
+#ifdef EARLY_RELEASE
+#undef EARLY_RELEASE
+#endif
+#endif
 
 #define DEFAULT_DURATION                10
 #define DEFAULT_INITIAL                 256
@@ -56,11 +63,12 @@ typedef struct node {
 } node_t;
 
 typedef struct intset {
+
     union {
         nxt_t head;
         node_t *headp;
     };
-    
+
 } intset_t;
 
 #define N2O(set, node)                  (nxt_t) ((nxt_t) (node) - (nxt_t) (set))
