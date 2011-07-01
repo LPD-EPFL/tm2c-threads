@@ -86,8 +86,6 @@ int set_size(intset_t *set) {
  *
  */
 
-#define READ_VALIDATION
-
 int set_contains(intset_t *set, val_t val, int transactional) {
     int result;
 
