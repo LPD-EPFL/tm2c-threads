@@ -194,6 +194,10 @@ int set_add(intset_t *set, val_t val, int transactional) {
     printf("++> set_add(%d)\n", (int) val);
     FLUSH;
 #endif
+    
+    if (!transactional) {
+        return set_seq_add(set, val);
+    }
 
 #ifdef SEQUENTIAL /* Unprotected */
 
