@@ -4,17 +4,15 @@
 
 #include "tm.h"
 
-stm_tx_t * stm_tx;
-stm_tx_node_t * stm_tx_node;
-
 /* DEFINES ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
 
 #define SHMEM_SIZE      SIS_SIZE
 #define NUM_TXOPS       100
-#define UPDTX_PRCNT     20
-#define WRITE_PRCNT     30
+#define UPDTX_PRCNT     10
+#define WRITE_PRCNT     10
+#define DURATION        1
 
 #define ROLL(prcntg)    if (rand_range(100) <= (prcntg))
 #define LOST            else
@@ -91,7 +89,7 @@ MAIN(int argc, char **argv) {
             int txupdate = 0;
     int txro = 0;
 
-    FOR(1) { //seconds
+    FOR(DURATION) { //seconds
 
         TX_START
 
@@ -121,7 +119,7 @@ MAIN(int argc, char **argv) {
 
     TM_END
 
-    EXITALL(0);
+    EXIT(0);
 }
 
 /*
