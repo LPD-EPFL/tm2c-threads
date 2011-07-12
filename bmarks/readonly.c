@@ -99,7 +99,7 @@ MAIN(int argc, char** argv) {
                         "  -m, --mem-size <int>\n"
                         "        Size of memory accessed (default=" XSTR(DEFAULT_MEM_SIZE) ")\n"
                         "  -s, --mode<int>\n"
-                        "        Accessing mem sequentially (0), randomly (1), or unique accesses (2) (default=" XSTR(DEFAULT_WRITE_ALL) ")\n"
+                        "        Accessing mem sequentially (0), randomly (1), or unique accesses (2) (default=" XSTR(DEFAULT_SEQUENTIAL) ")\n"
                         );
                 FLUSH;
             }
