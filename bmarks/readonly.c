@@ -175,7 +175,7 @@ void run_seq(int* memory) {
         TX_START
         for (i = 0; i < reads; i++) {
 
-            TX_LOAD(memory[i % memsize]);
+            TX_LOAD(memory + (i % memsize));
         }
         TX_COMMIT
     }
@@ -188,7 +188,7 @@ void run_rand(int* memory) {
     FOR(duration) {
         TX_START
         for (i = 0; i < reads; i++) {
-            TX_LOAD(memory[rand_range(memsize)]);
+            TX_LOAD(memory + rand_range(memsize));
         }
         TX_COMMIT
     }
@@ -203,7 +203,7 @@ void run_uniq(int* memory) {
                 int read = ID;
         for (i = 0; i < reads; i++) {
 
-            TX_LOAD(memory[read % memsize]);
+            TX_LOAD(memory + (read % memsize));
             read += ID;
         }
         TX_COMMIT
