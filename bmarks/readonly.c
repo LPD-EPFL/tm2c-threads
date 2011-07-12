@@ -43,7 +43,7 @@ void run_uniq(int *);
 
 #define DEFAULT_DURATION        10
 #define DEFAULT_READS           1000
-#define DEFAULT_MEM_SIZE        1000000
+#define DEFAULT_MEM_SIZE        16*1024*1024
 #define DEFAULT_SEQUENTIAL      1
 
 
@@ -69,7 +69,7 @@ MAIN(int argc, char** argv) {
     int c;
     while (1) {
         i = 0;
-        c = getopt_long(argc, argv, "ha:d:r:R:w:W:j", long_options, &i);
+        c = getopt_long(argc, argv, "ha:d:r:m:s", long_options, &i);
 
         if (c == -1)
             break;
