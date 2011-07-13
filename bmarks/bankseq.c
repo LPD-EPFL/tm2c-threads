@@ -332,7 +332,7 @@ TASKMAIN(int argc, char **argv) {
 
     while (1) {
         i = 0;
-        c = getopt_long(argc, argv, "ha:d:r:R:w:W:j", long_options, &i);
+        c = getopt_long(argc, argv, "ha:d:r:R:w:W:l", long_options, &i);
 
         if (c == -1)
             break;
