@@ -197,17 +197,17 @@ static inline void publish_finish(int nodeId, int shmem_address) {
 static void print_global_stats() {
     stats_duration /= NUM_UES_APP;
 
-    printf("||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\n");
+    printf("||||||||||||||||||||||||||||||||||||||||||||||||||||||\n");
     printf("TXs Statistics : %02d Nodes, %02d App Nodes|||||||||||||||||||||||\n", NUM_UES, NUM_UES_APP);
     printf(":: TOTAL -----------------------------------------------------\n");
-    printf("Avg Duration\t: %.3f s\n", stats_duration);
-    printf("Starts      \t: %lu\n", stats_total);
-    printf("Commits     \t: %lu\n", stats_commits);
-    printf("Aborts      \t: %lu\n", stats_aborts);
-    printf("Max Retries \t: %lu\n", stats_max_retries);
-    printf("Aborts WAR  \t: %lu\n", stats_aborts_war);
-    printf("Aborts RAW  \t: %lu\n", stats_aborts_raw);
-    printf("Aborts WAW  \t: %lu\n", stats_aborts_waw);
+    printf("T | Avg Duration\t: %.3f s\n", stats_duration);
+    printf("T | Starts      \t: %lu\n", stats_total);
+    printf("T | Commits     \t: %lu\n", stats_commits);
+    printf("T | Aborts      \t: %lu\n", stats_aborts);
+    printf("T | Max Retries \t: %lu\n", stats_max_retries);
+    printf("T | Aborts WAR  \t: %lu\n", stats_aborts_war);
+    printf("T | Aborts RAW  \t: %lu\n", stats_aborts_raw);
+    printf("T | Aborts WAW  \t: %lu\n", stats_aborts_waw);
     printf("--------------------------------------------------------------\n");
 
     stats_aborts /= stats_duration;
@@ -218,12 +218,12 @@ static void print_global_stats() {
     stats_total /= stats_duration;
 
     printf(":: PER SECOND TOTAL AVG --------------------------------------\n");
-    printf("Starts      \t: %lu\t/s\n", stats_total);
-    printf("Commits     \t: %lu\t/s\n", stats_commits);
-    printf("Aborts      \t: %lu\t/s\n", stats_aborts);
-    printf("Aborts WAR  \t: %lu\t/s\n", stats_aborts_war);
-    printf("Aborts RAW  \t: %lu\t/s\n", stats_aborts_raw);
-    printf("Aborts WAW  \t: %lu\t/s\n", stats_aborts_waw);
+    printf("TA| Starts      \t: %lu\t/s\n", stats_total);
+    printf("TA| Commits     \t: %lu\t/s\n", stats_commits);
+    printf("TA| Aborts      \t: %lu\t/s\n", stats_aborts);
+    printf("TA| Aborts WAR  \t: %lu\t/s\n", stats_aborts_war);
+    printf("TA| Aborts RAW  \t: %lu\t/s\n", stats_aborts_raw);
+    printf("TA| Aborts WAW  \t: %lu\t/s\n", stats_aborts_waw);
     printf("--------------------------------------------------------------\n");
 
     int stats_commits_app = stats_commits / NUM_UES_APP;
@@ -239,15 +239,15 @@ static void print_global_stats() {
     double tx_latency = (1 / (double) stats_commits_app) * 1000; //micros
 
     printf(":: PER SECOND PER NODE AVG -----------------------------------\n");
-    printf("Starts      \t: %lu\t/s\n", stats_total);
-    printf("Commits     \t: %lu\t/s\n", stats_commits);
-    printf("Aborts      \t: %lu\t/s\n", stats_aborts);
-    printf("Aborts WAR  \t: %lu\t/s\n", stats_aborts_war);
-    printf("Aborts RAW  \t: %lu\t/s\n", stats_aborts_raw);
-    printf("Aborts WAW  \t: %lu\t/s\n", stats_aborts_waw);
+    printf("NA| Starts      \t: %lu\t/s\n", stats_total);
+    printf("NA| Commits     \t: %lu\t/s\n", stats_commits);
+    printf("NA| Aborts      \t: %lu\t/s\n", stats_aborts);
+    printf("NA| Aborts WAR  \t: %lu\t/s\n", stats_aborts_war);
+    printf("NA| Aborts RAW  \t: %lu\t/s\n", stats_aborts_raw);
+    printf("NA| Aborts WAW  \t: %lu\t/s\n", stats_aborts_waw);
     printf("--\n");
-    printf("Commit Rate \t: %.2f %%\n", commit_rate * 100);
-    printf("Latency     \t: %.3f ms\n", tx_latency);
+    printf("NA| Commit Rate \t: %.2f %%\n", commit_rate * 100);
+    printf("NA| Latency     \t: %.3f ms\n", tx_latency);
     printf("--------------------------------------------------------------\n");
     printf("||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\n");
 
