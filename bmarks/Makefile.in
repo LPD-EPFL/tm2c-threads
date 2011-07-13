@@ -12,6 +12,7 @@ MB_LL := microbench/linkedlist
 MB_HT := microbench/hashtable
 
 BANKOBJS  := bank.o   $(ARCHIVE)
+BANKSOBJS  := bankseq.o   $(ARCHIVE)
 MTESTOBJS  := mtest.o   $(ARCHIVE)
 MBLLOBJS := $(MB_LL)/linkedlist.o $(MB_LL)/test.o $(ARCHIVE)	
 MBHTOBJS := $(MB_LL)/linkedlist.o $(MB_HT)/test.o $(MB_HT)/intset.o $(MB_HT)/hashtable.o $(ARCHIVE)
@@ -31,8 +32,14 @@ all: bank mbll mbht ro
 bank: $(BANKOBJS)
 	$(CCOMPILE) -o bank $(BANKOBJS) $(CFLAGS)
 
+bankseq: $(BANKOBJS)
+	$(CCOMPILE) -o bankseq $(BANKOBJS) $(CFLAGS)
+
 bank.o: bank.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h $(TMH)
 	$(CCOMPILE) -c $(CFLAGS) bank.c
+
+bankseq.o: bankseq.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h $(TMH)
+	$(CCOMPILE) -c $(CFLAGS) bankseq.c
 
 mtest: $(MTESTOBJS)
 	$(CCOMPILE) -o mtest $(MTESTOBJS) $(CFLAGS)
