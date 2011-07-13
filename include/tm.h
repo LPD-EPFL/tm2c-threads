@@ -53,7 +53,7 @@ extern "C" {
 
 #define TM_INITs                                                        \
     {                                                                   \
-        RCCE_ue();                                                      \
+        ID = RCCE_ue();                                                 \
         NUM_UES = RCCE_num_ues();                                       \
         tm_init(ID);
 
