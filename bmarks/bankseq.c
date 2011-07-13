@@ -71,6 +71,7 @@ int transfer(account_t *src, account_t *dst, int amount) {
     int i, j;
     
     i = src->balance - amount;
+    src->balance = i;
     j = dst->balance + amount;
     dst->balance = j;
 
