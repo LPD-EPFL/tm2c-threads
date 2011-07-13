@@ -227,10 +227,6 @@ bank_t * test(void *data, double duration, int nb_accounts) {
 
     // PRINT("chk %d", chk++); //0
 
-    if (d->id < d->read_cores) {
-        PRINT("Read core");
-    }
-
     FOR(duration) {
         if (d->id < d->read_cores) {
             /* Read all */
@@ -260,11 +256,11 @@ bank_t * test(void *data, double duration, int nb_accounts) {
             else {
                 /* Choose random accounts */
                 src = (int) (rand_range(rand_max) - 1) + rand_min;
-                assert(src < (rand_max + rand_min));
-                assert(src >= 0);
+                //assert(src < (rand_max + rand_min));
+                //assert(src >= 0);
                 dst = (int) (rand_range(rand_max) - 1) + rand_min;
-                assert(dst < (rand_max + rand_min));
-                assert(dst >= 0);
+                //assert(dst < (rand_max + rand_min));
+                //assert(dst >= 0);
                 if (dst == src)
                     dst = ((src + 1) % rand_max) + rand_min;
                 transfer(&bank->accounts[src], &bank->accounts[dst], 1);
@@ -276,11 +272,10 @@ bank_t * test(void *data, double duration, int nb_accounts) {
 
     //reset(bank);
 
-    BARRIER
-    PRINT("Duration: %f", duration__);
+    PRINT("~~");
     BARRIER
     /* Free transaction */
-    TM_END_STATS
+    TM_END
     BARRIER
 
     return bank;
