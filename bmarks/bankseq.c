@@ -433,11 +433,11 @@ TASKMAIN(int argc, char **argv) {
     printf("  #read-all   : %lu\n", data->nb_read_all);
     printf("  #write-all  : %lu\n", data->nb_write_all);
     printf(" -- \n");
-    int total = data->nb_transfer + data->nb_read_all + data->nb_write_all;
+    int total_ = data->nb_transfer + data->nb_read_all + data->nb_write_all;
     printf("Duration    : %f\n", _duration);
-    printf("Ops         : %d\n", total);
-    printf("Ops/s       : %d\n", (int) (total/_duration));
-    printf("Latency     : %f\n", _duration/(double)total);
+    printf("Ops         : %d\n", total_);
+    printf("Ops/s       : %d\n", (int) (total_/_duration));
+    printf("Latency     : %f\n", _duration/(double)total_);
     FLUSH
             
     ONCE
