@@ -32,8 +32,8 @@ all: bank mbll mbht ro
 bank: $(BANKOBJS)
 	$(CCOMPILE) -o bank $(BANKOBJS) $(CFLAGS)
 
-bankseq: $(BANKOBJS)
-	$(CCOMPILE) -o bankseq $(BANKOBJS) $(CFLAGS)
+bankseq: $(BANKSOBJS)
+	$(CCOMPILE) -o bankseq $(BANKSOBJS) $(CFLAGS)
 
 bank.o: bank.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h $(TMH)
 	$(CCOMPILE) -c $(CFLAGS) bank.c
