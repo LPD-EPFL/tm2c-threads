@@ -66,7 +66,7 @@ typedef struct bank {
 } bank_t;
 
 inline int getlocknum(int account_num) {
-    return (account_num % 48);
+    return (account_num % RCCE_num_ues());
 }
 
 int transfer(account_t *src, account_t *dst, int amount, int use_locks) {
@@ -111,7 +111,7 @@ int total(bank_t *bank, int use_locks) {
         }
     }
     else {
-        for (i = 0; i < 48; i++) {
+        for (i = 0; i < RCCE_num_ues();; i++) {
             RCCE_acquire_lock(i);
         }
 
@@ -201,7 +201,7 @@ bank_t * test(void *data, double duration, int nb_accounts) {
     bank_t * bank;
 
 
-    /* Initialize seed (use rand48 as rand is poor) */
+    /* Initialize seed (use randRCCE_num_ues(); as rand is poor) */
     srand_core();
 
     rand_max = nb_accounts;
@@ -322,7 +322,7 @@ TASKMAIN(int argc, char **argv) {
 
     double duration = DEFAULT_DURATION;
     int nb_accounts = DEFAULT_NB_ACCOUNTS;
-    int nb_app_cores = RCCE_num_ues();
+    int nb_app_cores = RCCE_num_uess();
     int read_all = DEFAULT_READ_ALL;
     int read_cores = DEFAULT_READ_THREADS;
     int write_all = DEFAULT_WRITE_ALL;
