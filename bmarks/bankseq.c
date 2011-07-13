@@ -66,7 +66,7 @@ typedef struct bank {
 } bank_t;
 
 inline int getlocknum(int account_num) {
-    return (account_num % 48);
+    return (account_num % RCCE_num_ues());
 }
 
 int transfer(account_t *src, account_t *dst, int amount, int use_locks) {
@@ -83,9 +83,7 @@ int transfer(account_t *src, account_t *dst, int amount, int use_locks) {
     else {
         i = getlocknum(src->number);
         j = getlocknum(src->number);
-        PRINT("lock for %d, %d", i, j);
         RCCE_acquire_lock(i);
-        PRINT("got locks !");
         if (j != i) {
             RCCE_acquire_lock(j);
         }
@@ -113,7 +111,7 @@ int total(bank_t *bank, int use_locks) {
         }
     }
     else {
-        for (i = 0; i < 48; i++) {
+        for (i = 0; i < RCCE_num_ues(); i++) {
             PRINT("lock for %d", i);
             RCCE_acquire_lock(i);
         }
@@ -123,7 +121,7 @@ int total(bank_t *bank, int use_locks) {
             total += bank->accounts[i].balance;
         }
 
-        for (i = 47; i > 0; i--) {
+        for (i = RCCE_num_ues() - 1; i > 0; i--) {
             RCCE_release_lock(i);
         }
 
