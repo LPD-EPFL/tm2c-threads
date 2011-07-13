@@ -111,7 +111,7 @@ int total(bank_t *bank, int use_locks) {
         }
     }
     else {
-        for (i = 0; i < RCCE_num_ues();; i++) {
+        for (i = 0; i < RCCE_num_ues(); i++) {
             RCCE_acquire_lock(i);
         }
 
@@ -322,7 +322,7 @@ TASKMAIN(int argc, char **argv) {
 
     double duration = DEFAULT_DURATION;
     int nb_accounts = DEFAULT_NB_ACCOUNTS;
-    int nb_app_cores = RCCE_num_uess();
+    int nb_app_cores = RCCE_num_ues();
     int read_all = DEFAULT_READ_ALL;
     int read_cores = DEFAULT_READ_THREADS;
     int write_all = DEFAULT_WRITE_ALL;
