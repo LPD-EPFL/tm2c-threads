@@ -116,6 +116,8 @@ int total(bank_t *bank, int use_locks) {
             RCCE_acquire_lock(i);
         }
 
+        PRINT("got locks");
+        
         total = 0;
         for (i = 0; i < bank->size; i++) {
             total += bank->accounts[i].balance;
