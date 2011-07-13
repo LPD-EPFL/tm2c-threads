@@ -224,7 +224,7 @@ bank_t * test(void *data, double duration, int nb_accounts) {
     FOR(duration) {
         if (d->id < d->read_cores) {
             /* Read all */
-            //  PRINT("READ ALL1");
+            PRINT("READ ALL1");
             total(bank, 0);
             d->nb_read_all++;
         }
@@ -236,18 +236,19 @@ bank_t * test(void *data, double duration, int nb_accounts) {
         else {
             nb = (int) (rand_range(100) - 1);
             if (nb < d->read_all) {
-                //     PRINT("READ ALL2");
+                PRINT("READ ALL2");
                 /* Read all */
                 total(bank, 0);
                 d->nb_read_all++;
             }
             else if (nb < d->read_all + d->write_all) {
                 /* Write all */
-                //     PRINT("WRITE ALL");
+                PRINT("WRITE ALL");
                 reset(bank);
                 d->nb_write_all++;
             }
             else {
+                PRINT("Transfer");
                 /* Choose random accounts */
                 src = (int) (rand_range(rand_max) - 1) + rand_min;
                 assert(src < (rand_max + rand_min));
@@ -257,7 +258,7 @@ bank_t * test(void *data, double duration, int nb_accounts) {
                 assert(dst >= 0);
                 if (dst == src)
                     dst = ((src + 1) % rand_max) + rand_min;
-                transfer(&bank->accounts[src], &bank->accounts[dst], 0);
+                transfer(&bank->accounts[src], &bank->accounts[dst], 1);
 
                 d->nb_transfer++;
             }
@@ -413,7 +414,7 @@ TASKMAIN(int argc, char **argv) {
     BARRIERW
 
 
-    data->id = (RCCE_ue() - 1) / 2;
+    
     data->id = RCCE_ue();
     data->read_all = read_all;
     data->read_cores = read_cores;
