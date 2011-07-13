@@ -83,6 +83,7 @@ int transfer(account_t *src, account_t *dst, int amount, int use_locks) {
     else {
         i = getlocknum(src->number);
         j = getlocknum(src->number);
+        PRINT("lock for %d, %d", i, j);
         RCCE_acquire_lock(i);
         if (j != i) {
             RCCE_acquire_lock(j);
@@ -235,6 +236,8 @@ bank_t * test(void *data, double duration, int nb_accounts) {
         PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\tBank total (before): %d\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
                 total(bank, 0));
     }
+    
+    BARRIERW
 
     /* Wait on barrier */
 
