@@ -217,7 +217,6 @@ bank_t * test(void *data, double duration, int nb_accounts) {
     }
 
     /* Wait on barrier */
-    BARRIER
 
     // PRINT("chk %d", chk++); //0
 
@@ -271,9 +270,7 @@ bank_t * test(void *data, double duration, int nb_accounts) {
     //reset(bank);
 
     PRINT("~~");
-    BARRIER
     /* Free transaction */
-    BARRIER
 
     return bank;
 }
