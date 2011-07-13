@@ -387,7 +387,6 @@ TASKMAIN(int argc, char **argv) {
 
     assert(duration >= 0);
     assert(nb_accounts >= 2);
-    PRINT("nb_app_cores = %d", nb_app_cores);
     assert(nb_app_cores > 0);
     assert(read_all >= 0 && write_all >= 0 && read_all + write_all <= 100);
     assert(read_cores + write_cores <= nb_app_cores);
@@ -437,7 +436,7 @@ TASKMAIN(int argc, char **argv) {
     int total = data->nb_transfer + data->nb_read_all + data->nb_write_all;
     printf("Duration    : %f\n", _duration);
     printf("Ops         : %d\n", total);
-    printf("Ops/s       : %d\n", total/_duration);
+    printf("Ops/s       : %d\n", (int) total/_duration);
     printf("Latency     : %f\n", _duration/(double)total);
     FLUSH
             
