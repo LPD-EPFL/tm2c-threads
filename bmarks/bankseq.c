@@ -222,6 +222,7 @@ bank_t * test(void *data, double duration, int nb_accounts) {
     // PRINT("chk %d", chk++); //0
 
     FOR(duration) {
+        PRINT("here - -  --");
         if (d->id < d->read_cores) {
             /* Read all */
             PRINT("READ ALL1");
