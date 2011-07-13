@@ -124,8 +124,10 @@ int total(bank_t *bank, int use_locks) {
         }
 
         for (i = RCCE_num_ues() - 1; i > 0; i--) {
+            PRINT("rls lock for %d", i);
             RCCE_release_lock(i);
         }
+        PRINT("rlsed locks");
 
 
     }
