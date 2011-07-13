@@ -59,6 +59,15 @@ extern "C" {
 
 #define TX_START                                                        \
     { PRINTD("|| Starting new tx");                                     \
+    short int reason;                                                   \
+    if (reason = sigsetjmp(stm_tx->env, 0)) {                           \
+        PRINTD("|| restarting due to %d", reason);                      \
+        stm_tx->write_set = write_set_empty(stm_tx->write_set);         \
+        stm_tx->read_set = read_set_empty(stm_tx->read_set);            \
+        stm_tx->retries++;                                              \
+    }
+/*#define TX_START                                                        \
+    { PRINTD("|| Starting new tx");                                     \
     if (stm_tx == NULL) {                                               \
         stm_tx = tx_metadata_new(RUNNING);                              \
         if (stm_tx == NULL) {                                           \
@@ -82,7 +91,7 @@ extern "C" {
     stm_tx->state = RUNNING;                                            \
     stm_tx->max_retries = (stm_tx->max_retries >= stm_tx->retries)      \
         ? stm_tx->max_retries : stm_tx->retries;                        
-
+*/
 
 #define TX_ABORT(reason)                                                \
     PRINTD("|| aborting tx");                                           \
@@ -90,6 +99,16 @@ extern "C" {
     siglongjmp(stm_tx->env, reason);
 
 #define TX_COMMIT                                                       \
+    PRINTD("|| commiting tx");                                          \
+    ps_publish_all();                                                   \
+    write_set_persist(stm_tx->write_set);                               \
+    ps_finish_all();                                                    \
+    mem_info_on_commit(stm_tx->mem_info);                               \
+    stm_tx_node->tx_starts += stm_tx->retries;                          \
+    stm_tx_node->tx_commited++;                                         \
+    stm_tx = tx_metadata_empty(stm_tx); }
+
+/*#define TX_COMMIT                                                       \
     PRINTD("|| commiting tx");                                          \
     ps_publish_all();                                                   \
     write_set_persist(stm_tx->write_set);                               \
@@ -107,7 +126,7 @@ extern "C" {
     stm_tx_node->aborts_raw += stm_tx->aborts_raw;                      \
     stm_tx_node->aborts_waw += stm_tx->aborts_waw;                      \
     stm_tx = tx_metadata_empty(stm_tx); }
-
+*/
 
 #define TM_END                                                          \
     PRINTD("|| FAKE: TM ends");                                         \
