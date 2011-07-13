@@ -83,10 +83,13 @@ int transfer(account_t *src, account_t *dst, int amount, int use_locks) {
     else {
         i = getlocknum(src->number);
         j = getlocknum(src->number);
+        PRINT("locks for %d, %d", i, j);
         RCCE_acquire_lock(i);
         if (j != i) {
             RCCE_acquire_lock(j);
         }
+        
+        PRINT("got locks");
 
         src->balance -= amount;
         dst->balance -= amount;
