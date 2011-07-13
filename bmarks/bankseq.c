@@ -39,7 +39,7 @@
 #define DEFAULT_WRITE_ALL               0
 #define DEFAULT_READ_THREADS            0
 #define DEFAULT_WRITE_THREADS           0
-#define DEFAULT_DISJOINT                0
+#define DEFAULT_LOCKS                   0
 
 #define XSTR(s)                         STR(s)
 #define STR(s)                          #s
@@ -65,36 +65,66 @@ typedef struct bank {
     int size;
 } bank_t;
 
-int transfer(account_t *src, account_t *dst, int amount) {
+inline int getlocknum(int account_num) {
+    return (account_num % 48);
+}
+
+int transfer(account_t *src, account_t *dst, int amount, int use_locks) {
     // PRINT("in transfer");
 
     int i, j;
-    
-    i = src->balance - amount;
-    src->balance = i;
-    j = dst->balance + amount;
-    dst->balance = j;
+
+    if (!use_locks) {
+        i = src->balance - amount;
+        src->balance = i;
+        j = dst->balance + amount;
+        dst->balance = j;
+    }
+    else {
+        i = getlocknum(src->number);
+        j = getlocknum(src->number);
+        RCCE_acquire_lock(i);
+        if (j != i) {
+            RCCE_acquire_lock(j);
+        }
+
+        src->balance -= amount;
+        dst->balance -= amount;
+
+        RCCE_release_lock(i);
+        if (i != j) {
+            RCCE_release_lock(j);
+        }
+
+    }
 
     return amount;
 }
 
-int total(bank_t *bank, int transactional) {
+int total(bank_t *bank, int use_locks) {
     int i, total;
 
-    if (!transactional) {
+    if (!use_locks) {
         total = 0;
         for (i = 0; i < bank->size; i++) {
             total += bank->accounts[i].balance;
         }
     }
     else {
-        TX_START
+        for (i = 0; i < 48; i++) {
+            RCCE_acquire_lock(i);
+        }
+
         total = 0;
         for (i = 0; i < bank->size; i++) {
-            //PRINTN("(l %d)", i);
-            total += *(int*) TX_LOAD(&bank->accounts[i].balance);
+            total += bank->accounts[i].balance;
         }
-        TX_COMMIT
+
+        for (i = 47; i > 0; i--) {
+            RCCE_release_lock(i);
+        }
+
+
     }
 
     return total;
@@ -157,7 +187,7 @@ typedef struct thread_data {
     int read_cores;
     int write_all;
     int write_cores;
-    int disjoint;
+    int use_locks;
     int nb_app_cores;
     char padding[64];
 } thread_data_t;
@@ -174,19 +204,8 @@ bank_t * test(void *data, double duration, int nb_accounts) {
     /* Initialize seed (use rand48 as rand is poor) */
     srand_core();
 
-    /* Prepare for disjoint access */
-    if (d->disjoint) {
-        rand_max = nb_accounts / d->nb_app_cores;
-        rand_min = rand_max * d->id;
-        if (rand_max <= 2) {
-            fprintf(stderr, "can't have disjoint account accesses");
-            return NULL;
-        }
-    }
-    else {
-        rand_max = nb_accounts;
-        rand_min = 0;
-    }
+    rand_max = nb_accounts;
+    rand_min = 0;
 
 
     bank = (bank_t *) malloc(sizeof (bank_t));
@@ -226,7 +245,7 @@ bank_t * test(void *data, double duration, int nb_accounts) {
         if (d->id < d->read_cores) {
             /* Read all */
             //PRINT("READ ALL1");
-            total(bank, 0);
+            total(bank, d->use_locks);
             d->nb_read_all++;
         }
         else if (d->id < d->read_cores + d->write_cores) {
@@ -239,7 +258,7 @@ bank_t * test(void *data, double duration, int nb_accounts) {
             if (nb < d->read_all) {
                 //PRINT("READ ALL2");
                 /* Read all */
-                total(bank, 0);
+                total(bank, d->use_locks);
                 d->nb_read_all++;
             }
             else if (nb < d->read_all + d->write_all) {
@@ -259,13 +278,13 @@ bank_t * test(void *data, double duration, int nb_accounts) {
                 assert(dst >= 0);
                 if (dst == src)
                     dst = ((src + 1) % rand_max) + rand_min;
-                transfer(&bank->accounts[src], &bank->accounts[dst], 1);
+                transfer(&bank->accounts[src], &bank->accounts[dst], 1, d->use_locks);
 
                 d->nb_transfer++;
             }
         }
     }
-    
+
     _duration = duration__;
 
     //reset(bank);
@@ -293,7 +312,7 @@ TASKMAIN(int argc, char **argv) {
         {"read-threads", required_argument, NULL, 'R'},
         {"write-all-rate", required_argument, NULL, 'w'},
         {"write-threads", required_argument, NULL, 'W'},
-        {"disjoint", no_argument, NULL, 'j'},
+        {"locks", required_argument, NULL, 'l'},
         {NULL, 0, NULL, 0}
     };
 
@@ -308,7 +327,7 @@ TASKMAIN(int argc, char **argv) {
     int read_cores = DEFAULT_READ_THREADS;
     int write_all = DEFAULT_WRITE_ALL;
     int write_cores = DEFAULT_WRITE_THREADS;
-    int disjoint = DEFAULT_DISJOINT;
+    int use_locks = DEFAULT_LOCKS;
 
 
     while (1) {
@@ -348,6 +367,8 @@ TASKMAIN(int argc, char **argv) {
                         "        Percentage of write-all transactions (default=" XSTR(DEFAULT_WRITE_ALL) ")\n"
                         "  -W, --write-threads <int>\n"
                         "        Number of threads issuing only write-all transactions (default=" XSTR(DEFAULT_WRITE_THREADS) ")\n"
+                        "  -l, --locks <int>\n"
+                        "        To use or not locks (default=" XSTR(DEFAULT_LOCKS) ")\n"
                         );
             }
                 exit(0);
@@ -369,8 +390,8 @@ TASKMAIN(int argc, char **argv) {
             case 'W':
                 write_cores = atoi(optarg);
                 break;
-            case 'j':
-                disjoint = 1;
+            case 'l':
+                use_locks = atoi(optarg);
                 break;
             case '?':
                 ONCE
@@ -413,13 +434,13 @@ TASKMAIN(int argc, char **argv) {
     BARRIERW
 
 
-    
+
     data->id = RCCE_ue();
     data->read_all = read_all;
     data->read_cores = read_cores;
     data->write_all = write_all;
     data->write_cores = write_cores;
-    data->disjoint = disjoint;
+    data->use_locks = use_locks;
     data->nb_app_cores = nb_app_cores;
     data->nb_transfer = 0;
     data->nb_read_all = 0;
@@ -436,10 +457,10 @@ TASKMAIN(int argc, char **argv) {
     int total_ = data->nb_transfer + data->nb_read_all + data->nb_write_all;
     printf("Duration    : %f\n", _duration);
     printf("Ops         : %d\n", total_);
-    printf("Ops/s       : %d\n", (int) (total_/_duration));
-    printf("Latency     : %f\n", _duration/(double)total_);
+    printf("Ops/s       : %d\n", (int) (total_ / _duration));
+    printf("Latency     : %f\n", _duration / (double) total_);
     FLUSH
-            
+
     ONCE
     {
         PRINT("\t\t\t~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
