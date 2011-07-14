@@ -28,6 +28,7 @@
 #undef BARRIER
 #define BARRIER BARRIERW
 #endif
+#endif
 
 /* Hashtable length (# of buckets) */
 unsigned int maxhtlength;
