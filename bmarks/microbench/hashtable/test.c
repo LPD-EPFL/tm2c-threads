@@ -522,7 +522,9 @@ TASKMAIN(int argc, char **argv) {
     {
         srand_core();
         FLUSH
+#ifdef STM
         udelay(rand_range(123));
+#endif
         srand_core();
         i = 0;
         maxhtlength = (int) (initial / load_factor);
