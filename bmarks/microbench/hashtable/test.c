@@ -583,9 +583,9 @@ TASKMAIN(int argc, char **argv) {
     printf("  #snapshoted : %lu\n", data->nb_snapshoted);
 #ifdef SEQUENTIAL
     int total_ops = data->nb_add + data->nb_contains + data->nb_remove;
-    printf("#Ops          : %d", total_ops);
-    printf("#Ops/s        : %d", (int) (total_ops / duration__));
-    printf("#Latency      : %f", duration__ / total_ops);
+    printf("#Ops          : %d\n", total_ops);
+    printf("#Ops/s        : %d\n", (int) (total_ops / duration__));
+    printf("#Latency      : %f\n", duration__ / total_ops);
 #endif
     FLUSH;
 
