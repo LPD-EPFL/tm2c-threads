@@ -113,7 +113,7 @@ int ht_move_naive(ht_intset_t *set, int val1, int val2, int transactional) {
         }
         if (v != val2) {
             nxt_t nxt = OF(new_node(val2, OF(next), transactional));
-            PRINTD("Created node %5d. Value: %d", nxt, val);
+            //PRINTD("Created node %5d. Value: %d", nxt, val);
             TX_STORE(&prev->next, &nxt, TYPE_UINT);
         }
         /* Even if the key is already in, the operation succeeds */
@@ -259,7 +259,7 @@ int ht_move_orrollback(ht_intset_t *set, int val1, int val2, int transactional) 
         }
         if (v != val2) {
             nxt_t nxt = OF(new_node(val2, OF(next), transactional));
-            PRINTD("Created node %5d. Value: %d", nxt, val);
+            //PRINTD("Created node %5d. Value: %d", nxt, val);
             TX_STORE(&prev->next, &nxt, TYPE_UINT);
             TX_SHFREE(next1);
         }
