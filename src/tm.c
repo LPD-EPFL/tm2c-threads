@@ -53,6 +53,11 @@ void handle_abort(stm_tx_t *stm_tx, CONFLICT_TYPE reason) {
     ps_finish_all();
     stm_tx->state = ABORTED;
     stm_tx->aborts++;
+
+    if ((stm_tx->retries + 1) % 100 == 0) {
+        PRINT("%d retries --", stm_tx->retries);
+    }
+    
     switch (reason) {
         case READ_AFTER_WRITE:
             stm_tx->aborts_raw++;
