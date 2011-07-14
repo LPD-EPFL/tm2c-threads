@@ -328,6 +328,9 @@ void print_ht(ht_intset_t *set) {
 TASKMAIN(int argc, char **argv) {
 #ifndef SEQUENTIAL
     TM_INIT
+#else
+    RCCE_init(&argc, &argv);
+    iRCCE_init();
 #endif
 
             struct option long_options[] = {
