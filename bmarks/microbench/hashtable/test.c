@@ -23,6 +23,12 @@
 
 #include "intset.h"
 
+#ifdef SEQUENTIAL
+#ifdef BARRIER
+#undef BARRIER
+#define BARRIER BARRIERW
+#endif
+
 /* Hashtable length (# of buckets) */
 unsigned int maxhtlength;
 
