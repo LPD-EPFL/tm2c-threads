@@ -350,7 +350,8 @@ TASKMAIN(int argc, char **argv) {
     thread_data_t *data;
     double duration = DEFAULT_DURATION;
     int initial = DEFAULT_INITIAL;
-#ifdef DSL
+    
+#if defined(DSL) && defined(STM)
     int nb_app_cores = (RCCE_num_ues() / 2) + ((RCCE_num_ues() % 2) ? 1 : 0);
 #else
     int nb_app_cores = RCCE_num_ues();
