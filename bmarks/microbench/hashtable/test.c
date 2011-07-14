@@ -217,7 +217,7 @@ void *test(void *data, double duration) {
 
     }
 
-            /* Free transaction */
+    /* Free transaction */
 
     return NULL;
 }
@@ -326,9 +326,11 @@ void print_ht(ht_intset_t *set) {
 }
 
 TASKMAIN(int argc, char **argv) {
+#ifndef SEQUENTIAL
     TM_INIT
+#endif
 
-    struct option long_options[] = {
+            struct option long_options[] = {
         // These options don't set a flag
         {"help", no_argument, NULL, 'h'},
         {"duration", required_argument, NULL, 'd'},
@@ -595,10 +597,12 @@ TASKMAIN(int argc, char **argv) {
      */
 
     free(data);
-    
+
     BARRIER
-            
+
+#ifndef SEQUENTIAL
     TM_END
+#endif
 
     //RCCE_finalize();
     EXIT(0);
