@@ -444,6 +444,14 @@ TASKMAIN(int argc, char **argv) {
 #endif
 
 
+    #ifdef SEQUENTIAL
+    int total_ops = data->nb_add + data->nb_contains + data->nb_remove;
+    printf("#Ops          : %d\n", total_ops);
+    printf("#Ops/s        : %d\n", (int) (total_ops / duration__));
+    printf("#Latency      : %f\n", duration__ / total_ops);
+    FLUSH
+#endif
+    
     //set_delete(set);
 
     /* Cleanup STM */
