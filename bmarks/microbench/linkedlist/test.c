@@ -423,7 +423,7 @@ TASKMAIN(int argc, char **argv) {
 
     BARRIER
 
-#ifdef STM
+#if defined(STM) && defined(DEBUG)
     TX_START
     if ((*(int *) sequencer) != ID) {
         udelay(100);
