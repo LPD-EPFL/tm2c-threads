@@ -25,9 +25,9 @@
  * _____________________________________________________________________________
  */
 #define SEQUENTIAL
-#define STM_
+#define STM
 #define EARLY_RELEASE_
-#define READ_VALIDATION_
+#define READ_VALIDATION
 
 #ifdef READ_VALIDATION
 #ifdef EARLY_RELEASE
