@@ -375,7 +375,7 @@ TASKMAIN(int argc, char **argv) {
 #ifdef STM
     int idc = (ID - 1) / 2;
     shmem_init(((idc % 4) * 16 * 1024 * 1024) - (initial * sizeof(node_t)));
-    PRINT("shmem from %d MB", (idc % 4) * 16);
+    PRINT("shmem from %d MB", (idc % 5) * 16);
     //shmem_init((RCCE_ue() * 1024 * 1024) - (initial * sizeof(node_t)));
 #endif
     
