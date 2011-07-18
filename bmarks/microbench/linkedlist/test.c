@@ -187,8 +187,11 @@ void *test(void *data, double duration) {
 
 TASKMAIN(int argc, char **argv) {
     dup2(STDOUT_FILENO, STDERR_FILENO);
-#ifdef STM
+#ifndef SEQUENTIAL
     TM_INIT
+#else
+    RCCE_init(&argc, &argv);
+    iRCCE_init();
 #endif
 
             struct option long_options[] = {
