@@ -399,7 +399,7 @@ TASKMAIN(int argc, char **argv) {
         off = 3;
     }
 
-    shmem_init(((off * 16) * 1024 * 1024) + (ID * 10 * 1024) - (initial * sizeof (node_t)));
+    shmem_init(((off * 16) * 1024 * 1024) + (ID * 20 * 1024) - (initial * sizeof (node_t)));
     PRINT("shmem from %d MB, %d KB", ((off * 16)), (ID * 10));
     //shmem_init((RCCE_ue() * 1024 * 1024) - (initial * sizeof(node_t)));
 #endif
