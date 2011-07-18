@@ -24,6 +24,13 @@
 #include "linkedlist.h"
 #include <unistd.h>
 
+#ifdef SEQUENTIAL
+#ifdef BARRIER
+#undef BARRIER
+#define BARRIER BARRIERW
+#endif
+#endif
+
 /* ################################################################### *
  * RANDOM
  * ################################################################### */
@@ -180,7 +187,9 @@ void *test(void *data, double duration) {
 
 TASKMAIN(int argc, char **argv) {
     dup2(STDOUT_FILENO, STDERR_FILENO);
+#ifdef STM
     TM_INIT
+#endif
 
             struct option long_options[] = {
         // These options don't set a flag
@@ -201,7 +210,7 @@ TASKMAIN(int argc, char **argv) {
     thread_data_t *data;
     double duration = DEFAULT_DURATION;
     int initial = DEFAULT_INITIAL;
-#ifdef DSL
+#if defined(DSL) && defined(STM)
     int nb_app_cores = (RCCE_num_ues() / 2) + ((RCCE_num_ues() % 2) ? 1 : 0);
 #else
     int nb_app_cores = RCCE_num_ues();
@@ -312,7 +321,9 @@ TASKMAIN(int argc, char **argv) {
     ONCE
     {
         printf("Bench type   : linked list\n");
-#ifdef EARLY_RELEASE 
+#ifdef SEQUENTIAL
+        printf("                sequential\n");
+#elif defined(EARLY_RELEASE )
         printf("                using early-release\n");
 #elif defined(READ_VALIDATION)
         printf("                using read-validation\n");
@@ -409,6 +420,7 @@ TASKMAIN(int argc, char **argv) {
 
     BARRIER
 
+#ifdef STM
     TX_START
     if ((*(int *) sequencer) != ID) {
         udelay(100);
@@ -420,13 +432,13 @@ TASKMAIN(int argc, char **argv) {
     int newc = cc + mychanges;
     TX_STORE(changes, &newc, TYPE_INT);
     TX_COMMIT
-
+            
     BARRIER
     ONCE
     {
         PRINT(":: ~~ :: Set size: %d, expected: %d", size_after, initial + set->head);
     }
-
+#endif
 
 
     //set_delete(set);
@@ -437,7 +449,9 @@ TASKMAIN(int argc, char **argv) {
 
     BARRIER
 
+#ifdef STM
     TM_END
+#endif
 
     EXIT(0);
 }
