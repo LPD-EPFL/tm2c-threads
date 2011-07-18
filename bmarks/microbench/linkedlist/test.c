@@ -194,7 +194,7 @@ TASKMAIN(int argc, char **argv) {
     iRCCE_init();
 #endif
 
-            struct option long_options[] = {
+    struct option long_options[] = {
         // These options don't set a flag
         {"help", no_argument, NULL, 'h'},
         {"duration", required_argument, NULL, 'd'},
@@ -373,12 +373,37 @@ TASKMAIN(int argc, char **argv) {
     }
 
 #ifdef STM
-    int idc = (ID - 1) / 2;
-    shmem_init(((idc % 4) * 16 * 1024 * 1024) - (initial * sizeof(node_t)));
-    PRINT("shmem from %d MB", (idc % 5) * 16);
+    int off;
+    if (ID < 6) {
+        off = 0;
+    }
+    else if (ID < 12) {
+        off = 1;
+    }
+    else if (ID < 18) {
+        off = 0;
+    }
+    else if (ID < 24) {
+        off = 1;
+    }
+    else if (ID < 30) {
+        off = 2;
+    }
+    else if (ID < 36){
+        off = 3;
+    }
+    else if (ID < 42) {
+        off = 2;
+    }
+    else if (ID < 48) {
+        off = 3;
+    }
+
+    shmem_init(((off * 16) * 1024 * 1024) + (ID * 10 * 1024) - (initial * sizeof (node_t)));
+    PRINT("shmem from %d MB, %d KB", ((off * 16) * 1024 * 1024), (ID * 10));
     //shmem_init((RCCE_ue() * 1024 * 1024) - (initial * sizeof(node_t)));
 #endif
-    
+
     /* Access set from all threads */
     data->first = last;
     data->range = range;
@@ -429,7 +454,7 @@ TASKMAIN(int argc, char **argv) {
     BARRIER
 
 #if defined(STM) && defined(DEBUG)
-    TX_START
+            TX_START
     if ((*(int *) sequencer) != ID) {
         udelay(100);
         TX_ABORT(WRITE_AFTER_WRITE);
@@ -440,7 +465,7 @@ TASKMAIN(int argc, char **argv) {
     int newc = cc + mychanges;
     TX_STORE(changes, &newc, TYPE_INT);
     TX_COMMIT
-            
+
     BARRIER
     ONCE
     {
@@ -449,14 +474,14 @@ TASKMAIN(int argc, char **argv) {
 #endif
 
 
-    #ifdef SEQUENTIAL
+#ifdef SEQUENTIAL
     int total_ops = data->nb_add + data->nb_contains + data->nb_remove;
     printf("#Ops          : %d\n", total_ops);
     printf("#Ops/s        : %d\n", (int) (total_ops / duration__));
     printf("#Latency      : %f\n", duration__ / total_ops);
     FLUSH
 #endif
-    
+
     //set_delete(set);
 
     /* Cleanup STM */
