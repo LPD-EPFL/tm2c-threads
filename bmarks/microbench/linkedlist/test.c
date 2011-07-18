@@ -400,7 +400,7 @@ TASKMAIN(int argc, char **argv) {
     }
 
     shmem_init(((off * 16) * 1024 * 1024) + (ID * 10 * 1024) - (initial * sizeof (node_t)));
-    PRINTD("shmem from %d MB, %d KB", ((off * 16)), (ID * 10));
+    PRINT("shmem from %d MB, %d KB", ((off * 16)), (ID * 10));
     //shmem_init((RCCE_ue() * 1024 * 1024) - (initial * sizeof(node_t)));
 #endif
 
