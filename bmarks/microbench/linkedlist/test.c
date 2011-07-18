@@ -372,7 +372,7 @@ TASKMAIN(int argc, char **argv) {
         FLUSH
     }
 
-    shmem_init((initial + (RCCE_ue() * 1000)) * sizeof (node_t));
+    shmem_init((initial + (RCCE_ue() * 10000)) * sizeof (node_t));
 
     /* Access set from all threads */
     data->first = last;
