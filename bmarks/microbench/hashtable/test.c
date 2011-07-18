@@ -557,7 +557,7 @@ TASKMAIN(int argc, char **argv) {
     BARRIER
 
 #ifdef STM
-    shmem_init((initial + (RCCE_ue() * 10000)) * sizeof (node_t));
+    shmem_init((RCCE_ue() * 1024 * 1024) - (initial * sizeof(node_t)));
 #endif
     
     data->first = last;
