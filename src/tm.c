@@ -51,7 +51,6 @@ void tm_init(unsigned int ID) {
 
 void handle_abort(stm_tx_t *stm_tx, CONFLICT_TYPE reason) {
     ps_finish_all();
-    stm_tx->state = ABORTED;
     stm_tx->aborts++;
 
     switch (reason) {
