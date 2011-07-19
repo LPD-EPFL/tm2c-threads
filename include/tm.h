@@ -87,10 +87,7 @@ extern "C" {
             EXIT(-1);                                                   \
         }                                                               \
     }                                                                   \
-    stm_tx->retries++;                                                  \
-    stm_tx->state = RUNNING;                                            \
-    stm_tx->max_retries = (stm_tx->max_retries >= stm_tx->retries)      \
-        ? stm_tx->max_retries : stm_tx->retries;                        
+    stm_tx->retries++;
 
 #define TX_ABORT(reason)                                                \
     PRINTD("|| aborting tx");                                           \
@@ -113,15 +110,14 @@ extern "C" {
     ps_publish_all();                                                   \
     write_set_persist(stm_tx->write_set);                               \
     ps_finish_all();                                                    \
-    stm_tx->state = COMMITED;                                           \
     mem_info_on_commit(stm_tx->mem_info);                               \
     stm_tx_node->tx_starts += stm_tx->retries;                          \
     stm_tx_node->tx_commited++;                                         \
     stm_tx_node->tx_aborted += stm_tx->aborts;                          \
     stm_tx_node->max_retries =                                          \
-        (stm_tx->max_retries < stm_tx_node->max_retries)                \
+        (stm_tx->retries < stm_tx_node->max_retries)                    \
             ? stm_tx_node->max_retries                                  \
-            : stm_tx->max_retries;                                      \
+            : stm_tx->retries;                                          \
     stm_tx_node->aborts_war += stm_tx->aborts_war;                      \
     stm_tx_node->aborts_raw += stm_tx->aborts_raw;                      \
     stm_tx_node->aborts_waw += stm_tx->aborts_waw;                      \
