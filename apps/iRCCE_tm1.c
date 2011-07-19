@@ -27,44 +27,47 @@ MAIN(int argc, char **argv) {
         *(sis + i) = 1;
     }
 
-    if (argc > 1) {
-        goto this;
-    }
+    i = 10;
+    while (i--) {
+
+        if (argc > 1) {
+            goto this;
+        }
 
 start:
-    
-    BARRIER
 
-    BMSTART("time to start and end an empty TX");
-    TX_START
-    TX_COMMIT
-    BMEND
+        BARRIER
 
-    BARRIER
-            
-if (argc > 1) {
-        goto end;
-    }
-    
+        BMSTART("time to start and end an empty TX");
+        TX_START
+        TX_COMMIT
+        BMEND
+
+        BARRIER
+
+        if (argc > 1) {
+            goto end;
+        }
+
 this:
 
-    BMSTART("time to start and end an empty TX once aborted TX");
-    int aborted = 0;
-    TX_START
-    if (!aborted) {
-        aborted = 1;
-        TX_ABORT(1)
-    }
-    TX_COMMIT
-    BMEND
+        BMSTART("time to start and end an empty TX once aborted TX");
+        int aborted = 0;
+        TX_START
+        if (!aborted) {
+            aborted = 1;
+            TX_ABORT(1)
+        }
+        TX_COMMIT
+        BMEND
 
-    if (argc > 1) {
-        goto start;
-    }
-    
+        if (argc > 1) {
+            goto start;
+        }
+
 end:
 
-
+    }
 
     TM_END
     EXIT(0);
