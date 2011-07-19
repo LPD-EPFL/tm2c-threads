@@ -156,7 +156,7 @@ int ht_move(ht_intset_t *set, int val1, int val2, int transactional) {
     TX_START
     addr1 = val1 % maxhtlength;
     OFFSET(set->buckets[addr1]);
-    prev = ND(*(nxt_t *) TX_LOAD(&set->buckets[addr1]->head));
+    prev = ND(set->buckets[addr1]->head);
 
     next = ND(*(nxt_t *) TX_LOAD(&prev->next));
     while (1) {
@@ -173,7 +173,7 @@ int ht_move(ht_intset_t *set, int val1, int val2, int transactional) {
         /* Inserting */
         addr2 = val2 % maxhtlength;
         OFFSET(set->buckets[addr2]);
-        prev = ND(*(nxt_t *) TX_LOAD(&set->buckets[addr2]->head));
+        prev = ND(set->buckets[addr2]->head);
         next = ND(*(nxt_t *) TX_LOAD(&prev->next));
 
         while (1) {
