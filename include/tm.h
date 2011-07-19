@@ -30,7 +30,7 @@ extern "C" {
 #define BACKOFF_MAX                     3
 #define BACKOFF_DELAY                   100
 
-    extern register stm_tx_t *stm_tx;
+    register stm_tx_t *stm_tx;
     extern stm_tx_node_t *stm_tx_node;
     extern double duration__;
 
