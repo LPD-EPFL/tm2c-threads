@@ -34,6 +34,8 @@ MAIN(int argc, char **argv) {
     TX_START
     TX_COMMIT
     BMEND
+    
+    BARRIER
 
     BMSTART("time to start and end an empty TX once aborted TX");
     int aborted = 0;
