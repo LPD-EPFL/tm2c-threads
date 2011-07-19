@@ -46,8 +46,6 @@ void tm_init(unsigned int ID) {
             PRINTD("Could not alloc tx metadata @ TM_INIT");
             EXIT(-1);
         }
-        stm_tx->state = IDLE;
-        stm_tx_node->aborts_raw = 0;
     }
 }
 
