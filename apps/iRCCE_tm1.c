@@ -27,15 +27,26 @@ MAIN(int argc, char **argv) {
         *(sis + i) = 1;
     }
 
+    if (argc > 1) {
+        goto this;
+    }
 
-    BARRIER
+start:
     
+    BARRIER
+
     BMSTART("time to start and end an empty TX");
     TX_START
     TX_COMMIT
     BMEND
-    
+
     BARRIER
+            
+if (argc > 1) {
+        goto end;
+    }
+    
+this:
 
     BMSTART("time to start and end an empty TX once aborted TX");
     int aborted = 0;
@@ -47,7 +58,11 @@ MAIN(int argc, char **argv) {
     TX_COMMIT
     BMEND
 
-
+    if (argc > 1) {
+        goto start;
+    }
+    
+end:
 
 
 
