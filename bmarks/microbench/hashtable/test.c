@@ -557,7 +557,34 @@ TASKMAIN(int argc, char **argv) {
     BARRIER
 
 #ifdef STM
-    shmem_init((RCCE_ue() * 1024 * 1024) - (initial * sizeof(node_t)));
+    int off;
+    if (ID < 6) {
+        off = 0;
+    }
+    else if (ID < 12) {
+        off = 1;
+    }
+    else if (ID < 18) {
+        off = 0;
+    }
+    else if (ID < 24) {
+        off = 1;
+    }
+    else if (ID < 30) {
+        off = 2;
+    }
+    else if (ID < 36){
+        off = 3;
+    }
+    else if (ID < 42) {
+        off = 2;
+    }
+    else if (ID < 48) {
+        off = 3;
+    }
+
+    shmem_init(((off * 16) * 1024 * 1024) + ((ID/2) * 40 * 1024) - (initial * sizeof (node_t)));
+    //shmem_init((RCCE_ue() * 1024 * 1024) - (initial * sizeof(node_t)));
 #endif
     
     data->first = last;
