@@ -68,24 +68,11 @@ extern "C" {
     }*/
 #define TX_START                                                        \
     { PRINTD("|| Starting new tx");                                     \
-    if (stm_tx == NULL) {                                               \
-        stm_tx = tx_metadata_new(RUNNING);                              \
-        if (stm_tx == NULL) {                                           \
-            PRINTD("Could not alloc tx metadata @ TX_START");           \
-            PRINTD("  | FAKE: freeing memory");                         \
-            EXIT(-1);                                                   \
-        }                                                               \
-    }                                                                   \
     short int reason;                                                   \
     if (reason = sigsetjmp(stm_tx->env, 0)) {                           \
         PRINTD("|| restarting due to %d", reason);                      \
         stm_tx->write_set = write_set_empty(stm_tx->write_set);         \
         stm_tx->read_set = read_set_empty(stm_tx->read_set);            \
-        if (stm_tx->write_set == NULL || stm_tx->read_set == NULL) {    \
-            PRINTD("Could not alloc r/w sets @ TX_START");              \
-            PRINTD("  | FAKE: freeing memory");                         \
-            EXIT(-1);                                                   \
-        }                                                               \
     }                                                                   \
     stm_tx->retries++;
 
