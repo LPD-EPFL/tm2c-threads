@@ -153,25 +153,29 @@ MAIN(int argc, char** argv) {
 
     BARRIER
 
-    switch (sequential) {
-        case 0:
-            run_seq(memory);
-            break;
-        case 1:
-            run_rand(memory);
-            break;
-        default:
-            run_uniq(memory);
+    ONCE
+    {
+        switch (sequential) {
+            case 0:
+                run_seq(memory);
+                break;
+            case 1:
+                run_rand(memory);
+                break;
+            default:
+                run_uniq(memory);
+        }
     }
-
 
     BARRIER
 
+    ONCE
+    {
 #ifdef READ_DURATION
-      PRINT("usec/read: %f", duration_reads / (stm_tx_node->tx_commited * reads));
+        PRINT("usec/read: %f", duration_reads / (stm_tx_node->tx_commited * reads));
 #endif
-      
-            
+    }
+
     BARRIER
     TM_END
     EXIT(0);
