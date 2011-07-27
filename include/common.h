@@ -18,7 +18,7 @@ extern "C" {
 #define NUM_DSL_UES     ((int) ((RCCE_num_ues() / DSLNDPERNODES)) + (RCCE_num_ues() % DSLNDPERNODES ? 1 : 0))
 #define NUM_APP_UES     (RCCE_num_ues() - NUM_DSL_UES)
 
-#define DEBUG_
+#define DEBUG
 
 #define MED printf("[%02d] ", RCCE_ue());
 #define PRINT(args...) printf("[%02d] ", RCCE_ue()); printf(args); printf("\n"); fflush(stdout)
