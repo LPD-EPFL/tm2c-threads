@@ -210,11 +210,14 @@ static void print_global_stats() {
     printf("T | Aborts WAW  \t: %lu\n", stats_aborts_waw);
     printf("--------------------------------------------------------------\n");
 
+    double stats_aborts_d = ((double) stats_aborts) / stats_duration;
     stats_aborts /= stats_duration;
     stats_aborts_raw /= stats_duration;
     stats_aborts_war /= stats_duration;
     stats_aborts_waw /= stats_duration;
+    double stats_commits_d = ((double) stats_commits) / stats_duration;
     stats_commits /= stats_duration;
+    double stats_total_d = ((double) stats_total) / stats_duration;
     stats_total /= stats_duration;
 
     printf(":: PER SECOND TOTAL AVG --------------------------------------\n");
@@ -226,7 +229,7 @@ static void print_global_stats() {
     printf("TA| Aborts WAW  \t: %lu\t/s\n", stats_aborts_waw);
     printf("--------------------------------------------------------------\n");
 
-    int stats_commits_app = stats_commits / NUM_UES_APP;
+    double stats_commits_app = stats_commits / NUM_UES_APP;
 
     stats_aborts /= NUM_UES;
     stats_aborts_raw /= NUM_UES;
@@ -235,7 +238,7 @@ static void print_global_stats() {
     stats_commits /= NUM_UES;
     stats_total /= NUM_UES;
 
-    double commit_rate = (stats_total - stats_aborts) / (double) stats_total;
+    double commit_rate = (stats_total_d - stats_aborts_d) / stats_total_d;
     double tx_latency = (1 / (double) stats_commits_app) * 1000; //micros
 
     printf(":: PER SECOND PER NODE AVG -----------------------------------\n");
