@@ -144,6 +144,7 @@ void ps_publish_finish(void *address) {
 }
 
 void ps_finish_all() {
+/*
 #define FINISH_ALL_PARALLEL
     int i;
 
@@ -171,6 +172,7 @@ void ps_finish_all() {
 #ifdef FINISH_ALL_PARALLEL
     iRCCE_wait_all(&waitlist);
 #endif
+*/
 
 }
 
