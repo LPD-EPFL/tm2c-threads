@@ -57,15 +57,15 @@ extern "C" {
         NUM_UES = RCCE_num_ues();                                       \
         tm_init(ID);
 
-/*#define TX_START                                                        \
-    { PRINTD("|| Starting new tx");                                     \
-    short int reason;                                                   \
-    if (reason = sigsetjmp(stm_tx->env, 0)) {                           \
-        PRINTD("|| restarting due to %d", reason);                      \
-        stm_tx->write_set = write_set_empty(stm_tx->write_set);         \
-        stm_tx->read_set = read_set_empty(stm_tx->read_set);            \
-        stm_tx->retries++;                                              \
-    }*/
+    /*#define TX_START                                                        \
+        { PRINTD("|| Starting new tx");                                     \
+        short int reason;                                                   \
+        if (reason = sigsetjmp(stm_tx->env, 0)) {                           \
+            PRINTD("|| restarting due to %d", reason);                      \
+            stm_tx->write_set = write_set_empty(stm_tx->write_set);         \
+            stm_tx->read_set = read_set_empty(stm_tx->read_set);            \
+            stm_tx->retries++;                                              \
+        }*/
 #define TX_START                                                        \
     { PRINTD("|| Starting new tx");                                     \
     short int reason;                                                   \
@@ -81,17 +81,17 @@ extern "C" {
     handle_abort(stm_tx, reason);                                       \
     siglongjmp(stm_tx->env, reason);
 
-/*#define TX_COMMIT                                                       \
-    PRINTD("|| commiting tx");                                          \
-    ps_publish_all();                                                   \
-    write_set_persist(stm_tx->write_set);                               \
-    ps_finish_all();                                                    \
-    mem_info_on_commit(stm_tx->mem_info);                               \
-    stm_tx_node->tx_starts += stm_tx->retries;                          \
-    stm_tx_node->tx_commited++;                                         \
-    stm_tx = tx_metadata_empty(stm_tx); }
-*/
-    
+    /*#define TX_COMMIT                                                       \
+        PRINTD("|| commiting tx");                                          \
+        ps_publish_all();                                                   \
+        write_set_persist(stm_tx->write_set);                               \
+        ps_finish_all();                                                    \
+        mem_info_on_commit(stm_tx->mem_info);                               \
+        stm_tx_node->tx_starts += stm_tx->retries;                          \
+        stm_tx_node->tx_commited++;                                         \
+        stm_tx = tx_metadata_empty(stm_tx); }
+     */
+
 #define TX_COMMIT                                                       \
     PRINTD("|| commiting tx");                                          \
     ps_publish_all();                                                   \
@@ -130,6 +130,11 @@ extern "C" {
 
 #define TX_STORE(addr, ptr, datatype)                                   \
     write_set_update(stm_tx->write_set, datatype, ((void *) (ptr)), ((void *) (addr)))
+
+#define TX_LOAD_STORE(addr, op, value, datatype)\
+{tx_wlock((void *) addr); int temp__ = (*(int *) addr) op value;\
+write_set_update(stm_tx->write_set, TYPE_INT, &temp__, addr);}
+
 
     /*early release of READ lock -- TODO: the entry remains in read-set, so one
      SHOULD NOT try to re-read the address cause the tx things it keeps the lock*/
@@ -191,6 +196,26 @@ retry:
                 }
             }
             return addr;
+        }
+    }
+
+    inline void tx_wlock(void *addr) {
+        CONFLICT_TYPE conflict;
+#ifdef BACKOFF
+        unsigned int num_delays = 0;
+        unsigned int delay = BACKOFF_DELAY;
+
+retry:
+#endif
+        if ((conflict = ps_publish((void *) addr)) != NO_CONFLICT) {
+#ifdef BACKOFF
+            if (num_delays++ < BACKOFF_MAX) {
+                udelay(delay);
+                delay *= 2;
+                goto retry;
+            }
+#endif
+            TX_ABORT(conflict);
         }
     }
 
