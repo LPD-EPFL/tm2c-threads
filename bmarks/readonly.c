@@ -234,7 +234,7 @@ void run_uniq(int* memory) {
     int i;
 #ifdef READ_DURATION
     double read_ts_start;
-#endifs
+#endif
 
     FOR(duration) {
         TX_START
