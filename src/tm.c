@@ -78,6 +78,7 @@ void ps_publish_finish_all(unsigned int locked) {
 }
 
 void ps_publish_all() {
+/*
     unsigned int locked = 0;
     write_entry_t *write_entries = stm_tx->write_set->write_entries;
     unsigned int nb_entries = stm_tx->write_set->nb_entries;
@@ -101,6 +102,7 @@ retry:
         }
         locked++;
     }
+*/
 }
 
 void ps_unsubscribe_all() {
