@@ -73,7 +73,6 @@ int transfer(account_t *src, account_t *dst, int amount) {
     /* Allow overdrafts */
     TX_START
 
-    PRINT("starting trasfet tx try");
     TX_LOAD_STORE(&src->balance, -, amount, TYPE_INT);
     TX_LOAD_STORE(&dst->balance, +, amount, TYPE_INT);
 
