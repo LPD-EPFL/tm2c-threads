@@ -132,8 +132,9 @@ extern "C" {
     write_set_update(stm_tx->write_set, datatype, ((void *) (ptr)), ((void *) (addr)))
 
 #define TX_LOAD_STORE(addr, op, value, datatype)\
-{tx_wlock((void *) addr); int temp__ = (*(int *) addr) op value;\
-write_set_update(stm_tx->write_set, TYPE_INT, &temp__, addr);}
+    {tx_wlock((void *) addr);\
+    int temp__ = (*(int *) addr) op value;\
+    write_set_update(stm_tx->write_set, TYPE_INT, &temp__, addr);}
 
 
     /*early release of READ lock -- TODO: the entry remains in read-set, so one
