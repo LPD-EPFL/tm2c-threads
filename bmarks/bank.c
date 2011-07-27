@@ -73,15 +73,16 @@ int transfer(account_t *src, account_t *dst, int amount) {
     /* Allow overdrafts */
     TX_START
 
-    TX_LOAD_STORE(&src->balance, -, amount, TYPE_INT);
-    TX_LOAD_STORE(&dst->balance, +, amount, TYPE_INT);
+    //TODO: test and use the TX_LOAD_STORE
+//    TX_LOAD_STORE(&src->balance, -, amount, TYPE_INT);
+//    TX_LOAD_STORE(&dst->balance, +, amount, TYPE_INT);
 
-    //i = *(int *) TX_LOAD(&src->balance);
-    //i -= amount;
-    //TX_STORE(&src->balance, &i, TYPE_INT); //NEED TX_STOREI
-    //j = *(int *) TX_LOAD(&dst->balance);
-    //j += amount;
-    //TX_STORE(&dst->balance, &j, TYPE_INT);
+    i = *(int *) TX_LOAD(&src->balance);
+    i -= amount;
+    TX_STORE(&src->balance, &i, TYPE_INT); //NEED TX_STOREI
+    j = *(int *) TX_LOAD(&dst->balance);
+    j += amount;
+    TX_STORE(&dst->balance, &j, TYPE_INT);
     TX_COMMIT
             // PRINT("in transfer : after commit");
     return amount;
