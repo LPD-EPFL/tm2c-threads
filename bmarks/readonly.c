@@ -45,12 +45,16 @@ void run_uniq(int *);
 #define DEFAULT_READS           1000
 #define DEFAULT_MEM_SIZE        16*1024*1024
 #define DEFAULT_SEQUENTIAL      1
+#define READ_DURATION
 
 
 double duration = DEFAULT_DURATION;
 int reads = DEFAULT_READS;
 int memsize = DEFAULT_MEM_SIZE;
 int sequential = DEFAULT_SEQUENTIAL;
+#ifdef READ_DURATION
+double duration_reads = 0;
+#endif
 
 MAIN(int argc, char** argv) {
     TM_INIT
@@ -163,6 +167,12 @@ MAIN(int argc, char** argv) {
 
     BARRIER
 
+#ifdef READ_DURATION
+      PRINT("usec/read: %f", duration_reads / (stm_tx_node->tx_commited * reads));
+#endif
+      
+            
+    BARRIER
     TM_END
     EXIT(0);
 }
@@ -170,13 +180,25 @@ MAIN(int argc, char** argv) {
 void run_seq(int* memory) {
 
     int i;
+#ifdef READ_DURATION
+    double read_ts_start;
+#endif
 
     FOR(duration) {
         TX_START
-        for (i = 0; i < reads; i++) {
 
+#ifdef READ_DURATION
+                double read_ts_start = RCCE_wtime();
+#endif
+
+        for (i = 0; i < reads; i++) {
             TX_LOAD(memory + (i % memsize));
         }
+
+#ifdef READ_DURATION
+        duration_reads += RCCE_wtime() - read_ts_start;
+#endif
+
         TX_COMMIT
     }
 }
@@ -184,12 +206,25 @@ void run_seq(int* memory) {
 void run_rand(int* memory) {
 
     int i;
+#ifdef READ_DURATION
+    double read_ts_start;
+#endif
 
     FOR(duration) {
         TX_START
+
+#ifdef READ_DURATION
+                double read_ts_start = RCCE_wtime();
+#endif
+
         for (i = 0; i < reads; i++) {
             TX_LOAD(memory + rand_range(memsize));
         }
+
+#ifdef READ_DURATION
+        duration_reads += RCCE_wtime() - read_ts_start;
+#endif
+
         TX_COMMIT
     }
 }
@@ -197,15 +232,28 @@ void run_rand(int* memory) {
 void run_uniq(int* memory) {
 
     int i;
+#ifdef READ_DURATION
+    double read_ts_start;
+#endifs
 
     FOR(duration) {
         TX_START
-                int read = ID;
+
+#ifdef READ_DURATION
+                double read_ts_start = RCCE_wtime();
+#endif
+
+        int read = ID;
         for (i = 0; i < reads; i++) {
 
             TX_LOAD(memory + (read % memsize));
             read += ID;
         }
+
+#ifdef READ_DURATION
+        duration_reads += RCCE_wtime() - read_ts_start;
+#endif
+
         TX_COMMIT
     }
 }
