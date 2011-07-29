@@ -84,7 +84,7 @@ static inline void ps_sendb(unsigned short int target, PS_COMMAND_TYPE command, 
 static inline void ps_recvb(unsigned short int from) {
     char data[PS_BUFFER_SIZE];
     iRCCE_irecv(data, PS_BUFFER_SIZE, from, NULL);
-    PS_COMMAND * cmd = (PS_COMMAND *) data;
+    PS_COMMAND * cmd = (PS_COMMAND *) data; //TODO : remove cmd variable
     ps_response = cmd->response;
 }
 
