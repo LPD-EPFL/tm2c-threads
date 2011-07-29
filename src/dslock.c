@@ -230,7 +230,7 @@ static void print_global_stats() {
     printf("TA| Aborts WAW  \t: %lu\t/s\n", stats_aborts_waw);
     printf("--------------------------------------------------------------\n");
 
-    double stats_commits_app = stats_commits / NUM_UES_APP;
+    double stats_commits_app = stats_commits_d / NUM_UES_APP;
 
     stats_aborts /= NUM_UES;
     stats_aborts_raw /= NUM_UES;
