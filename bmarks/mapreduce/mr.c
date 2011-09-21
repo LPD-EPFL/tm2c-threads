@@ -240,7 +240,6 @@ void map_reduce(FILE *fp, int *chunk_index, int *stats) {
     TX_START
             int i;
     for (i = 0; i < 27; i++) {
-        printf("%c : %d\n", 'a' + i, stats_local[i]);
         new_local[i] = (*(int *) TX_LOAD(stats + i)) + stats_local[i];
         TX_STORE(stats + i, &new_local[i], TYPE_INT);
     }
