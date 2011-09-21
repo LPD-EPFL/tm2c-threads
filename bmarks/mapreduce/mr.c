@@ -62,9 +62,11 @@ void map_reduce(FILE *fp, int *chunk_index, int *stats);
 #define STR(s)                  #s
 
 #define DEFAULT_CHUNK_SIZE      10
+#define DEFAULT_FILENAME        "testname"
 
 int chunk_size = DEFAULT_CHUNK_SIZE;
 int stats_local[27] = {};
+static char filename[];
 
 MAIN(int argc, char** argv) {
     TM_INIT
@@ -72,10 +74,8 @@ MAIN(int argc, char** argv) {
             struct option long_options[] = {
         // These options don't set a flag
         {"help", no_argument, NULL, 'h'},
-        {"duration", required_argument, NULL, 'd'},
-        {"reads", required_argument, NULL, 'r'},
-        {"mem-size", required_argument, NULL, 'm'},
-        {"mode", required_argument, NULL, 's'},
+        {"filename", required_argument, NULL, 'f'},
+        {"chunk", required_argument, NULL, 'c'},
         {NULL, 0, NULL, 0}
     };
 
@@ -83,7 +83,7 @@ MAIN(int argc, char** argv) {
     int c;
     while (1) {
         i = 0;
-        c = getopt_long(argc, argv, "ha:d:r:m:s", long_options, &i);
+        c = getopt_long(argc, argv, "ha:f:c", long_options, &i);
 
         if (c == -1)
             break;
@@ -98,34 +98,27 @@ MAIN(int argc, char** argv) {
             case 'h':
                 ONCE
             {
-                printf("readonly -- Read-only TXs benchmarking\n"
+                printf("MapReduce -- A transactional MapReduce example\n"
                         "\n"
                         "Usage:\n"
-                        "  ro [options...]\n"
+                        "  mr [options...]\n"
                         "\n"
                         "Options:\n"
                         "  -h, --help\n"
                         "        Print this message\n"
-                        "  -d, --duration <double>\n"
-                        "        Test duration in seconds (0=infinite, default=" XSTR(DEFAULT_DURATION) ")\n"
-                        "  -r, --reads <int>\n"
-                        "        Number of reads per transaction (default=" XSTR(DEFAULT_READS) ")\n"
-                        "  -m, --mem-size <int>\n"
-                        "        Size of memory accessed (default=" XSTR(DEFAULT_MEM_SIZE) ")\n"
-                        "  -s, --mode<int>\n"
-                        "        Accessing mem sequentially (0), randomly (1), or unique accesses (2) (default=" XSTR(DEFAULT_SEQUENTIAL) ")\n"
+                        "  -f, --filename <string>\n"
+                        "        File to be loaded and processed\n"
+                        "  -c, --chunk <int>\n"
+                        "        Chuck size (default=" XSTR(DEFAULT_CHUNK_SIZE) ")\n"
                         );
                 FLUSH;
             }
                 exit(0);
-            case 'd':
+            case 'f':
+                filename = optarg;
                 break;
-            case 'r':
-                break;
-            case 'm':
-                break;
-            case 's':
-                //sequential = atoi(optarg);
+            case 'c':
+                chunk_size = atoi(optarg);
                 break;
             case '?':
                 ONCE
@@ -144,13 +137,13 @@ MAIN(int argc, char** argv) {
     srand_core();
 
     FILE *fp;
-    fp = fopen("/shared/trigonak/testname", "r");
+    fp = fopen("/shared/trigonak/" filename, "r");
     if (fp == NULL) {
-        PRINT("Could not open file %s\n", "testname");
+        PRINT("Could not open file %s\n", filename);
         EXIT(1);
     }
 
-    PRINT("Opened file %s\n", "testname");
+    PRINT("Opened file %s\n", filename);
 
     int *chunk_index = (int *) RCCE_shmalloc(sizeof (int));
     int *stats = (int *) RCCE_shmalloc(sizeof (int) * 27);
@@ -172,7 +165,9 @@ MAIN(int argc, char** argv) {
     {
         fseek(fp, 0L, SEEK_END);
         printf("MapReduce --\n");
+        printf("Fillename \t: %s", filename);
         printf("Filesize  \t: %d bytes\n", ftell(fp));
+        printf("Chunksize \t: %d bytes", chunk_size);
         FLUSH
     }
 
