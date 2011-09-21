@@ -217,14 +217,15 @@ void map_reduce(FILE *fp, int *chunk_index, int *stats) {
     int ci;
 
     udelay((50000 * (ID + 1)));
-    
+
     duration__ = RCCE_wtime();
 
     TX_START
     //ci = *(int *) TX_LOAD(chunk_index);
     //int ci1 = ci + 1;
     //TX_STORE(chunk_index, &ci1, TYPE_INT);
-    ci = *(TX_LOAD_STORE(chunk_index, +, 1, TYPE_INT));
+    TX_LOAD_STORE(chunk_index, +, 1, TYPE_INT);
+    ci = *chunk_index - 1;
     //TX_COMMIT
     TX_COMMIT_NO_PUB
 
@@ -242,7 +243,8 @@ void map_reduce(FILE *fp, int *chunk_index, int *stats) {
         //ci = *(int *) TX_LOAD(chunk_index);
         //int ci1 = ci + 1;
         //TX_STORE(chunk_index, &ci1, TYPE_INT);
-        ci = *(TX_LOAD_STORE(chunk_index, +, 1, TYPE_INT));
+        TX_LOAD_STORE(chunk_index, +, 1, TYPE_INT);
+        ci = *chunk_index - 1;
         //TX_COMMIT
         TX_COMMIT_NO_PUB
 
@@ -274,30 +276,30 @@ void map_reduce(FILE *fp, int *chunk_index, int *stats) {
  */
 void map_reduce_seq(FILE *fp, int *chunk_index, int *stats) {
 
-/*
-    int ci;
+    /*
+        int ci;
 
-    duration__ = RCCE_wtime();
+        duration__ = RCCE_wtime();
 
-    rewind(fp);
-    char c;
+        rewind(fp);
+        char c;
 
-    while ((c = fgetc(fp)) != EOF) {
-        stats_local[char_offset(c)]++;
-    }
+        while ((c = fgetc(fp)) != EOF) {
+            stats_local[char_offset(c)]++;
+        }
 
-    duration__ = RCCE_wtime() - duration__;
+        duration__ = RCCE_wtime() - duration__;
 
-    PRINTD("Updating the statistics");
+        PRINTD("Updating the statistics");
 
-    int i;
-    for (i = 0; i < 27; i++) {
-        stats[i] += stats_local[i];
-        PRINTF("%c : %d\n", 'a' + i, stats_local[i]);
-    }
-    FLUSH
-*/
-    
+        int i;
+        for (i = 0; i < 27; i++) {
+            stats[i] += stats_local[i];
+            PRINTF("%c : %d\n", 'a' + i, stats_local[i]);
+        }
+        FLUSH
+     */
+
     int ci;
 
     duration__ = RCCE_wtime();
@@ -319,7 +321,7 @@ void map_reduce_seq(FILE *fp, int *chunk_index, int *stats) {
     duration__ = RCCE_wtime() - duration__;
 
     PRINTD("Updating the statistics");
-    
+
     int i;
     for (i = 0; i < 27; i++) {
         PRINTD("[%c : %d | %d]", 'a' + i, stat, stats[i]);
@@ -331,5 +333,5 @@ void map_reduce_seq(FILE *fp, int *chunk_index, int *stats) {
         PRINTF("%c : %d\n", 'a' + i, stats_local[i]);
     }
     FLUSH
-    
+
 }
