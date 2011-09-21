@@ -266,7 +266,8 @@ void map_reduce(FILE *fp, int *chunk_index, int *stats) {
 */
         TX_LOAD_STORE(stats + i, +, stats_local[i], TYPE_INT);
     }
-    TX_COMMIT
+    //TX_COMMIT
+    TX_COMMIT_NO_PUB
 
 
     for (i = 0; i < 27; i++) {
