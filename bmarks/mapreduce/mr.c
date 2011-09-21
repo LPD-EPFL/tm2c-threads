@@ -191,13 +191,13 @@ MAIN(int argc, char** argv) {
     TX_COMMIT
 
 
-            char c;
-    while (!fseek(fp, ci * chunk_size, SEEK_SET) && c != EOF) {
+    char ch;
+    while (!fseek(fp, ci * chunk_size, SEEK_SET) && ch != EOF) {
         PRINT("Handling chuck %d", ci);
 
         int index = 0;
-        while (index++ < chunk_size && (c = fgetc(fp)) != EOF) {
-            stats_local[char_offset(c)]++;
+        while (index++ < chunk_size && (ch = fgetc(fp)) != EOF) {
+            stats_local[char_offset(ch)]++;
         }
 
         TX_START
@@ -213,7 +213,7 @@ MAIN(int argc, char** argv) {
 
     PRINT("Updating the statistics");
     char new_local[27];
-    int i;
+    //int i;
     
     TX_START
     for (i = 0; i < 27; i++) {
