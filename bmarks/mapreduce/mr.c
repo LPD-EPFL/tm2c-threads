@@ -137,13 +137,16 @@ MAIN(int argc, char** argv) {
     srand_core();
 
     FILE *fp;
-    fp = fopen("/shared/trigonak/" filename, "r");
+    char fn[100];
+    strcpy(fn, "/shared/trigonak/");
+    strcat(fn, filename)
+    fp = fopen(fn, "r");
     if (fp == NULL) {
-        PRINT("Could not open file %s\n", filename);
+        PRINT("Could not open file %s\n", fn);
         EXIT(1);
     }
 
-    PRINT("Opened file %s\n", filename);
+    PRINT("Opened file %s\n", fn);
 
     int *chunk_index = (int *) RCCE_shmalloc(sizeof (int));
     int *stats = (int *) RCCE_shmalloc(sizeof (int) * 27);
