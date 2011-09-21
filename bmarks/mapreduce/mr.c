@@ -56,6 +56,7 @@ inline int char_offset(char c) {
 }
 
 void map_reduce(FILE *fp, int *chunk_index, int *stats);
+void map_reduce_seq(FILE *fp, int *chunk_index, int *stats);
 
 
 #define XSTR(s)                 STR(s)
@@ -76,6 +77,7 @@ MAIN(int argc, char** argv) {
         {"help", no_argument, NULL, 'h'},
         {"filename", required_argument, NULL, 'f'},
         {"chunk", required_argument, NULL, 'c'},
+        {"seq", no_argument, NULL, 's'},
         {NULL, 0, NULL, 0}
     };
 
@@ -83,7 +85,7 @@ MAIN(int argc, char** argv) {
     int c;
     while (1) {
         i = 0;
-        c = getopt_long(argc, argv, "ha:f:c", long_options, &i);
+        c = getopt_long(argc, argv, "ha:f:c:s", long_options, &i);
 
         if (c == -1)
             break;
@@ -110,6 +112,9 @@ MAIN(int argc, char** argv) {
                         "        File to be loaded and processed\n"
                         "  -c, --chunk <int>\n"
                         "        Chuck size (default=" XSTR(DEFAULT_CHUNK_SIZE) ")\n"
+                        "  -s, --seq <int>\n"
+                        "        Sequential execution\n"
+
                         );
                 FLUSH;
             }
@@ -250,6 +255,33 @@ void map_reduce(FILE *fp, int *chunk_index, int *stats) {
 
 
     for (i = 0; i < 27; i++) {
+        PRINTF("%c : %d\n", 'a' + i, stats_local[i]);
+    }
+    FLUSH
+}
+
+/*
+ */
+void map_reduce_seq(FILE *fp, int *chunk_index, int *stats) {
+
+    int ci;
+
+    duration__ = RCCE_wtime();
+
+    rewind(fp);
+    char c;
+
+    while ((c = fgetc(fp)) != EOF) {
+        stats_local[char_offset(c)]++;
+    }
+
+    duration__ = RCCE_wtime() - duration__;
+
+    PRINTD("Updating the statistics");
+
+    int i;
+    for (i = 0; i < 27; i++) {
+        stats[i] += stats_local[i];
         PRINTF("%c : %d\n", 'a' + i, stats_local[i]);
     }
     FLUSH
