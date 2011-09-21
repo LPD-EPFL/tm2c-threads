@@ -68,6 +68,7 @@ void map_reduce_seq(FILE *fp, int *chunk_index, int *stats);
 int chunk_size = DEFAULT_CHUNK_SIZE;
 int stats_local[27] = {};
 char *filename = DEFAULT_FILENAME;
+int sequential = 0;
 
 MAIN(int argc, char** argv) {
     TM_INIT
@@ -125,6 +126,9 @@ MAIN(int argc, char** argv) {
             case 'c':
                 chunk_size = atoi(optarg);
                 break;
+            case 's':
+                sequential = 1;
+                break;
             case '?':
                 ONCE
             {
@@ -167,10 +171,7 @@ MAIN(int argc, char** argv) {
             stats[i] = 0;
         }
         *chunk_index = 0;
-    }
 
-    ONCE
-    {
         fseek(fp, 0L, SEEK_END);
         printf("MapReduce --\n");
         printf("Fillename \t: %s\n", filename);
@@ -181,7 +182,12 @@ MAIN(int argc, char** argv) {
 
     BARRIER
 
-    map_reduce(fp, chunk_index, stats);
+    if (sequential) {
+        map_reduce_seq(fp, chunk_index, stats);
+    }
+    else {
+        map_reduce(fp, chunk_index, stats);
+    }
 
     fclose(fp);
     BARRIER
