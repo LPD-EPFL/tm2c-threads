@@ -152,7 +152,7 @@ MAIN(int argc, char** argv) {
 
     PRINT("Opened file %s\n", "testname");
 
-    int *chunk_index = (int *) RCCE_shmalloc(sizeof (int) * 27);
+    int *chunk_index = (int *) RCCE_shmalloc(sizeof (int) * 28);
     int *stats = chunk_index + 1;
     if (chunk_index == NULL) {
         PRINT("RCCE_shmalloc memory @ main");
@@ -161,7 +161,7 @@ MAIN(int argc, char** argv) {
     ONCE
     {
         int i;
-        for (i = 0; i < 27; i++) {
+        for (i = 0; i < 28; i++) {
             chunk_index[i] = 0;
         }
     }
