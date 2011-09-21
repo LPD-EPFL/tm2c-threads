@@ -201,10 +201,11 @@ void map_reduce(FILE *fp, int *chunk_index, int *stats) {
     //TX_LOAD_STORE(chunk_index, +, 1, TYPE_INT);
     TX_COMMIT
 
-    PRINT("Handling chuck %d", ci);
 
     char c;
     while (!fseek(fp, ci * chunk_size, SEEK_SET) && c != EOF) {
+        PRINT("Handling chuck %d", ci);
+
         int index = 0;
         while (index++ < chunk_size && (c = fgetc(fp)) != EOF) {
             stats_local[char_offset(c)]++;
@@ -216,8 +217,7 @@ void map_reduce(FILE *fp, int *chunk_index, int *stats) {
         TX_STORE(chunk_index, &ci1, TYPE_INT);
         //        TX_LOAD_STORE(chunk_index, +, 1, TYPE_INT);
         TX_COMMIT
-        
-        PRINT("Handling chuck %d", ci);
+
     }
 
     PRINT("Updating the statistics");
@@ -225,8 +225,10 @@ void map_reduce(FILE *fp, int *chunk_index, int *stats) {
     TX_START
             int i;
     for (i = 0; i < 27; i++) {
+        printf("%c : %d\n", 'a' + i, stats_local[i]);
         new_local[i] = (*(int *) TX_LOAD(stats + i)) + stats_local[i];
         TX_STORE(stats + i, &new_local[i], TYPE_INT);
     }
+    FLUSH
     TX_COMMIT
 }
