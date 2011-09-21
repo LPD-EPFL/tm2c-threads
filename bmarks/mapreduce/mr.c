@@ -216,7 +216,7 @@ void map_reduce(FILE *fp, int *chunk_index, int *stats) {
 
     int ci;
 
-    udelay(rand_range(5000 * (ID + 1)));
+    udelay((5000 * (ID + 1)));
     
     duration__ = RCCE_wtime();
 
