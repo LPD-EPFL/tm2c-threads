@@ -194,6 +194,8 @@ void map_reduce(FILE *fp, int *chunk_index, int *stats) {
 
     int ci;
 
+    duration__ = RCCE_wtime();
+    
     TX_START
     ci = *(int *) TX_LOAD(chunk_index);
     int ci1 = ci + 1;
@@ -219,6 +221,8 @@ void map_reduce(FILE *fp, int *chunk_index, int *stats) {
         TX_COMMIT
 
     }
+    
+    duration__ = RCCE_wtime() - duration__;
 
     PRINT("Updating the statistics");
     char new_local[27] = {};
