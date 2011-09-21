@@ -139,7 +139,7 @@ MAIN(int argc, char** argv) {
     FILE *fp;
     char fn[100];
     strcpy(fn, "/shared/trigonak/");
-    strcat(fn, filename)
+    strcat(fn, filename);
     fp = fopen(fn, "r");
     if (fp == NULL) {
         PRINT("Could not open file %s\n", fn);
