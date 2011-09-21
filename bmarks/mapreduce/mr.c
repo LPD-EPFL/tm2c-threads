@@ -301,7 +301,7 @@ void map_reduce_seq(FILE *fp, int *chunk_index, int *stats) {
 
     duration__ = RCCE_wtime();
 
-    ci = chunk_index++;
+    ci = (*chunk_index)++;
 
     char c;
     while (!fseek(fp, ci * chunk_size, SEEK_SET) && c != EOF) {
@@ -312,7 +312,7 @@ void map_reduce_seq(FILE *fp, int *chunk_index, int *stats) {
             stats_local[char_offset(c)]++;
         }
 
-        ci = chunk_index++;
+        ci = (*chunk_index)++;
     }
 
     duration__ = RCCE_wtime() - duration__;
