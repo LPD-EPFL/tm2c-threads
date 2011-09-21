@@ -61,7 +61,7 @@ void map_reduce(FILE *fp, int *chunk_index, int *stats);
 #define XSTR(s)                 STR(s)
 #define STR(s)                  #s
 
-#define DEFAULT_CHUNK_SIZE      1024
+#define DEFAULT_CHUNK_SIZE      10
 
 int chunk_size = DEFAULT_CHUNK_SIZE;
 int stats_local[27] = {};
