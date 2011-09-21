@@ -216,13 +216,13 @@ void map_reduce(FILE *fp, int *chunk_index, int *stats) {
 
     int ci;
 
-    udelay((5000 * (ID + 1)));
+    udelay((50000 * (ID + 1)));
     
     duration__ = RCCE_wtime();
 
     TX_START
-    ci = *(int *) TX_LOAD(chunk_index);
-    int ci1 = ci + 1;
+    //ci = *(int *) TX_LOAD(chunk_index);
+    //int ci1 = ci + 1;
     //TX_STORE(chunk_index, &ci1, TYPE_INT);
     TX_LOAD_STORE(chunk_index, +, 1, TYPE_INT);
     //TX_COMMIT
@@ -239,11 +239,12 @@ void map_reduce(FILE *fp, int *chunk_index, int *stats) {
         }
 
         TX_START
-        ci = *(int *) TX_LOAD(chunk_index);
-        int ci1 = ci + 1;
-        TX_STORE(chunk_index, &ci1, TYPE_INT);
-        //        TX_LOAD_STORE(chunk_index, +, 1, TYPE_INT);
-        TX_COMMIT
+        //ci = *(int *) TX_LOAD(chunk_index);
+        //int ci1 = ci + 1;
+        //TX_STORE(chunk_index, &ci1, TYPE_INT);
+        TX_LOAD_STORE(chunk_index, +, 1, TYPE_INT);
+        //TX_COMMIT
+        TX_COMMIT_NO_PUB
 
     }
 
