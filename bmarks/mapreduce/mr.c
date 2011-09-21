@@ -176,7 +176,7 @@ MAIN(int argc, char** argv) {
 
     BARRIER
 
-
+    map_reduce(fp, chunk_index, stats);
 
     fclose(fp);
     BARRIER
