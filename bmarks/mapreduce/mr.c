@@ -213,13 +213,12 @@ MAIN(int argc, char** argv) {
 
     PRINT("Updating the statistics");
     char new_local[27];
-    //int i;
     
     TX_START
     for (i = 0; i < 27; i++) {
         int stat = (*(int *) TX_LOAD(stats + i));
-        PRINT("[%c : %d | %d]", 'a' + i, stat, stats[i]);
         new_local[i] = stat + stats_local[i];
+        PRINT("[%c : %d | %d | %d]", 'a' + i, stat, stats[i], new_local[i]);
         TX_STORE(stats + i, &new_local[i], TYPE_INT);
     }
     TX_COMMIT
