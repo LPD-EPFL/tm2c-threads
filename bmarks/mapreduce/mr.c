@@ -42,8 +42,8 @@ inline void srand_core() {
  * non letters. Example: input: b, output: 1
  */
 inline int char_offset(char c) {
-    unsigned a = c - 'a';
-    unsigned A = c - 'A';
+    int a = c - 'a';
+    int A = c - 'A';
     if (a < 26 && a >= 0) {
         return a;
     }
@@ -171,9 +171,6 @@ MAIN(int argc, char** argv) {
         fseek(fp, 0L, SEEK_END);
         printf("MapReduce --\n");
         printf("Filesize  \t: %d bytes\n", ftell(fp));
-        printf("Reads     \t: %d\n", reads);
-        printf("Mem size  \t: %d ints\n", memsize);
-        printf("Mode      \t: %d s\n", sequential);
         FLUSH
     }
 
