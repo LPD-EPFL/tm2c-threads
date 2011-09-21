@@ -225,7 +225,7 @@ void map_reduce(FILE *fp, int *chunk_index, int *stats) {
     //int ci1 = ci + 1;
     //TX_STORE(chunk_index, &ci1, TYPE_INT);
     TX_LOAD_STORE(chunk_index, +, 1, TYPE_INT);
-    ci = *chunk_index - 1;
+    ci = *chunk_index;
     //TX_COMMIT
     TX_COMMIT_NO_PUB
 
@@ -244,7 +244,7 @@ void map_reduce(FILE *fp, int *chunk_index, int *stats) {
         //int ci1 = ci + 1;
         //TX_STORE(chunk_index, &ci1, TYPE_INT);
         TX_LOAD_STORE(chunk_index, +, 1, TYPE_INT);
-        ci = *chunk_index - 1;
+        ci = *chunk_index;
         //TX_COMMIT
         TX_COMMIT_NO_PUB
 
