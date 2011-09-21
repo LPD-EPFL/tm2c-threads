@@ -217,7 +217,7 @@ void map_reduce(FILE *fp, int *chunk_index, int *stats) {
 
             char c;
     while (!fseek(fp, ci * chunk_size, SEEK_SET) && c != EOF) {
-        PRINT("Handling chuck %d", ci);
+        PRINTD("Handling chuck %d", ci);
 
         int index = 0;
         while (index++ < chunk_size && (c = fgetc(fp)) != EOF) {
@@ -235,7 +235,7 @@ void map_reduce(FILE *fp, int *chunk_index, int *stats) {
 
     duration__ = RCCE_wtime() - duration__;
 
-    PRINT("Updating the statistics");
+    PRINTD("Updating the statistics");
     int new_local[27];
     int i;
 
