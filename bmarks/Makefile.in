@@ -10,10 +10,12 @@ TMH := $(iRCCEINCLUDE)/../src/pubSubTM.c $(iRCCEINCLUDE)/../src/rwhash.c $(iRCCE
 
 MB_LL := microbench/linkedlist
 MB_HT := microbench/hashtable
+MR := mapreduce
 
 BANKOBJS  := bank.o   $(ARCHIVE)
 BANKSOBJS  := bankseq.o   $(ARCHIVE)
 MTESTOBJS  := mtest.o   $(ARCHIVE)
+MROBJS := $(MR)/mr.o $(ARCHIVE)	
 MBLLOBJS := $(MB_LL)/linkedlist.o $(MB_LL)/test.o $(ARCHIVE)	
 MBHTOBJS := $(MB_LL)/linkedlist.o $(MB_HT)/test.o $(MB_HT)/intset.o $(MB_HT)/hashtable.o $(ARCHIVE)
 ROOBJS  := readonly.o   $(ARCHIVE)
@@ -25,6 +27,7 @@ default:
 	@echo "       make mbll "
 	@echo "       make mbht "
 	@echo "       make ro "
+	@echo "       make mr "
 	@echo "       make all "
 
 all: bank mbll mbht ro
@@ -47,11 +50,17 @@ mtest: $(MTESTOBJS)
 mtest.o: mtest.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h $(TMH)
 	$(CCOMPILE) -c $(CFLAGS) mtest.c
 
+$(MR)/mr.o: $(MR)/mr.c $(TMH)
+	$(CCOMPILE) -c $(CFLAGS) -o $(MR)/mr.o $(MR)/mr.c
+
 $(MB_LL)/linkedlist.o: $(MB_LL)/test.c $(MB_LL)/linkedlist.h $(MB_LL)/linkedlist.c $(MB_LL)/harris.h
 	$(CCOMPILE) -c $(CFLAGS) -o $(MB_LL)/linkedlist.o $(MB_LL)/linkedlist.c
 
 $(MB_LL)/test.o: $(MB_LL)/test.c $(MB_LL)/linkedlist.h $(MB_LL)/linkedlist.c $(MB_LL)/harris.h
 	$(CCOMPILE) -c $(CFLAGS) -o $(MB_LL)/test.o $(MB_LL)/test.c
+
+mr:  $(MROBJS) $(TMH)
+	$(CCOMPILE) -o mr $(CFLAGS) $(MROBJS)
 
 mbll:  $(MBLLOBJS) $(TMH)
 	$(CCOMPILE) -o mbll $(CFLAGS) $(MBLLOBJS)
