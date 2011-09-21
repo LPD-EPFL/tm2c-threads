@@ -178,7 +178,58 @@ MAIN(int argc, char** argv) {
 
     BARRIER
 
-    map_reduce(fp, chunk_index, stats);
+    //map_reduce(fp, chunk_index, stats);
+    int ci;
+
+    duration__ = RCCE_wtime();
+
+    TX_START
+    ci = *(int *) TX_LOAD(chunk_index);
+    int ci1 = ci + 1;
+    TX_STORE(chunk_index, &ci1, TYPE_INT);
+    //TX_LOAD_STORE(chunk_index, +, 1, TYPE_INT);
+    TX_COMMIT
+
+
+            char c;
+    while (!fseek(fp, ci * chunk_size, SEEK_SET) && c != EOF) {
+        PRINT("Handling chuck %d", ci);
+
+        int index = 0;
+        while (index++ < chunk_size && (c = fgetc(fp)) != EOF) {
+            stats_local[char_offset(c)]++;
+        }
+
+        TX_START
+        ci = *(int *) TX_LOAD(chunk_index);
+        int ci1 = ci + 1;
+        TX_STORE(chunk_index, &ci1, TYPE_INT);
+        //        TX_LOAD_STORE(chunk_index, +, 1, TYPE_INT);
+        TX_COMMIT
+
+    }
+
+    duration__ = RCCE_wtime() - duration__;
+
+    PRINT("Updating the statistics");
+    char new_local[27];
+    int i;
+    
+    TX_START
+    for (i = 0; i < 27; i++) {
+        int stat = (*(int *) TX_LOAD(stats + i));
+        PRINT("[%c : %d | %d]", 'a' + i, stat, stats[i]);
+        new_local[i] = stat + stats_local[i];
+        TX_STORE(stats + i, &new_local[i], TYPE_INT);
+    }
+    TX_COMMIT
+            
+            
+    for (i = 0; i < 27; i++) {
+        printf("%c : %d\n", 'a' + i, stats_local[i]);
+    }
+    FLUSH
+    
 
     fclose(fp);
     BARRIER
