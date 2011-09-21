@@ -258,10 +258,13 @@ void map_reduce(FILE *fp, int *chunk_index, int *stats) {
 
     TX_START
     for (i = 0; i < 27; i++) {
+/*
         int stat = (*(int *) TX_LOAD(stats + i));
         PRINTD("[%c : %d | %d]", 'a' + i, stat, stats[i]);
         new_local[i] = stat + stats_local[i];
         TX_STORE(stats + i, &new_local[i], TYPE_INT);
+*/
+        TX_LOAD_STORE(stats + i, +, stats_local[i], TYPE_INT);
     }
     TX_COMMIT
 
