@@ -119,16 +119,13 @@ MAIN(int argc, char** argv) {
             }
                 exit(0);
             case 'd':
-                duration = atof(optarg);
                 break;
             case 'r':
-                reads = atoi(optarg);
                 break;
             case 'm':
-                memsize = atoi(optarg);
                 break;
             case 's':
-                sequential = atoi(optarg);
+                //sequential = atoi(optarg);
                 break;
             case '?':
                 ONCE
@@ -182,16 +179,6 @@ MAIN(int argc, char** argv) {
 
     BARRIER
 
-
-
-    BARRIER
-
-    ONCE
-    {
-#ifdef READ_DURATION
-        PRINT("usec/read: %f", duration_reads / (stm_tx_node->tx_commited * reads));
-#endif
-    }
 
 
     fclose(fp);
