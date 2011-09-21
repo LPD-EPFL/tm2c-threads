@@ -212,7 +212,7 @@ MAIN(int argc, char** argv) {
     duration__ = RCCE_wtime() - duration__;
 
     PRINT("Updating the statistics");
-    char new_local[27];
+    int new_local[27];
     
     TX_START
     for (i = 0; i < 27; i++) {
