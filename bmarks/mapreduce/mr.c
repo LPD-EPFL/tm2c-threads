@@ -190,7 +190,7 @@ MAIN(int argc, char** argv) {
 
 /*
  */
-void map_reduce(FILE *fp, int *chunk_index, int stats) {
+void map_reduce(FILE *fp, int *chunk_index, int *stats) {
 
     int ci;
 
