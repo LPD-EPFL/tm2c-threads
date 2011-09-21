@@ -180,6 +180,17 @@ MAIN(int argc, char** argv) {
 
     fclose(fp);
     BARRIER
+
+    ONCE
+    {
+        printf("TOTAL stats - - - - - - - - - - - - - - - -\n");
+        int i;
+        for (i = 0; i < 26; i++) {
+            printf("%c :\t %d\n", 'a' + i, stats[i]);
+        }
+        printf("Other :\t %d\n", stats[i]);
+    }
+
     TM_END
     EXIT(0);
 }
@@ -195,7 +206,7 @@ void map_reduce(FILE *fp, int *chunk_index, int *stats) {
     int ci;
 
     duration__ = RCCE_wtime();
-    
+
     TX_START
     ci = *(int *) TX_LOAD(chunk_index);
     int ci1 = ci + 1;
@@ -204,7 +215,7 @@ void map_reduce(FILE *fp, int *chunk_index, int *stats) {
     TX_COMMIT
 
 
-    char c;
+            char c;
     while (!fseek(fp, ci * chunk_size, SEEK_SET) && c != EOF) {
         PRINT("Handling chuck %d", ci);
 
@@ -221,7 +232,7 @@ void map_reduce(FILE *fp, int *chunk_index, int *stats) {
         TX_COMMIT
 
     }
-    
+
     duration__ = RCCE_wtime() - duration__;
 
     PRINT("Updating the statistics");
@@ -233,6 +244,12 @@ void map_reduce(FILE *fp, int *chunk_index, int *stats) {
         new_local[i] = (*(int *) TX_LOAD(stats + i)) + stats_local[i];
         TX_STORE(stats + i, &new_local[i], TYPE_INT);
     }
-    FLUSH
+
     TX_COMMIT
+
+            int i;
+    for (i = 0; i < 27; i++) {
+        printf("%c : %d\n", 'a' + i, stats_local[i]);
+    }
+    FLUSH
 }
