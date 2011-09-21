@@ -66,7 +66,7 @@ void map_reduce(FILE *fp, int *chunk_index, int *stats);
 
 int chunk_size = DEFAULT_CHUNK_SIZE;
 int stats_local[27] = {};
-static char filename[];
+char *filename = DEFAULT_FILENAME;
 
 MAIN(int argc, char** argv) {
     TM_INIT
