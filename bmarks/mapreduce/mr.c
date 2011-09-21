@@ -144,7 +144,7 @@ MAIN(int argc, char** argv) {
     srand_core();
 
     FILE *fp;
-    fp = fopen("testname", "r");
+    fp = fopen("/shared/trigonak/testname", "r");
     if (fp == NULL) {
         PRINT("Could not open file %s\n", "testname");
         EXIT(1);
