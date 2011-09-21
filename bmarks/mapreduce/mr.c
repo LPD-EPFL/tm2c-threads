@@ -277,7 +277,6 @@ void map_reduce(FILE *fp, int *chunk_index, int *stats) {
  */
 void map_reduce_seq(FILE *fp, int *chunk_index, int *stats) {
 
-    /*
         int ci;
 
         duration__ = RCCE_wtime();
@@ -299,8 +298,8 @@ void map_reduce_seq(FILE *fp, int *chunk_index, int *stats) {
             PRINTF("%c : %d\n", 'a' + i, stats_local[i]);
         }
         FLUSH
-     */
 
+/*
     int ci;
 
     duration__ = RCCE_wtime();
@@ -334,5 +333,6 @@ void map_reduce_seq(FILE *fp, int *chunk_index, int *stats) {
         PRINTF("%c : %d\n", 'a' + i, stats_local[i]);
     }
     FLUSH
+*/
 
 }
