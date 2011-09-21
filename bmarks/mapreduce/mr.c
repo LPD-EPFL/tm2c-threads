@@ -55,7 +55,7 @@ inline int char_offset(char c) {
     }
 }
 
-void map_reduce(FILE *fp, int *chunk_index, int stats);
+void map_reduce(FILE *fp, int *chunk_index, int *stats);
 
 
 #define XSTR(s)                 STR(s)
