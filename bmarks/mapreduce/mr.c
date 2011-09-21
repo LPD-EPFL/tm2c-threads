@@ -273,6 +273,7 @@ void map_reduce(FILE *fp, int *chunk_index, int *stats) {
  */
 void map_reduce_seq(FILE *fp, int *chunk_index, int *stats) {
 
+/*
     int ci;
 
     duration__ = RCCE_wtime();
@@ -294,4 +295,40 @@ void map_reduce_seq(FILE *fp, int *chunk_index, int *stats) {
         PRINTF("%c : %d\n", 'a' + i, stats_local[i]);
     }
     FLUSH
+*/
+    
+    int ci;
+
+    duration__ = RCCE_wtime();
+
+    ci = chunk_index++;
+
+    char c;
+    while (!fseek(fp, ci * chunk_size, SEEK_SET) && c != EOF) {
+        PRINTD("Handling chuck %d", ci);
+
+        int index = 0;
+        while (index++ < chunk_size && (c = fgetc(fp)) != EOF) {
+            stats_local[char_offset(c)]++;
+        }
+
+        ci = chunk_index++;
+    }
+
+    duration__ = RCCE_wtime() - duration__;
+
+    PRINTD("Updating the statistics");
+    
+    int i;
+    for (i = 0; i < 27; i++) {
+        PRINTD("[%c : %d | %d]", 'a' + i, stat, stats[i]);
+        stats[i] += stats_local[i];
+    }
+
+
+    for (i = 0; i < 27; i++) {
+        PRINTF("%c : %d\n", 'a' + i, stats_local[i]);
+    }
+    FLUSH
+    
 }
