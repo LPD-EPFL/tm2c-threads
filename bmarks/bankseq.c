@@ -98,7 +98,7 @@ int transfer(account_t *src, account_t *dst, int amount, int use_locks) {
 
         PRINT("releasing bank");
         release_lock_bank();
-        PRINT("released bank")
+        PRINT("released bank");
 
     }
 
