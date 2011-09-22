@@ -115,23 +115,14 @@ int total(bank_t *bank, int use_locks) {
         }
     }
     else {
-        for (i = 0; i < RCCE_num_ues(); i++) {
-            PRINT("lock for %d", i);
-            RCCE_acquire_lock(i);
-        }
-
-        PRINT("got locks");
+        lock_bank();
         
         total = 0;
         for (i = 0; i < bank->size; i++) {
             total += bank->accounts[i].balance;
         }
 
-        for (i = RCCE_num_ues() - 1; i > 0; i--) {
-            PRINT("rls lock for %d", i);
-            RCCE_release_lock(i);
-        }
-        PRINT("rlsed locks");
+        release_lock_bank();
 
 
     }
