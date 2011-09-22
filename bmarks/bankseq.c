@@ -69,6 +69,14 @@ inline int getlocknum(int account_num) {
     return (account_num % RCCE_num_ues());
 }
 
+void lock_bank() {
+    RCCE_acquire_lock(0);
+}
+
+void release_lock_bank() {
+    RCCE_release_lock(0);
+}
+
 int transfer(account_t *src, account_t *dst, int amount, int use_locks) {
     // PRINT("in transfer");
 
@@ -81,24 +89,16 @@ int transfer(account_t *src, account_t *dst, int amount, int use_locks) {
         dst->balance = j;
     }
     else {
-        i = getlocknum(src->number);
-        j = getlocknum(src->number);
-        PRINT("locks for %d, %d", i, j);
-        RCCE_acquire_lock(i);
-        PRINT("got %d", i);
-        if (j != i) {
-            RCCE_acquire_lock(j);
-        }
-        
-        PRINT("got locks");
+        PRINT("locking bank");
+        lock_bank();
+        PRINT("locked bank");
 
         src->balance -= amount;
-        dst->balance -= amount;
+        dst->balance += amount;
 
-        RCCE_release_lock(i);
-        if (i != j) {
-            RCCE_release_lock(j);
-        }
+        PRINT("releasing bank");
+        release_lock_bank();
+        PRINT("released bank")
 
     }
 
@@ -323,7 +323,7 @@ TASKMAIN(int argc, char **argv) {
         {"read-threads", required_argument, NULL, 'R'},
         {"write-all-rate", required_argument, NULL, 'w'},
         {"write-threads", required_argument, NULL, 'W'},
-        {"locks", required_argument, NULL, 'l'},
+        {"locks", no_argument, NULL, 'l'},
         {NULL, 0, NULL, 0}
     };
 
@@ -402,7 +402,7 @@ TASKMAIN(int argc, char **argv) {
                 write_cores = atoi(optarg);
                 break;
             case 'l':
-                use_locks = atoi(optarg);
+                use_locks = 1;
                 break;
             case '?':
                 ONCE
