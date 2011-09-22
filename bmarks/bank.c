@@ -32,6 +32,9 @@
  * stm_get_env() and only call sigsetjmp() if it is not null.
  */
 
+/*use TX_LOAD_STORE*/
+#define LOAD_STORE
+
 #define DEFAULT_DURATION                10
 #define DEFAULT_NB_ACCOUNTS             1024
 #define DEFAULT_NB_THREADS              1
@@ -73,10 +76,12 @@ int transfer(account_t *src, account_t *dst, int amount) {
     /* Allow overdrafts */
     TX_START
 
+#ifdef LOAD_STORE
     //TODO: test and use the TX_LOAD_STORE
-//    TX_LOAD_STORE(&src->balance, -, amount, TYPE_INT);
-//    TX_LOAD_STORE(&dst->balance, +, amount, TYPE_INT);
-
+    TX_LOAD_STORE(&src->balance, -, amount, TYPE_INT);
+    TX_LOAD_STORE(&dst->balance, +, amount, TYPE_INT);
+    TX_COMMIT_NO_PUB
+#else
     i = *(int *) TX_LOAD(&src->balance);
     i -= amount;
     TX_STORE(&src->balance, &i, TYPE_INT); //NEED TX_STOREI
@@ -84,7 +89,7 @@ int transfer(account_t *src, account_t *dst, int amount) {
     j += amount;
     TX_STORE(&dst->balance, &j, TYPE_INT);
     TX_COMMIT
-            // PRINT("in transfer : after commit");
+#endif
     return amount;
 }
 
