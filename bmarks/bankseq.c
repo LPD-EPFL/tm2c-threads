@@ -458,8 +458,12 @@ TASKMAIN(int argc, char **argv) {
     data->nb_write_all = 0;
     data->max_retries = 0;
 
+    BARRIERW
+    
     bank = test(data, duration, nb_accounts);
 
+    BARRIERW
+    
     printf("---Core %d\n", RCCE_ue());
     printf("  #transfer   : %lu\n", data->nb_transfer);
     printf("  #read-all   : %lu\n", data->nb_read_all);
