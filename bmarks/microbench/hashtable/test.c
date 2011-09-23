@@ -119,6 +119,8 @@ void *test(void *data, double duration) {
     mnext = (r < d->move);
     cnext = (r >= d->update + d->snapshot);
 
+    PRINT("before FOR...");
+    
     FOR(duration) {
 
         if (unext) { // update
@@ -618,8 +620,6 @@ TASKMAIN(int argc, char **argv) {
     data->nb_found = 0;
     data->set = set;
     data->seed = seed;
-
-    PRINT("before test . ..");
 
     test(data, duration);
 
