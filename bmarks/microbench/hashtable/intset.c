@@ -68,12 +68,20 @@ int ht_move_naive(ht_intset_t *set, int val1, int val2, int transactional) {
 
 #ifdef SEQUENTIAL
 
+#ifdef LOCKS
+    global_lock();
+#endif
+
     int addr1, addr2;
 
     addr1 = val1 % maxhtlength;
     addr2 = val2 % maxhtlength;
     result = (set_remove(set->buckets[addr1], val1, transactional) &&
             set_add(set->buckets[addr2], val2, transactional));
+
+#ifdef LOCKS
+    global_lock_release();
+#endif
 
 #elif defined STM
 
@@ -138,6 +146,10 @@ int ht_move(ht_intset_t *set, int val1, int val2, int transactional) {
 
     int addr1, addr2;
 
+#ifdef LOCKS
+    global_lock();
+#endif
+
     addr1 = val1 % maxhtlength;
     addr2 = val2 % maxhtlength;
     //result =  (set_remove(set->buckets[addr1], val1, transactional) && 
@@ -146,6 +158,11 @@ int ht_move(ht_intset_t *set, int val1, int val2, int transactional) {
     if (set_remove(set->buckets[addr1], val1, 0))
         result = 1;
     set_add(set->buckets[addr2], val2, 0);
+
+#ifdef LOCKS
+    global_lock_release();
+#endif
+
     return result;
 
 #elif defined STM
@@ -187,7 +204,7 @@ int ht_move(ht_intset_t *set, int val1, int val2, int transactional) {
             /* Even if the key is already in, the operation succeeds */
             result = 1;
 
-            /* Physically removing */    
+            /* Physically removing */
             nxt_t *nxt1 = (nxt_t *) TX_LOAD(&next1->next);
             TX_STORE(&prev1->next, nxt1, TYPE_UINT);
             nxt_t nxt2 = OF(new_node(val2, OF(next), transactional));
@@ -215,10 +232,19 @@ int ht_move_orrollback(ht_intset_t *set, int val1, int val2, int transactional) 
 
     int addr1, addr2;
 
+
+#ifdef LOCKS
+    global_lock();
+#endif 
+
     addr1 = val1 % maxhtlength;
     addr2 = val2 % maxhtlength;
     result = (set_remove(set->buckets[addr1], val1, transactional) &&
             set_add(set->buckets[addr2], val2, transactional));
+
+#ifdef LOCKS
+    global_lock_release();
+#endif
 
 #elif defined STM
 
@@ -291,6 +317,11 @@ int ht_snapshot(ht_intset_t *set, int transactional) {
 
 #ifdef SEQUENTIAL
 
+
+#ifdef LOCKS
+    global_lock();
+#endif
+
     int i, sum = 0;
     node_t *next;
 
@@ -304,6 +335,10 @@ int ht_snapshot(ht_intset_t *set, int transactional) {
         }
     }
     result = 1;
+
+#ifdef LOCKS
+    global_lock_release();
+#endif
 
 #elif defined STM
 
