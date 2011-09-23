@@ -24,7 +24,7 @@
  * SETTINGS
  * _____________________________________________________________________________
  */
-#define SEQUENTIAL_
+#define SEQUENTIAL
 #define STM
 #define EARLY_RELEASE_
 #define READ_VALIDATION_
@@ -92,3 +92,11 @@ int set_add(intset_t *set, val_t val, int transactional);
 int set_remove(intset_t *set, val_t val, int transactional);
 
 void set_print(intset_t *set);
+
+inline void global_lock() {
+    RCCE_acquire_lock(0);
+}
+
+inline void global_lock_release() {
+    RCCE_release_lock(0);
+}
