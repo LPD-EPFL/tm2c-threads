@@ -619,6 +619,7 @@ TASKMAIN(int argc, char **argv) {
     data->set = set;
     data->seed = seed;
 
+    PRINT("before test . ..");
 
     test(data, duration);
 
