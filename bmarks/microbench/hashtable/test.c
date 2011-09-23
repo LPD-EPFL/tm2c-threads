@@ -498,6 +498,16 @@ TASKMAIN(int argc, char **argv) {
     ONCE
     {
         printf("Set type     : hash table\n");
+#ifdef SEQUENTIAL
+        printf("                sequential\n");
+#elif defined(EARLY_RELEASE )
+        printf("                using early-release\n");
+#elif defined(READ_VALIDATION)
+        printf("                using read-validation\n");
+#endif
+#ifdef LOCKS
+        printf("                  with locks\n");
+#endif
         printf("Duration     : %f\n", duration);
         printf("Initial size : %d\n", initial);
         printf("Nb threads   : %d\n", nb_app_cores);
