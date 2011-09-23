@@ -331,6 +331,9 @@ TASKMAIN(int argc, char **argv) {
 #elif defined(READ_VALIDATION)
         printf("                using read-validation\n");
 #endif
+#ifdef LOCKS
+        printf("                  with locks\n");
+#endif
         printf("Duration     : %f\n", duration);
         printf("Initial size : %d\n", initial);
         printf("Nb cores     : %d\n", nb_app_cores);
