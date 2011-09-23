@@ -93,10 +93,14 @@ int set_contains(intset_t *set, val_t val, int transactional) {
     printf("++> set_contains(%d)\n", (int) val);
     FLUSH;
 #endif
-
+    
 #ifdef SEQUENTIAL
     node_t *prev, *next;
 
+#ifdef LOCKS
+    global_lock();
+#endif
+    
     prev = ND(set->head);
     next = ND(prev->next);
     while (next->val < val) {
@@ -104,6 +108,10 @@ int set_contains(intset_t *set, val_t val, int transactional) {
         next = ND(prev->next);
     }
     result = (next->val == val);
+    
+#ifdef LOCKS
+    global_lock_release();
+#endif
 
 #elif defined STM
 
@@ -201,7 +209,13 @@ int set_add(intset_t *set, val_t val, int transactional) {
 
 #ifdef SEQUENTIAL /* Unprotected */
 
+#ifdef LOCKS
+    global_lock();
+#endif
     result = set_seq_add(set, val);
+#ifdef LOCKS
+    global_lock_release();
+#endif
 
 #elif defined STM
 #ifndef READ_VALIDATION
@@ -323,6 +337,10 @@ int set_remove(intset_t *set, val_t val, int transactional) {
 
     node_t *prev, *next;
 
+#ifdef LOCKS
+    global_lock();
+#endif
+    
     prev = ND(set->head);
     next = ND(prev->next);
     while (next->val < val) {
@@ -334,6 +352,10 @@ int set_remove(intset_t *set, val_t val, int transactional) {
         prev->next = next->next;
         RCCE_shfree((t_vcharp) next);
     }
+    
+#ifdef LOCKS
+    global_lock_release();
+#endif
 
 #elif defined STM
 #ifndef READ_VALIDATION
