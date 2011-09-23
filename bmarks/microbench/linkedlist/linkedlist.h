@@ -42,6 +42,7 @@
 #define DEFAULT_ELASTICITY		4
 #define DEFAULT_ALTERNATE		0
 #define DEFAULT_EFFECTIVE		1
+#define DEFAULT_LOCKS                   0
 
 #define XSTR(s)                         STR(s)
 #define STR(s)                          #s
