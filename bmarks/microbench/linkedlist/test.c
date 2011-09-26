@@ -428,7 +428,6 @@ TASKMAIN(int argc, char **argv) {
     data->seed = seed;
 
     BARRIER
-    RCCE_barrier(&RCCE_COMM_WORLD);
     /* Start */
     test(data, duration);
 
@@ -443,7 +442,6 @@ TASKMAIN(int argc, char **argv) {
     FLUSH;
     /* Delete set */
 
-    RCCE_barrier(&RCCE_COMM_WORLD);
     
     BARRIER
 
