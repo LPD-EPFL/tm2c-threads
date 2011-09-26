@@ -597,7 +597,7 @@ TASKMAIN(int argc, char **argv) {
     //shmem_init((RCCE_ue() * 1024 * 1024) - (initial * sizeof(node_t)));
     
 #else
-    shmem_init(1024*1024*400);
+    shmem_init(1024*1024*400*ID);
 #endif
     
 
