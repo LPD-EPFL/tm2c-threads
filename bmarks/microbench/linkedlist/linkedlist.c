@@ -24,6 +24,7 @@ node_t *new_node(val_t val, nxt_t next, int transactional) {
     }
     else {
         node = (node_t *) RCCE_shmalloc(sizeof (node_t));
+        PRINT("Node: %p", node);
     }
     if (node == NULL) {
         perror("malloc");
@@ -358,7 +359,9 @@ int set_remove(intset_t *set, val_t val, int transactional) {
     }
     result = (next->val == val);
     if (result) {
+        PRINT("Node: %p", ND(prev->next));
         prev->next = next->next;
+        PRINT("Node: %p", ND(prev->next));
         //RCCE_shfree((t_vcharp) next);
     }
 
