@@ -28,9 +28,11 @@ intset_t *offset;
 int ht_contains(ht_intset_t *set, int val, int transactional) {
     int addr, result;
 
+/*
 #if defined(SEQUENTIAL) && defined(LOCKS)
     global_lock();
 #endif
+*/
 
     addr = val % maxhtlength;
     if (transactional == 5)
@@ -38,9 +40,11 @@ int ht_contains(ht_intset_t *set, int val, int transactional) {
     else
         result = set_contains(set->buckets[addr], val, transactional);
 
+/*
 #if defined(SEQUENTIAL) && defined(LOCKS)
     global_lock_release();
 #endif
+*/
 
     return result;
 }
@@ -48,9 +52,11 @@ int ht_contains(ht_intset_t *set, int val, int transactional) {
 int ht_add(ht_intset_t *set, int val, int transactional) {
     int addr, result;
 
+/*
 #if defined(SEQUENTIAL) && defined(LOCKS)
     global_lock();
 #endif
+*/
 
     addr = val % maxhtlength;
     if (transactional == 5)
@@ -58,9 +64,11 @@ int ht_add(ht_intset_t *set, int val, int transactional) {
     else
         result = set_add(set->buckets[addr], val, transactional);
 
+/*
 #if defined(SEQUENTIAL) && defined(LOCKS)
     global_lock_release();
 #endif
+*/
     
     return result;
 
@@ -69,9 +77,11 @@ int ht_add(ht_intset_t *set, int val, int transactional) {
 int ht_remove(ht_intset_t *set, int val, int transactional) {
     int addr, result;
 
+/*
 #if defined(SEQUENTIAL) && defined(LOCKS)
     global_lock();
 #endif
+*/
 
     addr = val % maxhtlength;
     if (transactional == 5)
@@ -79,9 +89,11 @@ int ht_remove(ht_intset_t *set, int val, int transactional) {
     else
         result = set_remove(set->buckets[addr], val, transactional);
 
+/*
 #if defined(SEQUENTIAL) && defined(LOCKS)
     global_lock_release();
 #endif
+*/
     
     return result;
 
