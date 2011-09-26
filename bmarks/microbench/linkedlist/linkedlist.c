@@ -24,7 +24,6 @@ node_t *new_node(val_t val, nxt_t next, int transactional) {
     }
     else {
         node = (node_t *) RCCE_shmalloc(sizeof (node_t));
-        PRINT("Node: %p", node);
     }
     if (node == NULL) {
         perror("malloc");
@@ -188,8 +187,6 @@ static int set_seq_add(intset_t *set, val_t val) {
 #ifdef LOCKS
     global_lock();
 #endif
-    
-    set_print(set);
 
     prev = ND(set->head);
     next = ND(prev->next);
@@ -202,7 +199,6 @@ static int set_seq_add(intset_t *set, val_t val) {
         prev->next = OF(new_node(val, OF(next), 0));
     }
     
-    set_print(set);
 
 #ifdef LOCKS
     global_lock_release();
