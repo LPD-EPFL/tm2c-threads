@@ -186,6 +186,10 @@ static int set_seq_add(intset_t *set, val_t val) {
     int result;
     node_t *prev, *next;
 
+#ifdef LOCKS
+    global_lock();
+#endif
+
     prev = ND(set->head);
     next = ND(prev->next);
     while (next->val < val) {
@@ -198,6 +202,10 @@ static int set_seq_add(intset_t *set, val_t val) {
         PRINT("New node offs: %d", of);
         prev->next = of;
     }
+
+#ifdef LOCKS
+    global_lock_release();
+#endif
     return result;
 }
 
@@ -212,19 +220,11 @@ int set_add(intset_t *set, val_t val, int transactional) {
 #endif
 
     if (!transactional) {
-        PRINT("here.. *******************");
         return set_seq_add(set, val);
     }
 
 #ifdef SEQUENTIAL /* Unprotected */
-
-#ifdef LOCKS
-    global_lock();
-#endif
     result = set_seq_add(set, val);
-#ifdef LOCKS
-    global_lock_release();
-#endif
 
 #elif defined STM
 #ifndef READ_VALIDATION
