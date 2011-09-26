@@ -353,10 +353,8 @@ int set_remove(intset_t *set, val_t val, int transactional) {
     }
     result = (next->val == val);
     if (result) {
-        PRINT("Node: %p", ND(prev->next));
         prev->next = next->next;
-        PRINT("Node: %p", ND(prev->next));
-        //RCCE_shfree((t_vcharp) next);
+        RCCE_shfree((t_vcharp) next);
     }
 
 #ifdef LOCKS
