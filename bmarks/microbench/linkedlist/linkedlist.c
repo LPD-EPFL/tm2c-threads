@@ -188,7 +188,7 @@ static int set_seq_add(intset_t *set, val_t val) {
     global_lock();
 #endif
     
-    print_set(set);
+    set_print(set);
 
     prev = ND(set->head);
     next = ND(prev->next);
@@ -201,7 +201,7 @@ static int set_seq_add(intset_t *set, val_t val) {
         prev->next = OF(new_node(val, OF(next), 0));
     }
     
-    print_set(set);
+    set_print(set);
 
 #ifdef LOCKS
     global_lock_release();
