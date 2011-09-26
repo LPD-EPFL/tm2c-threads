@@ -97,7 +97,7 @@ void set_print(intset_t *set);
 inline void global_lock() {
     PRINTD("askking for global lock");
     RCCE_acquire_lock(0);
-    PRINT("got global lock");
+    PRINTD("got global lock");
 }
 
 inline void global_lock_release() {
