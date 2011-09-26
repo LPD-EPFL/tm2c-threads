@@ -338,6 +338,7 @@ TASKMAIN(int argc, char **argv) {
 #else
     RCCE_init(&argc, &argv);
     iRCCE_init();
+    dup2(STDOUT_FILENO, STDERR_FILENO);
 #endif
 
             struct option long_options[] = {
