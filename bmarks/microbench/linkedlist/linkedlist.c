@@ -95,14 +95,14 @@ int set_contains(intset_t *set, val_t val, int transactional) {
     printf("++> set_contains(%d)\n", (int) val);
     FLUSH;
 #endif
-    
+
 #ifdef SEQUENTIAL
     node_t *prev, *next;
 
 #ifdef LOCKS
     global_lock();
 #endif
-    
+
     prev = ND(set->head);
     next = ND(prev->next);
     while (next->val < val) {
@@ -110,7 +110,7 @@ int set_contains(intset_t *set, val_t val, int transactional) {
         next = ND(prev->next);
     }
     result = (next->val == val);
-    
+
 #ifdef LOCKS
     global_lock_release();
 #endif
@@ -184,6 +184,10 @@ static int set_seq_add(intset_t *set, val_t val) {
     int result;
     node_t *prev, *next;
 
+#ifdef LOCKS
+    global_lock();
+#endif
+
     prev = ND(set->head);
     next = ND(prev->next);
     while (next->val < val) {
@@ -194,6 +198,11 @@ static int set_seq_add(intset_t *set, val_t val) {
     if (result) {
         prev->next = OF(new_node(val, OF(next), 0));
     }
+
+#ifdef LOCKS
+    global_lock_release();
+#endif
+
     return result;
 }
 
@@ -204,20 +213,14 @@ int set_add(intset_t *set, val_t val, int transactional) {
     printf("++> set_add(%d)\n", (int) val);
     FLUSH;
 #endif
-    
+
     if (!transactional) {
         return set_seq_add(set, val);
     }
 
 #ifdef SEQUENTIAL /* Unprotected */
 
-#ifdef LOCKS
-    global_lock();
-#endif
     result = set_seq_add(set, val);
-#ifdef LOCKS
-    global_lock_release();
-#endif
 
 #elif defined STM
 #ifndef READ_VALIDATION
@@ -324,7 +327,7 @@ done:
     TX_COMMIT
 #endif
 #endif
-return result;
+            return result;
 }
 
 int set_remove(intset_t *set, val_t val, int transactional) {
@@ -342,7 +345,7 @@ int set_remove(intset_t *set, val_t val, int transactional) {
 #ifdef LOCKS
     global_lock();
 #endif
-    
+
     prev = ND(set->head);
     next = ND(prev->next);
     while (next->val < val) {
@@ -352,9 +355,9 @@ int set_remove(intset_t *set, val_t val, int transactional) {
     result = (next->val == val);
     if (result) {
         prev->next = next->next;
-        RCCE_shfree((t_vcharp) next);
+        //RCCE_shfree((t_vcharp) next);
     }
-    
+
 #ifdef LOCKS
     global_lock_release();
 #endif
