@@ -194,7 +194,9 @@ static int set_seq_add(intset_t *set, val_t val) {
     }
     result = (next->val != val);
     if (result) {
-        prev->next = OF(new_node(val, OF(next), 0));
+        unsigned of = OF(new_node(val, OF(next), 0));
+        PRINT("New node offs: %d", of);
+        prev->next = of;
     }
     return result;
 }
