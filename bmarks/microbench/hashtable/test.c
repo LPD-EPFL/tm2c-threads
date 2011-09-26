@@ -118,8 +118,6 @@ void *test(void *data, double duration) {
     unext = (r < d->update);
     mnext = (r < d->move);
     cnext = (r >= d->update + d->snapshot);
-
-    PRINT("before FOR...");
     
     FOR(duration) {
 
@@ -363,7 +361,7 @@ TASKMAIN(int argc, char **argv) {
     double duration = DEFAULT_DURATION;
     int initial = DEFAULT_INITIAL;
     
-#if defined(DSL) && defined(STM)
+#if defined(DSL) && defined(STM) && !defined(SEQUENTIAL)
     int nb_app_cores = (RCCE_num_ues() / 2) + ((RCCE_num_ues() % 2) ? 1 : 0);
 #else
     int nb_app_cores = RCCE_num_ues();
