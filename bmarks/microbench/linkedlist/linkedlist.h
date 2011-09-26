@@ -96,29 +96,26 @@ void set_print(intset_t *set);
 
 extern int hold_global_lock;
 
-#define DEBUG 1
 
 inline void global_lock() {
-    PRINTD("asking for global lock");
+    PRINT("asking for global lock");
     if (!hold_global_lock) {
       RCCE_acquire_lock(0);
       hold_global_lock = 1;
     }
-#ifndef DEBUG
     else {
-      PRINTD("had gl already");
+      PRINT("had gl already");
     }
-#endif
-    PRINTD("got global lock");
+    PRINT("got global lock");
 }
 
 inline void global_lock_release() {
   if (hold_global_lock) {
     RCCE_release_lock(0);
     hold_global_lock = 0;
-    PRINTD("released global lock");
+    PRINT("released global lock");
   }
   else {
-      PRINTD("release failed");
+      PRINT("release failed");
   }
 }
