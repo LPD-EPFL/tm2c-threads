@@ -97,25 +97,32 @@ void set_print(intset_t *set);
 extern int hold_global_lock;
 
 
+//inline void global_lock() {
+//    PRINT("asking for global lock");
+//    if (!hold_global_lock) {
+//      RCCE_acquire_lock(0);
+//      hold_global_lock = 1;
+//    }
+//    else {
+//      PRINT("had gl already");
+//    }
+//    PRINT("got global lock");
+//}
+//
+//inline void global_lock_release() {
+//  if (hold_global_lock) {
+//    RCCE_release_lock(0);
+//    hold_global_lock = 0;
+//    PRINT("released global lock");
+//  }
+//  else {
+//      PRINT("release failed");
+//  }
+//}
 inline void global_lock() {
-    PRINT("asking for global lock");
-    if (!hold_global_lock) {
       RCCE_acquire_lock(0);
-      hold_global_lock = 1;
-    }
-    else {
-      PRINT("had gl already");
-    }
-    PRINT("got global lock");
 }
 
 inline void global_lock_release() {
-  if (hold_global_lock) {
     RCCE_release_lock(0);
-    hold_global_lock = 0;
-    PRINT("released global lock");
-  }
-  else {
-      PRINT("release failed");
-  }
 }
