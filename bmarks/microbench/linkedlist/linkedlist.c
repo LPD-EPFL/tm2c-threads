@@ -10,6 +10,8 @@
 
 #include "linkedlist.h"
 
+extern int hold_global_lock = 0;
+
 void *shmem_init(size_t offset) {
     return (void *) (RCCE_shmalloc(offset) + offset);
 }
@@ -204,6 +206,7 @@ int set_add(intset_t *set, val_t val, int transactional) {
 #endif
     
     if (!transactional) {
+        PRINT("here.. *******************");
         return set_seq_add(set, val);
     }
 
