@@ -97,15 +97,16 @@ void set_print(intset_t *set);
 extern int hold_global_lock;
 
 inline void global_lock() {
-    PRINT("askking for global lock");
+    PRINTD("askking for global lock");
     if (!hold_global_lock) {
       RCCE_acquire_lock(0);
       hold_global_lock = 1;
     }
+#ifdef DEBUG
     else {
-      PRINT("had gl already");
+      PRINTD("had gl already");
     }
-
+#endif
     PRINT("got global lock");
 }
 
@@ -114,5 +115,5 @@ inline void global_lock_release() {
     RCCE_release_lock(0);
     hold_global_lock = 0;
   }
-  PRINT("released global lock");
+  PRINTD("released global lock");
 }
