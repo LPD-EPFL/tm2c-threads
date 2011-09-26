@@ -26,7 +26,6 @@
 intset_t *offset;
 
 int ht_contains(ht_intset_t *set, int val, int transactional) {
-    PRINT("contains");
     int addr;
 
     addr = val % maxhtlength;
@@ -37,7 +36,6 @@ int ht_contains(ht_intset_t *set, int val, int transactional) {
 }
 
 int ht_add(ht_intset_t *set, int val, int transactional) {
-    PRINT("add");
     int addr;
 
     addr = val % maxhtlength;
@@ -48,8 +46,6 @@ int ht_add(ht_intset_t *set, int val, int transactional) {
 }
 
 int ht_remove(ht_intset_t *set, int val, int transactional) {
-    PRINT("remove");
-    
     int addr;
 
     addr = val % maxhtlength;
