@@ -96,6 +96,8 @@ void set_print(intset_t *set);
 
 extern int hold_global_lock;
 
+#define DEBUG 1
+
 inline void global_lock() {
     PRINTD("asking for global lock");
     if (!hold_global_lock) {
@@ -113,7 +115,10 @@ inline void global_lock() {
 inline void global_lock_release() {
   if (hold_global_lock) {
     RCCE_release_lock(0);
+    hold_global_lock = 0;
+    PRINTD("released global lock");
   }
-  hold_global_lock = 0;
-  PRINTD("released global lock");
+  else {
+      PRINTD("release failed");
+  }
 }
