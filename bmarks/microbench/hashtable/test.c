@@ -627,6 +627,8 @@ TASKMAIN(int argc, char **argv) {
 
     print_ht(set);
     FLUSH
+    
+    BARRIER
             
     test(data, duration);
 
