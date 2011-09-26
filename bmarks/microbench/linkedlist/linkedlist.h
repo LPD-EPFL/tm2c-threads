@@ -94,13 +94,25 @@ int set_remove(intset_t *set, val_t val, int transactional);
 
 void set_print(intset_t *set);
 
+extern int hold_global_lock;
+
 inline void global_lock() {
     PRINT("askking for global lock");
-    RCCE_acquire_lock(0);
+    if (!hold_global_lock) {
+      RCCE_acquire_lock(0);
+      hold_global_lock = 1;
+    }
+    else {
+      PRINT("had gl already");
+    }
+
     PRINT("got global lock");
 }
 
 inline void global_lock_release() {
+  if (hold_global_lock) {
     RCCE_release_lock(0);
-    PRINT("released global lock");
+    hold_global_lock = 0;
+  }
+  PRINT("released global lock");
 }
