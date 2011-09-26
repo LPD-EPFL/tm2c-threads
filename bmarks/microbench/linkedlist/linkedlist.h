@@ -113,7 +113,7 @@ inline void global_lock() {
 inline void global_lock_release() {
   if (hold_global_lock) {
     RCCE_release_lock(0);
-    hold_global_lock = 0;
   }
+  hold_global_lock = 0;
   PRINT("released global lock");
 }
