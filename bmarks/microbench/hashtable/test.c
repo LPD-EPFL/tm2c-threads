@@ -118,7 +118,7 @@ void *test(void *data, double duration) {
     unext = (r < d->update);
     mnext = (r < d->move);
     cnext = (r >= d->update + d->snapshot);
-    
+
     FOR(duration) {
 
         if (unext) { // update
@@ -341,7 +341,7 @@ TASKMAIN(int argc, char **argv) {
     dup2(STDOUT_FILENO, STDERR_FILENO);
 #endif
 
-            struct option long_options[] = {
+    struct option long_options[] = {
         // These options don't set a flag
         {"help", no_argument, NULL, 'h'},
         {"duration", required_argument, NULL, 'd'},
@@ -361,7 +361,7 @@ TASKMAIN(int argc, char **argv) {
     thread_data_t *data;
     double duration = DEFAULT_DURATION;
     int initial = DEFAULT_INITIAL;
-    
+
 #if defined(DSL) && defined(STM) && !defined(SEQUENTIAL)
     int nb_app_cores = (RCCE_num_ues() / 2) + ((RCCE_num_ues() % 2) ? 1 : 0);
 #else
@@ -517,7 +517,6 @@ TASKMAIN(int argc, char **argv) {
         printf("Load factor  : %d\n", load_factor);
         printf("Move rate    : %d\n", move);
         printf("Snapshot rate: %d\n", snapshot);
-        printf("Elasticity   : %d\n", unit_tx);
         printf("Alternate    : %d\n", alternate);
         printf("Effective    : %d\n", effective);
         FLUSH;
@@ -541,7 +540,7 @@ TASKMAIN(int argc, char **argv) {
         srand_core();
         FLUSH
 #ifdef STM
-        udelay(rand_range(123));
+                udelay(rand_range(123));
 #endif
         srand_core();
         i = 0;
@@ -568,7 +567,7 @@ TASKMAIN(int argc, char **argv) {
     BARRIER
 
 #ifdef STM
-    int off;
+            int off;
     if (ID < 6) {
         off = 0;
     }
@@ -584,7 +583,7 @@ TASKMAIN(int argc, char **argv) {
     else if (ID < 30) {
         off = 2;
     }
-    else if (ID < 36){
+    else if (ID < 36) {
         off = 3;
     }
     else if (ID < 42) {
@@ -594,10 +593,10 @@ TASKMAIN(int argc, char **argv) {
         off = 3;
     }
 
-    shmem_init(((off * 16) * 1024 * 1024) + ((ID/2) * 40 * 1024) - (initial * sizeof (node_t)));
+    shmem_init(((off * 16) * 1024 * 1024) + ((ID / 2) * 40 * 1024) - (initial * sizeof (node_t)));
     //shmem_init((RCCE_ue() * 1024 * 1024) - (initial * sizeof(node_t)));
 #endif
-    
+
     data->first = last;
     data->range = range;
     data->update = update;
@@ -654,8 +653,10 @@ TASKMAIN(int argc, char **argv) {
 
 #ifndef SEQUENTIAL
     TM_END
+
+#else
+            RCCE_finalize();
 #endif
 
-    //RCCE_finalize();
     EXIT(0);
 }
