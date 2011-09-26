@@ -618,6 +618,8 @@ TASKMAIN(int argc, char **argv) {
     data->nb_found = 0;
     data->set = set;
     data->seed = seed;
+    
+    BARRIER
 
     test(data, duration);
 
