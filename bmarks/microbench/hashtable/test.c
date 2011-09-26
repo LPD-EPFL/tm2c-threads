@@ -566,7 +566,7 @@ TASKMAIN(int argc, char **argv) {
 
     BARRIER
 
-#ifdef STM
+#if defined(STM) && !defined(SEQUENTIAL)
             int off;
     if (ID < 6) {
         off = 0;
