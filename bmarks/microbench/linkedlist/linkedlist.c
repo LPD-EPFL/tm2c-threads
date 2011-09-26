@@ -89,20 +89,22 @@ int set_size(intset_t *set) {
  */
 
 int set_contains(intset_t *set, val_t val, int transactional) {
+    printf("++> set_contains(%d)\n", (int) val);
+    FLUSH;
     int result;
 
 #ifdef DEBUG
     printf("++> set_contains(%d)\n", (int) val);
     FLUSH;
 #endif
-    
+
 #ifdef SEQUENTIAL
     node_t *prev, *next;
 
 #ifdef LOCKS
     global_lock();
 #endif
-    
+
     prev = ND(set->head);
     next = ND(prev->next);
     while (next->val < val) {
@@ -110,7 +112,7 @@ int set_contains(intset_t *set, val_t val, int transactional) {
         next = ND(prev->next);
     }
     result = (next->val == val);
-    
+
 #ifdef LOCKS
     global_lock_release();
 #endif
@@ -198,13 +200,15 @@ static int set_seq_add(intset_t *set, val_t val) {
 }
 
 int set_add(intset_t *set, val_t val, int transactional) {
+    printf("++> set_add(%d)\n", (int) val);
+    FLUSH;
     int result = 0;
 
 #ifdef DEBUG
     printf("++> set_add(%d)\n", (int) val);
     FLUSH;
 #endif
-    
+
     if (!transactional) {
         PRINT("here.. *******************");
         return set_seq_add(set, val);
@@ -325,10 +329,12 @@ done:
     TX_COMMIT
 #endif
 #endif
-return result;
+            return result;
 }
 
 int set_remove(intset_t *set, val_t val, int transactional) {
+    printf("++> set_remove(%d)\n", (int) val);
+    FLUSH;
     int result = 0;
 
 #ifdef DEBUG
@@ -343,7 +349,7 @@ int set_remove(intset_t *set, val_t val, int transactional) {
 #ifdef LOCKS
     global_lock();
 #endif
-    
+
     prev = ND(set->head);
     next = ND(prev->next);
     while (next->val < val) {
@@ -355,7 +361,7 @@ int set_remove(intset_t *set, val_t val, int transactional) {
         prev->next = next->next;
         RCCE_shfree((t_vcharp) next);
     }
-    
+
 #ifdef LOCKS
     global_lock_release();
 #endif
