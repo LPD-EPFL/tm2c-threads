@@ -110,6 +110,23 @@ extern "C" {
     stm_tx_node->aborts_waw += stm_tx->aborts_waw;                      \
     stm_tx = tx_metadata_empty(stm_tx); }
 
+#define TX_COMMIT_NO_PUB                                                \
+    PRINTD("|| commiting tx");                                          \
+    write_set_persist(stm_tx->write_set);                               \
+    ps_finish_all();                                                    \
+    mem_info_on_commit(stm_tx->mem_info);                               \
+    stm_tx_node->tx_starts += stm_tx->retries;                          \
+    stm_tx_node->tx_commited++;                                         \
+    stm_tx_node->tx_aborted += stm_tx->aborts;                          \
+    stm_tx_node->max_retries =                                          \
+        (stm_tx->retries < stm_tx_node->max_retries)                    \
+            ? stm_tx_node->max_retries                                  \
+            : stm_tx->retries;                                          \
+    stm_tx_node->aborts_war += stm_tx->aborts_war;                      \
+    stm_tx_node->aborts_raw += stm_tx->aborts_raw;                      \
+    stm_tx_node->aborts_waw += stm_tx->aborts_waw;                      \
+    stm_tx = tx_metadata_empty(stm_tx); }
+
 
 #define TM_END                                                          \
     PRINTD("|| FAKE: TM ends");                                         \
@@ -135,8 +152,8 @@ extern "C" {
 //TODO: the write_set_update will make the system to try to acquire the wlocks in the
     //commit phase of the TX... it should not, cause the wlock is already acquired
 #define TX_LOAD_STORE(addr, op, value, datatype)\
-    {tx_wlock((void *) addr);\
-    int temp__ = (*(int *) addr) op value;\
+    {tx_wlock((void *) (addr));\
+    int temp__ = (*(int *) (addr)) op (value);\
     write_set_update(stm_tx->write_set, TYPE_INT, &temp__, addr);}
 
 
