@@ -353,7 +353,6 @@ TASKMAIN(int argc, char **argv) {
     set = set_new();
 
     BARRIER;
-    RCCE_barrier(&RCCE_COMM_WORLD);
 
     ONCE
     {
