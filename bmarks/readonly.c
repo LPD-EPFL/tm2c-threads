@@ -40,6 +40,7 @@ inline void srand_core() {
 void run_seq(int *);
 void run_rand(int *);
 void run_uniq(int *);
+void run_check_granularity();
 
 #define DEFAULT_DURATION        10
 #define DEFAULT_READS           1000
@@ -162,6 +163,9 @@ MAIN(int argc, char** argv) {
             case 1:
                 run_rand(memory);
                 break;
+            case 2:
+                run_check_granularity();
+                break;
             default:
                 run_uniq(memory);
         }
@@ -258,6 +262,26 @@ void run_uniq(int* memory) {
         duration_reads += RCCE_wtime() - read_ts_start;
 #endif
 
+        TX_COMMIT
+    }
+}
+
+void run_check_granularity() {
+    char *cp = (char *) RCCE_shmalloc(100);
+
+    int i = 10;
+    while (i--) {
+        TX_START
+        if (RCCE_ue() == 1) {
+            *cp = 'c';
+            TX_LOAD(cp);
+            TX_STORE(cp, cp, TYPE_CHAR);
+        }
+        else if (RCCE_ue() == 3) {
+            cp[1] = 'd'
+            TX_LOAD(cp + 1);
+            TX_STORE(cp + 1, cp + 1, TYPE_CHAR);
+        }
         TX_COMMIT
     }
 }
