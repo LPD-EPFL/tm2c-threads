@@ -278,7 +278,7 @@ void run_check_granularity() {
             TX_STORE(cp, cp, TYPE_CHAR);
         }
         else if (RCCE_ue() == 3) {
-            cp[1] = 'd'
+            cp[1] = 'd';
             TX_LOAD(cp + 1);
             TX_STORE(cp + 1, cp + 1, TYPE_CHAR);
         }
