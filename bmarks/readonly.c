@@ -154,8 +154,10 @@ MAIN(int argc, char** argv) {
 
     BARRIER
 
+/*
     ONCE
     {
+*/
         switch (sequential) {
             case 0:
                 run_seq(memory);
@@ -163,13 +165,13 @@ MAIN(int argc, char** argv) {
             case 1:
                 run_rand(memory);
                 break;
-            case 2:
+            case 3:
                 run_check_granularity();
                 break;
             default:
                 run_uniq(memory);
         }
-    }
+    //}
 
     BARRIER
 
