@@ -196,7 +196,9 @@ extern "C" {
             return (void *) &we->i;
         }
         else {
+#ifndef READ_BUF_OFF
             if (!read_set_update(rs, addr)) {
+#endif
                 //the node is NOT already subscribed for the address
                 CONFLICT_TYPE conflict;
 #ifdef BACKOFF
