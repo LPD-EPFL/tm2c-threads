@@ -149,7 +149,7 @@ extern "C" {
     write_set_update(stm_tx->write_set, datatype, ((void *) (ptr)), ((void *) (addr)))
 
 
-//TODO: the write_set_update will make the system to try to acquire the wlocks in the
+    //TODO: the write_set_update will make the system to try to acquire the wlocks in the
     //commit phase of the TX... it should not, cause the wlock is already acquired
 #define TX_LOAD_STORE(addr, op, value, datatype)\
     {tx_wlock((void *) (addr));\
@@ -219,7 +219,9 @@ retry:
                 }
             }
             return addr;
+#ifndef READ_BUF_OFF
         }
+#endif
     }
 
     inline void tx_wlock(void *addr) {
