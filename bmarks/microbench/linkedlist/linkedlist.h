@@ -25,7 +25,7 @@
  * _____________________________________________________________________________
  */
 #define SEQUENTIAL
-#define LOCKS
+#define LOCKS_
 #define STM_
 #define EARLY_RELEASE_
 #define READ_VALIDATION_
