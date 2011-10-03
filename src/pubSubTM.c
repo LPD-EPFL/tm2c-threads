@@ -98,7 +98,7 @@ CONFLICT_TYPE ps_subscribe(void *address) {
 
     unsigned int address_offs;
     unsigned short int responsible_node = DHT_get_responsible_node(address, &address_offs);
-
+    
     nodes_contacted[responsible_node]++;
 
     subscribing_address = address_offs; //TODO: remove??
@@ -188,7 +188,10 @@ void ps_send_stats(stm_tx_node_t* stats, double duration) {
     char data[PS_BUFFER_SIZE];
 
     memcpy(data, psc, sizeof (PS_COMMAND));
-    iRCCE_isend(data, PS_BUFFER_SIZE, 0, NULL);
+    int i;
+    for (i = 0; i < NUM_DSL_UES; i++) {
+        iRCCE_isend(data, PS_BUFFER_SIZE, dsl_nodes[i], NULL);
+    }
 }
 
 /*
