@@ -600,9 +600,9 @@ TASKMAIN(int argc, char **argv) {
         off = 3;
         id2use = ID - 36;
     }
-
-    shmem_init(((off * 16) * 1024 * 1024) + ((ID/2) * 1024 * 1024) - (initial * sizeof (node_t)));
-    PRINT("shmem from %d MB, %d KB", ((off * 16)), (ID * 10));
+    int fo = ((off * 16) * 1024 * 1024) + ((ID/2) * 1024 * 1024) - (initial * sizeof (node_t));
+    shmem_init(fo);
+    PRINT("shmem from %d MB", ((off * 16)));
     //shmem_init((RCCE_ue() * 1024 * 1024) - (initial * sizeof(node_t)));
     
 #else
