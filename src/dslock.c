@@ -133,7 +133,10 @@ static void dsl_communication() {
                     stats_total += ps_remote->commits + ps_remote->aborts;
 
                     if (++stats_received >= NUM_UES_APP) {
-                        print_global_stats();
+                        if (RCCE_ue() == 0) {
+                            print_global_stats();
+                        }
+                        EXIT(0);
                     }
                 default:
                     PRINTD("REMOTE MSG: ??");
@@ -209,17 +212,14 @@ static void print_global_stats() {
     printf("T | Aborts WAR  \t: %lu\n", stats_aborts_war);
     printf("T | Aborts RAW  \t: %lu\n", stats_aborts_raw);
     printf("T | Aborts WAW  \t: %lu\n", stats_aborts_waw);
-    printf("--------------------------------------------------------------\n");
 
-    double stats_aborts_d = ((double) stats_aborts) / stats_duration;
     stats_aborts /= stats_duration;
     stats_aborts_raw /= stats_duration;
     stats_aborts_war /= stats_duration;
     stats_aborts_waw /= stats_duration;
-    double stats_commits_d = ((double) stats_commits) / stats_duration;
     stats_commits /= stats_duration;
-    double stats_total_d = ((double) stats_total) / stats_duration;
     stats_total /= stats_duration;
+    int stats_commits_total = stats_commits;
 
     printf(":: PER SECOND TOTAL AVG --------------------------------------\n");
     printf("TA| Starts      \t: %lu\t/s\n", stats_total);
@@ -228,9 +228,8 @@ static void print_global_stats() {
     printf("TA| Aborts WAR  \t: %lu\t/s\n", stats_aborts_war);
     printf("TA| Aborts RAW  \t: %lu\t/s\n", stats_aborts_raw);
     printf("TA| Aborts WAW  \t: %lu\t/s\n", stats_aborts_waw);
-    printf("--------------------------------------------------------------\n");
 
-    double stats_commits_app = stats_commits_d / NUM_UES_APP;
+    int stats_commits_app = stats_commits / NUM_UES_APP;
 
     stats_aborts /= NUM_UES;
     stats_aborts_raw /= NUM_UES;
@@ -239,7 +238,7 @@ static void print_global_stats() {
     stats_commits /= NUM_UES;
     stats_total /= NUM_UES;
 
-    double commit_rate = (stats_total_d - stats_aborts_d) / stats_total_d;
+    double commit_rate = (stats_total - stats_aborts) / (double) stats_total;
     double tx_latency = (1 / (double) stats_commits_app) * 1000; //micros
 
     printf(":: PER SECOND PER NODE AVG -----------------------------------\n");
@@ -249,10 +248,8 @@ static void print_global_stats() {
     printf("NA| Aborts WAR  \t: %lu\t/s\n", stats_aborts_war);
     printf("NA| Aborts RAW  \t: %lu\t/s\n", stats_aborts_raw);
     printf("NA| Aborts WAW  \t: %lu\t/s\n", stats_aborts_waw);
-    printf("--\n");
-    printf("NA| Commit Rate \t: %.2f %%\n", commit_rate * 100);
-    printf("NA| Latency     \t: %.3f ms\n", tx_latency);
-    printf("--------------------------------------------------------------\n");
+    printf(":: Collect data ----------------------------------------------\n");
+    printf("))) %lu\t%.2f\t %.3f\t(Throughput, Commit Rate, Latency)\n", stats_commits_total, commit_rate * 100, tx_latency);
     printf("||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\n");
 
     fflush(stdout);
