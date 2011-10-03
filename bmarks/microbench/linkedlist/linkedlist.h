@@ -28,7 +28,7 @@
 #define LOCKS_
 #define STM
 #define EARLY_RELEASE
-#define READ_VALIDATION_
+#define READ_VALIDATION
 
 #ifdef READ_VALIDATION
 #ifdef EARLY_RELEASE
