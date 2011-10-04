@@ -24,9 +24,9 @@
  * SETTINGS
  * _____________________________________________________________________________
  */
-#define SEQUENTIAL_
+#define SEQUENTIAL
 #define LOCKS_
-#define STM
+#define STM_
 #define EARLY_RELEASE_
 #define READ_VALIDATION_
 
