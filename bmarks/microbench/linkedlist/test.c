@@ -376,35 +376,42 @@ TASKMAIN(int argc, char **argv) {
     }
 
 #ifdef STM
-    int off;
+        int off, id2use;
     if (ID < 6) {
         off = 0;
+        id2use = ID;
     }
     else if (ID < 12) {
         off = 1;
+        id2use = ID - 6;
     }
     else if (ID < 18) {
         off = 0;
+        id2use = ID - 6;
     }
     else if (ID < 24) {
         off = 1;
+        id2use = ID - 12;
     }
     else if (ID < 30) {
         off = 2;
+        id2use = ID - 24;
     }
     else if (ID < 36){
         off = 3;
+        id2use = ID - 30;
     }
     else if (ID < 42) {
         off = 2;
+        id2use = ID - 30;
     }
     else if (ID < 48) {
         off = 3;
+        id2use = ID - 36;
     }
-
-    shmem_init(((off * 16) * 1024 * 1024) + ((ID/2) * 40 * 1024) - (initial * sizeof (node_t)));
-    PRINT("shmem from %d MB, %d KB", ((off * 16)), (ID * 10));
-    //shmem_init((RCCE_ue() * 1024 * 1024) - (initial * sizeof(node_t)));
+    
+    shmem_init(((off * 16) * 1024 * 1024) + ((id2use/2) * 1024 * 1024));
+    PRINT("shmem from %d MB", (off * 16) + id2use/2);
 #else
     shmem_init(1024*100*RCCE_ue()*sizeof(node_t) + ((initial + 2) * sizeof(node_t)));
     
