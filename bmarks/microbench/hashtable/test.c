@@ -657,7 +657,7 @@ TASKMAIN(int argc, char **argv) {
     printf("#Ops/s        : %d\n", (int) (total_ops / duration__));
     printf("#Latency      : %f\n", duration__ / total_ops);
 */
-        printf("))) %d\t100\t%.3f\t(Throughput, Commit Rate, Latency)", (int) (total_ops / duration__), duration__ / total_ops);
+        printf("))) %d\t100\t%f\t(Throughput, Commit Rate, Latency)", (int) (total_ops / duration__), duration__ / total_ops);
 #endif
     FLUSH;
 
