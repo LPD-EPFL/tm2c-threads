@@ -653,8 +653,11 @@ TASKMAIN(int argc, char **argv) {
 #ifdef SEQUENTIAL
     int total_ops = data->nb_add + data->nb_contains + data->nb_remove + data->nb_move + data->nb_snapshot;
     printf("#Ops          : %d\n", total_ops);
+/*
     printf("#Ops/s        : %d\n", (int) (total_ops / duration__));
     printf("#Latency      : %f\n", duration__ / total_ops);
+*/
+        printf("))) %d\t100\t%.3f\t(Throughput, Commit Rate, Latency)", (int) (total_ops / duration__), (int) (total_ops / duration__));
 #endif
     FLUSH;
 
