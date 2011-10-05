@@ -14,7 +14,7 @@ extern "C" {
 
 #define DSL
     
-#define READ_BUF_OFF_
+#define READ_BUF_OFF
 
 #define DSLNDPERNODES   2 /* 1 dedicated DS-Locking core per DSLNDPERNODES cores*/
 #define NUM_DSL_UES     ((int) ((RCCE_num_ues() / DSLNDPERNODES)) + (RCCE_num_ues() % DSLNDPERNODES ? 1 : 0))
