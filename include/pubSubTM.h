@@ -86,7 +86,7 @@ extern "C" {
 
     typedef unsigned int SHMEM_START_ADDRESS;
 
-#define DHT_ADDRESS_MASK 3
+#define DHT_ADDRESS_MASK 2
 
     //TODO: remove ? have them at .c file
     extern iRCCE_WAIT_LIST waitlist; //the send-recv buffer
