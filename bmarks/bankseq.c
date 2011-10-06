@@ -246,8 +246,8 @@ bank_t * test(void *data, double duration, int nb_accounts) {
         int i;
         for (i = 0; i < bank->size; i++) {
             //       PRINTN("(s %d)", i);
-            bank->accounts[i].number = i;
-            bank->accounts[i].balance = 0;
+            bank->accounts[I(i)].number = i;
+            bank->accounts[I(i)].balance = 0;
         }
     }
 
