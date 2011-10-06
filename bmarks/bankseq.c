@@ -32,6 +32,12 @@
  * stm_get_env() and only call sigsetjmp() if it is not null.
  */
 
+/*use TX_LOAD_STORE*/
+#define LOAD_STORE
+
+/*take advante all 4 MCs*/
+#define MC 
+
 #define DEFAULT_DURATION                10
 #define DEFAULT_NB_ACCOUNTS             1024
 #define DEFAULT_NB_THREADS              1
@@ -45,6 +51,15 @@
 #define STR(s)                          #s
 
 #define CAST_VOIDP(addr)                ((void *) (addr))
+
+#define MB16            16777216
+#define INDEX(i)        ((((i) % 4) * MB16) + (i))
+
+#ifdef MC
+#define I(i)            INDEX(i)
+#else
+#define I(i)            i
+#endif
 
 
 /* ################################################################### *
@@ -111,7 +126,7 @@ int total(bank_t *bank, int use_locks) {
     if (!use_locks) {
         total = 0;
         for (i = 0; i < bank->size; i++) {
-            total += bank->accounts[i].balance;
+            total += bank->accounts[I(i)].balance;
         }
     }
     else {
@@ -119,7 +134,7 @@ int total(bank_t *bank, int use_locks) {
         
         total = 0;
         for (i = 0; i < bank->size; i++) {
-            total += bank->accounts[i].balance;
+            total += bank->accounts[I(i)].balance;
         }
 
         release_lock_bank();
@@ -135,7 +150,7 @@ void reset(bank_t *bank) {
 
     TX_START
     for (i = 0; i < bank->size; i++) {
-        TX_STORE(&bank->accounts[i].balance, &j, TYPE_INT);
+        TX_STORE(&bank->accounts[I(i)].balance, &j, TYPE_INT);
     }
     TX_COMMIT
 }
@@ -213,8 +228,14 @@ bank_t * test(void *data, double duration, int nb_accounts) {
         PRINT("malloc bank");
         EXIT(1);
     }
+    
+#ifdef MC
+    bank->accounts = (account_t *) RCCE_shmalloc(64 * 1024 * 1024);
+#else
     bank->accounts = (account_t *) RCCE_shmalloc(nb_accounts * sizeof (account_t));
-    if (bank == NULL) {
+#endif
+    
+    if (bank->accounts == NULL) {
         PRINT("malloc bank->accounts");
         EXIT(1);
     }
@@ -280,7 +301,7 @@ bank_t * test(void *data, double duration, int nb_accounts) {
                 assert(dst >= 0);
                 if (dst == src)
                     dst = ((src + 1) % rand_max) + rand_min;
-                transfer(&bank->accounts[src], &bank->accounts[dst], 1, d->use_locks);
+                transfer(&bank->accounts[I(src)], &bank->accounts[I(dst)], 1, d->use_locks);
 
                 d->nb_transfer++;
             }
