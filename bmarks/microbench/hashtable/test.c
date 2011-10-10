@@ -601,9 +601,13 @@ TASKMAIN(int argc, char **argv) {
         id2use = ID - 36;
     }
     
+#ifdef DSL
     shmem_init(((off * 16) * 1024 * 1024) + ((id2use/2) * 1024 * 1024));
     PRINT("shmem from %d MB", (off * 16) + id2use/2);
-    //shmem_init((RCCE_ue() * 1024 * 1024) - (initial * sizeof(node_t)));
+#else
+    shmem_init(((off * 16) * 1024 * 1024) + ((id2use) * 1024 * 1024));
+    PRINT("shmem from %d MB", (off * 16) + id2use);
+#endif
 #else
     shmem_init(1024*100*RCCE_ue()*sizeof(node_t) + (initial + 2)*sizeof(node_t));
 #endif
