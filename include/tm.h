@@ -24,8 +24,13 @@ extern "C" {
                                             while ((duration__ =\
                                             (RCCE_wtime() - starting__)) < (seconds))
     
+#ifdef DSL
 #define ONCE                            if (RCCE_ue() == 1 || RCCE_num_ues() == 1)
-
+#else
+#define ONCE                            if (RCCE_ue() == 0 || RCCE_num_ues() == 1)
+#endif
+    
+    
 #define BACKOFF
 #define BACKOFF_MAX                     3
 #define BACKOFF_DELAY                   100
