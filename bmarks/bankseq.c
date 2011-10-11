@@ -28,6 +28,8 @@
 
 #ifdef DSL
 #undef DSL
+#undef ONCE
+#define ONCE                            if (RCCE_ue() == 0 || RCCE_num_ues() == 1)
 #endif
 
 /*
