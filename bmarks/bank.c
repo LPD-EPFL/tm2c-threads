@@ -33,7 +33,7 @@
  */
 
 /*use TX_LOAD_STORE*/
-#define LOAD_STORE_
+#define LOAD_STORE
 
 /*take advante all 4 MCs*/
 #define MC 
