@@ -247,10 +247,10 @@ bank_t * test(void *data, double duration, int nb_accounts) {
         PRINT("malloc bank->accounts");
         EXIT(1);
     }
-
-    bank->size = nb_accounts;
+    
     ONCE
     {
+        bank->size = nb_accounts;
         int i;
         for (i = 0; i < bank->size; i++) {
             //       PRINTN("(s %d)", i);
