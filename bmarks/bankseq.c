@@ -234,7 +234,7 @@ bank_t * test(void *data, double duration, int nb_accounts) {
     rand_max = nb_accounts;
     rand_min = 0;
 
-    bank_t **btmp = (bank **) RCCE_shmalloc(RCCE_num_ues() * sizeof (bank_t));
+    bank_t **btmp = (bank_t **) RCCE_shmalloc(RCCE_num_ues() * sizeof (bank_t));
     //bank = (bank_t *) RCCE_shmalloc(sizeof (bank_t));
     bank = btmp[RCCE_ue()];
     //bank = (bank_t *) malloc(sizeof (bank_t));
