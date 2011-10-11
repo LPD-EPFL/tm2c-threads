@@ -499,7 +499,7 @@ TASKMAIN(int argc, char **argv) {
     /* Delete bank and accounts */
 
     RCCE_shfree((volatile unsigned char *) bank->accounts);
-    free(bank);
+    RCCE_shfree(bank);
 
     free(data);
 
