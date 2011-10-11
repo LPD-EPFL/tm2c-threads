@@ -42,7 +42,7 @@
 #define LOAD_STORE
 
 /*take advante all 4 MCs*/
-#define MC 
+#define MC_
 
 #define DEFAULT_DURATION                10
 #define DEFAULT_NB_ACCOUNTS             1024
