@@ -67,6 +67,10 @@
 #define I(i)            i
 #endif
 
+#define ACCNT(bank, i)  ((account_t *) (bank + 1 + i))
+#define ACCP(i)          ACCNT(bank, i)
+#define ACC(i)          (*ACCNT(bank, i))
+
 
 /* ################################################################### *
  * GLOBALS
@@ -132,7 +136,8 @@ int total(bank_t *bank, int use_locks) {
     if (!use_locks) {
         total = 0;
         for (i = 0; i < bank->size; i++) {
-            total += bank->accounts[I(i)].balance;
+            //total += bank->accounts[I(i)].balance;
+            total += ACC(I(i)).balance;
         }
     }
     else {
@@ -140,7 +145,8 @@ int total(bank_t *bank, int use_locks) {
 
         total = 0;
         for (i = 0; i < bank->size; i++) {
-            total += bank->accounts[I(i)].balance;
+            //total += bank->accounts[I(i)].balance;
+            total += ACC(I(i)).balance;
         }
 
         release_lock_bank();
@@ -237,6 +243,7 @@ bank_t * test(void *data, double duration, int nb_accounts) {
 
 
 
+/*
     ONCE
     {
 #ifdef MC
@@ -250,6 +257,7 @@ bank_t * test(void *data, double duration, int nb_accounts) {
             EXIT(1);
         }
     }
+*/
 
     ONCE
     {
@@ -257,8 +265,10 @@ bank_t * test(void *data, double duration, int nb_accounts) {
         int i;
         for (i = 0; i < bank->size; i++) {
             //       PRINTN("(s %d)", i);
-            bank->accounts[I(i)].number = i;
-            bank->accounts[I(i)].balance = 0;
+            //bank->accounts[I(i)].number = i;
+            //bank->accounts[I(i)].balance = 0;
+            ACC(I(i)).number = i;
+            ACC(I(i)).balance = 0;
         }
     }
 
@@ -316,7 +326,8 @@ bank_t * test(void *data, double duration, int nb_accounts) {
                 assert(dst >= 0);
                 if (dst == src)
                     dst = ((src + 1) % rand_max) + rand_min;
-                transfer(&bank->accounts[I(src)], &bank->accounts[I(dst)], 1, d->use_locks);
+                //transfer(&bank->accounts[I(src)], &bank->accounts[I(dst)], 1, d->use_locks);
+                transfer(ACCP(I(src)), ACCP(dst), 1, d->use_locks);
 
                 d->nb_transfer++;
             }
