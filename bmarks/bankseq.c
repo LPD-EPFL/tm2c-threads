@@ -110,16 +110,16 @@ int transfer(account_t *src, account_t *dst, int amount, int use_locks) {
         dst->balance = j;
     }
     else {
-        PRINTD("locking bank");
+        PRINT("locking bank");
         lock_bank();
-        PRINTD("locked bank");
+        PRINT("locked bank");
 
         src->balance -= amount;
         dst->balance += amount;
 
-        PRINTD("releasing bank");
+        PRINT("releasing bank");
         release_lock_bank();
-        PRINTD("released bank");
+        PRINT("released bank");
 
     }
 
