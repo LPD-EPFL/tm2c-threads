@@ -26,6 +26,10 @@
 #include <limits.h>
 #include <signal.h>
 
+#ifdef DSL
+#undef DSL
+#endif
+
 /*
  * Useful macros to work with transactions. Note that, to use nested
  * transactions, one should check the environment returned by
