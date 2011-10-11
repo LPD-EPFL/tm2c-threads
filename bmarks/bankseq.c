@@ -131,7 +131,7 @@ int total(bank_t *bank, int use_locks) {
     }
     else {
         lock_bank();
-        
+
         total = 0;
         for (i = 0; i < bank->size; i++) {
             total += bank->accounts[I(i)].balance;
@@ -222,19 +222,19 @@ bank_t * test(void *data, double duration, int nb_accounts) {
     rand_max = nb_accounts;
     rand_min = 0;
 
-
-    bank = (bank_t *) malloc(sizeof (bank_t));
+    bank = (bank_t *) RCCE_shmalloc(sizeof (bank_t));
+    //bank = (bank_t *) malloc(sizeof (bank_t));
     if (bank == NULL) {
         PRINT("malloc bank");
         EXIT(1);
     }
-    
+
 #ifdef MC
     bank->accounts = (account_t *) RCCE_shmalloc(64 * 1024 * 1024);
 #else
     bank->accounts = (account_t *) RCCE_shmalloc(nb_accounts * sizeof (account_t));
 #endif
-    
+
     if (bank->accounts == NULL) {
         PRINT("malloc bank->accounts");
         EXIT(1);
@@ -256,7 +256,7 @@ bank_t * test(void *data, double duration, int nb_accounts) {
         PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\tBank total (before): %d\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
                 total(bank, 0));
     }
-    
+
     BARRIERW
 
     /* Wait on barrier */
@@ -471,11 +471,11 @@ TASKMAIN(int argc, char **argv) {
     data->max_retries = 0;
 
     BARRIERW
-    
+
     bank = test(data, duration, nb_accounts);
 
     BARRIERW
-    
+
     printf("---Core %d\n", RCCE_ue());
     printf("  #transfer   : %lu\n", data->nb_transfer);
     printf("  #read-all   : %lu\n", data->nb_read_all);
