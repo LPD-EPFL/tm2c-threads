@@ -136,8 +136,8 @@ int total(bank_t *bank, int use_locks) {
     if (!use_locks) {
         total = 0;
         for (i = 0; i < bank->size; i++) {
-            //total += bank->accounts[I(i)].balance;
-            total += ACC(I(i)).balance;
+            total += bank->accounts[I(i)].balance;
+            //total += ACC(I(i)).balance;
         }
     }
     else {
@@ -145,8 +145,8 @@ int total(bank_t *bank, int use_locks) {
 
         total = 0;
         for (i = 0; i < bank->size; i++) {
-            //total += bank->accounts[I(i)].balance;
-            total += ACC(I(i)).balance;
+            total += bank->accounts[I(i)].balance;
+            //total += ACC(I(i)).balance;
         }
 
         release_lock_bank();
@@ -234,7 +234,9 @@ bank_t * test(void *data, double duration, int nb_accounts) {
     rand_max = nb_accounts;
     rand_min = 0;
 
-    bank = (bank_t *) RCCE_shmalloc(sizeof (bank_t));
+    bank_t **btmp = (bank **) RCCE_shmalloc(RCCE_num_ues() * sizeof (bank_t));
+    //bank = (bank_t *) RCCE_shmalloc(sizeof (bank_t));
+    bank = btmp[RCCE_ue()];
     //bank = (bank_t *) malloc(sizeof (bank_t));
     if (bank == NULL) {
         PRINT("malloc bank");
@@ -243,32 +245,30 @@ bank_t * test(void *data, double duration, int nb_accounts) {
 
 
 
-/*
-    ONCE
-    {
+
 #ifdef MC
-        bank->accounts = (account_t *) RCCE_shmalloc(64 * 1024 * 1024);
+    bank->accounts = (account_t *) RCCE_shmalloc(64 * 1024 * 1024);
 #else
-        bank->accounts = (account_t *) RCCE_shmalloc(nb_accounts * sizeof (account_t));
+    bank->accounts = (account_t *) RCCE_shmalloc(nb_accounts * sizeof (account_t));
 #endif
 
-        if (bank->accounts == NULL) {
-            PRINT("malloc bank->accounts");
-            EXIT(1);
-        }
+    if (bank->accounts == NULL) {
+        PRINT("malloc bank->accounts");
+        EXIT(1);
     }
-*/
 
+    bank->size = nb_accounts;
     ONCE
     {
-        bank->size = nb_accounts;
         int i;
         for (i = 0; i < bank->size; i++) {
             //       PRINTN("(s %d)", i);
-            //bank->accounts[I(i)].number = i;
-            //bank->accounts[I(i)].balance = 0;
-            ACC(I(i)).number = i;
-            ACC(I(i)).balance = 0;
+            bank->accounts[I(i)].number = i;
+            bank->accounts[I(i)].balance = 0;
+            /*
+                        ACC(I(i)).number = i;
+                        ACC(I(i)).balance = 0;
+             */
         }
     }
 
@@ -326,8 +326,8 @@ bank_t * test(void *data, double duration, int nb_accounts) {
                 assert(dst >= 0);
                 if (dst == src)
                     dst = ((src + 1) % rand_max) + rand_min;
-                //transfer(&bank->accounts[I(src)], &bank->accounts[I(dst)], 1, d->use_locks);
-                transfer(ACCP(I(src)), ACCP(dst), 1, d->use_locks);
+                transfer(&bank->accounts[I(src)], &bank->accounts[I(dst)], 1, d->use_locks);
+                //transfer(ACCP(I(src)), ACCP(dst), 1, d->use_locks);
 
                 d->nb_transfer++;
             }
@@ -528,7 +528,7 @@ TASKMAIN(int argc, char **argv) {
     /* Delete bank and accounts */
 
     RCCE_shfree((volatile unsigned char *) bank->accounts);
-    RCCE_shfree(bank);
+    RCCE_shfree((volatile unsigned char *) bank);
 
     free(data);
 
