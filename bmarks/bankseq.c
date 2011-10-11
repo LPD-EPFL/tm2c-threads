@@ -234,20 +234,23 @@ bank_t * test(void *data, double duration, int nb_accounts) {
         PRINT("malloc bank");
         EXIT(1);
     }
-    
-    
 
+
+
+    ONCE
+    {
 #ifdef MC
-    bank->accounts = (account_t *) RCCE_shmalloc(64 * 1024 * 1024);
+        bank->accounts = (account_t *) RCCE_shmalloc(64 * 1024 * 1024);
 #else
-    bank->accounts = (account_t *) RCCE_shmalloc(nb_accounts * sizeof (account_t));
+        bank->accounts = (account_t *) RCCE_shmalloc(nb_accounts * sizeof (account_t));
 #endif
 
-    if (bank->accounts == NULL) {
-        PRINT("malloc bank->accounts");
-        EXIT(1);
+        if (bank->accounts == NULL) {
+            PRINT("malloc bank->accounts");
+            EXIT(1);
+        }
     }
-    
+
     ONCE
     {
         bank->size = nb_accounts;
@@ -264,9 +267,9 @@ bank_t * test(void *data, double duration, int nb_accounts) {
         PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\tBank total (before): %d\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
                 total(bank, 0));
     }
-    
+
     BARRIERW
-    
+
     PRINT("bank size: %d", bank->size);
 
     BARRIERW
