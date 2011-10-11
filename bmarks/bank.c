@@ -216,7 +216,8 @@ bank_t * test(void *data, double duration, int nb_accounts) {
     /* Create transaction */
     TM_INITs
 
-    bank = (bank_t *) malloc(sizeof (bank_t));
+    //bank = (bank_t *) malloc(sizeof (bank_t));
+    bank = (bank_t *) RCCE_shmalloc(sizeof (bank_t));
     if (bank == NULL) {
         PRINT("malloc bank");
         EXIT(1);
