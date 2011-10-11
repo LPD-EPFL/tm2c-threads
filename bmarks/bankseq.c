@@ -265,6 +265,8 @@ bank_t * test(void *data, double duration, int nb_accounts) {
                 total(bank, 0));
     }
     
+    BARRIERW
+    
     PRINT("bank size: %d", bank->size);
 
     BARRIERW
