@@ -444,6 +444,9 @@ TASKMAIN(int argc, char **argv) {
     ONCE
     {
         PRINTN("BANK sequential");
+        if (use_locks) {
+            PRINTN("            using locks");
+        }
         PRINTN("Nb accounts    : %d\n", nb_accounts);
         PRINTN("Duration       : %fs\n", duration);
         PRINTN("Nb cores       : %d\n", nb_app_cores);
