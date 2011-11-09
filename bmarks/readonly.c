@@ -183,6 +183,7 @@ MAIN(int argc, char** argv) {
     }
 
     BARRIER
+    PF_PRINT
     TM_END
     EXIT(0);
 }
