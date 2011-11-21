@@ -23,14 +23,14 @@ extern "C" {
 #define FOR(seconds)                    double starting__ = RCCE_wtime();\
                                             while ((duration__ =\
                                             (RCCE_wtime() - starting__)) < (seconds))
-    
+
 #ifdef DSL
 #define ONCE                            if (RCCE_ue() == 1 || RCCE_num_ues() == 1)
 #else
 #define ONCE                            if (RCCE_ue() == 0 || RCCE_num_ues() == 1)
 #endif
-    
-    
+
+
 #define BACKOFF
 #define BACKOFF_MAX                     3
 #define BACKOFF_DELAY                   100
@@ -194,7 +194,12 @@ extern "C" {
 
     void handle_abort(stm_tx_t *stm_tx, CONFLICT_TYPE reason);
 
+#ifdef PGAS
+    inline int tx_load(write_set_t *ws, read_set_t *rs, void *addr) {
+#else
+
     inline void * tx_load(write_set_t *ws, read_set_t *rs, void *addr) {
+#endif
         write_entry_t *we;
         if ((we = write_set_contains(ws, addr)) != NULL) {
             read_set_update(rs, addr);
@@ -223,12 +228,19 @@ retry:
                     TX_ABORT(conflict);
                 }
             }
+#ifdef PGAS
+            return read_value;
+#else
             return addr;
+#endif
 #ifndef READ_BUF_OFF
         }
 #endif
     }
+    
 
+    /*  get a tx write lock for address addr
+     */
     inline void tx_wlock(void *addr) {
         CONFLICT_TYPE conflict;
 #ifdef BACKOFF

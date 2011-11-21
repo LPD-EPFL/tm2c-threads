@@ -22,7 +22,7 @@ CONFLICT_TYPE ps_response; //TODO: make it more sophisticated
 SHMEM_START_ADDRESS shmem_start_address = NULL;
 PS_COMMAND *psc;
 
-int subscribing_address;
+int read_value;
 
 static inline void ps_sendb(unsigned short int target, PS_COMMAND_TYPE operation, unsigned int address, CONFLICT_TYPE response);
 static inline void ps_recvb(unsigned short int from);
@@ -84,6 +84,7 @@ static inline void ps_recvb(unsigned short int from) {
     iRCCE_irecv(data, PS_BUFFER_SIZE, from, NULL);
     PS_COMMAND * cmd = (PS_COMMAND *) data; //TODO : remove cmd variable
     ps_response = cmd->response;
+    read_value = cmd->value;
 }
 
 /*
@@ -98,8 +99,6 @@ CONFLICT_TYPE ps_subscribe(void *address) {
     unsigned short int responsible_node = DHT_get_responsible_node(address, &address_offs);
     
     nodes_contacted[responsible_node]++;
-
-    subscribing_address = address_offs; //TODO: remove??
 
     ps_sendb(responsible_node, PS_SUBSCRIBE, address_offs, NO_CONFLICT);
     //    PRINTD("[SUB] addr: %d to %02d", address_offs, responsible_node);
