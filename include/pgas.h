@@ -37,7 +37,7 @@ extern "C" {
     //*((type) ((PGAS_TYPE) SHMEM + ((int) ((addr)/NUM_DSL_NODES)))) = (type) (val)
 
     #define PGAS_read(addr)                         \
-        ((int *) SHMEM + ROUND((double) (addr) / NUM_DSL_NODES))
+        *((int *) SHMEM + ROUND((double) (addr) / NUM_DSL_NODES))
 
 //    inline int PGAS_read(unsigned int addr) {
 //        PRINT("addr: %2d, rounded: %2d, pointer: %p", addr, ROUND((double) (addr) / NUM_DSL_NODES),
