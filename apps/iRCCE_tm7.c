@@ -148,7 +148,7 @@ inline void ro_tx(int * sis) {
     for (i = 0; i < NUM_TXOPS; i++) {
         long rnd = rand_range(SHMEM_SIZE);
 #ifdef PGAS
-        int j = *(int *) TX_LOAD(sis);
+        int j = *(int *) TX_LOAD(rnd);
 #else
         int j = *(int *) TX_LOAD(sis + rnd);
 #endif
