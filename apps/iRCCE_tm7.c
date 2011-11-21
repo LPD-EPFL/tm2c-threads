@@ -10,7 +10,7 @@
 
 #define SHMEM_SIZE      SIS_SIZE
 #define NUM_TXOPS       100
-#define UPDTX_PRCNT     10
+#define UPDTX_PRCNT     0
 #define WRITE_PRCNT     10
 #define DURATION        1
 
@@ -85,7 +85,7 @@ MAIN(int argc, char **argv) {
     }
 
     BARRIER
-    
+
             int txupdate = 0;
     int txro = 0;
 
@@ -109,9 +109,9 @@ MAIN(int argc, char **argv) {
 
         TX_COMMIT
     }
-    
+
     PRINT("%02d\t%d\t%d\t%f", NUM_UES,
-            stm_tx_node->tx_commited, (int) (stm_tx_node->tx_commited / duration__),  1000*(duration__ / stm_tx_node->tx_commited));
+            stm_tx_node->tx_commited, (int) (stm_tx_node->tx_commited / duration__), 1000 * (duration__ / stm_tx_node->tx_commited));
 
     BARRIER
 
@@ -147,6 +147,10 @@ inline void ro_tx(int * sis) {
     int i;
     for (i = 0; i < NUM_TXOPS; i++) {
         long rnd = rand_range(SHMEM_SIZE);
+#ifdef PGAS
+        int j = *(int *) TX_LOAD(sis);
+#else
         int j = *(int *) TX_LOAD(sis + rnd);
+#endif
     }
 }
