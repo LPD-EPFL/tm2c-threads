@@ -13,13 +13,20 @@ stm_tx_node_t *stm_tx_node;
 
 MAIN(int argc, char **argv) {
 
+    int steps = 0;
+
     TM_INIT
+
+    PRINT("%d", steps++);
 
     TX_START
 
-            int i;
+    PRINT("%d", steps++);
+
+
+    int i;
     for (i = 0; i < 5; i++) {
-        PRINT("loading: %2d, value: %d", i, *(int *) TX_LOAD(i));
+        PRINT("loading: %2d, value: %d", i, TX_LOAD(i));
     }
     TX_COMMIT
 
