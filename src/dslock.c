@@ -65,6 +65,7 @@ void dsl_init(void) {
     int i;
 
 #ifdef PGAS
+/*
     PGAS_write_sets = (write_set_t **) malloc(NUM_UES * sizeof (write_set_t *));
     if (PGAS_write_sets == NULL) {
         PRINT("malloc PGAS_write_sets == NULL");
@@ -80,6 +81,7 @@ void dsl_init(void) {
             }
         }
     }
+*/
 
     PGAS_init();
 
