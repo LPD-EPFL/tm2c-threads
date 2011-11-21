@@ -97,7 +97,6 @@ void dsl_init(void) {
     }
 
     // Create recv request for each possible (other) core.
-    int i;
     for (i = 0; i < NUM_UES; i++) {
         if (i % DSLNDPERNODES) { /*only for non DSL cores*/
             iRCCE_irecv(buf + i * PS_BUFFER_SIZE, PS_BUFFER_SIZE, i, &recv_requests[i]);
