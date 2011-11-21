@@ -97,6 +97,7 @@ extern "C" {
     extern iRCCE_WAIT_LIST waitlist; //the send-recv buffer
     extern BOOLEAN tm_has_command;
     extern PS_COMMAND *ps_command;
+    extern int read_value;
 
 
     //void ps_init(void);
