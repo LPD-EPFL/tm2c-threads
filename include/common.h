@@ -14,6 +14,7 @@ extern "C" {
 
 #define DSL
     
+#define PGAS
 #define READ_BUF_OFF
 
 #define DSLNDPERNODES   2 /* 1 dedicated DS-Locking core per DSLNDPERNODES cores*/

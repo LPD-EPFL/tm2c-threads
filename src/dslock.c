@@ -32,6 +32,11 @@ iRCCE_SEND_REQUEST *send_current;
 CONFLICT_TYPE ps_response; //TODO: make it more sophisticated
 PS_COMMAND *ps_command, *ps_remote, *psc;
 
+#ifdef PGAS
+#include "pgas.h"
+write_set_t **PGAS_write_sets;
+#endif
+
 unsigned int stats_total = 0, stats_commits = 0, stats_aborts = 0, stats_max_retries = 0, stats_aborts_war = 0,
         stats_aborts_raw = 0, stats_aborts_waw = 0, stats_received = 0;
 double stats_duration = 0;
@@ -57,6 +62,28 @@ void dsl_init(void) {
         PRINTD("malloc ps_command == NULL || ps_remote == NULL || psc == NULL || buf == NULL");
     }
 
+#ifdef PGAS
+    PGAS_write_sets = (write_entry_t **) malloc(NUM_UES * sizeof (write_set *));
+    if (PGAS_write_sets == NULL) {
+        PRINT("malloc PGAS_write_sets == NULL");
+        EXIT(-1);
+    }
+
+    int i;
+    for (i = 0; i < NUM_UES; i++) {
+        if (i % DSLNDPERNODES) {
+            PGAS_write_sets[i] = (write_entry_t *) malloc(sizeof (write_entry_t));
+            if (PGAS_write_sets[i] == NULL) {
+                PRINT("malloc PGAS_write_sets[i] == NULL");
+                EXIT(-1);
+            }
+        }
+    }
+
+    PGAS_init();
+
+#endif
+
     ps_hashtable = ps_hashtable_new();
 
     iRCCE_init_wait_list(&waitlist);
@@ -73,7 +100,7 @@ void dsl_init(void) {
     int i;
     for (i = 0; i < NUM_UES; i++) {
         if (i % DSLNDPERNODES) { /*only for non DSL cores*/
-            iRCCE_irecv(buf + i * 32, 32, i, &recv_requests[i]);
+            iRCCE_irecv(buf + i * PS_BUFFER_SIZE, PS_BUFFER_SIZE, i, &recv_requests[i]);
             iRCCE_add_recv_to_wait_list(&waitlist, &recv_requests[i]);
         }
     }
@@ -102,12 +129,16 @@ static void dsl_communication() {
 
             //the sender of the message
             sender = recv_current->source;
-            base = buf + sender * 32;
+            base = buf + sender * PS_BUFFER_SIZE;
             ps_remote = (PS_COMMAND *) base;
 
             switch (ps_remote->type) {
                 case PS_SUBSCRIBE:
+#ifdef PGAS
+                    ps_send(sender, PS_SUBSCRIBE_RESPONSE, PGAS_read(ps_remote->address), try_subscribe(sender, ps_remote->address));
+#else
                     ps_send(sender, PS_SUBSCRIBE_RESPONSE, ps_remote->address, try_subscribe(sender, ps_remote->address));
+#endif
                     //ps_send(sender, PS_SUBSCRIBE_RESPONSE, ps_remote->address, NO_CONFLICT);
                     break;
                 case PS_PUBLISH:
@@ -168,7 +199,7 @@ static inline void ps_send(unsigned short int target, PS_COMMAND_TYPE command, u
     }
 
     memcpy(data, psc, sizeof (PS_COMMAND));
-    if (iRCCE_isend(data, 32, target, s) != iRCCE_SUCCESS) {
+    if (iRCCE_isend(data, PS_BUFFER_SIZE, target, s) != iRCCE_SUCCESS) {
         iRCCE_add_send_to_wait_list(&sendlist, s);
         //iRCCE_add_to_wait_list(&sendlist, s, NULL);
     }

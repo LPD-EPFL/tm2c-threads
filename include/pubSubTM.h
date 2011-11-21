@@ -59,10 +59,15 @@ extern "C" {
                     int response; //BOOLEAN
                     unsigned int target; //nodeId
                 };
-                unsigned int address;
+
+                union {
+                    unsigned int address;
+                    int value;
+                };
             };
 
             //stats collecting
+
             struct {
                 unsigned short commits;
                 unsigned short aborts;
