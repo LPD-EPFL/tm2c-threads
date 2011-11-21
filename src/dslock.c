@@ -72,7 +72,7 @@ void dsl_init(void) {
     int i;
     for (i = 0; i < NUM_UES; i++) {
         if (i % DSLNDPERNODES) {
-            PGAS_write_sets[i] = (write_entry_t *) malloc(sizeof (write_entry_t));
+            PGAS_write_sets[i] = (write_set_t *) malloc(sizeof (write_set_t));
             if (PGAS_write_sets[i] == NULL) {
                 PRINT("malloc PGAS_write_sets[i] == NULL");
                 EXIT(-1);
