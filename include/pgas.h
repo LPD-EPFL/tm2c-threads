@@ -42,7 +42,7 @@ extern "C" {
     inline int PGAS_read(unsigned int addr) {
         PRINT("addr: %2d, rounded: %2d, pointer: %p", addr, ROUND((double) (addr) / NUM_DSL_NODES),
                 ((int *) SHMEM + ROUND((double) (addr) / NUM_DSL_NODES)));
-        return ((int *) SHMEM + ROUND((double) (addr) / NUM_DSL_NODES));
+        return *((int *) SHMEM + ROUND((double) (addr) / NUM_DSL_NODES));
     }
 
 
