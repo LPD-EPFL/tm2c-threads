@@ -15,7 +15,6 @@ iRCCE_WAIT_LIST waitlist;
 
 extern unsigned int ID; //=RCCE_ue()
 extern unsigned int NUM_UES;
-unsigned int NUM_DSL_NODES;
 unsigned int *dsl_nodes;
 char *buf;
 unsigned short nodes_contacted[48];
@@ -35,7 +34,6 @@ static inline unsigned int DHT_get_responsible_node(void *shmem_address, unsigne
 inline void publish_finish(int nodeId, int shmem_address);
 
 void ps_init_(void) {
-    NUM_DSL_NODES = (int) ((NUM_UES / DSLNDPERNODES)) + (NUM_UES % DSLNDPERNODES ? 1 : 0);
     PRINTD("NUM_DSL_NODES = %d", NUM_DSL_NODES);
     if ((dsl_nodes = (unsigned int *) malloc(NUM_DSL_NODES * sizeof (unsigned int))) == NULL) {
         PRINTD("malloc dsl_nodes");

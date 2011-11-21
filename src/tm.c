@@ -9,6 +9,8 @@
 
 unsigned int ID; //=RCCE_ue()
 unsigned int NUM_UES;
+unsigned int NUM_DSL_NODES;
+
 
 extern stm_tx_t *stm_tx = NULL;
 extern stm_tx_node_t *stm_tx_node = NULL;
@@ -32,6 +34,8 @@ int color(int id, void *aux) {
 }
 
 void tm_init(unsigned int ID) {
+    NUM_DSL_NODES = (int) ((NUM_UES / DSLNDPERNODES)) + (NUM_UES % DSLNDPERNODES ? 1 : 0);
+
     RCCE_comm_split(color, NULL, &RCCE_COMM_APP);
 
     if (ID % DSLNDPERNODES == 0) {
