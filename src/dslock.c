@@ -63,7 +63,7 @@ void dsl_init(void) {
     }
 
 #ifdef PGAS
-    PGAS_write_sets = (write_entry_t **) malloc(NUM_UES * sizeof (write_set *));
+    PGAS_write_sets = (write_entry_t **) malloc(NUM_UES * sizeof (write_set_t *));
     if (PGAS_write_sets == NULL) {
         PRINT("malloc PGAS_write_sets == NULL");
         EXIT(-1);
