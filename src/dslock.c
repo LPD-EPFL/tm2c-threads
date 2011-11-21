@@ -62,6 +62,8 @@ void dsl_init(void) {
         PRINTD("malloc ps_command == NULL || ps_remote == NULL || psc == NULL || buf == NULL");
     }
 
+    int i;
+
 #ifdef PGAS
     PGAS_write_sets = (write_set_t **) malloc(NUM_UES * sizeof (write_set_t *));
     if (PGAS_write_sets == NULL) {
@@ -69,7 +71,6 @@ void dsl_init(void) {
         EXIT(-1);
     }
 
-    int i;
     for (i = 0; i < NUM_UES; i++) {
         if (i % DSLNDPERNODES) {
             PGAS_write_sets[i] = (write_set_t *) malloc(sizeof (write_set_t));
