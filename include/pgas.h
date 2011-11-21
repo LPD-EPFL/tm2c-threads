@@ -18,7 +18,7 @@ extern "C" {
 
 #define SHMEM_SIZE      (1024 * 1024)           //1 KB
 #define SHMEM           shmem__
-//#define NUM_DSL_NODES   2
+    //#define NUM_DSL_NODES   2
 #define PGAS_TYPE       long long
 #define PGAS_GRAN       sizeof(long long int)
 
@@ -31,13 +31,19 @@ extern "C" {
     extern void PGAS_free(void *);
 
 #define ROUND(n)        (((int) n) == n ? (int) n : (int) n + 1)
-    
+
 #define PGAS_write(addr, val, type)             \
         *((type *) ((type *) SHMEM + ROUND((double) (addr) / NUM_DSL_NODES))) = (type) (val)
     //*((type) ((PGAS_TYPE) SHMEM + ((int) ((addr)/NUM_DSL_NODES)))) = (type) (val)
 
-#define PGAS_read(addr)                         \
-        ((int *) SHMEM + ROUND((double) (addr) / NUM_DSL_NODES))
+    //#define PGAS_read(addr)                         \
+//        ((int *) SHMEM + ROUND((double) (addr) / NUM_DSL_NODES))
+
+    inline int PGAS_read(unsigned int addr) {
+        PRINT("addr: %2d, rounded: %2d, pointer: %p", addr, ROUND((double) (addr) / NUM_DSL_NODES),
+                ((int *) SHMEM + ROUND((double) (addr) / NUM_DSL_NODES)));
+        return ((int *) SHMEM + ROUND((double) (addr) / NUM_DSL_NODES));
+    }
 
 
 
