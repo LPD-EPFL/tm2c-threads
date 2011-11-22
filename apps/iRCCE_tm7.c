@@ -58,7 +58,7 @@ inline void ro_tx(int * sis);
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
 
-unsigned int SIS_SIZE = 4800;
+unsigned int SIS_SIZE = 200;
 unsigned int store_me, ID;
 
 MAIN(int argc, char **argv) {
@@ -67,7 +67,7 @@ MAIN(int argc, char **argv) {
 
     srand_core();
     store_me = ID;
-    SIS_SIZE = NUM_UES * 1000;
+    //SIS_SIZE = NUM_UES * 1000;
 
     if (argc > 1) {
         SIS_SIZE = atoi(argv[1]);
