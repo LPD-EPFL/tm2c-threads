@@ -97,13 +97,13 @@ CONFLICT_TYPE ps_subscribe(void *address) {
 
     unsigned int address_offs;
     unsigned short int responsible_node = DHT_get_responsible_node(address, &address_offs);
-    
+
     nodes_contacted[responsible_node]++;
 
 #ifdef PGAS
-        ps_sendb(responsible_node, PS_SUBSCRIBE, (unsigned int) address, NO_CONFLICT);
+    ps_sendb(responsible_node, PS_SUBSCRIBE, (unsigned int) address, NO_CONFLICT);
 #else
-            ps_sendb(responsible_node, PS_SUBSCRIBE, address_offs, NO_CONFLICT);
+    ps_sendb(responsible_node, PS_SUBSCRIBE, address_offs, NO_CONFLICT);
 
 #endif
     //    PRINTD("[SUB] addr: %d to %02d", address_offs, responsible_node);
@@ -155,7 +155,7 @@ void ps_finish_all() {
     psc->type = PS_REMOVE_NODE;
     memcpy(data, psc, sizeof (PS_COMMAND));
 #endif
-    
+
     for (i = 0; i < NUM_UES; i++) {
         if (nodes_contacted[i] != 0) { //can be changed to non-blocking
 
@@ -178,7 +178,7 @@ void ps_finish_all() {
 
 void ps_send_stats(stm_tx_node_t* stats, double duration) {
     psc->type = PS_STATS;
-    
+
     psc->aborts = stats->tx_aborted;
     psc->aborts_raw = stats->aborts_raw;
     psc->aborts_war = stats->aborts_war;
@@ -186,7 +186,7 @@ void ps_send_stats(stm_tx_node_t* stats, double duration) {
     psc->commits = stats->tx_commited;
     psc->max_retries = stats->max_retries;
     psc->tx_duration = duration;
-    
+
     char data[PS_BUFFER_SIZE];
 
     memcpy(data, psc, sizeof (PS_COMMAND));
@@ -224,5 +224,11 @@ static inline unsigned int DHT_get_responsible_node(void *shmem_address, unsigne
     /* shift right by DHT_ADDRESS_MASK, thus making 2^DHT_ADDRESS_MASK continuous
         address handled by the same node*/
     *address_offset = shmem_address_offset(shmem_address);
+#ifdef PGAS
+    return dsl_nodes[(*address_offset) % NUM_DSL_NODES];
+#else
     return dsl_nodes[(*address_offset >> DHT_ADDRESS_MASK) % NUM_DSL_NODES];
+
+#endif
+
 }
