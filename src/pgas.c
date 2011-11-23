@@ -19,7 +19,6 @@ void PGAS_init() {
     int i;
     for (i = 0; i < SHMEM_SIZE; i++) {
         *((int *) SHMEM + i) = i;
-        *((int *) SHMEM + i) += 1;
     }
     
     PRINT("allocated %u bytes for shmem", SHMEM_SIZE);
