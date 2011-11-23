@@ -34,7 +34,7 @@ PS_COMMAND *ps_command, *ps_remote, *psc;
 
 #ifdef PGAS
 #include "pgas.h"
-write_set_t **PGAS_write_sets;
+write_set_pgas_t **PGAS_write_sets;
 #endif
 
 unsigned int stats_total = 0, stats_commits = 0, stats_aborts = 0, stats_max_retries = 0, stats_aborts_war = 0,
@@ -65,8 +65,7 @@ void dsl_init(void) {
     int i;
 
 #ifdef PGAS
-/*
-    PGAS_write_sets = (write_set_t **) malloc(NUM_UES * sizeof (write_set_t *));
+    PGAS_write_sets = (write_set_pgas_t **) malloc(NUM_UES * sizeof (write_set_pgas_t *));
     if (PGAS_write_sets == NULL) {
         PRINT("malloc PGAS_write_sets == NULL");
         EXIT(-1);
@@ -74,14 +73,13 @@ void dsl_init(void) {
 
     for (i = 0; i < NUM_UES; i++) {
         if (i % DSLNDPERNODES) {
-            PGAS_write_sets[i] = (write_set_t *) malloc(sizeof (write_set_t));
+            PGAS_write_sets[i] = (write_set_pgas_t *) malloc(sizeof (write_set_pgas_t));
             if (PGAS_write_sets[i] == NULL) {
                 PRINT("malloc PGAS_write_sets[i] == NULL");
                 EXIT(-1);
             }
         }
     }
-*/
 
     PGAS_init();
 
@@ -145,9 +143,18 @@ static void dsl_communication() {
                     //ps_send(sender, PS_SUBSCRIBE_RESPONSE, ps_remote->address, NO_CONFLICT);
                     break;
                 case PS_PUBLISH:
-                    ps_send(sender, PS_PUBLISH_RESPONSE, ps_remote->address, try_publish(sender, ps_remote->address));
+                    CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
+#ifdef PGAS
+                    if (conflict == NO_CONFLICT) {
+                        write_set_pgas_insert(PGAS_write_sets[sender], ps_remote->write_value, ps_remote->address);
+                    }
+#endif
+                    ps_send(sender, PS_PUBLISH_RESPONSE, ps_remote->address, conflict);
                     break;
                 case PS_REMOVE_NODE:
+                    //write_set_pgas_persist(PGAS_write_sets[sender]);
+                    write_set_pgas_print(PGAS_write_sets[sender]);
+                    write_set_pgas_empty(PGAS_write_sets[sender]);
                     ps_hashtable_delete_node(ps_hashtable, sender);
                     break;
                 case PS_UNSUBSCRIBE:

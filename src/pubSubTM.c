@@ -61,6 +61,40 @@ void ps_init_(void) {
     PRINT("[APP NODE] Initialized pub-sub..");
 }
 
+#ifdef PGAS
+
+static inline void ps_send_rl(unsigned short int target, unsigned int address) {
+
+    psc->type = PS_SUBSCRIBE;
+    psc->address = address;
+
+    char data[PS_BUFFER_SIZE];
+
+    memcpy(data, psc, sizeof (PS_COMMAND));
+    iRCCE_isend(data, PS_BUFFER_SIZE, target, NULL);
+}
+
+static inline void ps_send_wl(unsigned short int target, unsigned int address, int value) {
+
+    psc->type = PS_PUBLISH;
+    psc->address = address;
+    psc->write_value = value;
+
+    char data[PS_BUFFER_SIZE];
+
+    memcpy(data, psc, sizeof (PS_COMMAND));
+    iRCCE_isend(data, PS_BUFFER_SIZE, target, NULL);
+}
+
+static inline void ps_recv_wl(unsigned short int from) {
+    char data[PS_BUFFER_SIZE];
+    iRCCE_irecv(data, PS_BUFFER_SIZE, from, NULL);
+    PS_COMMAND * cmd = (PS_COMMAND *) data; //TODO : remove cmd variable
+    ps_response = cmd->response;
+#endif
+}
+#endif
+
 static inline void ps_send(unsigned short int target, PS_COMMAND_TYPE command, unsigned int address,
         iRCCE_SEND_REQUEST *s, char * data) {
 
@@ -105,7 +139,7 @@ CONFLICT_TYPE ps_subscribe(void *address) {
     nodes_contacted[responsible_node]++;
 
 #ifdef PGAS
-    ps_sendb(responsible_node, PS_SUBSCRIBE, (unsigned int) address, NO_CONFLICT);
+    ps_send_rl(responsible_node, (unsigned int) address);
 #else
     ps_sendb(responsible_node, PS_SUBSCRIBE, address_offs, NO_CONFLICT);
 
@@ -116,15 +150,27 @@ CONFLICT_TYPE ps_subscribe(void *address) {
     return ps_response;
 }
 
+#ifdef PGAS
+
+CONFLICT_TYPE ps_publish(void *address, int value) {
+#else
+
 CONFLICT_TYPE ps_publish(void *address) {
+#endif
 
     unsigned int address_offs;
     unsigned short int responsible_node = DHT_get_responsible_node(address, &address_offs);
 
     nodes_contacted[responsible_node]++;
 
+#ifdef PGAS
+    ps_send_wl(responsible_node, (unsigned int) address, value);
+    ps_recv_wl(responsible_node);
+#else
     ps_sendb(responsible_node, PS_PUBLISH, address_offs, NO_CONFLICT); //make sync
     ps_recvb(responsible_node);
+
+#endif
 
     return ps_response;
 }

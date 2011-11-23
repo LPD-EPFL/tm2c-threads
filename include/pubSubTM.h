@@ -85,6 +85,8 @@ extern "C" {
                 unsigned int abrt_attacker;
                 unsigned int abrt_reason;
             };
+            
+            int write_value;
         };
     } PS_COMMAND;
 

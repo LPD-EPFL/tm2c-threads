@@ -367,3 +367,129 @@ inline read_entry_l_t * read_set_contains(read_set_t *read_set, void *address_sh
 
     return NULL;
 }
+
+
+#ifdef PGAS
+/*______________________________________________________________________________________________________
+ * WRITE SET PGAS                                                                                       |
+ *______________________________________________________________________________________________________|
+ */
+
+
+inline write_set_pgas_t * write_set_pgas_new() {
+    write_set_pgas_t *write_set_pgas;
+
+    if ((write_set_pgas = (write_set_pgas_t *) malloc(sizeof (write_set_pgas_t))) == NULL) {
+        PRINT("Could not initialize the write set");
+        return NULL;
+    }
+
+    if ((write_set_pgas->write_entries = (write_entry_pgas_t *) malloc(WRITE_SET_PGAS_SIZE * sizeof (write_entry_pgas_t))) == NULL) {
+        free(write_set_pgas);
+        PRINT("Could not initialize the write set");
+        return NULL;
+    }
+    
+    write_set_pgas->nb_entries = 0;
+    write_set_pgas->size = WRITE_SET_PGAS_SIZE;
+
+    return write_set_pgas;
+}
+
+inline void write_set_pgas_free(write_set_pgas_t *write_set_pgas) {
+    free(write_set_pgas->write_entries);
+    free(write_set_pgas);
+}
+
+inline write_set_pgas_t * write_set_pgas_empty(write_set_pgas_t *write_set_pgas) {
+    
+    if (write_set_pgas->size > WRITE_SET_PGAS_SIZE) {
+        write_entry_pgas_t * temp;
+        if ((temp = (write_entry_pgas_t *) realloc(write_set_pgas->write_entries, WRITE_SET_PGAS_SIZE * sizeof(write_entry_pgas_t))) == NULL) {
+            free(write_set_pgas->write_entries);
+            PRINT("realloc @ write_set_pgas_empty failed");
+            write_set_pgas->write_entries = (write_entry_pgas_t *) malloc(WRITE_SET_PGAS_SIZE * sizeof(write_entry_pgas_t));
+            if (write_set_pgas->write_entries == NULL) {
+                PRINT("malloc write_set_pgas->write_entries @ write_set_pgas_empty");
+                return NULL;
+            }
+        }
+    }
+    write_set_pgas->size = WRITE_SET_PGAS_SIZE;
+    write_set_pgas->nb_entries = 0;
+    return write_set_pgas;
+}
+
+inline write_entry_pgas_t * write_set_pgas_entry(write_set_pgas_t *write_set_pgas) {
+    if (write_set_pgas->nb_entries == write_set_pgas->size) {
+        //PRINTD("WRITE set max sized (%d)", write_set_pgas->size);
+        unsigned int new_size = 2 * write_set_pgas->size;
+        write_entry_pgas_t *temp;
+        if ((temp = (write_entry_pgas_t *) realloc(write_set_pgas->write_entries, new_size * sizeof (write_entry_pgas_t))) == NULL) {
+            write_set_pgas_free(write_set_pgas);
+            PRINT("Could not resize the write set");
+            return NULL;
+        }
+
+        write_set_pgas->write_entries = temp;
+        write_set_pgas->size = new_size;
+    }
+
+    return &write_set_pgas->write_entries[write_set_pgas->nb_entries++];
+}
+
+inline void write_set_pgas_insert(write_set_pgas_t *write_set_pgas, int value, unsigned int address) {
+    write_entry_pgas_t *we = write_set_pgas_entry(write_set_pgas);
+
+    we->address = address;
+    we->value = value;
+}
+
+inline void write_set_pgas_update(write_set_pgas_t *write_set_pgas, int value, unsigned int address) {
+    int i;
+    for (i = 0; i < write_set_pgas->nb_entries; i++) {
+        if (write_set_pgas->write_entries[i].address == address) {
+            write_set_pgas->write_entries[i].value = value;
+            return;
+        }
+    }
+
+    write_set_pgas_insert(write_set_pgas, value, address);
+}
+
+inline void write_entry_pgas_persist(write_entry_pgas_t *we) {
+    PGAS_write(we->address, we->value, int);
+}
+
+inline void write_entry_pgas_print(write_entry_pgas_t *we) {
+            PRINTSME("[%5d :  %d]", (we->address), we->value);
+}
+
+inline void write_set_pgas_print(write_set_pgas_t *write_set_pgas) {
+    PRINTSME("WRITE SET PGAS (elements: %d, size: %d) --------------\n", write_set_pgas->nb_entries, write_set_pgas->size);
+    int i;
+    for (i = 0; i < write_set_pgas->nb_entries; i++) {
+        write_entry_pgas_print(&write_set_pgas->write_entries[i]);
+    }
+    FLUSH
+}
+
+inline void write_set_pgas_persist(write_set_pgas_t *write_set_pgas) {
+    int i;
+    for (i = 0; i < write_set_pgas->nb_entries; i++) {
+        write_entry_pgas_persist(&write_set_pgas->write_entries[i]);
+    }
+}
+
+inline write_entry_pgas_t * write_set_pgas_contains(write_set_pgas_t *write_set_pgas, unsigned int address) {
+    int i;
+    for (i = write_set_pgas->nb_entries - 1; i >= 0; i--) {
+        if (write_set_pgas->write_entries[i].address == address) {
+            return &write_set_pgas->write_entries[i];
+        }
+    }
+
+    return NULL;
+}
+
+#endif

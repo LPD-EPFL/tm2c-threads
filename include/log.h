@@ -15,6 +15,9 @@ extern "C" {
 #endif
 
 #include "common.h"
+#ifdef PGAS
+#include "pgas.h"
+#endif
 
 #define CAST_WORD(addr) *((unsigned int *) (addr))
 #define CAST_CHAR(addr) *((char *) (addr))
@@ -106,7 +109,7 @@ extern "C" {
 
     extern write_entry_t * write_set_contains(write_set_t *write_set, void *address_shmem);
 
-    
+
     /*______________________________________________________________________________________________________
      * READ SET                                                                                             |
      *______________________________________________________________________________________________________|
@@ -128,7 +131,7 @@ extern "C" {
     } read_set_t;
 
     extern read_set_t * read_set_new();
-    
+
     extern void read_set_free(read_set_t *read_set);
 
     extern read_set_t * read_set_empty(read_set_t *read_set);
@@ -155,6 +158,53 @@ extern "C" {
 
 #ifdef	__cplusplus
 }
+#endif
+
+
+#ifdef PGAS
+
+/*______________________________________________________________________________________________________
+ * WRITE SET PGAS                                                                                       |
+ *______________________________________________________________________________________________________|
+ */
+
+
+#define WRITE_SET_PGAS_SIZE 8
+
+typedef struct write_entry_pgas {
+    unsigned int address;
+    int value;
+} write_entry_pgas_t;
+
+typedef struct write_set_pgas {
+    write_entry_pgas_t *write_entries;
+    unsigned int nb_entries;
+    unsigned int size;
+} write_set_pgas_t;
+
+extern write_set_pgas_t * write_set_pgas_new();
+
+extern void write_set_pgas_free(write_set_pgas_t *write_set_pgas);
+
+extern write_set_pgas_t * write_set_pgas_empty(write_set_pgas_t *write_set_pgas);
+
+inline write_entry_pgas_t * write_set_pgas_entry(write_set_pgas_t *write_set_pgas);
+
+extern void write_set_pgas_insert(write_set_pgas_t *write_set_pgas, int value, unsigned int address);
+
+extern void write_set_pgas_update(write_set_pgas_t *write_set_pgas, int value, unsigned int address);
+
+inline void write_entry_pgas_persist(write_entry_pgas_t *we);
+
+inline void write_entry_pgas_print(write_entry_pgas_t *we);
+
+extern void write_set_pgas_print(write_set_pgas_t *write_set_pgas);
+
+extern void write_set_pgas_persist(write_set_pgas_t *write_set_pgas);
+
+extern write_entry_pgas_t * write_set_pgas_contains(write_set_pgas_t *write_set_pgas, unsigned int address);
+
+
 #endif
 
 #endif	/* LOG_H */
