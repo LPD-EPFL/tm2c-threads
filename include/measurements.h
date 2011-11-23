@@ -9,7 +9,7 @@
 #endif
 #endif
 
-#define DO_TIMINGS
+#define DO_TIMINGS_
 #define DO_TIMINGS_TICKS
 
 #ifdef	__cplusplus
