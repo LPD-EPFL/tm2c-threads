@@ -155,8 +155,13 @@ extern "C" {
     tx_load(stm_tx->write_set, stm_tx->read_set, ((void *) (addr)))
 #endif
 
+#ifdef PGAS
 #define TX_STORE(addr, ptr, datatype)                                   \
     write_set_update(stm_tx->write_set, datatype, ((void *) (ptr)), ((void *) (addr)))
+#else
+#define TX_STORE(addr, ptr, datatype)                                   \
+    write_set_update(stm_tx->write_set, datatype, ((void *) (ptr)), ((void *) (addr)))
+#endif
 
 
     //TODO: the write_set_update will make the system to try to acquire the wlocks in the

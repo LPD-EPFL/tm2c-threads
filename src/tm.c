@@ -68,22 +68,38 @@ void handle_abort(stm_tx_t *stm_tx, CONFLICT_TYPE reason) {
             stm_tx->aborts_waw++;
     }
     //PRINTD("  | read/write_set_free");
+#ifdef PGAS
+    write_set_pgas_empty(stm_tx->write_set);
+#else
     write_set_empty(stm_tx->write_set);
+#endif
     read_set_empty(stm_tx->read_set);
     mem_info_on_abort(stm_tx->mem_info);
 }
 
 void ps_publish_finish_all(unsigned int locked) {
     locked = (locked != 0) ? locked : stm_tx->write_set->nb_entries;
+#ifdef PGAS
+    write_entry_pgas_t *we_current = stm_tx->write_set->write_entries;
+#else
     write_entry_t *we_current = stm_tx->write_set->write_entries;
+#endif
     while (locked-- > 0) {
+#ifdef PGAS
+       // ps_publish_finish(we_current->address, we_current->value);
+#else
         ps_publish_finish((void *) we_current[locked].address_shmem);
+#endif
     }
 }
 
 void ps_publish_all() {
     unsigned int locked = 0;
+#ifdef PGAS
+    write_entry_pgas_t *write_entries = stm_tx->write_set->write_entries;
+#else
     write_entry_t *write_entries = stm_tx->write_set->write_entries;
+#endif
     unsigned int nb_entries = stm_tx->write_set->nb_entries;
     while (locked < nb_entries) {
         CONFLICT_TYPE conflict;
@@ -92,7 +108,11 @@ void ps_publish_all() {
         unsigned int delay = BACKOFF_DELAY; //micro
 retry:
 #endif
+#ifdef PGAS
+        if ((conflict = ps_publish(write_entries[locked].address, write_entries[locked].value)) != NO_CONFLICT) {
+#else
         if ((conflict = ps_publish((void *) write_entries[locked].address_shmem)) != NO_CONFLICT) {
+#endif
             //ps_publish_finish_all(locked);
 #ifdef BACKOFF
             if (num_delays++ < BACKOFF_MAX) {

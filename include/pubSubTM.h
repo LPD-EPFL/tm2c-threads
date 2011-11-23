@@ -123,7 +123,11 @@ extern "C" {
     CONFLICT_TYPE ps_subscribe(void *address);
     /* Try to publish a write on the address
      */
+#ifdef PGAS
+    CONFLICT_TYPE ps_publish(unsigned int address, int value);
+#else
     CONFLICT_TYPE ps_publish(void *address);
+#endif
     /* Unsubscribes the TX from the address
      */
     void ps_unsubscribe(void *address);

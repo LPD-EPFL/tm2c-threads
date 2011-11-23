@@ -150,8 +150,7 @@ CONFLICT_TYPE ps_subscribe(void *address) {
 }
 
 #ifdef PGAS
-
-CONFLICT_TYPE ps_publish(void *address, int value) {
+CONFLICT_TYPE ps_publish(unsigned int address, int value) {
 #else
 
 CONFLICT_TYPE ps_publish(void *address) {
@@ -163,7 +162,7 @@ CONFLICT_TYPE ps_publish(void *address) {
     nodes_contacted[responsible_node]++;
 
 #ifdef PGAS
-    ps_send_wl(responsible_node, (unsigned int) address, value);
+    ps_send_wl(responsible_node, address, value);
     ps_recv_wl(responsible_node);
 #else
     ps_sendb(responsible_node, PS_PUBLISH, address_offs, NO_CONFLICT); //make sync

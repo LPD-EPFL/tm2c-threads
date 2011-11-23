@@ -30,7 +30,11 @@ extern "C" {
         //        stm_word_t start; /* Start timestamp */
         //        stm_word_t end; /* End timestamp (validity range) */
         read_set_t *read_set; /* Read set */
+#ifdef PGAS
+        write_set_pgas_t *write_set; /* Write set */
+#else
         write_set_t *write_set; /* Write set */
+#endif
         mem_info_t *mem_info; /* Transactional mem alloc lists*/
         sigjmp_buf env; /* Environment for setjmp/longjmp */
         sigjmp_buf *jmp; /* Pointer to environment (NULL when not using setjmp/longjmp) */
@@ -54,7 +58,6 @@ extern "C" {
         unsigned long aborts_raw;
         unsigned long aborts_waw;
     } stm_tx_node_t;
-
 
     inline void tx_metadata_node_print(stm_tx_node_t * stm_tx_node) {
         printf("TXs Statistics for node --------------------------------------\n");
@@ -108,7 +111,11 @@ extern "C" {
 
         stm_tx_temp->state = state;
         stm_tx_temp->read_set = read_set_new();
+#ifdef PGAS
+        stm_tx_temp->write_set = write_set_pgas_new();
+#else
         stm_tx_temp->write_set = write_set_new();
+#endif
         stm_tx_temp->mem_info = mem_info_new();
         //TODO: what about the env?
         stm_tx_temp->retries = 0;
@@ -124,7 +131,11 @@ extern "C" {
     inline stm_tx_t * tx_metadata_empty(stm_tx_t *stm_tx_temp) {
 
         stm_tx_temp->read_set = read_set_empty(stm_tx_temp->read_set);
+#ifdef PGAS
+        stm_tx_temp->write_set = write_set_pgas_empty(stm_tx_temp->write_set);
+#else
         stm_tx_temp->write_set = write_set_empty(stm_tx_temp->write_set);
+#endif
         //stm_tx_temp->mem_info = mem_info_new();
         //TODO: what about the env?
         stm_tx_temp->retries = 0;
@@ -139,7 +150,7 @@ extern "C" {
 
     inline void tx_metadata_free(stm_tx_t **stm_tx) {
         //TODO: "clear" insted of freeing the stm_tx
-        
+
         write_set_free((*stm_tx)->write_set);
         read_set_free((*stm_tx)->read_set);
         mem_info_free((*stm_tx)->mem_info);
