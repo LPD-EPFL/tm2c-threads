@@ -117,32 +117,14 @@ MAIN(int argc, char **argv) {
     BARRIER
 
     PF_PRINT
-            
+
     RCCE_shfree((t_vcharp) sis);
 
     TM_END
 
     fprintf(stderr, "%d", sum);
-    
+
     EXIT(0);
-}
-
-/*
- * Operations executed for an update Tx
- */
-inline void update_tx(int * sis) {
-    int i;
-    for (i = 0; i < NUM_TXOPS; i++) {
-        long rnd = rand_range(SHMEM_SIZE1);
-
-        ROLL(WRITE_PRCNT) {
-            TX_STORE(sis + rnd, &ID, TYPE_INT);
-        }
-        LOST
-        {
-            int j = *(int *) TX_LOAD(sis + rnd);
-        }
-    }
 }
 
 /*
@@ -156,10 +138,32 @@ inline void ro_tx(int * sis) {
         sum = TX_LOAD(rnd);
 #else
         int *j = (int *) TX_LOAD(sis + rnd);
-        
+
         PF_START(0)
         sum = *j;
         PF_STOP(0)
 #endif
+    }
+}
+
+/*
+ * Operations executed for an update Tx
+ */
+inline void update_tx(int * sis) {
+    int i;
+    for (i = 0; i < NUM_TXOPS; i++) {
+        long rnd = rand_range(SHMEM_SIZE1);
+
+        ROLL(WRITE_PRCNT) {
+#ifdef PGAS
+            TX_STORE(rnd, &ID);
+#else
+            TX_STORE(sis + rnd, &ID, TYPE_INT);
+#endif
+        }
+        LOST
+        {
+            ro_tx(sis);
+        }
     }
 }
