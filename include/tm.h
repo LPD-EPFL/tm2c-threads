@@ -66,7 +66,7 @@ extern "C" {
 #define WSET_EMPTY           write_set_pgas_empty
 #define WSET_PERSIST         write_set_pgas_persist
 #else
-#define    WSET_EMPTY  write_set_empty
+#define WSET_EMPTY           write_set_empty
 #define WSET_PERSIST         write_set_persist
 #endif
 
@@ -85,21 +85,10 @@ extern "C" {
     handle_abort(stm_tx, reason);                                       \
     siglongjmp(stm_tx->env, reason);
 
-    /*#define TX_COMMIT                                                       \
-        PRINTD("|| commiting tx");                                          \
-        ps_publish_all();                                                   \
-        write_set_persist(stm_tx->write_set);                               \
-        ps_finish_all();                                                    \
-        mem_info_on_commit(stm_tx->mem_info);                               \
-        stm_tx_node->tx_starts += stm_tx->retries;                          \
-        stm_tx_node->tx_commited++;                                         \
-        stm_tx = tx_metadata_empty(stm_tx); }
-     */
-
 #define TX_COMMIT                                                       \
     PRINTD("|| commiting tx");                                          \
     ps_publish_all();                                                   \
-    WS_PERSIST(stm_tx->write_set);                                      \ 
+    WSET_PERSIST(stm_tx->write_set);                                    \
     ps_finish_all();                                                    \
     mem_info_on_commit(stm_tx->mem_info);                               \
     stm_tx_node->tx_starts += stm_tx->retries;                          \
@@ -112,8 +101,7 @@ extern "C" {
     stm_tx_node->aborts_war += stm_tx->aborts_war;                      \
     stm_tx_node->aborts_raw += stm_tx->aborts_raw;                      \
     stm_tx_node->aborts_waw += stm_tx->aborts_waw;                      \
-    stm_tx = tx_metadata_empty(stm_tx);
-}
+    stm_tx = tx_metadata_empty(stm_tx);}
 
 #define TX_COMMIT_NO_PUB                                                \
     PRINTD("|| commiting tx");                                          \
