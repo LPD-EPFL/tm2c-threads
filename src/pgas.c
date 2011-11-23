@@ -19,8 +19,6 @@ void PGAS_init() {
     int i;
     for (i = 0; i < SHMEM_SIZE; i++) {
         *((int *) SHMEM + i) = i;
-    }
-    for (i = 0; i < SHMEM_SIZE; i++) {
         *((int *) SHMEM + i) += 1;
     }
     
