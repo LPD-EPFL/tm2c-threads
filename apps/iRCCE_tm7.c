@@ -115,6 +115,8 @@ MAIN(int argc, char **argv) {
 
     BARRIER
 
+    PF_PRINT
+            
     RCCE_shfree((t_vcharp) sis);
 
     TM_END
