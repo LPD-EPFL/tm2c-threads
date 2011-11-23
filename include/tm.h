@@ -62,21 +62,18 @@ extern "C" {
         NUM_UES = RCCE_num_ues();                                       \
         tm_init(ID);
 
-    /*#define TX_START                                                        \
-        { PRINTD("|| Starting new tx");                                     \
-        short int reason;                                                   \
-        if (reason = sigsetjmp(stm_tx->env, 0)) {                           \
-            PRINTD("|| restarting due to %d", reason);                      \
-            stm_tx->write_set = write_set_empty(stm_tx->write_set);         \
-            stm_tx->read_set = read_set_empty(stm_tx->read_set);            \
-            stm_tx->retries++;                                              \
-        }*/
+#ifdef PGAS
+#define    WSET_EMPTY  write_set_pgas_empty
+#else
+#define    WSET_EMPTY  write_set_empty
+#endif
+    
 #define TX_START                                                        \
     { PRINTD("|| Starting new tx");                                     \
     short int reason;                                                   \
     if (reason = sigsetjmp(stm_tx->env, 0)) {                           \
         PRINTD("|| restarting due to %d", reason);                      \
-        stm_tx->write_set = write_set_empty(stm_tx->write_set);         \
+        stm_tx->write_set = WSET_EMPTY(stm_tx->write_set);              \
         stm_tx->read_set = read_set_empty(stm_tx->read_set);            \
     }                                                                   \
     stm_tx->retries++;
