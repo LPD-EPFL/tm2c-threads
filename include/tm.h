@@ -156,8 +156,8 @@ extern "C" {
 #endif
 
 #ifdef PGAS
-#define TX_STORE(addr, ptr, datatype)                                   \
-    write_set_update(stm_tx->write_set, datatype, ((void *) (ptr)), ((void *) (addr)))
+#define TX_STORE(addr, val)                                             \
+    write_set_pgas_update(stm_tx->write_set, val, addr)
 #else
 #define TX_STORE(addr, ptr, datatype)                                   \
     write_set_update(stm_tx->write_set, datatype, ((void *) (ptr)), ((void *) (addr)))
