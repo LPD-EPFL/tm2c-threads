@@ -151,7 +151,11 @@ extern "C" {
     inline void tx_metadata_free(stm_tx_t **stm_tx) {
         //TODO: "clear" insted of freeing the stm_tx
 
+#ifdef PGAS
+        write_set_pgas_free((*stm_tx)->write_set);
+#else
         write_set_free((*stm_tx)->write_set);
+#endif
         read_set_free((*stm_tx)->read_set);
         mem_info_free((*stm_tx)->mem_info);
         free((*stm_tx));
