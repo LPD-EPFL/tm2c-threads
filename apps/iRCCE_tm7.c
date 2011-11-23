@@ -156,7 +156,7 @@ inline void update_tx(int * sis) {
 
         ROLL(WRITE_PRCNT) {
 #ifdef PGAS
-            TX_STORE(rnd, &ID);
+            TX_STORE(rnd, ID);
 #else
             TX_STORE(sis + rnd, &ID, TYPE_INT);
 #endif
