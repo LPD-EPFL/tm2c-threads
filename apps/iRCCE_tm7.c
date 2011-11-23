@@ -158,7 +158,7 @@ inline void ro_tx(int * sis) {
         int *j = (int *) TX_LOAD(sis + rnd);
         
         PF_START(0)
-        sum += *j;
+        sum = *j;
         PF_STOP(0)
 #endif
     }
