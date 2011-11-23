@@ -143,6 +143,7 @@ static void dsl_communication() {
                     //ps_send(sender, PS_SUBSCRIBE_RESPONSE, ps_remote->address, NO_CONFLICT);
                     break;
                 case PS_PUBLISH:
+                {
                     CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
 #ifdef PGAS
                     if (conflict == NO_CONFLICT) {
@@ -151,6 +152,7 @@ static void dsl_communication() {
 #endif
                     ps_send(sender, PS_PUBLISH_RESPONSE, ps_remote->address, conflict);
                     break;
+                }
                 case PS_REMOVE_NODE:
                     //write_set_pgas_persist(PGAS_write_sets[sender]);
                     write_set_pgas_print(PGAS_write_sets[sender]);
