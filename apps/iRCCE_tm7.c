@@ -60,6 +60,7 @@ inline void ro_tx(int * sis);
 
 unsigned int SIS_SIZE = 200;
 unsigned int store_me, ID;
+int sum = 0;
 
 MAIN(int argc, char **argv) {
 
@@ -121,6 +122,8 @@ MAIN(int argc, char **argv) {
 
     TM_END
 
+    fprintf(stderr, "%d", sum);
+    
     EXIT(0);
 }
 
@@ -146,7 +149,7 @@ inline void update_tx(int * sis) {
  * Operations executed for a read-only Tx
  */
 inline void ro_tx(int * sis) {
-    int i, sum;
+    int i;
     for (i = 0; i < NUM_TXOPS; i++) {
         long rnd = rand_range(SHMEM_SIZE);
 #ifdef PGAS
