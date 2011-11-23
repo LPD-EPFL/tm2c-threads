@@ -223,10 +223,10 @@ static inline unsigned int shmem_address_offset(void *shmem_address) {
 static inline unsigned int DHT_get_responsible_node(void *shmem_address, unsigned int *address_offset) {
     /* shift right by DHT_ADDRESS_MASK, thus making 2^DHT_ADDRESS_MASK continuous
         address handled by the same node*/
-    *address_offset = shmem_address_offset(shmem_address);
 #ifdef PGAS
     return dsl_nodes[(*address_offset) % NUM_DSL_NODES];
 #else
+    *address_offset = shmem_address_offset(shmem_address);
     return dsl_nodes[(*address_offset >> DHT_ADDRESS_MASK) % NUM_DSL_NODES];
 
 #endif
