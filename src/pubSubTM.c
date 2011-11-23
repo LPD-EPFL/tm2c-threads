@@ -86,7 +86,8 @@ static inline void ps_recvb(unsigned short int from) {
     ps_response = cmd->response;
 #ifdef PGAS
     PF_START(0)
-    read_value = cmd->value;
+    //read_value = cmd->value;
+    cmd->value;
     PF_STOP(0)
 #endif
 }
