@@ -100,7 +100,7 @@ static inline void ps_recvb(unsigned short int from) {
 CONFLICT_TYPE ps_subscribe(void *address) {
 
     unsigned int address_offs;
-    PRINT("addr: %d", *(int*) address);
+    PRINT("addr: %d", (unsigned int) address);
     unsigned short int responsible_node = DHT_get_responsible_node(address, &address_offs);
 
     nodes_contacted[responsible_node]++;
@@ -230,7 +230,7 @@ static inline unsigned int DHT_get_responsible_node(void *shmem_address, unsigne
     /* shift right by DHT_ADDRESS_MASK, thus making 2^DHT_ADDRESS_MASK continuous
         address handled by the same node*/
 #ifdef PGAS
-    return dsl_nodes[(*(int *)shmem_address) % NUM_DSL_NODES];
+    return dsl_nodes[(unsigned int) shmem_address) % NUM_DSL_NODES];
 #else
     *address_offset = shmem_address_offset(shmem_address);
     return dsl_nodes[(*address_offset >> DHT_ADDRESS_MASK) % NUM_DSL_NODES];

@@ -147,8 +147,12 @@ extern "C" {
     free(stm_tx_node); }                                  
 
 
+#ifdef PGAS
 #define TX_LOAD(addr)                                                   \
+    tx_load(stm_tx->write_set, stm_tx->read_set, (unsigned int)(addr))
+#else
     tx_load(stm_tx->write_set, stm_tx->read_set, ((void *) (addr)))
+#endif
 
 #define TX_STORE(addr, ptr, datatype)                                   \
     write_set_update(stm_tx->write_set, datatype, ((void *) (ptr)), ((void *) (addr)))
@@ -195,7 +199,8 @@ extern "C" {
     void handle_abort(stm_tx_t *stm_tx, CONFLICT_TYPE reason);
 
 #ifdef PGAS
-    inline int tx_load(write_set_t *ws, read_set_t *rs, void *addr) {
+
+    inline int tx_load(write_set_t *ws, read_set_t *rs, unsigned int addr) {
 #else
 
     inline void * tx_load(write_set_t *ws, read_set_t *rs, void *addr) {
@@ -237,7 +242,6 @@ retry:
         }
 #endif
     }
-    
 
     /*  get a tx write lock for address addr
      */
