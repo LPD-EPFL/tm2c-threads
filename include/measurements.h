@@ -19,6 +19,14 @@ extern "C" {
 #ifndef DO_TIMINGS
 #undef DO_TIMINGS_TICKS
 #undef DO_TIMINGS_STD
+#define PF_MSG(pos, msg)        
+#define PF_START(pos)           
+#define PF_STOP(pos)            
+#define PF_KILL(pos)            
+#define PF_PRINT_TICKS          
+#define PF_PRINT                
+#define PF_EXCLUDE(pos)         
+    
 #else
 #define PF_MSG(pos, msg)        SET_PROF_MSG_POS(pos, msg)
 #define PF_START(pos)           ENTRY_TIME_POS(pos)
