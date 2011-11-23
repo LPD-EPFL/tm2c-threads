@@ -91,7 +91,6 @@ static inline void ps_recv_wl(unsigned short int from) {
     iRCCE_irecv(data, PS_BUFFER_SIZE, from, NULL);
     PS_COMMAND * cmd = (PS_COMMAND *) data; //TODO : remove cmd variable
     ps_response = cmd->response;
-#endif
 }
 #endif
 
