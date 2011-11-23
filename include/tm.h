@@ -63,11 +63,13 @@ extern "C" {
         tm_init(ID);
 
 #ifdef PGAS
-#define    WSET_EMPTY  write_set_pgas_empty
+#define WSET_EMPTY           write_set_pgas_empty
+#define WSET_PERSIST         write_set_pgas_persist
 #else
 #define    WSET_EMPTY  write_set_empty
+#define WSET_PERSIST         write_set_persist
 #endif
-    
+
 #define TX_START                                                        \
     { PRINTD("|| Starting new tx");                                     \
     short int reason;                                                   \
@@ -97,7 +99,7 @@ extern "C" {
 #define TX_COMMIT                                                       \
     PRINTD("|| commiting tx");                                          \
     ps_publish_all();                                                   \
-    write_set_persist(stm_tx->write_set);                               \
+    WS_PERSIST(stm_tx->write_set);                                      \ 
     ps_finish_all();                                                    \
     mem_info_on_commit(stm_tx->mem_info);                               \
     stm_tx_node->tx_starts += stm_tx->retries;                          \
@@ -110,7 +112,8 @@ extern "C" {
     stm_tx_node->aborts_war += stm_tx->aborts_war;                      \
     stm_tx_node->aborts_raw += stm_tx->aborts_raw;                      \
     stm_tx_node->aborts_waw += stm_tx->aborts_waw;                      \
-    stm_tx = tx_metadata_empty(stm_tx); }
+    stm_tx = tx_metadata_empty(stm_tx);
+}
 
 #define TX_COMMIT_NO_PUB                                                \
     PRINTD("|| commiting tx");                                          \
@@ -161,26 +164,26 @@ extern "C" {
 #endif
 
 
-    //TODO: the write_set_update will make the system to try to acquire the wlocks in the
-    //commit phase of the TX... it should not, cause the wlock is already acquired
+//TODO: the write_set_update will make the system to try to acquire the wlocks in the
+//commit phase of the TX... it should not, cause the wlock is already acquired
 #define TX_LOAD_STORE(addr, op, value, datatype)\
     {tx_wlock((void *) (addr));\
     int temp__ = (*(int *) (addr)) op (value);\
     write_set_update(stm_tx->write_set, TYPE_INT, &temp__, addr);}
 
 
-    /*early release of READ lock -- TODO: the entry remains in read-set, so one
-     SHOULD NOT try to re-read the address cause the tx things it keeps the lock*/
+/*early release of READ lock -- TODO: the entry remains in read-set, so one
+ SHOULD NOT try to re-read the address cause the tx things it keeps the lock*/
 #define TX_RRLS(addr)                                                   \
     ps_unsubscribe((void*) (addr));
 
 #define TX_WRLS(addr)                                                   \
     ps_publish_finish((void*) (addr));
 
-    /*__________________________________________________________________________________________
-     * TRANSACTIONAL MEMORY ALLOCATION
-     * _________________________________________________________________________________________
-     */
+/*__________________________________________________________________________________________
+ * TRANSACTIONAL MEMORY ALLOCATION
+ * _________________________________________________________________________________________
+ */
 
 #define TX_MALLOC(size)                                                   \
     stm_malloc(stm_tx->mem_info, (size_t) size)
@@ -194,102 +197,104 @@ extern "C" {
 #define TX_SHFREE(addr)                                                   \
     stm_shfree(stm_tx->mem_info, (t_vcharp) addr)
 
-    inline void udelay(unsigned int micros) {
-        double __ts_end = RCCE_wtime() + ((double) micros / 1000000);
-        while (RCCE_wtime() < __ts_end);
-    }
+inline void udelay(unsigned int micros) {
+    double __ts_end = RCCE_wtime() + ((double) micros / 1000000);
+    while (RCCE_wtime() < __ts_end);
+}
 
-    void handle_abort(stm_tx_t *stm_tx, CONFLICT_TYPE reason);
+void handle_abort(stm_tx_t *stm_tx, CONFLICT_TYPE reason);
 
 #ifdef PGAS
 
-    inline int tx_load(write_set_t *ws, read_set_t *rs, unsigned int addr) {
+inline int tx_load(write_set_t *ws, read_set_t *rs, unsigned int addr) {
 #else
 
-    inline void * tx_load(write_set_t *ws, read_set_t *rs, void *addr) {
+inline void * tx_load(write_set_t *ws, read_set_t *rs, void *addr) {
 #endif
-        write_entry_t *we;
-        if ((we = write_set_contains(ws, addr)) != NULL) {
-            read_set_update(rs, addr);
-            return (void *) &we->i;
-        }
-        else {
+    write_entry_t *we;
+    if ((we = write_set_contains(ws, addr)) != NULL) {
+        read_set_update(rs, addr);
+        return (void *) &we->i;
+    }
+    else {
 #ifndef READ_BUF_OFF
-            if (!read_set_update(rs, addr)) {
+        if (!read_set_update(rs, addr)) {
 #endif
-                //the node is NOT already subscribed for the address
-                CONFLICT_TYPE conflict;
+            //the node is NOT already subscribed for the address
+            CONFLICT_TYPE conflict;
 #ifdef BACKOFF
-                unsigned int num_delays = 0;
-                unsigned int delay = BACKOFF_DELAY;
+            unsigned int num_delays = 0;
+            unsigned int delay = BACKOFF_DELAY;
 
 retry:
 #endif
-                if ((conflict = ps_subscribe((void *) addr)) != NO_CONFLICT) {
+            if ((conflict = ps_subscribe((void *) addr)) != NO_CONFLICT) {
 #ifdef BACKOFF
-                    if (num_delays++ < BACKOFF_MAX) {
-                        udelay(delay);
-                        delay *= 2;
-                        goto retry;
-                    }
-#endif
-                    TX_ABORT(conflict);
+                if (num_delays++ < BACKOFF_MAX) {
+                    udelay(delay);
+                    delay *= 2;
+                    goto retry;
                 }
+#endif
+                TX_ABORT(conflict);
             }
+        }
 #ifdef PGAS
-            return read_value;
+        return read_value;
 #else
-            return addr;
+        return addr;
 #endif
 #ifndef READ_BUF_OFF
-        }
-#endif
     }
-
-    /*  get a tx write lock for address addr
-     */
-#ifdef PGAS
-    inline void tx_wlock(unsigned int address, int value) {
-#else
-    inline void tx_wlock(void *address) {
 #endif
-        
-        CONFLICT_TYPE conflict;
+}
+
+/*  get a tx write lock for address addr
+ */
+#ifdef PGAS
+
+inline void tx_wlock(unsigned int address, int value) {
+#else
+
+inline void tx_wlock(void *address) {
+#endif
+
+    CONFLICT_TYPE conflict;
 #ifdef BACKOFF
-        unsigned int num_delays = 0;
-        unsigned int delay = BACKOFF_DELAY;
+    unsigned int num_delays = 0;
+    unsigned int delay = BACKOFF_DELAY;
 
 retry:
 #endif
 #ifdef PGAS
-        if ((conflict = ps_publish(address, value)) != NO_CONFLICT) {
-      #else      
-        if ((conflict = ps_publish((void *) address)) != NO_CONFLICT) {
+    if ((conflict = ps_publish(address, value)) != NO_CONFLICT) {
+#else      
+    if ((conflict = ps_publish((void *) address)) != NO_CONFLICT) {
 #endif
 #ifdef BACKOFF
-            if (num_delays++ < BACKOFF_MAX) {
-                udelay(delay);
-                delay *= 2;
-                goto retry;
-            }
-#endif
-            TX_ABORT(conflict);
+        if (num_delays++ < BACKOFF_MAX) {
+            udelay(delay);
+            delay *= 2;
+            goto retry;
         }
+#endif
+        TX_ABORT(conflict);
     }
+}
 
 #define taskudelay udelay
 
-    void ps_unsubscribe_all();
+void ps_unsubscribe_all();
 
-    int color(int id, void *aux);
+int color(int id, void *aux);
 
-    void tm_init(unsigned int ID);
+void tm_init(unsigned int ID);
 
-    void ps_publish_finish_all(unsigned int locked);
+void ps_publish_finish_all(unsigned int locked);
 
-    void ps_publish_all();
+void ps_publish_all();
 
-    void ps_unsubscribe_all();
+void ps_unsubscribe_all();
 
 #ifdef	__cplusplus
 }
