@@ -151,6 +151,7 @@ extern "C" {
 #define TX_LOAD(addr)                                                   \
     tx_load(stm_tx->write_set, stm_tx->read_set, (unsigned int)(addr))
 #else
+#define TX_LOAD(addr)                                                   \
     tx_load(stm_tx->write_set, stm_tx->read_set, ((void *) (addr)))
 #endif
 
