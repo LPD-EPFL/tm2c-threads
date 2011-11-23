@@ -105,6 +105,7 @@ CONFLICT_TYPE ps_subscribe(void *address) {
     nodes_contacted[responsible_node]++;
 
 #ifdef PGAS
+    PRINT("addr: %03d, resp node: %02d", *(int *)address, responsible_node);
     ps_sendb(responsible_node, PS_SUBSCRIBE, (unsigned int) address, NO_CONFLICT);
 #else
     ps_sendb(responsible_node, PS_SUBSCRIBE, address_offs, NO_CONFLICT);
