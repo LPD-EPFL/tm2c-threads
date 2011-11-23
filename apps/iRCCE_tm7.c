@@ -146,7 +146,7 @@ inline void update_tx(int * sis) {
  * Operations executed for a read-only Tx
  */
 inline void ro_tx(int * sis) {
-    int i;
+    int i, sum;
     for (i = 0; i < NUM_TXOPS; i++) {
         long rnd = rand_range(SHMEM_SIZE);
 #ifdef PGAS
@@ -154,9 +154,8 @@ inline void ro_tx(int * sis) {
 #else
         int *j = (int *) TX_LOAD(sis + rnd);
         
-        int jj;
         PF_START(0)
-        jj = *j;
+        sum += *j;
         PF_STOP(0)
 #endif
     }
