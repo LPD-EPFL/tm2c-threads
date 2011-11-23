@@ -100,13 +100,11 @@ static inline void ps_recvb(unsigned short int from) {
 CONFLICT_TYPE ps_subscribe(void *address) {
 
     unsigned int address_offs;
-    PRINT("addr: %d", (unsigned int) address);
     unsigned short int responsible_node = DHT_get_responsible_node(address, &address_offs);
 
     nodes_contacted[responsible_node]++;
 
 #ifdef PGAS
-    //PRINT("addr: %03d, resp node: %02d", *(int *)address, responsible_node);
     ps_sendb(responsible_node, PS_SUBSCRIBE, (unsigned int) address, NO_CONFLICT);
 #else
     ps_sendb(responsible_node, PS_SUBSCRIBE, address_offs, NO_CONFLICT);
