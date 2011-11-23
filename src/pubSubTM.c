@@ -100,7 +100,7 @@ static inline void ps_recvb(unsigned short int from) {
 CONFLICT_TYPE ps_subscribe(void *address) {
 
     unsigned int address_offs;
-    PRINT("addr: %d", *(unsigned int*) address);
+    PRINT("addr: %d", *(int*) address);
     unsigned short int responsible_node = DHT_get_responsible_node(address, &address_offs);
 
     nodes_contacted[responsible_node]++;
