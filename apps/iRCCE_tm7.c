@@ -8,7 +8,7 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
 
-#define SHMEM_SIZE      SIS_SIZE
+#define SHMEM_SIZE1      SIS_SIZE
 #define NUM_TXOPS       100
 #define UPDTX_PRCNT     0
 #define WRITE_PRCNT     10
@@ -133,7 +133,7 @@ MAIN(int argc, char **argv) {
 inline void update_tx(int * sis) {
     int i;
     for (i = 0; i < NUM_TXOPS; i++) {
-        long rnd = rand_range(SHMEM_SIZE);
+        long rnd = rand_range(SHMEM_SIZE1);
 
         ROLL(WRITE_PRCNT) {
             TX_STORE(sis + rnd, &ID, TYPE_INT);
@@ -151,7 +151,7 @@ inline void update_tx(int * sis) {
 inline void ro_tx(int * sis) {
     int i;
     for (i = 0; i < NUM_TXOPS; i++) {
-        long rnd = rand_range(SHMEM_SIZE);
+        long rnd = rand_range(SHMEM_SIZE1);
 #ifdef PGAS
         sum = TX_LOAD(rnd);
 #else
