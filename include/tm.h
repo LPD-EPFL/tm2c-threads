@@ -251,7 +251,12 @@ retry:
 
     /*  get a tx write lock for address addr
      */
-    inline void tx_wlock(void *addr) {
+#ifdef PGAS
+    inline void tx_wlock(unsigned int address, int value) {
+#else
+    inline void tx_wlock(void *address) {
+#endif
+        
         CONFLICT_TYPE conflict;
 #ifdef BACKOFF
         unsigned int num_delays = 0;
@@ -259,7 +264,11 @@ retry:
 
 retry:
 #endif
-        if ((conflict = ps_publish((void *) addr)) != NO_CONFLICT) {
+#ifdef PGAS
+        if ((conflict = ps_publish(address, value)) != NO_CONFLICT) {
+      #else      
+        if ((conflict = ps_publish((void *) address)) != NO_CONFLICT) {
+#endif
 #ifdef BACKOFF
             if (num_delays++ < BACKOFF_MAX) {
                 udelay(delay);
