@@ -82,6 +82,7 @@ extern "C" {
 #include <string.h>
 #include <stddef.h>
 #include <unistd.h>
+#include "measurements.h"
 
 #define TASKMAIN MAIN
 #define MAIN int main
