@@ -34,11 +34,12 @@ extern "C" {
 #define ROUND(n)        (((int) n) == n ? (int) n : (int) n + 1)
 
 #define PGAS_write(addr, val, type)             \
-        *((type *) ((type *) SHMEM + ROUND((double) (addr) / NUM_DSL_NODES))) = (type) (val)
-    //*((type) ((PGAS_TYPE) SHMEM + ((int) ((addr)/NUM_DSL_NODES)))) = (type) (val)
+        *((type *) ((type *) SHMEM + addr)) = (type) (val)
+        //*((type *) ((type *) SHMEM + ROUND((double) (addr) / NUM_DSL_NODES))) = (type) (val)
 
 #define PGAS_read(addr)                         \
-        *((int *) SHMEM + ROUND((double) (addr) / NUM_DSL_NODES))
+        *((int *) SHMEM + addr)
+//        *((int *) SHMEM + ROUND((double) (addr) / NUM_DSL_NODES))
 
 //    inline int PGAS_read(unsigned int addr);
 
