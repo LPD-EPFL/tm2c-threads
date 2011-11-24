@@ -72,7 +72,7 @@ void dsl_init(void) {
     }
 
     for (i = 0; i < NUM_UES; i++) {
-        if (i % DSLNDPERNODES) {
+        if (i % DSLNDPERNODES) { /*only for non DSL cores*/
             PGAS_write_sets[i] = (write_set_pgas_t *) malloc(sizeof (write_set_pgas_t));
             if (PGAS_write_sets[i] == NULL) {
                 PRINT("malloc PGAS_write_sets[i] == NULL");
@@ -83,6 +83,15 @@ void dsl_init(void) {
 
     PGAS_init();
 
+    PRINT("testing ws");
+    write_set_pgas_insert(PGAS_write_sets[1], 1, 1);
+    write_set_pgas_insert(PGAS_write_sets[1], 2, 2);
+    write_set_pgas_insert(PGAS_write_sets[1], 3, 3);
+    write_set_pgas_insert(PGAS_write_sets[1], 4, 4);
+    write_set_pgas_print(PGAS_write_sets[1]);
+    write_set_pgas_empty(PGAS_write_sets[1]);
+    
+    
 #endif
 
     ps_hashtable = ps_hashtable_new();
