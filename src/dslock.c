@@ -152,6 +152,7 @@ static void dsl_communication() {
                         PRINT("WL from %02d> addr: %04d, val: %d | done", sender, ps_remote->address, ps_remote->write_value);
                     }
 #endif
+                    PRINT("completed wl req");
                     ps_send(sender, PS_PUBLISH_RESPONSE, ps_remote->address, conflict);
                     break;
                 }
