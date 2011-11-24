@@ -144,6 +144,7 @@ static void dsl_communication() {
                     break;
                 case PS_PUBLISH:
                 {
+                    PRINT("WL from %02d> addr: %04d, val: %d", sender, ps_remote->address, ps_remote->write_value);
                     CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
 #ifdef PGAS
                     if (conflict == NO_CONFLICT) {
