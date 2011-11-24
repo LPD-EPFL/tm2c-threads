@@ -156,7 +156,9 @@ static void dsl_communication() {
                 }
                 case PS_REMOVE_NODE:
                     //write_set_pgas_persist(PGAS_write_sets[sender]);
+                    PRINT("printing ws");
                     write_set_pgas_print(PGAS_write_sets[sender]);
+                    PRINT("emptying ws");
                     write_set_pgas_empty(PGAS_write_sets[sender]);
                     ps_hashtable_delete_node(ps_hashtable, sender);
                     break;
