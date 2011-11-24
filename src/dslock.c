@@ -149,7 +149,7 @@ static void dsl_communication() {
 #ifdef PGAS
                     if (conflict == NO_CONFLICT) {
                         write_set_pgas_insert(PGAS_write_sets[sender], ps_remote->write_value, ps_remote->address);
-                        PRINT("WL from %02d> addr: %04d, val: %d | done");
+                        PRINT("WL from %02d> addr: %04d, val: %d | done", sender, ps_remote->address, ps_remote->write_value);
                     }
 #endif
                     ps_send(sender, PS_PUBLISH_RESPONSE, ps_remote->address, conflict);
