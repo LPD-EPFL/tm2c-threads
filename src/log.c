@@ -435,6 +435,8 @@ inline write_entry_pgas_t * write_set_pgas_entry(write_set_pgas_t *write_set_pga
         write_set_pgas->write_entries = temp;
         write_set_pgas->size = new_size;
     }
+    
+    PRINT("WS: we: %p, size: %2d, nb_entries: %2d", write_set_pgas->write_entries, write_set_pgas->size, write_set_pgas->nb_entries);
 
     return &write_set_pgas->write_entries[write_set_pgas->nb_entries++];
 }
