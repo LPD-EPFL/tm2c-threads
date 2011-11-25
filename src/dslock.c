@@ -82,17 +82,6 @@ void dsl_init(void) {
     }
 
     PGAS_init();
-
-    PRINT("testing ws");
-    int k;
-    for (k = 0; k < 16; k++) {
-        write_set_pgas_insert(PGAS_write_sets[1], k, k);
-    }
-    
-    write_set_pgas_print(PGAS_write_sets[1]);
-    PGAS_write_sets[1] = write_set_pgas_empty(PGAS_write_sets[1]);
-
-
 #endif
 
     ps_hashtable = ps_hashtable_new();
