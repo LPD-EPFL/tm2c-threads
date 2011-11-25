@@ -427,8 +427,8 @@ inline write_entry_pgas_t * write_set_pgas_entry(write_set_pgas_t *write_set_pga
         PRINT("WRITE set max sized (%d)(%d)", write_set_pgas->size, new_size);
         write_entry_pgas_t *temp;
         if ((temp = (write_entry_pgas_t *) realloc(write_set_pgas->write_entries, new_size * sizeof (write_entry_pgas_t))) == NULL) {
+            PRINT("Could not resize the write set pgas");
             write_set_pgas_free(write_set_pgas);
-            PRINT("Could not resize the write set");
             return NULL;
         }
 
