@@ -164,6 +164,7 @@ static void dsl_communication() {
 #endif
                     PRINT("completed wl req");
                     ps_send(sender, PS_PUBLISH_RESPONSE, ps_remote->address, conflict);
+                    PRINT("and send resp msg");
                     break;
                 }
                 case PS_REMOVE_NODE:
