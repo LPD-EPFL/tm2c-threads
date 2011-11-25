@@ -88,6 +88,9 @@ void dsl_init(void) {
     for (k = 0; k < 16; k++) {
         write_set_pgas_insert(PGAS_write_sets[1], k, k);
     }
+    
+    write_set_print(PGAS_write_sets[1]);
+    write_set_empty(PGAS_write_sets[1]);
 
 
 #endif
