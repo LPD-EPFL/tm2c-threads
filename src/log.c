@@ -20,7 +20,7 @@ inline write_set_t * write_set_new() {
         PRINTD("Could not initialize the write set");
         return NULL;
     }
-    
+
     write_set->nb_entries = 0;
     write_set->size = WRITE_SET_SIZE;
 
@@ -33,13 +33,13 @@ inline void write_set_free(write_set_t *write_set) {
 }
 
 inline write_set_t * write_set_empty(write_set_t *write_set) {
-    
+
     if (write_set->size > WRITE_SET_SIZE) {
         write_entry_t * temp;
-        if ((temp = (write_entry_t *) realloc(write_set->write_entries, WRITE_SET_SIZE * sizeof(write_entry_t))) == NULL) {
+        if ((temp = (write_entry_t *) realloc(write_set->write_entries, WRITE_SET_SIZE * sizeof (write_entry_t))) == NULL) {
             free(write_set->write_entries);
             PRINT("realloc @ write_set_empty failed");
-            write_set->write_entries = (write_entry_t *) malloc(WRITE_SET_SIZE * sizeof(write_entry_t));
+            write_set->write_entries = (write_entry_t *) malloc(WRITE_SET_SIZE * sizeof (write_entry_t));
             if (write_set->write_entries == NULL) {
                 PRINT("malloc write_set->write_entries @ write_set_empty");
                 return NULL;
@@ -286,13 +286,13 @@ inline void read_set_free(read_set_t *read_set) {
 }
 
 inline read_set_t * read_set_empty(read_set_t *read_set) {
-    
+
     if (read_set->size > READ_SET_SIZE) {
         read_entry_l_t * temp;
-        if ((temp = (read_entry_l_t *) realloc(read_set->read_entries, READ_SET_SIZE * sizeof(read_entry_l_t))) == NULL) {
+        if ((temp = (read_entry_l_t *) realloc(read_set->read_entries, READ_SET_SIZE * sizeof (read_entry_l_t))) == NULL) {
             free(read_set->read_entries);
             PRINT("realloc @ read_set_empty failed");
-            read_set->read_entries = (read_entry_l_t *) malloc(READ_SET_SIZE * sizeof(read_entry_l_t));
+            read_set->read_entries = (read_entry_l_t *) malloc(READ_SET_SIZE * sizeof (read_entry_l_t));
             if (read_set->read_entries == NULL) {
                 PRINT("malloc read_set->read_entries @ read_set_empty");
                 return NULL;
@@ -370,6 +370,7 @@ inline read_entry_l_t * read_set_contains(read_set_t *read_set, void *address_sh
 
 
 #ifdef PGAS
+
 /*______________________________________________________________________________________________________
  * WRITE SET PGAS                                                                                       |
  *______________________________________________________________________________________________________|
@@ -389,7 +390,7 @@ inline write_set_pgas_t * write_set_pgas_new() {
         PRINT("Could not initialize the write set");
         return NULL;
     }
-    
+
     write_set_pgas->nb_entries = 0;
     write_set_pgas->size = WRITE_SET_PGAS_SIZE;
 
@@ -402,13 +403,13 @@ inline void write_set_pgas_free(write_set_pgas_t *write_set_pgas) {
 }
 
 inline write_set_pgas_t * write_set_pgas_empty(write_set_pgas_t *write_set_pgas) {
-    
+
     if (write_set_pgas->size > WRITE_SET_PGAS_SIZE) {
         write_entry_pgas_t * temp;
-        if ((temp = (write_entry_pgas_t *) realloc(write_set_pgas->write_entries, WRITE_SET_PGAS_SIZE * sizeof(write_entry_pgas_t))) == NULL) {
+        if ((temp = (write_entry_pgas_t *) realloc(write_set_pgas->write_entries, WRITE_SET_PGAS_SIZE * sizeof (write_entry_pgas_t))) == NULL) {
             free(write_set_pgas->write_entries);
             PRINT("realloc @ write_set_pgas_empty failed");
-            write_set_pgas->write_entries = (write_entry_pgas_t *) malloc(WRITE_SET_PGAS_SIZE * sizeof(write_entry_pgas_t));
+            write_set_pgas->write_entries = (write_entry_pgas_t *) malloc(WRITE_SET_PGAS_SIZE * sizeof (write_entry_pgas_t));
             if (write_set_pgas->write_entries == NULL) {
                 PRINT("malloc write_set_pgas->write_entries @ write_set_pgas_empty");
                 return NULL;
@@ -422,8 +423,8 @@ inline write_set_pgas_t * write_set_pgas_empty(write_set_pgas_t *write_set_pgas)
 
 inline write_entry_pgas_t * write_set_pgas_entry(write_set_pgas_t *write_set_pgas) {
     if (write_set_pgas->nb_entries == write_set_pgas->size) {
-        PRINT("WRITE set max sized (%d)", write_set_pgas->size);
         unsigned int new_size = 2 * write_set_pgas->size;
+        PRINT("WRITE set max sized (%d)(%d)", write_set_pgas->size, new_size);
         write_entry_pgas_t *temp;
         if ((temp = (write_entry_pgas_t *) realloc(write_set_pgas->write_entries, new_size * sizeof (write_entry_pgas_t))) == NULL) {
             write_set_pgas_free(write_set_pgas);
@@ -462,7 +463,7 @@ inline void write_entry_pgas_persist(write_entry_pgas_t *we) {
 }
 
 inline void write_entry_pgas_print(write_entry_pgas_t *we) {
-            PRINTSME("[%5d :  %d]", (we->address), we->value);
+    PRINTSME("[%5d :  %d]", (we->address), we->value);
 }
 
 inline void write_set_pgas_print(write_set_pgas_t *write_set_pgas) {
