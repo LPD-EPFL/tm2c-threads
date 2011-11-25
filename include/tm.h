@@ -64,10 +64,10 @@ extern "C" {
 
 #ifdef PGAS
 #define WSET_EMPTY           write_set_pgas_empty
-#define WSET_PERSIST         write_set_pgas_persist
+#define WSET_PERSIST(stm_tx)
 #else
 #define WSET_EMPTY           write_set_empty
-#define WSET_PERSIST         write_set_persist
+#define WSET_PERSIST(stm_tx) write_set_persist(stm_tx)
 #endif
 
 #define TX_START                                                        \
