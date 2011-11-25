@@ -164,9 +164,7 @@ CONFLICT_TYPE ps_publish(void *address) {
 
 #ifdef PGAS
     ps_send_wl(responsible_node, address, value);
-    PRINT(">> send wl req for %d", address);
     ps_recv_wl(responsible_node);
-    PRINT("<< wl resp for %d", address);
 #else
     ps_sendb(responsible_node, PS_PUBLISH, address_offs, NO_CONFLICT); //make sync
     ps_recvb(responsible_node);
