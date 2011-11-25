@@ -85,7 +85,7 @@ void dsl_init(void) {
 
     PRINT("testing ws");
     int k;
-    for (k = 0; k < 8; k++) {
+    for (k = 0; k < 16; k++) {
         write_set_pgas_insert(PGAS_write_sets[1], k, k);
     }
 
