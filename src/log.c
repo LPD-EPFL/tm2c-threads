@@ -404,6 +404,7 @@ inline void write_set_pgas_free(write_set_pgas_t *write_set_pgas) {
 
 inline write_set_pgas_t * write_set_pgas_empty(write_set_pgas_t *write_set_pgas) {
 
+#ifdef WRITE_SET_RESIZE
     if (write_set_pgas->size > WRITE_SET_PGAS_SIZE) {
         write_entry_pgas_t * temp;
         if ((temp = (write_entry_pgas_t *) realloc(write_set_pgas->write_entries, WRITE_SET_PGAS_SIZE * sizeof (write_entry_pgas_t))) == NULL) {
@@ -417,6 +418,7 @@ inline write_set_pgas_t * write_set_pgas_empty(write_set_pgas_t *write_set_pgas)
         }
     }
     write_set_pgas->size = WRITE_SET_PGAS_SIZE;
+#endif
     write_set_pgas->nb_entries = 0;
     return write_set_pgas;
 }
@@ -436,8 +438,6 @@ inline write_entry_pgas_t * write_set_pgas_entry(write_set_pgas_t *write_set_pga
         write_set_pgas->size = new_size;
     }
     
-    PRINT("WS: we: %p, size: %2d, nb_entries: %2d", write_set_pgas->write_entries, write_set_pgas->size, write_set_pgas->nb_entries);
-
     return &write_set_pgas->write_entries[write_set_pgas->nb_entries++];
 }
 
