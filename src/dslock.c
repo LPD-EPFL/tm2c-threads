@@ -154,23 +154,18 @@ static void dsl_communication() {
                     break;
                 case PS_PUBLISH:
                 {
-                    PRINT("WL from %02d> addr: %04d, val: %d", sender, ps_remote->address, ps_remote->write_value);
                     CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
 #ifdef PGAS
                     if (conflict == NO_CONFLICT) {
                         write_set_pgas_insert(PGAS_write_sets[sender], ps_remote->write_value, ps_remote->address);
-                        PRINT("WL from %02d> addr: %04d, val: %d | done", sender, ps_remote->address, ps_remote->write_value);
                     }
 #endif
-                    PRINT("completed wl req");
                     ps_send(sender, PS_PUBLISH_RESPONSE, ps_remote->address, conflict);
                     break;
                 }
                 case PS_REMOVE_NODE:
                     //write_set_pgas_persist(PGAS_write_sets[sender]);
-                    PRINT("printing ws");
                     write_set_pgas_print(PGAS_write_sets[sender]);
-                    PRINT("emptying ws");
                     PGAS_write_sets[sender] = write_set_pgas_empty(PGAS_write_sets[sender]);
                     ps_hashtable_delete_node(ps_hashtable, sender);
                     break;
