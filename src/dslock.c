@@ -153,8 +153,10 @@ static void dsl_communication() {
                     break;
                 }
                 case PS_REMOVE_NODE:
+#ifdef PGAS
                     //write_set_pgas_persist(PGAS_write_sets[sender]);
                     PGAS_write_sets[sender] = write_set_pgas_empty(PGAS_write_sets[sender]);
+#endif
                     ps_hashtable_delete_node(ps_hashtable, sender);
                     break;
                 case PS_UNSUBSCRIBE:
