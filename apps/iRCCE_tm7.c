@@ -11,7 +11,7 @@
 #define SHMEM_SIZE1      SIS_SIZE
 #define NUM_TXOPS       100
 #define UPDTX_PRCNT     10
-#define WRITE_PRCNT     50
+#define WRITE_PRCNT     10
 #define DURATION        1
 
 #define ROLL(prcntg)    if (rand_range(100) <= (prcntg))
