@@ -10,7 +10,7 @@
 
 #define SHMEM_SIZE1      SIS_SIZE
 #define NUM_TXOPS       100
-#define UPDTX_PRCNT     50
+#define UPDTX_PRCNT     10
 #define WRITE_PRCNT     50
 #define DURATION        1
 
