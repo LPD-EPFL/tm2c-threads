@@ -90,7 +90,7 @@ void dsl_init(void) {
     }
     
     write_set_pgas_print(PGAS_write_sets[1]);
-    write_set_pgas_empty(PGAS_write_sets[1]);
+    PGAS_write_sets[1] = write_set_pgas_empty(PGAS_write_sets[1]);
 
 
 #endif
@@ -171,7 +171,7 @@ static void dsl_communication() {
                     PRINT("printing ws");
                     write_set_pgas_print(PGAS_write_sets[sender]);
                     PRINT("emptying ws");
-                    write_set_pgas_empty(PGAS_write_sets[sender]);
+                    PGAS_write_sets[sender] = write_set_pgas_empty(PGAS_write_sets[sender]);
                     ps_hashtable_delete_node(ps_hashtable, sender);
                     break;
                 case PS_UNSUBSCRIBE:
