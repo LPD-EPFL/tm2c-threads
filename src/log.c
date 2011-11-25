@@ -422,7 +422,7 @@ inline write_set_pgas_t * write_set_pgas_empty(write_set_pgas_t *write_set_pgas)
 
 inline write_entry_pgas_t * write_set_pgas_entry(write_set_pgas_t *write_set_pgas) {
     if (write_set_pgas->nb_entries == write_set_pgas->size) {
-        //PRINTD("WRITE set max sized (%d)", write_set_pgas->size);
+        PRINT("WRITE set max sized (%d)", write_set_pgas->size);
         unsigned int new_size = 2 * write_set_pgas->size;
         write_entry_pgas_t *temp;
         if ((temp = (write_entry_pgas_t *) realloc(write_set_pgas->write_entries, new_size * sizeof (write_entry_pgas_t))) == NULL) {
