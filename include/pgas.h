@@ -31,7 +31,8 @@ extern "C" {
     extern void * PGAS_alloc();
     extern void PGAS_free(void *);
 
-#define ROUND(n)        (((int) n) == n ? (int) n : (int) n + 1)
+//#define ROUND(n)        (((int) n) == n ? (int) n : (int) n + 1)
+#define ROUND(n)        ((int) (n))
 
 #define PGAS_write(addr, val, type)             \
         *((type *) ((type *) SHMEM + addr)) = (type) (val)
