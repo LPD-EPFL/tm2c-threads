@@ -130,7 +130,13 @@ static inline void ps_recvb(unsigned short int from) {
  * ____________________________________________________________________________________________|
  */
 
+#ifdef PGAS
+
+CONFLICT_TYPE ps_subscribe(unsigned int address) {
+#else
+
 CONFLICT_TYPE ps_subscribe(void *address) {
+#endif
 
     unsigned int address_offs;
     unsigned short int responsible_node = DHT_get_responsible_node(address, &address_offs);
@@ -139,7 +145,7 @@ CONFLICT_TYPE ps_subscribe(void *address) {
 
 #ifdef PGAS
     //ps_send_rl(responsible_node, (unsigned int) address);
-    ps_send_rl(responsible_node, ROUND((unsigned int) address/ (double) NUM_DSL_NODES));
+    ps_send_rl(responsible_node, ROUND((double) address / NUM_DSL_NODES));
 #else
     ps_sendb(responsible_node, PS_SUBSCRIBE, address_offs, NO_CONFLICT);
 
@@ -270,11 +276,17 @@ static inline unsigned int shmem_address_offset(void *shmem_address) {
     return ((int) shmem_address) -shmem_start_address;
 }
 
+#ifdef PGAS
+
+static inline unsigned int DHT_get_responsible_node(unsigned int shmem_address, unsigned int *address_offset) {
+#else
+
 static inline unsigned int DHT_get_responsible_node(void *shmem_address, unsigned int *address_offset) {
+#endif
     /* shift right by DHT_ADDRESS_MASK, thus making 2^DHT_ADDRESS_MASK continuous
         address handled by the same node*/
 #ifdef PGAS
-    return dsl_nodes[((unsigned int) shmem_address) % NUM_DSL_NODES];
+    return dsl_nodes[shmem_address % NUM_DSL_NODES];
 #else
     *address_offset = shmem_address_offset(shmem_address);
     return dsl_nodes[(*address_offset >> DHT_ADDRESS_MASK) % NUM_DSL_NODES];
