@@ -138,7 +138,8 @@ CONFLICT_TYPE ps_subscribe(void *address) {
     nodes_contacted[responsible_node]++;
 
 #ifdef PGAS
-    ps_send_rl(responsible_node, (unsigned int) address);
+    //ps_send_rl(responsible_node, (unsigned int) address);
+    ps_send_rl(responsible_node, ROUND((double) address/NUM_DSL_NODES));
 #else
     ps_sendb(responsible_node, PS_SUBSCRIBE, address_offs, NO_CONFLICT);
 
