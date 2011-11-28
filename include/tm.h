@@ -225,7 +225,12 @@ extern "C" {
 
 retry:
 #endif
+
+#ifdef PGAS
+                if ((conflict = ps_subscribe(addr)) != NO_CONFLICT) {
+#else
                 if ((conflict = ps_subscribe((void *) addr)) != NO_CONFLICT) {
+#endif
 #ifdef BACKOFF
                     if (num_delays++ < BACKOFF_MAX) {
                         udelay(delay);
