@@ -85,7 +85,7 @@ extern "C" {
                 unsigned int abrt_attacker;
                 unsigned int abrt_reason;
             };
-            
+
             int write_value;
         };
     } PS_COMMAND;
@@ -120,7 +120,11 @@ extern "C" {
 
     /* Try to subscribe the TX for reading the address
      */
+#ifdef PGAS
+    CONFLICT_TYPE ps_subscribe(unsigned int address);
+#else
     CONFLICT_TYPE ps_subscribe(void *address);
+#endif
     /* Try to publish a write on the address
      */
 #ifdef PGAS
