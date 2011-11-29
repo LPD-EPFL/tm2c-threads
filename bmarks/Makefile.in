@@ -13,6 +13,7 @@ MB_HT := microbench/hashtable
 MR := mapreduce
 
 BANKOBJS  := bank.o   $(ARCHIVE)
+BANKPGASOBJS  := bankpgas.o   $(ARCHIVE)
 BANKSOBJS  := bankseq.o   $(ARCHIVE)
 MTESTOBJS  := mtest.o   $(ARCHIVE)
 MROBJS := $(MR)/mr.o $(ARCHIVE)	
@@ -35,11 +36,17 @@ all: bank mbll mbht ro
 bank: $(BANKOBJS)
 	$(CCOMPILE) -o bank $(BANKOBJS) $(CFLAGS)
 
+bankpgas: $(BANKPGASOBJS)
+	$(CCOMPILE) -o bankpgas $(BANKPGASOBJS) $(CFLAGS)
+
 bankseq: $(BANKSOBJS)
 	$(CCOMPILE) -o bankseq $(BANKSOBJS) $(CFLAGS)
 
 bank.o: bank.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h $(TMH)
 	$(CCOMPILE) -c $(CFLAGS) bank.c
+
+bankpgas.o: bankpgas.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h $(TMH)
+	$(CCOMPILE) -c $(CFLAGS) bankpgas.c
 
 bankseq.o: bankseq.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h $(TMH)
 	$(CCOMPILE) -c $(CFLAGS) bankseq.c
