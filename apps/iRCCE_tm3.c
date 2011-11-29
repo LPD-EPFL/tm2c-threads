@@ -20,11 +20,9 @@ MAIN(int argc, char **argv) {
 
     TX_START
     
-    FOR(3) {
-        PGAS_alloc();
-    }
-    
-    PRINT("%d", PGAS_alloc());
+    TX_LOAD_STORE(0, +, 5);
+    TX_LOAD_STORE(1, +, 3);
+    TX_LOAD_STORE(2, -, 4);
     
     TX_COMMIT
 
