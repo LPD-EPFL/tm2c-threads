@@ -20,7 +20,7 @@ MAIN(int argc, char **argv) {
 
     TX_START
     
-    FOR(1) {
+    FOR(3) {
         PGAS_alloc();
     }
     
