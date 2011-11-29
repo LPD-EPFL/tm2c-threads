@@ -19,12 +19,12 @@ MAIN(int argc, char **argv) {
 
 
     TX_START
-
-    while(steps++ < 10) {
-        printf("%3d ", PGAS_alloc());
+    
+    FOR(1) {
+        PGAS_alloc();
     }
-    printf("\n");
-    FLUSH;
+    
+    PRINT("%d", PGAS_alloc());
     
     TX_COMMIT
 
