@@ -6,6 +6,7 @@
  */
 
 #include "tm.h"
+#include "pgas.h"
 
 unsigned int ID; //=RCCE_ue()
 unsigned int NUM_UES;
@@ -50,6 +51,10 @@ void tm_init(unsigned int ID) {
             PRINTD("Could not alloc tx metadata @ TM_INIT");
             EXIT(-1);
         }
+
+#ifdef PGAS
+        PGAS_alloc_init(0);
+#endif
     }
 }
 
@@ -86,7 +91,7 @@ void ps_publish_finish_all(unsigned int locked) {
 #endif
     while (locked-- > 0) {
 #ifdef PGAS
-       // ps_publish_finish(we_current->address, we_current->value);
+        // ps_publish_finish(we_current->address, we_current->value);
 #else
         ps_publish_finish((void *) we_current[locked].address_shmem);
 #endif
