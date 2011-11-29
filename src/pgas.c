@@ -8,6 +8,9 @@
 #include "pgas.h"
 
 void * SHMEM;
+unsigned int shmem_index = 0;
+unsigned int id__m1d2;
+unsigned int num_ues_d2;
 
 void PGAS_init() {
     SHMEM = (void *) malloc(SHMEM_SIZE);
