@@ -145,7 +145,7 @@ extern "C" {
      */
     void ps_publish_finish(void *address);
 
-    void ps_finish_all(void);
+    void ps_finish_all(CONFLICT_TYPE conflict);
     //
     //    unsigned int shmem_address_offset(void *shmem_address);
     //

@@ -169,6 +169,18 @@ static void dsl_communication() {
 #endif
                 case PS_REMOVE_NODE:
 #ifdef PGAS
+                    /*
+                     
+                     TODO: persist only if was no conflict
+                     
+                     
+                     */
+                    if (ps_remote->response == NO_CONFLICT) {
+                        PRINT("PS_REMOVE_NODE %02d, no conflict", sender);
+                    }
+                    else {
+                        PRINT("PS_REMOVE_NODE %02d, CONFLICT", sender);
+                    }
                     write_set_pgas_persist(PGAS_write_sets[sender]);
                     PGAS_write_sets[sender] = write_set_pgas_empty(PGAS_write_sets[sender]);
 #endif

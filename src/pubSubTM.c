@@ -231,7 +231,7 @@ void ps_publish_finish(void *address) {
     ps_sendb(responsible_node, PS_PUBLISH_FINISH, address_offs, NO_CONFLICT);
 }
 
-void ps_finish_all() {
+void ps_finish_all(CONFLICT_TYPE conflict) {
 #define FINISH_ALL_PARALLEL
     int i;
 
@@ -239,6 +239,7 @@ void ps_finish_all() {
     iRCCE_SEND_REQUEST sends[NUM_UES];
     char data[PS_BUFFER_SIZE];
     psc->type = PS_REMOVE_NODE;
+    psc->response = conflict;
     memcpy(data, psc, sizeof (PS_COMMAND));
 #endif
 
@@ -246,7 +247,7 @@ void ps_finish_all() {
         if (nodes_contacted[i] != 0) { //can be changed to non-blocking
 
 #ifndef FINISH_ALL_PARALLEL
-            ps_sendb(i, PS_REMOVE_NODE, 0, NO_CONFLICT);
+            ps_sendb(i, PS_REMOVE_NODE, 0, conflict);
 #else
             if (iRCCE_isend(data, PS_BUFFER_SIZE, i, &sends[i]) != iRCCE_SUCCESS) {
                 iRCCE_add_send_to_wait_list(&waitlist, &sends[i]);
