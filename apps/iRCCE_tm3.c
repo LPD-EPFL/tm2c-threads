@@ -20,9 +20,9 @@ MAIN(int argc, char **argv) {
 
     TX_START
     
-    TX_LOAD_STORE(0, +, 5);
-    TX_LOAD_STORE(1, +, 3);
-    TX_LOAD_STORE(2, -, 4);
+    TX_LOAD_STORE(0, +, 1);
+    TX_LOAD_STORE(1, +, 1);
+    TX_LOAD_STORE(2, +, 1);
     
     TX_COMMIT
 
