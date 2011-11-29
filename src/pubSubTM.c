@@ -206,6 +206,8 @@ CONFLICT_TYPE ps_store_inc(unsigned int address, int increment) {
     
     ps_send_winc(responsible_node, address, increment);
     ps_recv_wl(responsible_node);
+    
+    return ps_response;
 }
 #endif
 
