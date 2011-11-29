@@ -152,12 +152,15 @@ extern "C" {
 #endif
 
 
-    //TODO: the write_set_update will make the system to try to acquire the wlocks in the
-    //commit phase of the TX... it should not, cause the wlock is already acquired
-#define TX_LOAD_STORE(addr, op, value, datatype)\
-    {tx_wlock((void *) (addr));\
-    int temp__ = (*(int *) (addr)) op (value);\
+#ifdef PGAS
+#define TX_LOAD_STORE(addr, op, value)                                  \
+        tx_wlock(addr, op(value));
+#else
+#define TX_LOAD_STORE(addr, op, value, datatype)                        \
+    {tx_wlock((void *) (addr));                                         \
+    int temp__ = (*(int *) (addr)) op (value);                          \
     write_set_update(stm_tx->write_set, TYPE_INT, &temp__, addr);}
+#endif
 
 
     /*early release of READ lock -- TODO: the entry remains in read-set, so one
@@ -269,7 +272,7 @@ retry:
 retry:
 #endif
 #ifdef PGAS
-        if ((conflict = ps_publish(address, value)) != NO_CONFLICT) {
+        if ((conflict = ps_store_inc(address, value)) != NO_CONFLICT) {
 #else      
         if ((conflict = ps_publish((void *) address)) != NO_CONFLICT) {
 #endif

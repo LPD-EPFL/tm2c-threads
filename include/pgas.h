@@ -61,7 +61,7 @@ extern "C" {
         num_ues_d2 = (num_ues)>>1
 
 #define PGAS_alloc()                            \
-((id__m1d2) + (num_ues_d2 * shmem_index++))
+        ((id__m1d2) + (num_ues_d2 * shmem_index++))
         //((id__m1d2) + (shmem_index+=num_ues_d2))
         //((id__m1d2) + (num_ues_d2 * shmem_index++))
         //(((ID - 1)>>1) + ((NUM_UES>>1) * shmem_index++))

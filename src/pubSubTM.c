@@ -90,6 +90,18 @@ static inline void ps_send_wl(unsigned short int target, unsigned int address, i
     iRCCE_isend(data, PS_BUFFER_SIZE, target, NULL);
 }
 
+static inline void ps_send_winc(unsigned short int target, unsigned int address, int value) {
+
+    psc->type = PS_WRITE_INC;
+    psc->address = address;
+    psc->write_value = value;
+
+    char data[PS_BUFFER_SIZE];
+
+    memcpy(data, psc, sizeof (PS_COMMAND));
+    iRCCE_isend(data, PS_BUFFER_SIZE, target, NULL);
+}
+
 static inline void ps_recv_wl(unsigned short int from) {
     char data[PS_BUFFER_SIZE];
     iRCCE_irecv(data, PS_BUFFER_SIZE, from, NULL);
@@ -184,6 +196,18 @@ CONFLICT_TYPE ps_publish(void *address) {
 
     return ps_response;
 }
+
+#ifdef PGAS
+
+CONFLICT_TYPE ps_store_inc(unsigned int address, int increment) {
+    unsigned int address_offs;
+    unsigned short int responsible_node = DHT_get_responsible_node(address, &address_offs);
+    nodes_contacted[responsible_node]++;
+    
+    ps_send_winc(responsible_node, address, increment);
+    ps_recv_wl(responsible_node);
+}
+#endif
 
 void ps_unsubscribe(void *address) {
 

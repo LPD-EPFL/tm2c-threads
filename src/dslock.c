@@ -152,6 +152,21 @@ static void dsl_communication() {
                     ps_send(sender, PS_PUBLISH_RESPONSE, ps_remote->address, conflict);
                     break;
                 }
+#ifdef PGAS
+                case PS_WRITE_INC:
+                {
+                    CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
+                    if (conflict == NO_CONFLICT) {
+                        PRINT("PS_WRITE_INC for %3d, old: %3d, new: %d", ps_remote->address, PGAS_read(ps_remote->address),
+                                PGAS_read(ps_remote->address) + ps_remote->write_value);
+                        write_set_pgas_insert(PGAS_write_sets[sender], PGAS_read(ps_remote->address) + ps_remote->write_value,
+                                ps_remote->address);
+                    }
+                    ps_send(sender, PS_PUBLISH_RESPONSE, ps_remote->address, conflict);
+
+                    break;
+                }
+#endif
                 case PS_REMOVE_NODE:
 #ifdef PGAS
                     write_set_pgas_persist(PGAS_write_sets[sender]);

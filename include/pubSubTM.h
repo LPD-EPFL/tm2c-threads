@@ -42,7 +42,8 @@ extern "C" {
         PS_PUBLISH_RESPONSE, //5
         PS_ABORTED, //6
         PS_REMOVE_NODE, //7
-        PS_STATS
+        PS_STATS,
+        PS_WRITE_INC
     } PS_COMMAND_TYPE;
 
     //TODO: make it union with address normal int..
@@ -129,6 +130,10 @@ extern "C" {
      */
 #ifdef PGAS
     CONFLICT_TYPE ps_publish(unsigned int address, int value);
+    
+    /*  Try to increment by increment and store (so, write) address
+     */
+    CONFLICT_TYPE ps_store_inc(unsigned int address, int increment);
 #else
     CONFLICT_TYPE ps_publish(void *address);
 #endif
