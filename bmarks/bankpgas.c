@@ -91,7 +91,7 @@ int transfer(unsigned int src, unsigned int dst, int amount) {
 #ifdef LOAD_STORE
     //TODO: test and use the TX_LOAD_STORE
     TX_LOAD_STORE(src, -, amount);
-    TX_LOAD_STORE(dst +, amount);
+    TX_LOAD_STORE(dst, +, amount);
     TX_COMMIT
 #else
     i = TX_LOAD(src);
