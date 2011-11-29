@@ -89,7 +89,7 @@ extern "C" {
     PRINTD("|| commiting tx");                                          \
     ps_publish_all();                                                   \
     WSET_PERSIST(stm_tx->write_set);                                    \
-    ps_finish_all();                                                    \
+    ps_finish_all(NO_CONFLICT);                                         \
     mem_info_on_commit(stm_tx->mem_info);                               \
     stm_tx_node->tx_starts += stm_tx->retries;                          \
     stm_tx_node->tx_commited++;                                         \
