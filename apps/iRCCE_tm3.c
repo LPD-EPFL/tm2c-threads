@@ -17,17 +17,15 @@ MAIN(int argc, char **argv) {
 
     TM_INIT
 
-    PRINT("%d", steps++);
 
     TX_START
 
-    PRINT("%d", steps++);
-
-
-    int i;
-    for (i = 0; i < 5; i++) {
-        PRINT("loading: %2d, value: %d", i, TX_LOAD(i));
+    while(steps++ < 10) {
+        printf("%3d ", PGAS_alloc());
     }
+    printf("\n");
+    FLUSH;
+    
     TX_COMMIT
 
     TM_END
