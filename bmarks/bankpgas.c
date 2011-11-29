@@ -89,12 +89,12 @@ int transfer(unsigned int src, unsigned int dst, int amount) {
     TX_START
 
 #ifdef LOAD_STORE
-    //TODO: test and use the TX_LOAD_STORE
-    TX_LOAD_STORE(src, -, amount);
+            //TODO: test and use the TX_LOAD_STORE
+            TX_LOAD_STORE(src, -, amount);
     TX_LOAD_STORE(dst, +, amount);
     TX_COMMIT
 #else
-    i = TX_LOAD(src);
+            i = TX_LOAD(src);
     i -= amount;
     TX_STORE(src, i);
     j = TX_LOAD(dst);
@@ -102,7 +102,7 @@ int transfer(unsigned int src, unsigned int dst, int amount) {
     TX_STORE(dst, j);
     TX_COMMIT
 #endif
-    return amount;
+            return amount;
 }
 
 int total(bank_t *bank, int transactional) {
@@ -224,20 +224,20 @@ bank_t * test(void *data, double duration, int nb_accounts) {
         PRINT("malloc bank");
         EXIT(1);
     }
-    
+
 
     bank->size = nb_accounts;
-/*
-    ONCE
-    {
-        int i;
-        for (i = 0; i < bank->size; i++) {
-            //       PRINTN("(s %d)", i);
-            bank->accounts[I(i)].number = i;
-            bank->accounts[I(i)].balance = 0;
+    /*
+        ONCE
+        {
+            int i;
+            for (i = 0; i < bank->size; i++) {
+                //       PRINTN("(s %d)", i);
+                bank->accounts[I(i)].number = i;
+                bank->accounts[I(i)].balance = 0;
+            }
         }
-    }
-*/
+     */
 
     ONCE
     {
@@ -297,7 +297,15 @@ bank_t * test(void *data, double duration, int nb_accounts) {
 
     PRINT("~~");
     BARRIER
-    /* Free transaction */
+
+    ONCE
+    {
+        PRINT("\t\t\t~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                "\t\t\t\tBank total (after): %d\n"
+                "\t\t\t~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+                total(bank, 0));
+    }
+
     TM_END
     BARRIER
 
@@ -467,14 +475,6 @@ TASKMAIN(int argc, char **argv) {
     printf("  #read-all   : %lu\n", data->nb_read_all);
     printf("  #write-all  : %lu\n", data->nb_write_all);
     FLUSH
-
-    ONCE
-    {
-        PRINT("\t\t\t~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                "\t\t\t\tBank total (after): %d\n"
-                "\t\t\t~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
-                total(bank, 0));
-    }
 
     /* Delete bank and accounts */
 
