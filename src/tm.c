@@ -59,7 +59,7 @@ void tm_init(unsigned int ID) {
 }
 
 void handle_abort(stm_tx_t *stm_tx, CONFLICT_TYPE reason) {
-    ps_finish_all();
+    ps_finish_all(reason);
     stm_tx->aborts++;
 
     switch (reason) {
