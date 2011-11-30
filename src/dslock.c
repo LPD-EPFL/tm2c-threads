@@ -134,7 +134,7 @@ static void dsl_communication() {
             switch (ps_remote->type) {
                 case PS_SUBSCRIBE:
 #ifdef PGAS
-                    PRINT("RL addr: %3d, val: %d", ps_remote->address, PGAS_read(ps_remote->address));
+                    //PRINT("RL addr: %3d, val: %d", ps_remote->address, PGAS_read(ps_remote->address));
                     ps_send(sender, PS_SUBSCRIBE_RESPONSE, PGAS_read(ps_remote->address), try_subscribe(sender, ps_remote->address));
 #else
                     ps_send(sender, PS_SUBSCRIBE_RESPONSE, ps_remote->address, try_subscribe(sender, ps_remote->address));
@@ -157,13 +157,17 @@ static void dsl_communication() {
                 {
                     CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
                     if (conflict == NO_CONFLICT) {
+/*
                         PRINT("PS_WRITE_INC from %2d for %3d, old: %3d, new: %d", sender, ps_remote->address, PGAS_read(ps_remote->address),
                                 PGAS_read(ps_remote->address) + ps_remote->write_value);
+*/
                         write_set_pgas_insert(PGAS_write_sets[sender], PGAS_read(ps_remote->address) + ps_remote->write_value,
                                 ps_remote->address);
                     }
                     else {
+/*
                         PRINT("PS_WRITE_INC from %2d for %3d, CONFLICT", sender, ps_remote->address);
+*/
                     }
                     ps_send(sender, PS_PUBLISH_RESPONSE, ps_remote->address, conflict);
 
