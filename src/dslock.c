@@ -163,7 +163,7 @@ static void dsl_communication() {
                                 ps_remote->address);
                     }
                     else {
-                        PRINT("PS_WRITE_INC for from %2d for %3d, CONFLICT", ps_remote->address);
+                        PRINT("PS_WRITE_INC for from %2d for %3d, CONFLICT", sender, ps_remote->address);
                     }
                     ps_send(sender, PS_PUBLISH_RESPONSE, ps_remote->address, conflict);
 
