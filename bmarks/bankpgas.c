@@ -248,14 +248,10 @@ bank_t * test(void *data, double duration, int nb_accounts) {
     /* Wait on barrier */
     BARRIER
 
-    // PRINT("chk %d", chk++); //0
+            // PRINT("chk %d", chk++); //0
+            goto notrun;
 
     FOR(duration) {
-        
-        break;
-        
-        
-        
         if (d->id < d->read_cores) {
             /* Read all */
             //  PRINT("READ ALL1");
@@ -298,10 +294,10 @@ bank_t * test(void *data, double duration, int nb_accounts) {
         }
     }
 
-    
+notrun:
     int i;
     for (i = 0; i < bank->size; i++) {
-        transfer(i, (i+1)%bank->size, 1);
+        transfer(i, (i + 1) % bank->size, 1);
     }
     //reset(bank);
 
