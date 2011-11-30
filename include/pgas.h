@@ -34,7 +34,8 @@ extern "C" {
 
     //#define ROUND(n)        (((int) n) == n ? (int) n : (int) n + 1)
 #define ROUND(n)        ((int) (n))
-#define SHRINK(addr)    ROUND((double) (addr) / NUM_DSL_NODES)
+#define SHRINK(addr)    (addr)
+//#define SHRINK(addr)    ROUND((double) (addr) / NUM_DSL_NODES)
 
 #define PGAS_write(addr, val, type)             \
         *((type *) ((type *) SHMEM + addr)) = (type) (val)
