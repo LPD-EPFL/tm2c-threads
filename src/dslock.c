@@ -134,7 +134,7 @@ static void dsl_communication() {
             switch (ps_remote->type) {
                 case PS_SUBSCRIBE:
 #ifdef PGAS
-                    //PRINT("RL addr: %d", ps_remote->address);
+                    PRINT("RL addr: %3d, val: %d", ps_remote->address, PGAS_read(ps_remote->address));
                     ps_send(sender, PS_SUBSCRIBE_RESPONSE, PGAS_read(ps_remote->address), try_subscribe(sender, ps_remote->address));
 #else
                     ps_send(sender, PS_SUBSCRIBE_RESPONSE, ps_remote->address, try_subscribe(sender, ps_remote->address));
