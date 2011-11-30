@@ -295,6 +295,7 @@ bank_t * test(void *data, double duration, int nb_accounts) {
     }
 
 notrun:
+    PRINT("test");
     int i;
     for (i = 0; i < bank->size; i++) {
         transfer(i, (i + 1) % bank->size, 1);
