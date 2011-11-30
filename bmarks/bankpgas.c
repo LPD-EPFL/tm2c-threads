@@ -302,8 +302,9 @@ notrun:
     }
     //reset(bank);
 
-    PRINT("~~");
     BARRIER
+    PRINT("~~");
+
 
     ONCE
     {
