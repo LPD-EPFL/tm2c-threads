@@ -249,7 +249,7 @@ bank_t * test(void *data, double duration, int nb_accounts) {
     BARRIER
 
             // PRINT("chk %d", chk++); //0
-            goto notrun;
+          //  goto notrun;
 
     FOR(duration) {
         if (d->id < d->read_cores) {
@@ -294,12 +294,14 @@ bank_t * test(void *data, double duration, int nb_accounts) {
         }
     }
 
+/*
 notrun:
     PRINT("test");
     int i;
     for (i = 0; i < bank->size; i++) {
         transfer(i, (i + 1) % bank->size, 1);
     }
+*/
     //reset(bank);
 
     BARRIER
