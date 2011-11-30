@@ -186,7 +186,7 @@ CONFLICT_TYPE ps_publish(void *address) {
     nodes_contacted[responsible_node]++;
 
 #ifdef PGAS
-    ps_send_wl(responsible_node, address, value);
+    ps_send_wl(responsible_node, SHRINK(address), value);
     ps_recv_wl(responsible_node);
 #else
     ps_sendb(responsible_node, PS_PUBLISH, address_offs, NO_CONFLICT); //make sync
@@ -204,7 +204,7 @@ CONFLICT_TYPE ps_store_inc(unsigned int address, int increment) {
     unsigned short int responsible_node = DHT_get_responsible_node(address, &address_offs);
     nodes_contacted[responsible_node]++;
     
-    ps_send_winc(responsible_node, address, increment);
+    ps_send_winc(responsible_node, SHRINK(address), increment);
     ps_recv_wl(responsible_node);
     
     return ps_response;
