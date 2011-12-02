@@ -173,9 +173,10 @@ int set_add(intset_t *set, val_t val, int transactional) {
 done:
     result = (v != val);
     if (result) {
-        pgas_addr_t nxt = new_node(val, next.next, transactional);
+        new_node_t nxt = new_node(val, next.next, transactional);
         PRINTD("Created node %5d. Value: %d", nxt, val);
-        TX_STORE(prev.next, nxt);
+        TX_STORE(nxt.addr, nxt.node.toint);
+        TX_STORE(prev.next, nxt.addr);
     }
     TX_COMMIT
 
