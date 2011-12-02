@@ -49,7 +49,7 @@ intset_t *set_new() {
     new_node_t max_nn = new_node(VAL_MAX, 0, 0);
     PRINT("max is : %d", max_nn.addr);
     new_node_t min_nn = new_node(VAL_MIN, max_nn.addr, 0);
-    PRINT("min is : %d", min.addr);
+    PRINT("min is : %d", min_nn.addr);
     TX_STORE(max_nn.addr, max_nn.node.toint);
     TX_STORE(min_nn.addr, min_nn.node.toint);
     set->head = min_nn.addr;
