@@ -140,7 +140,7 @@ int set_add(intset_t *set, val_t val, int transactional) {
     val_t v;
     node_t prev, next;
     TX_START
-    prev = (node_t) TX_LOAD(set.head);
+    prev = (node_t) TX_LOAD(set->head);
     next = (node_t) TX_LOAD(prev.next);
 
     v = next.val;
@@ -181,7 +181,7 @@ int set_remove(intset_t *set, val_t val, int transactional) {
     node_t prev, next;
 
     TX_START
-    prev = (node_t) TX_LOAD(set.head);
+    prev = (node_t) TX_LOAD(set->head);
     next = (node_t) TX_LOAD(prev.next);
 
     v = next.val;
@@ -213,7 +213,7 @@ done:
 void set_print(intset_t* set) {
 
     TX_START
-    node_t node = (node_t) TX_LOAD(set.head);
+    node_t node = (node_t) TX_LOAD(set->head);
 
     if (node.next == NULL) {
         goto null;
