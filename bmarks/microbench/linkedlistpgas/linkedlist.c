@@ -14,24 +14,25 @@ void *shmem_init(size_t offset) {
     return (void *) (RCCE_shmalloc(offset) + offset);
 }
 
-pgas_addr_t new_node(val_t val, nxt_t next, int transactional) {
+typedef struct new_node {
     pgas_addr_t addr;
+    node_t node;
+} new_node_t;
+
+new_node_t new_node(val_t val, nxt_t next, int transactional) {
+    new_node_t nn;
 
     if (transactional) {
-        addr = PGAS_alloc();
+        nn.addr = PGAS_alloc();
     }
     else {
-        addr = PGAS_alloc_seq();
+        nn.addr = PGAS_alloc_seq();
     }
 
-    node_t node;
-    node.val = val;
-    node.next = next;
-    TX_START
-    TX_STORE(addr, node.toint);
-    TX_COMMIT
+    nn.node.val = val;
+    nn.node.next = next;
 
-    return addr;
+    return nn;
 }
 
 intset_t *set_new() {
@@ -125,7 +126,9 @@ static int set_seq_add(intset_t *set, val_t val) {
     }
     result = (next.val != val);
     if (result) {
-        TX_STORE(prev.next, new_node(val, next.next, 0));
+        new_node_t nn = new_node(val, next.next, 0);
+        TX_STORE(prev.next, nn.addr);
+        TX_STORE(nn.addr, nn.node.toint);
     }
     TX_COMMIT
     return result;
