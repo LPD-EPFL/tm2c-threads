@@ -59,10 +59,10 @@ int set_size(intset_t *set) {
     TX_START
     size = 0;
     head.next = set->head;
-    node = TX_LOAD(head.next);
+    node = (node_t) TX_LOAD(head.next);
     while (node.next != 0) {
         size++;
-        node = TX_LOAD(node.next);
+        node = (node_t) TX_LOAD(node.next);
     }
     TX_COMMIT
     return size;
@@ -92,13 +92,13 @@ int set_contains(intset_t *set, val_t val, int transactional) {
 
     TX_START
     prev.next = set->head;
-    next = TX_LOAD(prev.next);
+    next = (node_t) TX_LOAD(prev.next);
     while (1) {
         v = next.val;
         if (v >= val)
             break;
         prev = next;
-        next = TX_LOAD(prev.next);
+        next = (node_t) TX_LOAD(prev.next);
     }
     TX_COMMIT
     result = (v == val);
@@ -112,10 +112,10 @@ static int set_seq_add(intset_t *set, val_t val) {
 
     TX_START
     prev.next = set->head;
-    next = TX_LOAD(prev.next);
+    next = (node_t) TX_LOAD(prev.next);
     while (next.val < val) {
         prev = next;
-        next = TX_LOAD(prev.next);
+        next = (node_t) TX_LOAD(prev.next);
     }
     result = (next.val != val);
     if (result) {
@@ -140,22 +140,22 @@ int set_add(intset_t *set, val_t val, int transactional) {
     val_t v;
     node_t prev, next;
     TX_START
-    prev = TX_LOAD(set.head);
-    next = TX_LOAD(prev.next);
+    prev = (node_t) TX_LOAD(set.head);
+    next = (node_t) TX_LOAD(prev.next);
 
     v = next.val;
     if (v >= val)
         goto done;
 
     prev = next;
-    next = TX_LOAD(prev.next);
+    next = (node_t) TX_LOAD(prev.next);
 
     while (1) {
         v = next.val;
         if (v >= val)
             break;
         prev = next;
-        next = TX_LOAD(prev.next);
+        next = (node_t) TX_LOAD(prev.next);
     }
 done:
     result = (v != val);
@@ -181,27 +181,27 @@ int set_remove(intset_t *set, val_t val, int transactional) {
     node_t prev, next;
 
     TX_START
-    prev = TX_LOAD(set.head);
-    next = TX_LOAD(prev.next);
+    prev = (node_t) TX_LOAD(set.head);
+    next = (node_t) TX_LOAD(prev.next);
 
     v = next.val;
     if (v >= val)
         goto done;
 
     prev = next;
-    next = TX_LOAD(prev.next);
+    next = (node_t) TX_LOAD(prev.next);
 
     while (1) {
         v = next.val;
         if (v >= val)
             break;
         prev = next;
-        next = TX_LOAD(prev.next);
+        next = (node_t) TX_LOAD(prev.next);
     }
 done:
     result = (v == val);
     if (result) {
-        node_t nxt = TX_LOAD(next.next);
+        node_t nxt = (node_t) TX_LOAD(next.next);
         TX_STORE(prev.next, nxt.next);
         PRINTD("Freed node   %5d. Value: %d", next, next.val);
     }
@@ -213,14 +213,14 @@ done:
 void set_print(intset_t* set) {
 
     TX_START
-    node_t node = TX_LOAD(set.head);
+    node_t node = (node_t) TX_LOAD(set.head);
 
     if (node.next == NULL) {
         goto null;
     }
     while (node.next != NULL) {
         printf("%d -> ", node.val);
-        node = TX_LOAD(node.next);
+        node = (node_t) TX_LOAD(node.next);
     }
     TX_COMMIT
 null:
