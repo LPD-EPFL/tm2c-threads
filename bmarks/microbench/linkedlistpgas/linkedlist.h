@@ -57,7 +57,7 @@ typedef unsigned short int nxt_t;
 #define VAL_MAX                         USHRT_MAX
 
 typedef union {
-    int nodei;
+    int toint;
     struct {
         val_t val;
         nxt_t next;

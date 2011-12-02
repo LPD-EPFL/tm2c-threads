@@ -26,9 +26,9 @@ pgas_addr_t new_node(val_t val, nxt_t next, int transactional) {
 
     node_t node;
     node.val = val;
-    node. next = next;
+    node.next = next;
     TX_START
-    TX_STORE(addr, node);
+    TX_STORE(addr, node.toint);
     TX_COMMIT
 
     return addr;
