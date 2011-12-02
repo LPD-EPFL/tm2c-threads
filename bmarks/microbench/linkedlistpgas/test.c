@@ -355,7 +355,8 @@ TASKMAIN(int argc, char **argv) {
     ONCE
     {
         /* Populate set */
-        printf("Adding %d entries to set\n", initial);
+        PRINT("Adding %d entries to set\n", initial);
+        
         i = 0;
         while (i < initial) {
             val = rand_range(range);
