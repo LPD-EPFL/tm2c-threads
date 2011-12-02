@@ -48,7 +48,7 @@ intset_t *set_new() {
     PRINT("creating the leftmost/rightmost nodes for new set");
     new_node_t max_nn = new_node(VAL_MAX, 0, 0);
     PRINT("max is : %d", max_nn.addr);
-    new_node_t min = new_node(VAL_MIN, max_nn.addr, 0);
+    new_node_t min_nn = new_node(VAL_MIN, max_nn.addr, 0);
     PRINT("min is : %d", min.addr);
     TX_STORE(max_nn.addr, max_nn.node.toint);
     TX_STORE(min_nn.addr, min_nn.node.toint);
