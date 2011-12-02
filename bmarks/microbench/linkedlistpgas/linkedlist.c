@@ -14,11 +14,6 @@ void *shmem_init(size_t offset) {
     return (void *) (RCCE_shmalloc(offset) + offset);
 }
 
-typedef struct new_node {
-    pgas_addr_t addr;
-    node_t node;
-} new_node_t;
-
 new_node_t new_node(val_t val, nxt_t next, int transactional) {
     new_node_t nn;
 
