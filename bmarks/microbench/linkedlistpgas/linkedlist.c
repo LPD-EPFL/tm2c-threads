@@ -121,6 +121,7 @@ static int set_seq_add(intset_t *set, val_t val) {
     while (next.val < val) {
         prev = next;
         next = (node_t) TX_LOAD(prev.next);
+        PRINT("next : (%d)(%d)", next.val, next.next);
     }
     result = (next.val != val);
     if (result) {
