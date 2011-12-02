@@ -42,6 +42,7 @@ intset_t *set_new() {
         perror("malloc");
         EXIT(1);
     }
+    PRINT("creating the leftmost/rightmost nodes for new set");
     max = new_node(VAL_MAX, NULL, 0);
     min = new_node(VAL_MIN, max, 0);
     set->head = min;
