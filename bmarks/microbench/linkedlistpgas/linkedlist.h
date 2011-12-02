@@ -52,7 +52,6 @@
 
 typedef unsigned short int val_t;
 typedef unsigned short int nxt_t;
-typedef unsigned int nxt_t;
 
 #define VAL_MIN                         0
 #define VAL_MAX                         USHRT_MAX
