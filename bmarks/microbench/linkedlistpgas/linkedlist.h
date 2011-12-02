@@ -50,27 +50,20 @@
 
 #define TRANSACTIONAL                   d->unit_tx
 
-typedef intptr_t val_t;
+typedef unsigned short int val_t;
+typedef unsigned short int nxt_t;
 typedef unsigned int nxt_t;
 
-#define VAL_MIN                         INT_MIN
-#define VAL_MAX                         INT_MAX
+#define VAL_MIN                         0
+#define VAL_MAX                         USHRT_MAX
 
 typedef struct node {
     val_t val;
-
-    union {
-        struct node *nextp;
-        nxt_t next;
-    };
+    nxt_t next;
 } node_t;
 
 typedef struct intset {
-
-    union {
-        nxt_t head;
-        node_t *headp;
-    };
+    nxt_t head;
 
 } intset_t;
 

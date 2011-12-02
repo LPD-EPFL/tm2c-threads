@@ -20,6 +20,7 @@ extern "C" {
 #define SHMEM           shmem__
 #define PGAS_TYPE       long long
 #define PGAS_GRAN       sizeof(long long int)
+    typedef unsigned int pgas_addr_t;
     //#define NUM_DSL_NODES 2
 
     extern void * SHMEM;
@@ -43,9 +44,9 @@ extern "C" {
 #define PGAS_read(addr)                         \
         *((int *) SHMEM + addr)
     //        *((int *) SHMEM + ROUND((double) (addr) / NUM_DSL_NODES))
-    
-    
-    
+
+
+
     /*  for application cores ---------------------------------------------------------------
      */
 
@@ -57,15 +58,18 @@ extern "C" {
 
 #define PGAS_alloc_id(id)                       \
         id__m1d2 = (((id) - 1)>>1)
-    
+
 #define PGAS_alloc_num_ues(num_ues)             \
         num_ues_d2 = (num_ues)>>1
 
+#define PGAS_alloc_seq()                        \
+        shmem_index++
+    
 #define PGAS_alloc()                            \
         ((id__m1d2) + (num_ues_d2 * shmem_index++))
-        //((id__m1d2) + (shmem_index+=num_ues_d2))
-        //((id__m1d2) + (num_ues_d2 * shmem_index++))
-        //(((ID - 1)>>1) + ((NUM_UES>>1) * shmem_index++))
+    //((id__m1d2) + (shmem_index+=num_ues_d2))
+    //((id__m1d2) + (num_ues_d2 * shmem_index++))
+    //(((ID - 1)>>1) + ((NUM_UES>>1) * shmem_index++))
 
 #ifdef	__cplusplus
 }
