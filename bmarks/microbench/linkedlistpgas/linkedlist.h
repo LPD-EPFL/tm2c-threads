@@ -66,8 +66,12 @@ typedef union {
 
 typedef struct intset {
     nxt_t head;
-
 } intset_t;
+
+typedef struct {
+    pgas_addr_t addr;
+    node_t node;
+} new_node_t;
 
 #define N2O(set, node)                  (nxt_t) ((nxt_t) (node) - (nxt_t) (set))
 #define O2N(set, offset)                ((void *) (offset) == NULL ? NULL : (node_t *) ((nxt_t) (set) + (offset)))
@@ -77,7 +81,7 @@ typedef struct intset {
 
 void *shmem_init(size_t offset);
 
-pgas_addr_t new_node(val_t val, nxt_t next, int transactional);
+new_node_t new_node(val_t val, nxt_t next, int transactional);
 intset_t *set_new();
 void set_delete(intset_t *set);
 int set_size(intset_t *set);
