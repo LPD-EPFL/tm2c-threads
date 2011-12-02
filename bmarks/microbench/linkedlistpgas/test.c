@@ -355,11 +355,12 @@ TASKMAIN(int argc, char **argv) {
     ONCE
     {
         /* Populate set */
-        PRINT("Adding %d entries to set\n", initial);
+        PRINT("Adding %d entries to set", initial);
         
         i = 0;
         while (i < initial) {
             val = rand_range(range);
+            PRINT("adding %d", val);
             if (set_add(set, val, 0)) {
                 last = val;
                 i++;
