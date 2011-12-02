@@ -42,7 +42,7 @@
  * be too high for given values of range and initial.
  */
 inline long rand_range(long r) {
-    int m = RAND_MAX;
+    int m = VAL_MAX;
     long d, v = 0;
 
     do {
@@ -55,7 +55,7 @@ inline long rand_range(long r) {
 
 /* Re-entrant version of rand_range(r) */
 inline long rand_range_re(unsigned int *seed, long r) {
-    int m = RAND_MAX;
+    int m = VAL_MAX;
     long d, v = 0;
 
     do {
@@ -187,14 +187,9 @@ void *test(void *data, double duration) {
 
 TASKMAIN(int argc, char **argv) {
     dup2(STDOUT_FILENO, STDERR_FILENO);
-#ifndef SEQUENTIAL
     TM_INIT
-#else
-    RCCE_init(&argc, &argv);
-    iRCCE_init();
-#endif
 
-    struct option long_options[] = {
+            struct option long_options[] = {
         // These options don't set a flag
         {"help", no_argument, NULL, 'h'},
         {"duration", required_argument, NULL, 'd'},
@@ -323,7 +318,7 @@ TASKMAIN(int argc, char **argv) {
 
     ONCE
     {
-        printf("Bench type   : linked list\n");
+        printf("Bench type   : linked list PGAS\n");
 #ifdef SEQUENTIAL
         printf("                sequential\n");
 #elif defined(EARLY_RELEASE )
@@ -350,7 +345,10 @@ TASKMAIN(int argc, char **argv) {
         exit(1);
     }
 
-    set = set_new();
+    ONCE
+    {
+        set = set_new();
+    }
 
     BARRIER;
 
@@ -368,54 +366,10 @@ TASKMAIN(int argc, char **argv) {
         }
         size = set_size(set);
         printf("Set size     : %d\n", size);
-        /*
-                set_print(set);
-         */
+        set_print(set);
         assert(size == initial);
         FLUSH
     }
-
-#ifdef STM
-        int off, id2use;
-    if (ID < 6) {
-        off = 0;
-        id2use = ID;
-    }
-    else if (ID < 12) {
-        off = 1;
-        id2use = ID - 6;
-    }
-    else if (ID < 18) {
-        off = 0;
-        id2use = ID - 6;
-    }
-    else if (ID < 24) {
-        off = 1;
-        id2use = ID - 12;
-    }
-    else if (ID < 30) {
-        off = 2;
-        id2use = ID - 24;
-    }
-    else if (ID < 36){
-        off = 3;
-        id2use = ID - 30;
-    }
-    else if (ID < 42) {
-        off = 2;
-        id2use = ID - 30;
-    }
-    else if (ID < 48) {
-        off = 3;
-        id2use = ID - 36;
-    }
-    
-    shmem_init(((off * 16) * 1024 * 1024) + ((id2use/2) * 1024 * 1024));
-    PRINT("shmem from %d MB", (off * 16) + id2use/2);
-#else
-    shmem_init(1024*100*RCCE_ue()*sizeof(node_t) + ((initial + 2) * sizeof(node_t)));
-    
-#endif
 
     /* Access set from all threads */
     data->first = last;
@@ -435,7 +389,7 @@ TASKMAIN(int argc, char **argv) {
 
     BARRIER
     /* Start */
-    test(data, duration);
+    //test(data, duration);
 
     printf("-- Core %d\n", RCCE_ue());
     printf("  #add        : %lu\n", data->nb_add);
@@ -448,7 +402,7 @@ TASKMAIN(int argc, char **argv) {
     FLUSH;
     /* Delete set */
 
-    
+
     BARRIER
 
             int *changes;
@@ -504,9 +458,7 @@ TASKMAIN(int argc, char **argv) {
 
     BARRIER
 
-#ifdef STM
     TM_END
-#endif
 
     EXIT(0);
 }
