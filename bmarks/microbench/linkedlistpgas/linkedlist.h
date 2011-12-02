@@ -58,7 +58,7 @@ typedef unsigned short int nxt_t;
 
 typedef union {
     int nodei;
-    struct node {
+    struct {
         val_t val;
         nxt_t next;
     };

@@ -160,7 +160,7 @@ int set_add(intset_t *set, val_t val, int transactional) {
 done:
     result = (v != val);
     if (result) {
-        pgas_addr_t nxt = new_node(val, next, transactional);
+        pgas_addr_t nxt = new_node(val, next.next, transactional);
         PRINTD("Created node %5d. Value: %d", nxt, val);
         TX_STORE(prev.next, nxt);
     }
