@@ -52,7 +52,7 @@ intset_t *set_new() {
     PRINT("min is : %d", min.addr);
     TX_STORE(max_nn.addr, max_nn.node.toint);
     TX_STORE(min_nn.addr, min_nn.node.toint);
-    set->head = min.addr;
+    set->head = min_nn.addr;
     TX_COMMIT
     return set;
 }
