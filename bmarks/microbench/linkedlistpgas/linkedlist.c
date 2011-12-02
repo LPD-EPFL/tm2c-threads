@@ -88,7 +88,7 @@ int set_contains(intset_t *set, val_t val, int transactional) {
 #endif
 
     val_t v = 0;
-    node prev, next;
+    node_t prev, next;
 
     TX_START
     prev.next = set->head;
