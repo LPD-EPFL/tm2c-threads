@@ -119,7 +119,7 @@ static int set_seq_add(intset_t *set, val_t val) {
     }
     result = (next.val != val);
     if (result) {
-        TX_STORE(prev.next, new_node(val, next, 0));
+        TX_STORE(prev.next, new_node(val, next.next, 0));
     }
     TX_COMMIT
     return result;
