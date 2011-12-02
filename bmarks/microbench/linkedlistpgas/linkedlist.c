@@ -42,6 +42,7 @@ intset_t *set_new() {
         perror("malloc");
         EXIT(1);
     }
+    PGAS_alloc_init(1);
     PRINT("creating the leftmost/rightmost nodes for new set");
     max = new_node(VAL_MAX, 0, 0);
     PRINT("max is : %d", max);
