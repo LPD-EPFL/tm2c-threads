@@ -115,7 +115,7 @@ static int set_seq_add(intset_t *set, val_t val) {
     node_t prev, next;
 
     TX_START
-    prev.next = set->head;
+    prev = (node_t) TX_LOAD(set->head);
     next = (node_t) TX_LOAD(prev.next);
     PRINT("set->head: %d, next.next: %d", set->head, next.next);
     while (next.val < val) {
