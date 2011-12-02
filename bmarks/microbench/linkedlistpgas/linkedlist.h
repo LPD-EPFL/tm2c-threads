@@ -38,7 +38,7 @@
 
 #define DEFAULT_DURATION                10
 #define DEFAULT_INITIAL                 256
-#define DEFAULT_RANGE                   0x7FFFFFFF
+#define DEFAULT_RANGE                   VAL_MAX
 #define DEFAULT_UPDATE                  20
 #define DEFAULT_ELASTICITY		4
 #define DEFAULT_ALTERNATE		0
