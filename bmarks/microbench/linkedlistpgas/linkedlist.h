@@ -57,9 +57,12 @@ typedef unsigned int nxt_t;
 #define VAL_MIN                         0
 #define VAL_MAX                         USHRT_MAX
 
-typedef struct node {
-    val_t val;
-    nxt_t next;
+typedef union {
+    int nodei;
+    struct node {
+        val_t val;
+        nxt_t next;
+    };
 } node_t;
 
 typedef struct intset {
