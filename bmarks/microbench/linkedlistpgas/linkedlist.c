@@ -43,8 +43,10 @@ intset_t *set_new() {
         EXIT(1);
     }
     PRINT("creating the leftmost/rightmost nodes for new set");
-    max = new_node(VAL_MAX, NULL, 0);
+    max = new_node(VAL_MAX, 0, 0);
+    PRINT("max is : %d", max);
     min = new_node(VAL_MIN, max, 0);
+    PRINT("min is : %d", min);
     set->head = min;
     return set;
 }
@@ -224,7 +226,7 @@ void set_print(intset_t* set) {
         node = (node_t) TX_LOAD(node.next);
     }
     TX_COMMIT
-null:
-    PRINTSF("NULL\n");
+    null :
+            PRINTSF("NULL\n");
 
 }
