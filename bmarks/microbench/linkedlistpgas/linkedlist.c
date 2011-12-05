@@ -235,7 +235,7 @@ void set_print(intset_t* set) {
         goto null;
     }
     while (node.next != NULL) {
-        printf("%d -> ", node.val);
+        printf("{%d} |%d-> ", node.val, node.next);
         node = (node_t) TX_LOAD(node.next);
     }
     TX_COMMIT
