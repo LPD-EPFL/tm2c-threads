@@ -58,12 +58,12 @@ void set_delete(intset_t *set) {
 
 int set_size(intset_t *set) {
     int size;
-    node_t node, head;
+    node_t node;
+    PRINT("SET_SIZE");
     /* We have at least 2 elements */
     TX_START
-    size = 0;
-    head.next = set->head;
-    node = (node_t) TX_LOAD(head.next);
+    size = -2;
+    node = (node_t) TX_LOAD(set->head);
     while (node.next != 0) {
         size++;
         node = (node_t) TX_LOAD(node.next);
