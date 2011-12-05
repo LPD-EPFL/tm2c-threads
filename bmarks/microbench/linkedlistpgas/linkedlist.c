@@ -189,31 +189,36 @@ int set_remove(intset_t *set, val_t val, int transactional) {
 
     val_t v;
     node_t prev, next;
+    pgas_addr_t prev_addr;
 
     TX_START
     prev = (node_t) TX_LOAD(set->head);
+    prev_addr = set->head;
     next = (node_t) TX_LOAD(prev.next);
 
     v = next.val;
     if (v >= val)
         goto done;
 
+    prev_addr = prev->next;
     prev = next;
     next = (node_t) TX_LOAD(prev.next);
-
     while (1) {
         v = next.val;
         if (v >= val)
             break;
+        prev_addr = prev.next;
         prev = next;
         next = (node_t) TX_LOAD(prev.next);
     }
 done:
     result = (v == val);
     if (result) {
-        node_t nxt = (node_t) TX_LOAD(next.next);
-        TX_STORE(prev.next, nxt.next);
-        PRINTD("Freed node   %5d. Value: %d", next, next.val);
+        node_t prevnew = prev;
+        prevnew.next = next.next;
+        prevnew.val = prev.val;
+        TX_STORE(prev_addr, next.next);
+        PRINTD("Freed node   %5d. Value: %d", prev.next, next.val);
     }
     TX_COMMIT
 
