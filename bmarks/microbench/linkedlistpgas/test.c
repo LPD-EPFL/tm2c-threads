@@ -378,9 +378,13 @@ TASKMAIN(int argc, char **argv) {
         PRINT("----------------------------------------------------------------");
         PRINT("Adding: %d", 666);
         set_add(set, 666, 1);
+        PRINT("Adding: %d", 55666);
+        set_add(set, 55666, 1);
         set_print(set);
         PRINT("Removing: %d", 666);
         set_remove(set, 666, 1);
+        PRINT("Removing: %d", 55666);
+        set_remove(set, 55666, 1);
         set_print(set);
 
     }
