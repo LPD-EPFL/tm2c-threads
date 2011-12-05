@@ -114,7 +114,7 @@ static int set_seq_add(intset_t *set, val_t val) {
     int result;
     node_t prev, next;
     pgas_addr_t prev_addr;
-    
+
     TX_START
     prev = (node_t) TX_LOAD(set->head);
     prev_addr = set->head;
@@ -123,7 +123,7 @@ static int set_seq_add(intset_t *set, val_t val) {
         prev_addr = prev.next;
         prev = next;
         next = (node_t) TX_LOAD(prev.next);
-        PRINT("%d:%d", prev.next, next.val);//
+        PRINT("%d:%d", prev.next, next.val);
     }
     result = (next.val != val);
     if (result) {
@@ -151,33 +151,28 @@ int set_add(intset_t *set, val_t val, int transactional) {
         return set_seq_add(set, val);
     }
 
-    val_t v;
     node_t prev, next;
+    pgas_addr_t prev_addr;
+
     TX_START
     prev = (node_t) TX_LOAD(set->head);
+    prev_addr = set->head;
     next = (node_t) TX_LOAD(prev.next);
-
-    v = next.val;
-    if (v >= val)
-        goto done;
-
-    prev = next;
-    next = (node_t) TX_LOAD(prev.next);
-
-    while (1) {
-        v = next.val;
-        if (v >= val)
-            break;
+    while (next.val < val) {
+        prev_addr = prev.next;
         prev = next;
         next = (node_t) TX_LOAD(prev.next);
+        PRINT("%d:%d", prev.next, next.val);
     }
-done:
-    result = (v != val);
+    result = (next.val != val);
     if (result) {
-        new_node_t nxt = new_node(val, next.next, transactional);
-        PRINTD("Created node %5d. Value: %d", nxt, val);
-        TX_STORE(nxt.addr, nxt.node.toint);
-        TX_STORE(prev.next, nxt.addr);
+        new_node_t nn = new_node(val, prev.next, 0);
+        PRINT("adding value %d addr %d, after %d, before %d", nn.node.val, nn.addr, prev.val, next.val);
+        node_t prevnew = prev;
+        prevnew.next = nn.addr;
+        prevnew.val = prev.val;
+        TX_STORE(prev_addr, prevnew.toint);
+        TX_STORE(nn.addr, nn.node.toint);
     }
     TX_COMMIT
 
