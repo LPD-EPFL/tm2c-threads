@@ -200,7 +200,7 @@ int set_remove(intset_t *set, val_t val, int transactional) {
     if (v >= val)
         goto done;
 
-    prev_addr = prev->next;
+    prev_addr = prev.next;
     prev = next;
     next = (node_t) TX_LOAD(prev.next);
     while (1) {
