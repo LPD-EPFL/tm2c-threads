@@ -217,7 +217,7 @@ done:
         node_t prevnew = prev;
         prevnew.next = next.next;
         prevnew.val = prev.val;
-        TX_STORE(prev_addr, next.next);
+        TX_STORE(prev_addr, prevnew.toint);
         PRINTD("Freed node   %5d. Value: %d", prev.next, next.val);
     }
     TX_COMMIT
