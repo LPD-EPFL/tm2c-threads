@@ -113,13 +113,16 @@ int set_contains(intset_t *set, val_t val, int transactional) {
 static int set_seq_add(intset_t *set, val_t val) {
     int result;
     node_t prev, next;
-
+    pgas_addr_t prev_addr;
+    
     TX_START
     int i = 5;
     prev = (node_t) TX_LOAD(set->head);
+    prev_addr = set->head;
     next = (node_t) TX_LOAD(prev.next);
     PRINT("(hd) %d:%d -> (tl) %d:%d", set->head, prev.val, prev.next, next.val);
     while (next.val < val && i--) {
+        prev_addr = prev.next;
         prev = next;
         next = (node_t) TX_LOAD(prev.next);
         PRINT("%d:%d", prev.next, next.val);
@@ -131,7 +134,7 @@ static int set_seq_add(intset_t *set, val_t val) {
         node_t prevnew = prev;
         prevnew.next = nn.addr;
         prevnew.val = prev.val;
-        TX_STORE(prev.next, prevnew.toint);
+        TX_STORE(prev_addr, prevnew.toint);
         TX_STORE(nn.addr, nn.node.toint);
     }
     TX_COMMIT
