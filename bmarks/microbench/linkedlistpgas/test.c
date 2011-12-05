@@ -387,6 +387,10 @@ TASKMAIN(int argc, char **argv) {
         PRINT("set contains %d = %d", c, set_contains(set, c, 1));
         c = 55666;
         PRINT("set contains %d = %d", c, set_contains(set, c, 1));
+        c = 1;
+        PRINT("set contains %d = %d", c, set_contains(set, c, 1));
+        c = 65000;
+        PRINT("set contains %d = %d", c, set_contains(set, c, 1));
         
         PRINT("Removing: %d", 666);
         set_remove(set, 666, 1);
