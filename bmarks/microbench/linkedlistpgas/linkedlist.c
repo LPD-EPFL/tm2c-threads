@@ -127,7 +127,7 @@ static int set_seq_add(intset_t *set, val_t val) {
     result = (next.val != val);
     if (result && i) {
         new_node_t nn = new_node(val, prev.next, 0);
-        PRINT("adding value %d addr %d, after %d, before %d", nn.node.val, nn.addr, prev.next, prev.next);
+        PRINT("adding value %d addr %d, after %d, before %d", nn.node.val, nn.addr, prev.val, next.val);
         node_t prevnew = prev;
         prevnew.next = nn.addr;
         prevnew.val = prev.val;
