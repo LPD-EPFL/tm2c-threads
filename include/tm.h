@@ -204,7 +204,7 @@ extern "C" {
 #endif
 
 #ifdef PGAS
-        PRINT("(loading: %d)", addr);
+        //PRINT("(loading: %d)", addr);
         write_entry_pgas_t *we;
         if ((we = write_set_pgas_contains(ws, addr)) != NULL) {
             return we->value;
