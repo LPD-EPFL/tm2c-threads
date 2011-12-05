@@ -121,14 +121,17 @@ static int set_seq_add(intset_t *set, val_t val) {
     PRINT("(hd) %d:%d -> (tl) %d:%d", set->head, prev.val, prev.next, next.val);
     while (next.val < val && i--) {
         prev = next;
-        next = (node_t) TX_LOAD(prev.next);//
+        next = (node_t) TX_LOAD(prev.next);
         PRINT("%d:%d", prev.next, next.val);
     }
     result = (next.val != val);
     if (result && i) {
-        new_node_t nn = new_node(val, next.next, 0);
+        new_node_t nn = new_node(val, prev.next, 0);
         PRINT("adding value %d addr %d, after %d, before %d", nn.node.val, nn.addr, prev.next, next.next);
-        TX_STORE(prev.next, nn.addr);
+        node_t prevnew = prev;
+        prevnew.next = nn.addr;
+        prevnew.val = prev.val;
+        TX_STORE(prev.next, prevnew.toint);
         TX_STORE(nn.addr, nn.node.toint);
     }
     TX_COMMIT
