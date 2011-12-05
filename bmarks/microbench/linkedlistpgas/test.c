@@ -356,7 +356,7 @@ TASKMAIN(int argc, char **argv) {
     {
         /* Populate set */
         PRINT("Adding %d entries to set", initial);
-        
+
         i = 0;
         while (i < initial) {
             val = rand_range(range);
@@ -371,6 +371,18 @@ TASKMAIN(int argc, char **argv) {
         set_print(set);
         assert(size == initial);
         FLUSH
+
+
+        PRINT("----------------------------------------------------------------");
+        PRINT("----------------------------------------------------------------");
+        PRINT("----------------------------------------------------------------");
+        PRINT("Adding: %d", 666);
+        set_add(set, 666, 1);
+        print_set(set);
+        PRINT("Removing: %d", 666);
+        set_remove(set, 666, 1);
+        print_set(set);
+
     }
 
     /* Access set from all threads */
