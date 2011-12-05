@@ -62,7 +62,7 @@ int set_size(intset_t *set) {
     PRINT("SET_SIZE");
     /* We have at least 2 elements */
     TX_START
-    size = -2;
+    size = -1;
     node = (node_t) TX_LOAD(set->head);
     while (node.next != 0) {
         size++;
