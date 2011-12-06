@@ -137,10 +137,7 @@ void *test(void *data, double duration) {
                 else {
                     /* Random computation only in non-alternated cases */
                     val = rand_range_re(&d->seed, d->range);
-                    if (val == -1) {
-                        PRINT("val = -1 ? ? ?");
-                    }
-                    else if (val == VAL_MAX) {
+                    if (val == VAL_MAX) {
                         PRINT("val = VAL_MAX ? ? ?");
                     }
                     /* Remove one random value */
