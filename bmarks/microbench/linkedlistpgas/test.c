@@ -64,7 +64,7 @@ inline long rand_range_re(unsigned int *seed, long r) {
         r -= m;
     } while (r > 0);
     
-    if (v >= VAL_MAX) {
+    if (v == 0) {
         PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%d", v);
     }
     return v;
@@ -135,9 +135,6 @@ void *test(void *data, double duration) {
                 else {
                     /* Random computation only in non-alternated cases */
                     val = rand_range_re(&d->seed, d->range);
-                    if (val == VAL_MAX) {
-                        PRINT("val = VAL_MAX ? ? ?");
-                    }
                     /* Remove one random value */
                     if (set_remove(d->set, val, TRANSACTIONAL)) {
                         d->nb_removed++;
