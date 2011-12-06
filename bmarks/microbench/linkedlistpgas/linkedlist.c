@@ -40,11 +40,17 @@ intset_t *set_new() {
     }
     TX_START
     PGAS_alloc_init(1);
+/*
     PRINT("creating the leftmost/rightmost nodes for new set");
+*/
     new_node_t max_nn = new_node(VAL_MAX, 0, 0);
+/*
     PRINT("max is : %d, value: %d, nxt: %d", max_nn.addr, max_nn.node.val, max_nn.node.next);
+*/
     new_node_t min_nn = new_node(VAL_MIN, max_nn.addr, 0);
+/*
     PRINT("min is : %d, value: %d, nxt: %d", min_nn.addr, min_nn.node.val, min_nn.node.next);
+*/
     TX_STORE(max_nn.addr, max_nn.node.toint);
     TX_STORE(min_nn.addr, min_nn.node.toint);
     set->head = min_nn.addr;
