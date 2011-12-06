@@ -140,7 +140,7 @@ static int set_seq_add(intset_t *set, val_t val) {
 /*
         PRINT("adding value %d addr %d, after %d, before %d", nn.node.val, nn.addr, prev.val, next.val);
 */
-        node_t prevnew;
+        node_t prevnew = prev;
         prevnew.next = nn.addr;
         prevnew.val = prev.val;
         TX_STORE(prev_addr, prevnew.toint);
@@ -232,7 +232,7 @@ done:
 /*
         PRINT("removing value %d addr %d, before %d", val, prev.next, next.next);
 */
-        node_t prevnew;
+        node_t prevnew = prev;
         prevnew.next = next.next;
         prevnew.val = prev.val;
         TX_STORE(prev_addr, prevnew.toint);
