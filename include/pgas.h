@@ -56,6 +56,9 @@ extern "C" {
             id__m1d2 = (((RCCE_ue()) - 1)>>1);  \
             num_ues_d2 = (RCCE_num_ues())>>1;
 
+#define PGAS_alloc_offs(offs)                   \
+        id__m1d2 = (((RCCE_ue())-1)>>1) + offs; \
+    
 #define PGAS_alloc_id(id)                       \
         id__m1d2 = (((id) - 1)>>1)
 
