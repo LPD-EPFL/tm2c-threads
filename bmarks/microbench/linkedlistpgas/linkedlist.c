@@ -172,7 +172,7 @@ int set_add(intset_t *set, val_t val, int transactional) {
     while (next.val < val) {
         prev_addr = prev.next;
         prev = next;
-        next = (node_t) TX_LOAD(prev_addr);
+        next = (node_t) TX_LOAD(prev.next);
 /*
         PRINT("%d:%d", prev.next, next.val);
 */
@@ -224,7 +224,7 @@ int set_remove(intset_t *set, val_t val, int transactional) {
             break;
         prev_addr = prev.next;
         prev = next;
-        next = (node_t) TX_LOAD(prev_addr);
+        next = (node_t) TX_LOAD(prev.next);
     }
 done:
     result = (v == val);
