@@ -71,7 +71,8 @@ inline long rand_range_re(unsigned int *seed, long r) {
     if (v == 65535) {
         PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%d", v);
     }
-    else if (ifa--) {
+    else if (ifa == 1) {
+        ifa == 0;
         PRINT("WOTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT");
     }
     return v;
