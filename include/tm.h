@@ -26,6 +26,7 @@ extern "C" {
 
 #ifdef DSL
 #define ONCE                            if (RCCE_ue() == 1 || RCCE_num_ues() == 1)
+#define OTHERS                          if (RCCE_ue() != 1)
 #else
 #define ONCE                            if (RCCE_ue() == 0 || RCCE_num_ues() == 1)
 #endif
