@@ -347,6 +347,7 @@ TASKMAIN(int argc, char **argv) {
 
     ONCE
     {
+        PGAS_alloc_init(1);
         set = set_new();
     }
     OTHERS

@@ -39,7 +39,6 @@ intset_t *set_new() {
         EXIT(1);
     }
     TX_START
-    PGAS_alloc_init(1);
 /*
     PRINT("creating the leftmost/rightmost nodes for new set");
 */
