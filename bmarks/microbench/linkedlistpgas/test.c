@@ -384,14 +384,6 @@ TASKMAIN(int argc, char **argv) {
     PGAS_alloc_init(0);
     PGAS_alloc_offs(initial + 3);
     BARRIER
-    PRINT(":::::::::::::::::::::::::::::: %d %d %d", PGAS_alloc(), PGAS_alloc(), PGAS_alloc());
-
-    OTHERS
-    {
-        set_add(set, 1000*ID, 1);
-        set_add(set, 1001*ID, 1);
-        set_add(set, 1000*ID, 1);
-    }
 
     /* Access set from all threads */
     data->first = last;
@@ -411,7 +403,7 @@ TASKMAIN(int argc, char **argv) {
 
     BARRIER
     /* Start */
-    //test(data, duration);
+    test(data, duration);
 
     printf("-- Core %d\n", RCCE_ue());
     printf("  #add        : %lu\n", data->nb_add);
@@ -427,43 +419,6 @@ TASKMAIN(int argc, char **argv) {
 
     BARRIER
 
-            int *changes;
-    changes = (int *) set;
-    int *sequencer;
-    sequencer = changes + sizeof (int);
-    int mychanges = data->nb_added - data->nb_removed;
-
-    int size_after;
-    ONCE
-    {
-        size_after = set_size(set);
-        *changes = 0;
-        *sequencer = 1;
-    }
-
-    BARRIER
-
-#if defined(STM) && defined(DEBUG)
-            TX_START
-    if ((*(int *) sequencer) != ID) {
-        udelay(100);
-        TX_ABORT(WRITE_AFTER_WRITE);
-    }
-    int id1 = ID + 2;
-    TX_STORE(sequencer, &id1, TYPE_INT);
-    int cc = *(int *) TX_LOAD(changes);
-    int newc = cc + mychanges;
-    TX_STORE(changes, &newc, TYPE_INT);
-    TX_COMMIT
-
-    BARRIER
-    ONCE
-    {
-        PRINT(":: ~~ :: Set size: %d, expected: %d", size_after, initial + set->head);
-    }
-#endif
-
-
 #ifdef SEQUENTIAL
     int total_ops = data->nb_add + data->nb_contains + data->nb_remove;
     printf("#Ops          : %d\n", total_ops);
@@ -477,6 +432,7 @@ TASKMAIN(int argc, char **argv) {
     /* Cleanup STM */
 
     free(data);
+    free(set);
 
     BARRIER
 
