@@ -380,34 +380,33 @@ TASKMAIN(int argc, char **argv) {
         assert(size == initial);
         FLUSH
 
+    }
+    OTHERS
+    {
+        PRINT("----------------------------------------------------------------");
+        PRINT("----------------------------------------------------------------");
+        PRINT("----------------------------------------------------------------");
+        PRINT("Adding: %d", 666);
+        set_add(set, 666, 1);
+        PRINT("Adding: %d", 55666);
+        set_add(set, 55666, 1);
+        set_print(set);
+        int c = 666;
+        PRINT("set contains %d = %d", c, set_contains(set, c, 1));
+        c = 5666;
+        PRINT("set contains %d = %d", c, set_contains(set, c, 1));
+        c = 55666;
+        PRINT("set contains %d = %d", c, set_contains(set, c, 1));
+        c = 1;
+        PRINT("set contains %d = %d", c, set_contains(set, c, 1));
+        c = 65000;
+        PRINT("set contains %d = %d", c, set_contains(set, c, 1));
 
-        OTHERS {
-                        PRINT("----------------------------------------------------------------");
-                        PRINT("----------------------------------------------------------------");
-                        PRINT("----------------------------------------------------------------");
-                        PRINT("Adding: %d", 666);
-                        set_add(set, 666, 1);
-                        PRINT("Adding: %d", 55666);
-                        set_add(set, 55666, 1);
-                        set_print(set);
-                        int c = 666;
-                        PRINT("set contains %d = %d", c, set_contains(set, c, 1));
-                        c = 5666;
-                        PRINT("set contains %d = %d", c, set_contains(set, c, 1));
-                        c = 55666;
-                        PRINT("set contains %d = %d", c, set_contains(set, c, 1));
-                        c = 1;
-                        PRINT("set contains %d = %d", c, set_contains(set, c, 1));
-                        c = 65000;
-                        PRINT("set contains %d = %d", c, set_contains(set, c, 1));
-        
-                        PRINT("Removing: %d", 666);
-                        set_remove(set, 666, 1);
-                        PRINT("Removing: %d", 55666);
-                        set_remove(set, 55666, 1);
-                        set_print(set);
-        }
-
+        PRINT("Removing: %d", 666);
+        set_remove(set, 666, 1);
+        PRINT("Removing: %d", 55666);
+        set_remove(set, 55666, 1);
+        set_print(set);
     }
 
     /* Access set from all threads */
