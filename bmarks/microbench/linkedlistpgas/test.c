@@ -57,7 +57,7 @@ inline long rand_range(long r) {
 }
 
 /* Re-entrant version of rand_range(r) */
-long rand_range_re(unsigned int *seed, long r) {
+inline long rand_range_re(unsigned int *seed, long r) {
     int m = VAL_MAX;
     long d, v = 0;
 
@@ -66,7 +66,7 @@ long rand_range_re(unsigned int *seed, long r) {
         v += 1 + (long) (d * ((double) rand_r(seed) / ((double) (m) + 1.0)));
         r -= m;
     } while (r > 0);
-    if (v == VAL_MAX) {
+    if (v == 65535) {
         PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%d", v);
     }
     return v;
