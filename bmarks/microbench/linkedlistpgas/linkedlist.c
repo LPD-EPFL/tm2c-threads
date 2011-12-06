@@ -107,7 +107,9 @@ int set_contains(intset_t *set, val_t val, int transactional) {
     TX_COMMIT
     result = (v == val);
 
+/*
     PRINT("contains %d (%d)", val, result);
+*/
     return result;
 }
 
@@ -124,12 +126,16 @@ static int set_seq_add(intset_t *set, val_t val) {
         prev_addr = prev.next;
         prev = next;
         next = (node_t) TX_LOAD(prev.next);
+/*
         PRINT("%d:%d", prev.next, next.val);
+*/
     }
     result = (next.val != val);
     if (result) {
         new_node_t nn = new_node(val, prev.next, 0);
+/*
         PRINT("adding value %d addr %d, after %d, before %d", nn.node.val, nn.addr, prev.val, next.val);
+*/
         node_t prevnew = prev;
         prevnew.next = nn.addr;
         prevnew.val = prev.val;
@@ -163,12 +169,16 @@ int set_add(intset_t *set, val_t val, int transactional) {
         prev_addr = prev.next;
         prev = next;
         next = (node_t) TX_LOAD(prev.next);
+/*
         PRINT("%d:%d", prev.next, next.val);
+*/
     }
     result = (next.val != val);
     if (result) {
         new_node_t nn = new_node(val, prev.next, 1);
+/*
         PRINT("adding value %d addr %d, after %d, before %d", nn.node.val, nn.addr, prev.val, next.val);
+*/
         node_t prevnew = prev;
         prevnew.next = nn.addr;
         prevnew.val = prev.val;
@@ -188,8 +198,6 @@ int set_remove(intset_t *set, val_t val, int transactional) {
     FLUSH;
 #endif
     
-    if (val == VAL_MAX) {PRINT("?? ?? ?? removing maxval??");}
-
     val_t v;
     node_t prev, next;
     pgas_addr_t prev_addr;
@@ -217,7 +225,9 @@ int set_remove(intset_t *set, val_t val, int transactional) {
 done:
     result = (v == val);
     if (result) {
+/*
         PRINT("removing value %d addr %d, before %d", val, prev.next, next.next);
+*/
         node_t prevnew = prev;
         prevnew.next = next.next;
         prevnew.val = prev.val;
