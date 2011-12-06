@@ -146,12 +146,14 @@ static void dsl_communication() {
                     CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
 #ifdef PGAS
                     if (conflict == NO_CONFLICT) {
+/*
                         union {
                             int i;
                             unsigned short s[2];
                         } convert;
                         convert.i = ps_remote->write_value;
                         PRINT("\t\t\tWriting (val:%d|nxt:%d) to address %d", convert.s[0], convert.s[1], ps_remote->address);
+*/
                         write_set_pgas_insert(PGAS_write_sets[sender], ps_remote->write_value, ps_remote->address);
                     }
 #endif
