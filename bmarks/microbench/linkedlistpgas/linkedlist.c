@@ -140,7 +140,7 @@ static int set_seq_add(intset_t *set, val_t val) {
 /*
         PRINT("adding value %d addr %d, after %d, before %d", nn.node.val, nn.addr, prev.val, next.val);
 */
-        node_t prevnew = prev;
+        node_t prevnew;
         prevnew.next = nn.addr;
         prevnew.val = prev.val;
         TX_STORE(prev_addr, prevnew.toint);
@@ -172,7 +172,7 @@ int set_add(intset_t *set, val_t val, int transactional) {
     while (next.val < val) {
         prev_addr = prev.next;
         prev = next;
-        next = (node_t) TX_LOAD(prev.next);
+        next = (node_t) TX_LOAD(prev_addr);
 /*
         PRINT("%d:%d", prev.next, next.val);
 */
@@ -224,7 +224,7 @@ int set_remove(intset_t *set, val_t val, int transactional) {
             break;
         prev_addr = prev.next;
         prev = next;
-        next = (node_t) TX_LOAD(prev.next);
+        next = (node_t) TX_LOAD(prev_addr);
     }
 done:
     result = (v == val);
@@ -232,7 +232,7 @@ done:
 /*
         PRINT("removing value %d addr %d, before %d", val, prev.next, next.next);
 */
-        node_t prevnew = prev;
+        node_t prevnew;
         prevnew.next = next.next;
         prevnew.val = prev.val;
         TX_STORE(prev_addr, prevnew.toint);
