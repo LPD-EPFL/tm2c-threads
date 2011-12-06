@@ -166,7 +166,7 @@ int set_add(intset_t *set, val_t val, int transactional) {
     }
     result = (next.val != val);
     if (result) {
-        new_node_t nn = new_node(val, prev.next, 0);
+        new_node_t nn = new_node(val, prev.next, 1);
         PRINT("adding value %d addr %d, after %d, before %d", nn.node.val, nn.addr, prev.val, next.val);
         node_t prevnew = prev;
         prevnew.next = nn.addr;
