@@ -56,8 +56,6 @@ inline long rand_range(long r) {
     return v;
 }
 
-int ifa = 1;
-
 /* Re-entrant version of rand_range(r) */
 inline long rand_range_re(unsigned int *seed, long r) {
     int m = VAL_MAX;
@@ -68,12 +66,9 @@ inline long rand_range_re(unsigned int *seed, long r) {
         v += 1 + (long) (d * ((double) rand_r(seed) / ((double) (m) + 1.0)));
         r -= m;
     } while (r > 0);
-    if (v == 65535) {
+    
+    if (v == VAL_MAX) {
         PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%d", v);
-    }
-    else if (ifa == 1) {
-        ifa == 0;
-        PRINT("WOTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT");
     }
     return v;
 }
