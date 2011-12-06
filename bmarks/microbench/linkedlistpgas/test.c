@@ -379,7 +379,7 @@ TASKMAIN(int argc, char **argv) {
         set_print(set);
         assert(size == initial);
         FLUSH
-
+        PRINT(":::::::::::::::::::::::::::::: %d %d %d", PGAS_alloc(),PGAS_alloc(),PGAS_alloc());
     }
     
     BARRIER
