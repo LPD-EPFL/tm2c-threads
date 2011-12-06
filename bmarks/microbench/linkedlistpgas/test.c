@@ -63,10 +63,6 @@ inline long rand_range_re(unsigned int *seed, long r) {
         v += 1 + (long) (d * ((double) rand_r(seed) / ((double) (m) + 1.0)));
         r -= m;
     } while (r > 0);
-    
-    if (v == 0) {
-        PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%d", v);
-    }
     return v;
 }
 
