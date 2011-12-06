@@ -57,7 +57,7 @@ inline long rand_range(long r) {
 }
 
 /* Re-entrant version of rand_range(r) */
-inline long rand_range_re(unsigned int *seed, long r) {
+long rand_range_re(unsigned int *seed, long r) {
     int m = VAL_MAX;
     long d, v = 0;
 
