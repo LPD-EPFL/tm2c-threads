@@ -125,6 +125,9 @@ void *test(void *data, double duration) {
             else { // remove
 
                 if (d->alternate) { // alternate mode (default)
+                    if (last == -1) {
+                        PRINT("last = -1 ? ? ?");
+                    }
                     if (set_remove(d->set, last, TRANSACTIONAL)) {
                         d->nb_removed++;
                     }
