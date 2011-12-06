@@ -381,6 +381,9 @@ TASKMAIN(int argc, char **argv) {
         FLUSH
 
     }
+    
+    BARRIER
+    
     OTHERS
     {
         PRINT("----------------------------------------------------------------");
