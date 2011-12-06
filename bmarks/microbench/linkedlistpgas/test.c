@@ -50,7 +50,7 @@ inline long rand_range(long r) {
         v += 1 + (long) (d * ((double) rand() / ((double) (m) + 1.0)));
         r -= m;
     } while (r > 0);
-    if(v == 0 || v == VAL_MAX) {PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%d",v);}
+    if(v == VAL_MAX) {PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%d",v);}
     return v;
 }
 
@@ -63,8 +63,8 @@ inline long rand_range_re(unsigned int *seed, long r) {
         d = (m > r ? r : m);
         v += 1 + (long) (d * ((double) rand_r(seed) / ((double) (m) + 1.0)));
         r -= m;
-    } while (r > 0 || v == 0 || v == VAL_MAX);
-    if(v == 0 || v == VAL_MAX) {PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%d",v);}
+    } while (r > 0);
+    if(v == VAL_MAX) {PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%d",v);}
     return v;
 }
 
