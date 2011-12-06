@@ -187,6 +187,8 @@ int set_remove(intset_t *set, val_t val, int transactional) {
     printf("++> set_remove(%d)\n", (int) val);
     FLUSH;
 #endif
+    
+    if (val == VAL_MAX) {PRINT("?? ?? ?? removing maxval??");}
 
     val_t v;
     node_t prev, next;
