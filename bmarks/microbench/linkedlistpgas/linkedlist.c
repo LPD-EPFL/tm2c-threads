@@ -65,7 +65,6 @@ void set_delete(intset_t *set) {
 int set_size(intset_t *set) {
     int size;
     node_t node;
-    PRINT("SET_SIZE");
     /* We have at least 2 elements */
     TX_START
     size = -1;
