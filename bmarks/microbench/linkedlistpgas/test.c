@@ -42,7 +42,7 @@
  * be too high for given values of range and initial.
  */
 inline long rand_range(long r) {
-    int m = VAL_MAX;
+    int m = RAND_MAX;
     long d, v = 0;
 
     do {
@@ -55,7 +55,7 @@ inline long rand_range(long r) {
 
 /* Re-entrant version of rand_range(r) */
 inline long rand_range_re(unsigned int *seed, long r) {
-    int m = VAL_MAX;
+    int m = RAND_MAX;
     long d, v = 0;
 
     do {
