@@ -36,6 +36,9 @@
 #endif
 #endif
 
+#define VAL_MIN                         0
+#define VAL_MAX                         USHRT_MAX
+
 #define DEFAULT_DURATION                10
 #define DEFAULT_INITIAL                 256
 #define DEFAULT_RANGE                   (VAL_MAX-2)
@@ -52,9 +55,6 @@
 
 typedef unsigned short int val_t;
 typedef unsigned short int nxt_t;
-
-#define VAL_MIN                         0
-#define VAL_MAX                         USHRT_MAX
 
 typedef union {
     int toint;
