@@ -368,7 +368,6 @@ TASKMAIN(int argc, char **argv) {
         i = 0;
         while (i < initial) {
             val = rand_range(range);
-            PRINT("adding %d", val);
             if (set_add(set, val, 0)) {
                 last = val;
                 i++;
@@ -376,7 +375,7 @@ TASKMAIN(int argc, char **argv) {
         }
         size = set_size(set);
         printf("Set size     : %d\n", size);
-        set_print(set);
+        //set_print(set);
         assert(size == initial);
         FLUSH
 
