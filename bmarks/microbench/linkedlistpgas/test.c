@@ -379,14 +379,19 @@ TASKMAIN(int argc, char **argv) {
         set_print(set);
         assert(size == initial);
         FLUSH
-        PRINT(":::::::::::::::::::::::::::::: %d %d %d", PGAS_alloc(),PGAS_alloc(),PGAS_alloc());
+
     }
-    
+    PGAS_alloc_init(0);
+    PGAS_alloc_offs(initial + 2);
     BARRIER
-    
+    ONCE
+    {
+        PRINT(":::::::::::::::::::::::::::::: %d %d %d", PGAS_alloc(), PGAS_alloc(), PGAS_alloc());
+    }
+
     OTHERS
     {
-        PGAS_alloc_init(initial + 3);
+
         PRINT("----------------------------------------------------------------");
         PRINT("----------------------------------------------------------------");
         PRINT("----------------------------------------------------------------");
