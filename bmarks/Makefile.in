@@ -11,6 +11,7 @@ TMH := $(iRCCEINCLUDE)/../src/pubSubTM.c $(iRCCEINCLUDE)/../src/rwhash.c $(iRCCE
 MB_LL := microbench/linkedlist
 MB_LLPGAS := microbench/linkedlistpgas
 MB_HT := microbench/hashtable
+MB_HTPGAS := microbench/hashtablepgas
 MR := mapreduce
 
 BANKOBJS  := bank.o   $(ARCHIVE)
@@ -21,6 +22,7 @@ MROBJS := $(MR)/mr.o $(ARCHIVE)
 MBLLOBJS := $(MB_LL)/linkedlist.o $(MB_LL)/test.o $(ARCHIVE)
 MBLLPGASOBJS := $(MB_LLPGAS)/linkedlist.o $(MB_LLPGAS)/test.o $(ARCHIVE)
 MBHTOBJS := $(MB_LL)/linkedlist.o $(MB_HT)/test.o $(MB_HT)/intset.o $(MB_HT)/hashtable.o $(ARCHIVE)
+MBHTPGASOBJS := $(MB_LLPGAS)/linkedlist.o $(MB_HTPGAS)/test.o $(MB_HTPGAS)/intset.o $(MB_HTPGAS)/hashtable.o $(ARCHIVE)
 ROOBJS  := readonly.o   $(ARCHIVE)
 
 .PHONY: all default clean bank
@@ -95,6 +97,20 @@ $(MB_HT)/test.o: $(MB_LL)/linkedlist.o $(MB_HT)/test.c $(MB_LL)/linkedlist.h $(M
 
 mbht:  $(MBHTOBJS) $(TMH)
 	$(CCOMPILE) -o mbht $(CFLAGS) $(MBHTOBJS)
+
+$(MB_HTPGAS)/hashtable.o: $(MB_LLPGAS)/linkedlist.o $(MB_HTPGAS)/hashtable.c $(MB_HTPGAS)/hashtable.h $(MB_LLPGAS)/linkedlist.c \
+	$(MB_LLPGAS)/harris.h $(MB_LLPGAS)/linkedlist.h
+	$(CCOMPILE) -c $(CFLAGS) -o $(MB_HTPGAS)/hashtable.o $(MB_HTPGAS)/hashtable.c
+
+$(MB_HTPGAS)/intset.o: $(MB_LLPGAS)/linkedlist.o $(MB_HTPGAS)/intset.c $(MB_HTPGAS)/hashtable.h $(MB_LLPGAS)/linkedlist.c 
+	$(MB_LLPGAS)/harris.h $(MB_LLPGAS)/linkedlist.h
+	$(CCOMPILE) -c $(CFLAGS) -o $(MB_HTPGAS)/intset.o $(MB_HTPGAS)/intset.c
+
+$(MB_HTPGAS)/test.o: $(MB_LLPGAS)/linkedlist.o $(MB_HTPGAS)/test.c $(MB_LLPGAS)/linkedlist.h $(MB_HTPGAS)/intset.c $(MB_HTPGAS)/hashtable.c
+	$(CCOMPILE) -c $(CFLAGS) -o $(MB_HTPGAS)/test.o $(MB_HTPGAS)/test.c
+
+mbhtpgas:  $(MBHTPGASOBJS) $(TMH)
+	$(CCOMPILE) -o mbht $(CFLAGS) $(MBHTPGASOBJS)
 
 
 ro: $(ROOBJS)
