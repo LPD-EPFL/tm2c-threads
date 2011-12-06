@@ -50,6 +50,7 @@ inline long rand_range(long r) {
         v += 1 + (long) (d * ((double) rand() / ((double) (m) + 1.0)));
         r -= m;
     } while (r > 0);
+    if(v == 0 || v == VAL_MAX) {PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%d",v);}
     return v;
 }
 
