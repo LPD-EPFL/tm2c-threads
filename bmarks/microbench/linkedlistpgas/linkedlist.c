@@ -214,6 +214,7 @@ int set_remove(intset_t *set, val_t val, int transactional) {
 done:
     result = (v == val);
     if (result) {
+        PRINT("removing value %d addr %d, before %d", val, prev.next, next.next);
         node_t prevnew = prev;
         prevnew.next = next.next;
         prevnew.val = prev.val;
