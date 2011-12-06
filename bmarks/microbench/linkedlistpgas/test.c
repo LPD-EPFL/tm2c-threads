@@ -50,7 +50,9 @@ inline long rand_range(long r) {
         v += 1 + (long) (d * ((double) rand() / ((double) (m) + 1.0)));
         r -= m;
     } while (r > 0);
-    if(v == VAL_MAX) {PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%d",v);}
+    if (v == VAL_MAX) {
+        PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%d", v);
+    }
     return v;
 }
 
@@ -64,7 +66,9 @@ inline long rand_range_re(unsigned int *seed, long r) {
         v += 1 + (long) (d * ((double) rand_r(seed) / ((double) (m) + 1.0)));
         r -= m;
     } while (r > 0);
-    if(v == VAL_MAX) {PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%d",v);}
+    if (v == VAL_MAX) {
+        PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%d", v);
+    }
     return v;
 }
 
@@ -125,12 +129,6 @@ void *test(void *data, double duration) {
             else { // remove
 
                 if (d->alternate) { // alternate mode (default)
-                    if (last == -1) {
-                        PRINT("last = -1 ? ? ?");
-                    }
-                    else if (last == VAL_MAX) {
-                        PRINT("last = VAL_MAX ? ? ?");
-                    }
                     if (set_remove(d->set, last, TRANSACTIONAL)) {
                         d->nb_removed++;
                     }
@@ -139,6 +137,12 @@ void *test(void *data, double duration) {
                 else {
                     /* Random computation only in non-alternated cases */
                     val = rand_range_re(&d->seed, d->range);
+                    if (val == -1) {
+                        PRINT("val = -1 ? ? ?");
+                    }
+                    else if (val == VAL_MAX) {
+                        PRINT("val = VAL_MAX ? ? ?");
+                    }
                     /* Remove one random value */
                     if (set_remove(d->set, val, TRANSACTIONAL)) {
                         d->nb_removed++;
@@ -428,7 +432,7 @@ TASKMAIN(int argc, char **argv) {
     BARRIER
 
 #ifdef SEQUENTIAL
-    int total_ops = data->nb_add + data->nb_contains + data->nb_remove;
+            int total_ops = data->nb_add + data->nb_contains + data->nb_remove;
     printf("#Ops          : %d\n", total_ops);
     printf("#Ops/s        : %d\n", (int) (total_ops / duration__));
     printf("#Latency      : %f\n", duration__ / total_ops);
