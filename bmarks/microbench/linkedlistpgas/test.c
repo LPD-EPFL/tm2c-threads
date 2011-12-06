@@ -42,15 +42,15 @@
  * be too high for given values of range and initial.
  */
 inline long rand_range(long r) {
-    int m = VAL_MAX-2;
+    int m = VAL_MAX;
     long d, v = 0;
 
     do {
         d = (m > r ? r : m);
         v += 1 + (long) (d * ((double) rand() / ((double) (m) + 1.0)));
         r -= m;
-    } while (r > 0);
-    return v+1;
+    } while (r > 0 || v == 0 || v == VAL_MAX);
+    return v;
 }
 
 /* Re-entrant version of rand_range(r) */
