@@ -382,15 +382,13 @@ TASKMAIN(int argc, char **argv) {
 
     }
     PGAS_alloc_init(0);
-    PGAS_alloc_offs(initial + 2);
+    PGAS_alloc_offs(initial + 3);
     BARRIER
-    ONCE
-    {
-        PRINT(":::::::::::::::::::::::::::::: %d %d %d", PGAS_alloc(), PGAS_alloc(), PGAS_alloc());
-    }
+    PRINT(":::::::::::::::::::::::::::::: %d %d %d", PGAS_alloc(), PGAS_alloc(), PGAS_alloc());
 
     OTHERS
     {
+/*
 
         PRINT("----------------------------------------------------------------");
         PRINT("----------------------------------------------------------------");
@@ -416,6 +414,7 @@ TASKMAIN(int argc, char **argv) {
         PRINT("Removing: %d", 55666);
         set_remove(set, 55666, 1);
         set_print(set);
+*/
     }
 
     /* Access set from all threads */
