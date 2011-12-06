@@ -107,6 +107,7 @@ int set_contains(intset_t *set, val_t val, int transactional) {
     TX_COMMIT
     result = (v == val);
 
+    PRINT("contains %d (%d)", val, result);
     return result;
 }
 
