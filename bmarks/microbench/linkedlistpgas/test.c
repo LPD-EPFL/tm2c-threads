@@ -128,6 +128,9 @@ void *test(void *data, double duration) {
                     if (last == -1) {
                         PRINT("last = -1 ? ? ?");
                     }
+                    else if (last == VAL_MAX) {
+                        PRINT("last = VAL_MAX ? ? ?");
+                    }
                     if (set_remove(d->set, last, TRANSACTIONAL)) {
                         d->nb_removed++;
                     }
