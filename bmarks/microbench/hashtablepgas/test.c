@@ -552,11 +552,18 @@ TASKMAIN(int argc, char **argv) {
             perror("malloc");
             exit(1);
         }
-        
+
         int i;
         for (i = 1; i <= maxhtlength; i++) {
-            PRINT("setting set->buckets[%d]->head = %d;", i-1, 2*i);
-        //    set->buckets[i-1]->head = 2*i;
+            intset_t *temp;
+            if ((temp = (intset_t *) malloc(sizeof (intset_t))) == NULL) {
+                perror("malloc");
+                EXIT(1);
+            }
+            set->buckets[i - 1] = temp;
+            
+            PRINT("setting set->buckets[%d]->head = %d;", i - 1, 2 * i);
+            set->buckets[i - 1]->head = 2 * i;
         }
     }
 
