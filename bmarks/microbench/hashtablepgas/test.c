@@ -316,7 +316,7 @@ void print_set(intset_t* set) {
     }
     while (node.next != NULL) {
         //printf("{%d} -%d-> ", node.val, node.next);
-        printf("%d =%d=> ", node.val, node.next);
+        printf("%5d =(%3d)=> ", node.val, node.next);
         node = (node_t) TX_LOAD(node.next);
     }
     TX_COMMIT
@@ -538,10 +538,10 @@ TASKMAIN(int argc, char **argv) {
         printf("Set size     : %d\n", size);
         printf("Bucket amount: %d\n", maxhtlength);
         printf("Load         : %d\n", load_factor);
+        FLUSH
 
         print_ht(set);
 
-        FLUSH
     }
 
     BARRIER
