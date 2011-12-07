@@ -521,6 +521,7 @@ TASKMAIN(int argc, char **argv) {
         udelay(rand_range(123));
         srand_core();
         
+        PGAS_alloc_init(1);
         set = ht_new();
         
         i = 0;
