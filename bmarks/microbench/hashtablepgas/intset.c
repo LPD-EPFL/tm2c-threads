@@ -214,7 +214,7 @@ int ht_move(ht_intset_t *set, int val1, int val2, int transactional) {
             node_t prevnew = prev1;
             prevnew.next = next1.next;
             prevnew.val = prev1.val;
-            TX_STORE(prev_addr1, next1.next);
+            TX_STORE(prev1_addr, next1.next);
 
             new_node_t nn = new_node(val2, prev.next, 1);
             prevnew = prev;
