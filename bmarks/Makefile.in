@@ -110,7 +110,7 @@ $(MB_HTPGAS)/test.o: $(MB_LLPGAS)/linkedlist.o $(MB_HTPGAS)/test.c $(MB_LLPGAS)/
 	$(CCOMPILE) -c $(CFLAGS) -o $(MB_HTPGAS)/test.o $(MB_HTPGAS)/test.c
 
 mbhtpgas:  $(MBHTPGASOBJS) $(TMH)
-	$(CCOMPILE) -o mbht $(CFLAGS) $(MBHTPGASOBJS)
+	$(CCOMPILE) -o mbhtpgas $(CFLAGS) $(MBHTPGASOBJS)
 
 
 ro: $(ROOBJS)
