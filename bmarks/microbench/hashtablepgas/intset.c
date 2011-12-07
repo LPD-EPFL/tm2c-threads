@@ -86,7 +86,7 @@ int ht_move_naive(ht_intset_t *set, int val1, int val2, int transactional) {
 #elif defined STM
 
     int v, addr1, addr2;
-    node_t *n, prev, next;
+    node_t prev, next;
     pgas_addr_t prev_addr;
 
     TX_START
@@ -170,7 +170,7 @@ int ht_move(ht_intset_t *set, int val1, int val2, int transactional) {
 #elif defined STM
 
     int v, addr1, addr2;
-    node_t *prev, *next, *prev1, *next1;
+    node_t prev, next, prev1, next1;
     pgas_addr_t prev_addr, prev1_addr;
 
     TX_START
@@ -331,7 +331,7 @@ int ht_snapshot(ht_intset_t *set, int transactional) {
     int result = 0;
 
     int i, sum;
-    node_t *next;
+    node_t next;
 
     TX_START
     sum = 0;
