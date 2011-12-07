@@ -542,6 +542,21 @@ TASKMAIN(int argc, char **argv) {
         FLUSH
 
     }
+    OTHERS
+    {
+        if ((set = (ht_intset_t *) malloc(sizeof (ht_intset_t))) == NULL) {
+            perror("malloc");
+            exit(1);
+        }
+        if ((set->buckets = (void *) malloc((maxhtlength + 1) * sizeof (intset_t *))) == NULL) {
+            perror("malloc");
+            exit(1);
+        }
+        int i;
+        for (i = 1; i <= maxhtlength; i++) {
+            set->buckets->head = 2*i;
+        }
+    }
 
     BARRIER
 
@@ -571,12 +586,15 @@ TASKMAIN(int argc, char **argv) {
     data->seed = seed;
 
     BARRIER
-            
-    ht_add(set, 10*ID, 1);
-    ht_add(set, 100*ID, 1);
+
+    ht_add(set, 10 * ID, 1);
+    ht_add(set, 100 * ID, 1);
 
     BARRIER
-    ONCE{print_ht(set);}
+    ONCE
+    {
+        print_ht(set);
+    }
 
     //test(data, duration);
 
