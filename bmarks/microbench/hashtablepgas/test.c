@@ -554,7 +554,7 @@ TASKMAIN(int argc, char **argv) {
         }
         int i;
         for (i = 1; i <= maxhtlength; i++) {
-            set->buckets->head = 2*i;
+            set->buckets[i]->head = 2*i;
         }
     }
 
