@@ -596,16 +596,7 @@ TASKMAIN(int argc, char **argv) {
 
     BARRIER
 
-    ht_add(set, 10 * ID, 1);
-    ht_add(set, 100 * ID, 1);
-
-    BARRIER
-    ONCE
-    {
-        print_ht(set);
-    }
-
-    //test(data, duration);
+    test(data, duration);
 
     BARRIER
 
