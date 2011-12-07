@@ -90,7 +90,6 @@ ht_intset_t *ht_new() {
 
     for (i = 0; i < maxhtlength; i++) {
         set->buckets[i] = set_new();
-        printf("bucket[%2d]->head = %d\n", i, set->buckets[i]->head);
     }
     FLUSH;
     return set;
