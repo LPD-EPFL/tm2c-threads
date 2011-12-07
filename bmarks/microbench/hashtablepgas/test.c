@@ -325,6 +325,7 @@ void print_set(intset_t* set) {
 }
 
 void print_ht(ht_intset_t *set) {
+    printf("HASHTABLE (%d buckets)------------------------------------------------------------", maxhtlength);
     int i;
     for (i = 0; i < maxhtlength; i++) {
         printf("[%3d] :: ", i);
@@ -543,6 +544,10 @@ TASKMAIN(int argc, char **argv) {
         print_ht(set);
         ht_add(set, 666, 1);
         ht_add(set, 55555, 1);
+        print_ht(set);
+        ht_delete(set, 55555);
+        ht_delete(set, 666);
+        ht_delete(set, 6666);
         print_ht(set);
 
     }
