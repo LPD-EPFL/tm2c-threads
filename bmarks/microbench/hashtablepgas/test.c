@@ -315,7 +315,8 @@ void print_set(intset_t* set) {
         goto null;
     }
     while (node.next != NULL) {
-        printf("{%d} -%d-> ", node.val, node.next);
+        //printf("{%d} -%d-> ", node.val, node.next);
+        printf("%d =%d=> ", node.val, node.next);
         node = (node_t) TX_LOAD(node.next);
     }
     TX_COMMIT
@@ -541,8 +542,6 @@ TASKMAIN(int argc, char **argv) {
         print_ht(set);
 
         FLUSH
-
-
     }
 
     BARRIER
