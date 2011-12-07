@@ -102,7 +102,7 @@ $(MB_HTPGAS)/hashtable.o: $(MB_LLPGAS)/linkedlist.o $(MB_HTPGAS)/hashtable.c $(M
 	$(MB_LLPGAS)/harris.h $(MB_LLPGAS)/linkedlist.h
 	$(CCOMPILE) -c $(CFLAGS) -o $(MB_HTPGAS)/hashtable.o $(MB_HTPGAS)/hashtable.c
 
-$(MB_HTPGAS)/intset.o: $(MB_LLPGAS)/linkedlist.o $(MB_HTPGAS)/intset.c $(MB_HTPGAS)/hashtable.h $(MB_LLPGAS)/linkedlist.c 
+$(MB_HTPGAS)/intset.o: $(MB_LLPGAS)/linkedlist.o $(MB_HTPGAS)/intset.c $(MB_HTPGAS)/hashtable.h $(MB_LLPGAS)/linkedlist.c \
 	$(MB_LLPGAS)/harris.h $(MB_LLPGAS)/linkedlist.h
 	$(CCOMPILE) -c $(CFLAGS) -o $(MB_HTPGAS)/intset.o $(MB_HTPGAS)/intset.c
 
