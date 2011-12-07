@@ -541,6 +541,9 @@ TASKMAIN(int argc, char **argv) {
         FLUSH
 
         print_ht(set);
+        ht_add(set, 666, 1);
+        ht_add(set, 55555, 1);
+        print_ht(set);
 
     }
 
