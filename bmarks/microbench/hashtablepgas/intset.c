@@ -115,7 +115,7 @@ int ht_move_naive(ht_intset_t *set, int val1, int val2, int transactional) {
         prev = (node_t) TX_LOAD(prev_addr);
         next = (node_t) TX_LOAD(prev.next);
         while (1) {
-            v = next->val; //was TX
+            v = next.val; //was TX
             if (v >= val2) {
                 break;
             }
@@ -180,7 +180,7 @@ int ht_move(ht_intset_t *set, int val1, int val2, int transactional) {
     prev = (node_t) TX_LOAD(prev_addr);
     next = (node_t) TX_LOAD(prev.next);
     while (1) {
-        v = next->val; //was TX
+        v = next.val; //was TX
         if (v >= val1) {
             break;
         }
@@ -199,7 +199,7 @@ int ht_move(ht_intset_t *set, int val1, int val2, int transactional) {
         next = (node_t) TX_LOAD(prev.next);
 
         while (1) {
-            v = next->val; //was TX
+            v = next.val; //was TX
             if (v >= val2) break;
             prev_addr = prev.next;
             prev = next;
