@@ -334,7 +334,7 @@ void print_ht(ht_intset_t *set) {
 TASKMAIN(int argc, char **argv) {
     TM_INIT
 
-    struct option long_options[] = {
+            struct option long_options[] = {
         // These options don't set a flag
         {"help", no_argument, NULL, 'h'},
         {"duration", required_argument, NULL, 'd'},
@@ -513,19 +513,16 @@ TASKMAIN(int argc, char **argv) {
     maxhtlength = (unsigned int) initial / load_factor;
 
 
-    set = ht_new();
-    // Populate set 
-
     BARRIER
 
     ONCE
     {
         srand_core();
-        FLUSH
-#ifdef STM
-                udelay(rand_range(123));
-#endif
+        udelay(rand_range(123));
         srand_core();
+        
+        set = ht_new();
+        
         i = 0;
         maxhtlength = (int) (initial / load_factor);
         while (i < initial) {
@@ -576,7 +573,7 @@ TASKMAIN(int argc, char **argv) {
 
     BARRIER
 
-    test(data, duration);
+    //test(data, duration);
 
     BARRIER
 
