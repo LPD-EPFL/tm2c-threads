@@ -537,7 +537,7 @@ TASKMAIN(int argc, char **argv) {
         printf("Bucket amount: %d\n", maxhtlength);
         printf("Load         : %d\n", load_factor);
 
-        //print_ht(set);
+        print_ht(set);
 
         FLUSH
 
