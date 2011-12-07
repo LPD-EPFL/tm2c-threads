@@ -546,9 +546,9 @@ TASKMAIN(int argc, char **argv) {
         ht_add(set, 55555, 1);
         ht_add(set, 666, 1);
         print_ht(set);
-        ht_delete(set, 55555);
-        ht_delete(set, 666);
-        ht_delete(set, 6666);
+        ht_remove(set, 55555, 1);
+        ht_remove(set, 555, 1);
+        ht_remove(set, 666, 1);
         print_ht(set);
 
     }
