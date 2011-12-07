@@ -206,7 +206,7 @@ int ht_move(ht_intset_t *set, int val1, int val2, int transactional) {
             next = (node_t) TX_LOAD(prev.next);
         }
 
-        if (v != val2 && prev != prev1 && prev != next1) {
+        if (v != val2 && prev.val != prev1.val && prev.val != next1.val) {
             /* Even if the key is already in, the operation succeeds */
             result = 1;
 
