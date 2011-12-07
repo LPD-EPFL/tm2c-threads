@@ -561,8 +561,6 @@ TASKMAIN(int argc, char **argv) {
                 EXIT(1);
             }
             set->buckets[i - 1] = temp;
-            
-            PRINT("setting set->buckets[%d]->head = %d;", i - 1, 2 * i);
             set->buckets[i - 1]->head = 2 * i;
         }
     }
