@@ -306,22 +306,21 @@ void *test2(void *data, double duration) {
     return NULL;
 }
 
-void print_set(intset_t *set) {
-    intset_t *offset = set;
+void print_set(intset_t* set) {
 
-    node_t *node = ND(set->head);
-    node = ND(node->next);
+    TX_START
+    node_t node = (node_t) TX_LOAD(set->head);
 
-    if (node == NULL) {
+    if (node.next == NULL) {
         goto null;
     }
-    while (node->nextp != NULL) {
-        printf("%d -> ", node->val);
-        node = ND(node->next);
+    while (node.next != NULL) {
+        printf("{%d} -%d-> ", node.val, node.next);
+        node = (node_t) TX_LOAD(node.next);
     }
-
-null:
-    PRINTS("NULL\n");
+    TX_COMMIT
+    null :
+            PRINTSF("NULL\n");
 }
 
 void print_ht(ht_intset_t *set) {
@@ -333,13 +332,7 @@ void print_ht(ht_intset_t *set) {
 }
 
 TASKMAIN(int argc, char **argv) {
-#ifndef SEQUENTIAL
     TM_INIT
-#else
-    RCCE_init(&argc, &argv);
-    iRCCE_init();
-    dup2(STDOUT_FILENO, STDERR_FILENO);
-#endif
 
     struct option long_options[] = {
         // These options don't set a flag
@@ -498,17 +491,7 @@ TASKMAIN(int argc, char **argv) {
 
     ONCE
     {
-        printf("Set type     : hash table\n");
-#ifdef SEQUENTIAL
-        printf("                sequential\n");
-#elif defined(EARLY_RELEASE )
-        printf("                using early-release\n");
-#elif defined(READ_VALIDATION)
-        printf("                using read-validation\n");
-#endif
-#ifdef LOCKS
-        printf("                  with locks\n");
-#endif
+        printf("Set type     : hash table PGAS\n");
         printf("Duration     : %f\n", duration);
         printf("Initial size : %d\n", initial);
         printf("Nb threads   : %d\n", nb_app_cores);
@@ -566,52 +549,6 @@ TASKMAIN(int argc, char **argv) {
 
     BARRIER
 
-#if defined(STM) && !defined(SEQUENTIAL)
-        int off, id2use;
-    if (ID < 6) {
-        off = 0;
-        id2use = ID;
-    }
-    else if (ID < 12) {
-        off = 1;
-        id2use = ID - 6;
-    }
-    else if (ID < 18) {
-        off = 0;
-        id2use = ID - 6;
-    }
-    else if (ID < 24) {
-        off = 1;
-        id2use = ID - 12;
-    }
-    else if (ID < 30) {
-        off = 2;
-        id2use = ID - 24;
-    }
-    else if (ID < 36){
-        off = 3;
-        id2use = ID - 30;
-    }
-    else if (ID < 42) {
-        off = 2;
-        id2use = ID - 30;
-    }
-    else if (ID < 48) {
-        off = 3;
-        id2use = ID - 36;
-    }
-    
-#ifdef DSL
-    shmem_init(((off * 16) * 1024 * 1024) + ((id2use/2) * 1024 * 1024));
-    PRINT("shmem from %d MB", (off * 16) + id2use/2);
-#else
-    shmem_init(((off * 16) * 1024 * 1024) + ((id2use) * 1024 * 1024));
-    PRINT("shmem from %d MB", (off * 16) + id2use);
-#endif
-#else
-    shmem_init(1024*100*RCCE_ue()*sizeof(node_t) + (initial + 2)*sizeof(node_t));
-#endif
-    
 
     data->first = last;
     data->range = range;
@@ -634,11 +571,11 @@ TASKMAIN(int argc, char **argv) {
     data->nb_found = 0;
     data->set = set;
     data->seed = seed;
-    
+
     BARRIER
 
     BARRIER
-            
+
     test(data, duration);
 
     BARRIER
@@ -657,11 +594,11 @@ TASKMAIN(int argc, char **argv) {
 #ifdef SEQUENTIAL
     int total_ops = data->nb_add + data->nb_contains + data->nb_remove + data->nb_move + data->nb_snapshot;
     printf("#Ops          : %d\n", total_ops);
-/*
-    printf("#Ops/s        : %d\n", (int) (total_ops / duration__));
-    printf("#Latency      : %f\n", duration__ / total_ops);
-*/
-        printf("))) %d\t100\t%.3f\t(Throughput, Commit Rate, Latency)", (int) (total_ops / duration__), 1000 * duration__ / total_ops);
+    /*
+        printf("#Ops/s        : %d\n", (int) (total_ops / duration__));
+        printf("#Latency      : %f\n", duration__ / total_ops);
+     */
+    printf("))) %d\t100\t%.3f\t(Throughput, Commit Rate, Latency)", (int) (total_ops / duration__), 1000 * duration__ / total_ops);
 #endif
     FLUSH;
 
@@ -674,12 +611,6 @@ TASKMAIN(int argc, char **argv) {
 
     BARRIER
 
-#ifndef SEQUENTIAL
     TM_END
-
-#else
-            RCCE_finalize();
-#endif
-
     EXIT(0);
 }
