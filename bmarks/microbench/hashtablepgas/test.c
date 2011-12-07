@@ -541,23 +541,12 @@ TASKMAIN(int argc, char **argv) {
         printf("Load         : %d\n", load_factor);
         FLUSH
 
-        PGAS_alloc_init(0);
-        PGAS_alloc_offs(initial + (2 * maxhtlength) + 1);
-
-        print_ht(set);
-        ht_add(set, 666, 1);
-        ht_add(set, 55555, 1);
-        ht_add(set, 666, 1);
-        print_ht(set);
-        ht_remove(set, 55555, 1);
-        ht_remove(set, 555, 1);
-        ht_remove(set, 666, 1);
-        print_ht(set);
-
     }
 
     BARRIER
 
+    PGAS_alloc_init(0);
+    PGAS_alloc_offs(initial + (2 * maxhtlength) + 1);
 
     data->first = last;
     data->range = range;
@@ -582,8 +571,12 @@ TASKMAIN(int argc, char **argv) {
     data->seed = seed;
 
     BARRIER
+            
+    ht_add(set, 10*ID, 1);
+    ht_add(set, 100*ID, 1);
 
     BARRIER
+    ONCE{print_ht(set)
 
     //test(data, duration);
 
