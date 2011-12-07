@@ -522,10 +522,10 @@ TASKMAIN(int argc, char **argv) {
         srand_core();
         udelay(rand_range(123));
         srand_core();
-        
+
         PGAS_alloc_init(1);
         set = ht_new();
-        
+
         i = 0;
         maxhtlength = (int) (initial / load_factor);
         while (i < initial) {
@@ -540,6 +540,9 @@ TASKMAIN(int argc, char **argv) {
         printf("Bucket amount: %d\n", maxhtlength);
         printf("Load         : %d\n", load_factor);
         FLUSH
+
+        PGAS_alloc_init(0);
+        PGAS_alloc_offs(initial + (2 * maxhtlength) + 1);
 
         print_ht(set);
         ht_add(set, 666, 1);
