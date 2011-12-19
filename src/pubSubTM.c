@@ -40,16 +40,17 @@ inline void publish_finish(int nodeId, int shmem_address);
 void ps_init_(void) {
     PRINTD("NUM_DSL_NODES = %d", NUM_DSL_NODES);
     if ((dsl_nodes = (unsigned int *) malloc(NUM_DSL_NODES * sizeof (unsigned int))) == NULL) {
-        PRINTD("malloc dsl_nodes");
+        PRINT("malloc dsl_nodes");
         EXIT(-1);
     }
 
     psc = (PS_COMMAND *) malloc(sizeof (PS_COMMAND)); //TODO: free at finalize + check for null
     buf = (char *) malloc(NUM_UES * PS_BUFFER_SIZE); //TODO: free at finalize + check for null
     if (psc == NULL || buf == NULL) {
-        PRINTD("malloc ps_command == NULL || ps_remote == NULL || psc == NULL || buf == NULL");
+        PRINT("malloc ps_command == NULL || ps_remote == NULL || psc == NULL || buf == NULL");
     }
     shmem_init_start_address();
+
     int j, dsln = 0;
     for (j = 0; j < NUM_UES; j++) {
         nodes_contacted[j] = 0;
@@ -161,6 +162,7 @@ CONFLICT_TYPE ps_subscribe(void *address) {
 
 #ifdef PGAS
     //ps_send_rl(responsible_node, (unsigned int) address);
+    PRINT("\t\t\t\tAddress: %2d -> %d | NUM_DSL_NODES: %d", address, SHRINK(address), NUM_DSL_NODES);
     ps_send_rl(responsible_node, SHRINK(address));
 #else
     ps_sendb(responsible_node, PS_SUBSCRIBE, address_offs, NO_CONFLICT);
