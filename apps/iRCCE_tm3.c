@@ -19,10 +19,17 @@ MAIN(int argc, char **argv) {
 
 
     TX_START
+    int i;
+    for (i = 0; i < 10; i++) {
+        TX_LOAD_STORE(i, +, i);
+    }
     
-    TX_LOAD_STORE(0, +, 1);
-    TX_LOAD_STORE(1, +, 1);
-    TX_LOAD_STORE(2, +, 1);
+    TX_COMMIT
+    TX_START
+    int i;
+    for (i = 0; i < 10; i++) {
+            PRINT("address %2d, value %2d", i, TX_LOAD(i));
+    }
     
     TX_COMMIT
 
