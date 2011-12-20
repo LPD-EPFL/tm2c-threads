@@ -65,6 +65,8 @@ void dsl_init(void) {
     int i;
 
 #ifdef PGAS
+    PGAS_init();
+    
     PGAS_write_sets = (write_set_pgas_t **) malloc(NUM_UES * sizeof (write_set_pgas_t *));
     if (PGAS_write_sets == NULL) {
         PRINT("malloc PGAS_write_sets == NULL");
@@ -81,7 +83,6 @@ void dsl_init(void) {
         }
     }
 
-    PGAS_init();
 #endif
 
     ps_hashtable = ps_hashtable_new();
