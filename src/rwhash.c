@@ -177,7 +177,7 @@ void rw_entry_insert_bucket_entry(bucket_entry_t *bucket_entry, int nodeId, RW r
             /*change it with CM*/
             ps_conflict_type = WRITE_AFTER_WRITE;
         }
-        else if (!rw_entry_is_empty(rw_entry)) { /*Possible READ/WRITE*/
+        else if (!rw_entry_is_empty(bucket_entry)) { /*Possible READ/WRITE*/
             /*if the only writer is the one that "asks"*/
             if (rw_entry_is_unique_reader(bucket_entry, nodeId)) {
                 rw_entry_set_writer(bucket_entry, nodeId);
