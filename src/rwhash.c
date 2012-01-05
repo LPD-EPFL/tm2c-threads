@@ -170,7 +170,7 @@ void rw_entry_insert_bucket_entry(bucket_entry_t *bucket_entry, int nodeId, RW r
     }
 
     if (rw == WRITE) { /*publishing*/
-        if (rw_entry_has_writer(rw_entry)) { /*WRITE/WRITE conflict*/
+        if (rw_entry_has_writer(bucket_entry)) { /*WRITE/WRITE conflict*/
             //TODO: here the logic for WRITE -> WRITE
             PRINTD("[X] %d tries to write %d: WRITE lock by %d", nodeId, bucket_entry->address, bucket_entry->rw_entry.shorts[3]);
 
@@ -199,7 +199,7 @@ void rw_entry_insert_bucket_entry(bucket_entry_t *bucket_entry, int nodeId, RW r
         }
     }
     else { /*subscribing*/
-        if (rw_entry_has_writer(rw_entry) && !rw_entry_is_writer(bucket_entry, nodeId)) { /*WRITE/READ*/
+        if (rw_entry_has_writer(bucket_entry) && !rw_entry_is_writer(bucket_entry, nodeId)) { /*WRITE/READ*/
             //TODO: here the logic for WRITE -> READ
             PRINTD("[X] %d tries to read %d: WRITE lock by %d", nodeId, bucket_entry->address, bucket_entry->rw_entry.shorts[3]);
 
