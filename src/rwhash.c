@@ -14,27 +14,48 @@ unsigned int bucket_usages[NUM_OF_BUCKETS];
 #define USE_MACROS
 
 #ifdef USE_MACROS
+#ifndef BITOPTS
 #define rw_entry_member(be, nodeId)     \
         ((BOOLEAN) ((be->rw_entry.ints[(int) (nodeId / 32)] >> (nodeId % 32)) & 0x01))
 #else
+#define rw_entry_member(be, nodeId)      \
+        test_bit(nodeId, (unsigned long *) be->rw_entry.ints);
+#endif
+
+#else
+
 inline BOOLEAN rw_entry_member(bucket_entry_t *be, unsigned short nodeId) {
     return (BOOLEAN) ((be->rw_entry.ints[(int) (nodeId / 32)] >> (nodeId % 32)) & 0x01);
 }
 #endif
 
 #ifdef USE_MACROS
+#ifndef BITOPTS
 #define rw_entry_set(be, nodeId)        \
         be->rw_entry.ints[(int) (nodeId / 32)] |= (1 << (nodeId % 32))
 #else
+#define rw_entry_set(be, nodeId)        \
+        set_bit(nodeId, (unsigned long *) be->rw_entry.ints)
+        //set_bit(nodeId % 32, (unsigned long *) &be->rw_entry.ints[(int) nodeId / 32])
+#endif
+#else
+
 inline void rw_entry_set(bucket_entry_t *be, unsigned short nodeId) {
     be->rw_entry.ints[(int) (nodeId / 32)] |= (1 << (nodeId % 32));
 }
 #endif
 
 #ifdef USE_MACROS
+#ifndef BITOPTS
 #define rw_entry_unset(be, nodeId)      \
         be->rw_entry.ints[(int) (nodeId / 32)] &= (~(1 << (nodeId % 32)))
 #else
+#define rw_entry_unset(be, nodeId)      \
+        clear_bit(nodeId, (unsigned long *) be->rw_entry.ints)
+        //clear_bit(nodeId % 32, (unsigned long *) &be->rw_entry.ints[(int) nodeId / 32])
+#endif
+#else
+
 inline void rw_entry_unset(bucket_entry_t *be, unsigned short nodeId) {
     be->rw_entry.ints[(int) (nodeId / 32)] &= (~(1 << (nodeId % 32)));
 }
