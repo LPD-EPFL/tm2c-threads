@@ -13,11 +13,8 @@ stm_tx_node_t *stm_tx_node;
 MAIN(int argc, char **argv) {    
     TM_INIT
     
-    int * i = (int *) malloc(10);
-    free(i);
     
     int *j = (int *) RCCE_shmalloc(10);
-    RCCE_shfree(j);
 
     BARRIER
     
@@ -28,11 +25,11 @@ MAIN(int argc, char **argv) {
     
     TX_START
     
-    int * i = (int *) malloc(10);
-    free(i);
-    
-    int *j = (int *) RCCE_shmalloc(10);
-    RCCE_shfree(j);
+    int i;
+    for (i = 0; i < 10; i++) {
+        PRINT("loading %2d, %p", i, j+i);
+        TX_LOAD(j + i);
+    }
 
     TX_COMMIT
     
