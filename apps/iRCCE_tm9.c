@@ -14,7 +14,7 @@ MAIN(int argc, char **argv) {
     TM_INIT
     
     
-    int *j = (int *) RCCE_shmalloc(10);
+    int *j = (int *) RCCE_shmalloc(1000);
 
     BARRIER
     
@@ -26,7 +26,7 @@ MAIN(int argc, char **argv) {
     TX_START
     
     int i;
-    for (i = 0; i < 10; i++) {
+    for (i = 0; i < 1000; i++) {
         //PRINT("loading %2d, %p", i, j+i);
         TX_LOAD(j + i);
     }
