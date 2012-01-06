@@ -53,7 +53,7 @@ intset_t *set_new() {
     TX_STORE(max_nn.addr, max_nn.node.toint);
     TX_STORE(min_nn.addr, min_nn.node.toint);
     set->head = min_nn.addr;
-    TX_COMMIT
+    TX_COMMIT_NO_STATS
     return set;
 }
 
@@ -72,7 +72,7 @@ int set_size(intset_t *set) {
         size++;
         node = (node_t) TX_LOAD(node.next);
     }
-    TX_COMMIT
+    TX_COMMIT_NO_STATS
     return size;
 }
 
@@ -146,7 +146,7 @@ static int set_seq_add(intset_t *set, val_t val) {
         TX_STORE(prev_addr, prevnew.toint);
         TX_STORE(nn.addr, nn.node.toint);
     }
-    TX_COMMIT
+    TX_COMMIT_NO_STATS
     return result;
 }
 
