@@ -321,7 +321,6 @@ static inline unsigned int DHT_get_responsible_node(void *shmem_address, unsigne
     return dsl_nodes[shmem_address % NUM_DSL_NODES];
 #else
     *address_offset = shmem_address_offset(shmem_address);
-    PRINT("address %p > offset %d", shmem_address, *address_offset);
     return dsl_nodes[(*address_offset >> DHT_ADDRESS_MASK) % NUM_DSL_NODES];
 
 #endif
