@@ -20,7 +20,7 @@ extern "C" {
 #define MEM_PREALLOC
 #define USE_MACROS_
 
-#define BITOPTS
+#define BITOPTS_
     
 #ifdef BITOPTS
 #include "bitopts.h"
