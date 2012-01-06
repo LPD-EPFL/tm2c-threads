@@ -137,7 +137,7 @@ do {									\
   do {									\
     if (entry_time_valid[position]) {					\
       entry_time_valid[position] = M_FALSE;				\
-      ticks exit_time = getticks() - 16;				\
+      ticks exit_time = getticks();				\
       total_sum_ticks[position] += (exit_time - entry_time[position]);	\
       total_samples[position]++;					\
 }} while (0);
