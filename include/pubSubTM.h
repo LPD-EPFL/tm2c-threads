@@ -26,7 +26,7 @@
 extern "C" {
 #endif
 
-#define DHT_ADDRESS_MASK 3
+#define DHT_ADDRESS_MASK 2
 
     //the buffer size for pub-sub = the size (in bytes) of the msg exchanged
 #define PS_BUFFER_SIZE     32
