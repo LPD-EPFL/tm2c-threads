@@ -39,8 +39,8 @@ extern "C" {
 
 //#define HASH(address)   ((((((unsigned int) address)) ^ 2) >> 8))
 //#define HASH(address)   ((((((unsigned int) address)))>> 3))
-//#define HASH(address)   (address)
-#define HASH(address)   (address / NUM_DSL_NODES)
+#define HASH(address)   (address)
+//#define HASH(address)   (address / NUM_DSL_NODES)
 
 
 
