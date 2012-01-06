@@ -35,12 +35,12 @@ extern "C" {
 
 #define NO_WRITERI      0x10000000
 #define NO_WRITER       0x1000
-#define NUM_OF_BUCKETS  3
+#define NUM_OF_BUCKETS  7
 
 //#define HASH(address)   ((((((unsigned int) address)) ^ 2) >> 8))
 //#define HASH(address)   ((((((unsigned int) address)))>> 3))
-#define HASH(address)   (address)
-//#define HASH(address)   (address / NUM_DSL_NODES)
+//#define HASH(address)   (address)
+#define HASH(address)   (address / NUM_DSL_NODES)
 
 
 
