@@ -222,7 +222,7 @@ while (0);
                         ticks_perc, total_samples[i],
                         s, ms, us, ns,
                         sa, msa, usa, nsa,
-                        total_sum_ticks[i]);
+                        (long long int) total_sum_ticks[i]);
             }
         }
 
