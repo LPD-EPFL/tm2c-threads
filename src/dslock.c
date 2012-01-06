@@ -236,7 +236,12 @@ static void dsl_communication() {
                             print_hashtable_usage();
 
                         }
-                        EXIT(0);
+
+#ifdef DEBUG_UTILIZATION
+                        PRINT("*** Completed requests: %d", read_reqs_num + write_reqs_num);
+#endif
+
+                                EXIT(0);
                     }
                 default:
                     PRINTD("REMOTE MSG: ??");
