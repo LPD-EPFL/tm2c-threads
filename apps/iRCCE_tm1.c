@@ -4,6 +4,8 @@
  */
 
 #include "tm.h"
+#include "measurements.h"
+
 
 #define SIS_SIZE 480
 
@@ -14,61 +16,15 @@ MAIN(int argc, char **argv) {
 
     TM_INIT
 
-            int *sis = (int *) RCCE_shmalloc(SIS_SIZE * sizeof (int));
-    if (sis == NULL) {
-        PRINTD("RCCE_shmalloc");
-        EXIT(-1);
+    long long int ll = 10000000;
+    
+    while (ll--) {
+        PF_START(0);
+        PF_STOP(0);
     }
-
-    PRINTD("~ %p", sis);
-
-    int i;
-    for (i = ID; i < SIS_SIZE; i += NUM_UES) {
-        *(sis + i) = 1;
-    }
-
-    i = 10;
-    while (i--) {
-
-        if (argc > 1) {
-            goto this;
-        }
-
-start:
-
-        BARRIER
-
-        BMSTART("time to start and end an empty TX");
-        TX_START
-        TX_COMMIT
-        BMEND
-
-        BARRIER
-
-        if (argc > 1) {
-            goto end;
-        }
-
-this:
-
-        BMSTART("time to start and end an empty TX once aborted TX");
-        int aborted = 0;
-        TX_START
-        if (!aborted) {
-            aborted = 1;
-            TX_ABORT(1)
-        }
-        TX_COMMIT
-        BMEND
-
-        if (argc > 1) {
-            goto start;
-        }
-
-end:
-        ;
-
-    }
+    
+    PF_PRINT
+    
 
     TM_END
     EXIT(0);
