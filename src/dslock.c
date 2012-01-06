@@ -41,6 +41,11 @@ unsigned int stats_total = 0, stats_commits = 0, stats_aborts = 0, stats_max_ret
         stats_aborts_raw = 0, stats_aborts_waw = 0, stats_received = 0;
 double stats_duration = 0;
 
+#ifdef DEBUG_UTILIZATION
+unsigned int read_reqs_num = 0;
+unsigned int write_reqs_num = 0;
+#endif
+
 static void dsl_communication();
 static inline void ps_send(unsigned short int target, PS_COMMAND_TYPE operation, unsigned int address, CONFLICT_TYPE response);
 
@@ -49,6 +54,7 @@ static inline CONFLICT_TYPE try_publish(int nodeId, int shmem_address);
 static inline void unsubscribe(int nodeId, int shmem_address);
 static inline void publish_finish(int nodeId, int shmem_address);
 static void print_global_stats();
+static void print_hashtable_usage();
 
 void dsl_init(void) {
     NUM_UES_APP = NUM_UES - NUM_DSL_UES;
@@ -211,6 +217,9 @@ static void dsl_communication() {
                     if (++stats_received >= NUM_UES_APP) {
                         if (RCCE_ue() == 0) {
                             print_global_stats();
+                            
+                            print_hashtable_usage();
+                            
                         }
                         EXIT(0);
                     }
@@ -329,4 +338,26 @@ static void print_global_stats() {
     printf("||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\n");
 
     fflush(stdout);
+}
+
+static void print_hashtable_usage() {
+#ifdef DEBUG_UTILIZATION
+    PRINTSME("USAGE ()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()\n");
+
+    printf("read reqs: \t%u\n", read_reqs_num);
+    printf("write reqs: \t%u\n", write_reqs_num);
+    printf("total reqs: \t%u\n--\n", read_reqs_num + write_reqs_num);
+
+
+    long long unsigned total_usages = 0;
+    int i;
+    for (i = 0; i < NUM_OF_BUCKETS; i++) {
+        total_usages += bucket_usages[i];
+    }
+
+    for (i = 0; i < NUM_OF_BUCKETS; i++) {
+        printf("bucket [%02d]\tusages: %d\t percentage: %f%%\n", i, bucket_usages[i], (100 * (double) bucket_usages[i]) / total_usages);
+    }
+
+#endif
 }
