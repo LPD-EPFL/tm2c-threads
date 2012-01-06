@@ -26,6 +26,8 @@
 extern "C" {
 #endif
 
+#define DHT_ADDRESS_MASK 3
+
     //the buffer size for pub-sub = the size (in bytes) of the msg exchanged
 #define PS_BUFFER_SIZE     32
 
@@ -94,7 +96,6 @@ extern "C" {
 
     typedef unsigned int SHMEM_START_ADDRESS;
 
-#define DHT_ADDRESS_MASK 2
 
     //TODO: remove ? have them at .c file
     extern iRCCE_WAIT_LIST waitlist; //the send-recv buffer
@@ -130,7 +131,7 @@ extern "C" {
      */
 #ifdef PGAS
     CONFLICT_TYPE ps_publish(unsigned int address, int value);
-    
+
     /*  Try to increment by increment and store (so, write) address
      */
     CONFLICT_TYPE ps_store_inc(unsigned int address, int increment);
