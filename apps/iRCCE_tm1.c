@@ -16,7 +16,7 @@ MAIN(int argc, char **argv) {
 
     TM_INIT
 
-    short j = 0; 
+            short j = 0;
     long long int ll = 10000000;
 
     while (ll--) {
@@ -37,7 +37,7 @@ MAIN(int argc, char **argv) {
         PF_START(j);
         PF_STOP(j);
     }
-    
+
     j++;
     ll = 10000;
     while (ll--) {
@@ -47,6 +47,29 @@ MAIN(int argc, char **argv) {
 
     j++;
     ll = 1000;
+    while (ll--) {
+        PF_START(j);
+        PF_STOP(j);
+    }
+
+    j++;
+    ll = 100;
+    while (ll--) {
+        PF_START(j);
+        PF_STOP(j);
+    }
+
+
+    j++;
+    ll = 10;
+    while (ll--) {
+        PF_START(j);
+        PF_STOP(j);
+    }
+
+
+    j++;
+    ll = 1;
     while (ll--) {
         PF_START(j);
         PF_STOP(j);
