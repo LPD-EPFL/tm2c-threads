@@ -14,7 +14,7 @@ unsigned int bucket_usages[NUM_OF_BUCKETS];
 #define USE_MACROS
 
 #ifdef USE_MACROS
-#ifndef BITOPTS
+#ifndef BITOPTS_
 #define rw_entry_member(be, nodeId)     \
         ((BOOLEAN) ((be->rw_entry.ints[(int) (nodeId / 32)] >> (nodeId % 32)) & 0x01))
 #else
