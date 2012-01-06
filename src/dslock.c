@@ -72,7 +72,7 @@ void dsl_init(void) {
 
 #ifdef PGAS
     PGAS_init();
-    
+
     PGAS_write_sets = (write_set_pgas_t **) malloc(NUM_UES * sizeof (write_set_pgas_t *));
     if (PGAS_write_sets == NULL) {
         PRINT("malloc PGAS_write_sets == NULL");
@@ -140,6 +140,11 @@ static void dsl_communication() {
 
             switch (ps_remote->type) {
                 case PS_SUBSCRIBE:
+
+#ifdef DEBUG_UTILIZATION
+                    read_reqs_num++;
+#endif
+
 #ifdef PGAS
                     //PRINT("RL addr: %3d, val: %d", ps_remote->address, PGAS_read(ps_remote->address));
                     ps_send(sender, PS_SUBSCRIBE_RESPONSE, PGAS_read(ps_remote->address), try_subscribe(sender, ps_remote->address));
@@ -150,17 +155,22 @@ static void dsl_communication() {
                     break;
                 case PS_PUBLISH:
                 {
+
+#ifdef DEBUG_UTILIZATION
+                    write_reqs_num++;
+#endif
+
                     CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
 #ifdef PGAS
                     if (conflict == NO_CONFLICT) {
-/*
-                        union {
-                            int i;
-                            unsigned short s[2];
-                        } convert;
-                        convert.i = ps_remote->write_value;
-                        PRINT("\t\t\tWriting (val:%d|nxt:%d) to address %d", convert.s[0], convert.s[1], ps_remote->address);
-*/
+                        /*
+                                                union {
+                                                    int i;
+                                                    unsigned short s[2];
+                                                } convert;
+                                                convert.i = ps_remote->write_value;
+                                                PRINT("\t\t\tWriting (val:%d|nxt:%d) to address %d", convert.s[0], convert.s[1], ps_remote->address);
+                         */
                         write_set_pgas_insert(PGAS_write_sets[sender], ps_remote->write_value, ps_remote->address);
                     }
 #endif
@@ -170,19 +180,24 @@ static void dsl_communication() {
 #ifdef PGAS
                 case PS_WRITE_INC:
                 {
+
+#ifdef DEBUG_UTILIZATION
+                    write_reqs_num++;
+#endif
+
                     CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
                     if (conflict == NO_CONFLICT) {
-/*
-                        PRINT("PS_WRITE_INC from %2d for %3d, old: %3d, new: %d", sender, ps_remote->address, PGAS_read(ps_remote->address),
-                                PGAS_read(ps_remote->address) + ps_remote->write_value);
-*/
+                        /*
+                                                PRINT("PS_WRITE_INC from %2d for %3d, old: %3d, new: %d", sender, ps_remote->address, PGAS_read(ps_remote->address),
+                                                        PGAS_read(ps_remote->address) + ps_remote->write_value);
+                         */
                         write_set_pgas_insert(PGAS_write_sets[sender], PGAS_read(ps_remote->address) + ps_remote->write_value,
                                 ps_remote->address);
                     }
                     else {
-/*
-                        PRINT("PS_WRITE_INC from %2d for %3d, CONFLICT", sender, ps_remote->address);
-*/
+                        /*
+                                                PRINT("PS_WRITE_INC from %2d for %3d, CONFLICT", sender, ps_remote->address);
+                         */
                     }
                     ps_send(sender, PS_PUBLISH_RESPONSE, ps_remote->address, conflict);
 
@@ -217,9 +232,9 @@ static void dsl_communication() {
                     if (++stats_received >= NUM_UES_APP) {
                         if (RCCE_ue() == 0) {
                             print_global_stats();
-                            
+
                             print_hashtable_usage();
-                            
+
                         }
                         EXIT(0);
                     }
