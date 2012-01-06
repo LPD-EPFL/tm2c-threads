@@ -27,7 +27,7 @@ MAIN(int argc, char **argv) {
     
     int i;
     for (i = 0; i < 10; i++) {
-        PRINT("loading %2d, %p", i, j+i);
+        //PRINT("loading %2d, %p", i, j+i);
         TX_LOAD(j + i);
     }
 
