@@ -218,10 +218,11 @@ while (0);
                 int msa = (int) trunc((secsa - sa) * 1000);
                 int usa = (int) trunc(((secsa - sa) * 1000000) - (msa * 1000));
                 int nsa = (int) trunc(((secsa - sa) * 1000000000) - (msa * 1000000) - (usa * 1000));
-                printf("  [%2.1f%%] \tsamples: %-16llu | time: %3d %3d %3d %3d | avg time: %3d %3d %3d %3d \t(s ms us ns)\n",
+                printf("  [%2.1f%%] \tsamples: %-16llu | time: %3d %3d %3d %3d | avg time: %3d %3d %3d %3d \t(s ms us ns) || ticks: %d\n",
                         ticks_perc, total_samples[i],
                         s, ms, us, ns,
-                        sa, msa, usa, nsa);
+                        sa, msa, usa, nsa,
+                        total_sum_ticks[i]);
             }
         }
 
