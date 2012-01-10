@@ -13,6 +13,7 @@ MAIN(int argc, char **argv) {
 
     TM_INIT
 
+    int *sis = (int *)RCCE_shmalloc(SIS_SIZE * sizeof(int));
 
     BARRIER
 
@@ -25,7 +26,7 @@ FOR(0.3) {
 
                 int i;
         for (i = 0; i < SIS_SIZE; i++) {
-            TX_STORE(4 * i, reps * i);
+            TX_STORE(sis + i, reps * i, TYPE_INT);
         }
 
         TX_COMMIT
@@ -35,7 +36,7 @@ FOR(0.3) {
                 int i;
         int s[SIS_SIZE];
         for (i = 0; i < SIS_SIZE; i++) {
-            s[i] = TX_LOAD(4 * i);
+            s[i] = *(int *) TX_LOAD(sis + i);
             //printf("%d - ", s[i]);
         }
         //printf("\n");
