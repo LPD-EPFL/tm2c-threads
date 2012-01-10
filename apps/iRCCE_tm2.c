@@ -43,7 +43,7 @@ MAIN(int argc, char **argv) {
         //FLUSH
 
         TX_COMMIT
-        reps++
+        reps++;
 
     }
 
