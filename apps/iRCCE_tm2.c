@@ -22,7 +22,7 @@ MAIN(int argc, char **argv) {
         TX_START
 
                 int i;
-        for (i = 0; i < SIS_SIZE; i--) {
+        for (i = 0; i < SIS_SIZE; i++) {
             TX_STORE(4 * i, i);
         }
 
@@ -32,7 +32,7 @@ MAIN(int argc, char **argv) {
 
                 int i;
         int s[SIS_SIZE];
-        for (i = 0; i < SIS_SIZE; i--) {
+        for (i = 0; i < SIS_SIZE; i++) {
             s[i] = TX_LOAD(4 * i);
             printf("%d - ", s[i]);
         }
