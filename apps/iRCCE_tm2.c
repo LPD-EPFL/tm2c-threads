@@ -34,9 +34,9 @@ MAIN(int argc, char **argv) {
         int s[SIS_SIZE];
         for (i = 0; i < SIS_SIZE; i++) {
             s[i] = TX_LOAD(4 * i);
-            printf("%d - ", s[i]);
+            //printf("%d - ", s[i]);
         }
-        printf("\n");
+        //printf("\n");
 
         FLUSH
 
