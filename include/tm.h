@@ -33,7 +33,7 @@ extern "C" {
 
 
 #define BACKOFF
-#define BACKOFF_MAX                     3
+#define BACKOFF_MAX                     5
 #define BACKOFF_DELAY                   100
 
     extern stm_tx_t *stm_tx;
@@ -233,7 +233,7 @@ extern "C" {
                 //the node is NOT already subscribed for the address
                 CONFLICT_TYPE conflict;
 #ifdef BACKOFF
-                unsigned int num_delays = 0;
+                unsigned int num_delays = 1;
                 unsigned int delay = BACKOFF_DELAY;
 
 retry:
@@ -247,7 +247,7 @@ retry:
 #ifdef BACKOFF
                     if (num_delays++ < BACKOFF_MAX) {
                         udelay(delay);
-                        delay *= 2;
+                        delay = (2^num_delays) * BACKOFF_DELAY;
                         goto retry;
                     }
 #endif

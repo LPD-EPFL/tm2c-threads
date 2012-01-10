@@ -109,7 +109,7 @@ void ps_publish_all() {
     while (locked < nb_entries) {
         CONFLICT_TYPE conflict;
 #ifdef BACKOFF
-        unsigned int num_delays = 0;
+        unsigned int num_delays = 1;
         unsigned int delay = BACKOFF_DELAY; //micro
 retry:
 #endif
@@ -122,7 +122,7 @@ retry:
 #ifdef BACKOFF
             if (num_delays++ < BACKOFF_MAX) {
                 udelay(delay);
-                delay *= 2;
+                delay = (2^num_delays) * BACKOFF_DELAY;
                 goto retry;
             }
 #endif
