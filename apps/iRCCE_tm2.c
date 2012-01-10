@@ -4,7 +4,7 @@
 
 #include "tm.h"
 
-#define SIS_SIZE 10000
+#define SIS_SIZE 100
 
 stm_tx_t *stm_tx;
 stm_tx_node_t *stm_tx_node;
@@ -18,7 +18,7 @@ MAIN(int argc, char **argv) {
 
             int reps = 1;
 
-    FOR(1) {
+FOR(0.3) {
         //        PRINT("@rep %d", reps);
 
         TX_START
