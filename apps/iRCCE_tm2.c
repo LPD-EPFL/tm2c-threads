@@ -17,13 +17,15 @@ MAIN(int argc, char **argv) {
     BARRIER
 
             int reps = 1;
-    while (reps++ < 11) {
-        PRINT("@rep %d", reps);
+
+    FOR(1) {
+        //        PRINT("@rep %d", reps);
+
         TX_START
 
                 int i;
         for (i = 0; i < SIS_SIZE; i++) {
-            TX_STORE(4 * i, reps*i);
+            TX_STORE(4 * i, reps * i);
         }
 
         TX_COMMIT
@@ -38,9 +40,11 @@ MAIN(int argc, char **argv) {
         }
         //printf("\n");
 
-        FLUSH
+        //FLUSH
 
         TX_COMMIT
+        reps++
+
     }
 
     TM_END
