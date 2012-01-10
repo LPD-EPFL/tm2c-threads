@@ -4,7 +4,7 @@
 
 #include "tm.h"
 
-#define SIS_SIZE 1000
+#define SIS_SIZE 10000
 
 stm_tx_t *stm_tx;
 stm_tx_node_t *stm_tx_node;
