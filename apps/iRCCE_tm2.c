@@ -4,7 +4,7 @@
 
 #include "tm.h"
 
-#define SIS_SIZE 4800
+#define SIS_SIZE 10
 
 stm_tx_t *stm_tx;
 stm_tx_node_t *stm_tx_node;
@@ -13,47 +13,37 @@ MAIN(int argc, char **argv) {
 
     TM_INIT
 
-            int *sis = (int *) RCCE_shmalloc(SIS_SIZE * sizeof (int));
-    if (sis == NULL) {
-        PRINTD("RCCE_shmalloc");
-        EXIT(-1);
-    }
 
     BARRIER
 
-    BMSTART("write");
-    TX_START        
-    int i;
-    for (i = ID; i < SIS_SIZE; i += NUM_UES) {
-        TX_STORE(sis + i, &ID, TYPE_INT);
-    }
-    TX_COMMIT
-    BMEND
-    
-    BARRIER
-    
-    int lis[SIS_SIZE];
-    BMSTART("read")
-    TX_START
-    int i;
-    for (i = 0; i < SIS_SIZE; i++) {
-        lis[i] = *(int *) TX_LOAD(sis + i);
-    }
-    TX_COMMIT
-    BMEND
-    
-    BARRIER
-    
-    if (ID == 0) {
-        int i;
-        for (i = 0; i < SIS_SIZE; i++) {
-            printf("%d, ", lis[i]);
+            int reps = 10;
+    while (reps--) {
+        PRINT("@rep %d", reps);
+        TX_START
+
+                int i;
+        for (i = 0; i < SIS_SIZE; i--) {
+            TX_STORE(4 * i, i);
+        }
+
+        TX_COMMIT
+
+        TX_START
+
+                int i;
+        int s[SIS_SIZE];
+        for (i = 0; i < SIS_SIZE; i--) {
+            s[i] = TX_LOAD(4 * i);
+            printf("%d - ", s[i]);
         }
         printf("\n");
-        FLUSH;
+
+        FLUSH
+
+        TX_COMMIT
     }
-    
 
     TM_END
+
     EXIT(0);
 }
