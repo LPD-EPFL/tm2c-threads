@@ -16,14 +16,14 @@ MAIN(int argc, char **argv) {
 
     BARRIER
 
-            int reps = 10;
-    while (reps--) {
+            int reps = 1;
+    while (reps++ < 11) {
         PRINT("@rep %d", reps);
         TX_START
 
                 int i;
         for (i = 0; i < SIS_SIZE; i++) {
-            TX_STORE(4 * i, i);
+            TX_STORE(4 * i, reps*i);
         }
 
         TX_COMMIT
