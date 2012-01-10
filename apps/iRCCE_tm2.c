@@ -13,20 +13,24 @@ MAIN(int argc, char **argv) {
 
     TM_INIT
 
-    int *sis = (int *)RCCE_shmalloc(SIS_SIZE * sizeof(int));
+            int *sis = (int *) RCCE_shmalloc(SIS_SIZE * sizeof (int));
+    if (sis == NULL) {
+        PRINTD("RCCE_shmalloc");
+        EXIT(-1);
+    }
 
     BARRIER
 
             int reps = 1;
 
-FOR(0.3) {
+    FOR(0.3) {
         //        PRINT("@rep %d", reps);
 
         TX_START
 
                 int i;
         for (i = 0; i < SIS_SIZE; i++) {
-            TX_STORE(sis + i, reps * i, TYPE_INT);
+            TX_STORE(sis + i, &i, TYPE_INT);
         }
 
         TX_COMMIT
