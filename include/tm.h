@@ -33,7 +33,7 @@ extern "C" {
 
 
 #define BACKOFF
-#define BACKOFF_MAX                     5
+#define BACKOFF_MAX                     8
 #define BACKOFF_DELAY                   100
 
     extern stm_tx_t *stm_tx;
