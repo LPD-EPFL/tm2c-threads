@@ -35,7 +35,7 @@ extern "C" {
 #define BACKOFF
 #ifdef BACKOFF
 #define BACKOFF_MAX                     3
-#define BACKOFF_DELAY                   400
+#define BACKOFF_DELAY                   500
 #else
 #define BACKOFF_MAX                     5
 #define BACKOFF_DELAY                   500
