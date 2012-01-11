@@ -86,7 +86,7 @@ void handle_abort(stm_tx_t *stm_tx, CONFLICT_TYPE reason) {
     mem_info_on_abort(stm_tx->mem_info);
     
     /*BACKOFF and RETRY*/
-    unsigned int wait_max = pow(2, stm_tx->retries) * BACKOFF_DELAY;
+    unsigned int wait_max = pow(2, (stm_tx->retries < BACKOFF_MAX ? stm_tx->retries : BACKOFF_MAX)) * BACKOFF_DELAY;
     unsigned int wait = rand_range(wait_max);
     PRINT("\t\t\t\t\t\t... backoff for %5d micros (retries: %3d | max: %d)", wait, stm_tx->retries, wait_max);
     udelay(wait);
