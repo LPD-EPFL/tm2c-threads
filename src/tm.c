@@ -5,8 +5,12 @@
  * Created on June 16, 2011, 12:29 PM
  */
 
+#include <sys/param.h>
+
 #include "tm.h"
+#ifdef PGAS
 #include "pgas.h"
+#endif
 
 unsigned int ID; //=RCCE_ue()
 unsigned int NUM_UES;
@@ -80,6 +84,13 @@ void handle_abort(stm_tx_t *stm_tx, CONFLICT_TYPE reason) {
 #endif
     read_set_empty(stm_tx->read_set);
     mem_info_on_abort(stm_tx->mem_info);
+    
+    /*BACKOFF and RETRY*/
+    unsigned int wait_max = pow(2, stm_tx->retries) * BACKOFF_DELAY;
+    unsigned int wait = rand_range(wait_max);
+    PRINT("\t\t\t\t\t\t... backoff for %5d micros (max: %d)", wait, wait_max)
+    udelay(wait);
+    
 }
 
 void ps_publish_finish_all(unsigned int locked) {
