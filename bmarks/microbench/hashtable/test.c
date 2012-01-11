@@ -37,24 +37,6 @@ unsigned int maxhtlength;
  * RANDOM
  * ################################################################### */
 
-/* 
- * Returns a pseudo-random value in [1;range).
- * Depending on the symbolic constant RAND_MAX>=32767 defined in stdlib.h,
- * the granularity of rand() could be lower-bounded by the 32767^th which might 
- * be too high for given values of range and initial.
- */
-inline long rand_range(long r) {
-    int m = RAND_MAX;
-    long d, v = 0;
-
-    do {
-        d = (m > r ? r : m);
-        v += 1 + (long) (d * ((double) rand() / ((double) (m) + 1.0)));
-        r -= m;
-    } while (r > 0);
-    return v;
-}
-
 /* Re-entrant version of rand_range(r) */
 inline long rand_range_re(unsigned int *seed, long r) {
     int m = RAND_MAX;
@@ -68,15 +50,6 @@ inline long rand_range_re(unsigned int *seed, long r) {
     return v;
 }
 
-/*
- * Seeding the rand()
- */
-inline void srand_core() {
-    double timed_ = RCCE_wtime();
-    unsigned int timeprfx_ = (unsigned int) timed_;
-    unsigned int time_ = (unsigned int) ((timed_ - timeprfx_) * 1000000);
-    srand(time_ + (13 * (RCCE_ue() + 1)));
-}
 
 typedef struct thread_data {
     val_t first;
