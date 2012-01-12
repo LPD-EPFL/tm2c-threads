@@ -7,81 +7,28 @@
 
 #include "rwhash.h"
 
-#ifdef DEBUG_UTILIZATION
-unsigned int bucket_usages[NUM_OF_BUCKETS];
-#endif
-
-#define USE_MACROS
-
-#ifdef USE_MACROS
-#ifndef BITOPTS
-#define rw_entry_member(be, nodeId)     \
-        ((BOOLEAN) ((be->rw_entry.ints[(int) (nodeId / 32)] >> (nodeId % 32)) & 0x01))
-#else
-#define rw_entry_member(be, nodeId)      \
-        test_bit(nodeId, (unsigned long *) be->rw_entry.ints);
-#endif
-
-#else
-
-inline BOOLEAN rw_entry_member(bucket_entry_t *be, unsigned short nodeId) {
-    return (BOOLEAN) ((be->rw_entry.ints[(int) (nodeId / 32)] >> (nodeId % 32)) & 0x01);
+inline BOOLEAN rw_entry_member(rw_entry_t *rwe, unsigned short nodeId) {
+    return (BOOLEAN) ((rwe->ints[(int) (nodeId / 32)] >> (nodeId % 32)) & 0x01);
 }
-#endif
 
-#ifdef USE_MACROS
-#ifndef BITOPTS
-#define rw_entry_set(be, nodeId)        \
-        be->rw_entry.ints[(int) (nodeId / 32)] |= (1 << (nodeId % 32))
-#else
-#define rw_entry_set(be, nodeId)        \
-        set_bit(nodeId, (unsigned long *) be->rw_entry.ints)
-        //set_bit(nodeId % 32, (unsigned long *) &be->rw_entry.ints[(int) nodeId / 32])
-#endif
-#else
-
-inline void rw_entry_set(bucket_entry_t *be, unsigned short nodeId) {
-    be->rw_entry.ints[(int) (nodeId / 32)] |= (1 << (nodeId % 32));
+inline void rw_entry_set(rw_entry_t *rwe, unsigned short nodeId) {
+    rwe->ints[(int) (nodeId / 32)] |= (1 << (nodeId % 32));
 }
-#endif
 
-#ifdef USE_MACROS
-#ifndef BITOPTS
-#define rw_entry_unset(be, nodeId)      \
-        be->rw_entry.ints[(int) (nodeId / 32)] &= (~(1 << (nodeId % 32)))
-#else
-#define rw_entry_unset(be, nodeId)      \
-        clear_bit(nodeId, (unsigned long *) be->rw_entry.ints)
-        //clear_bit(nodeId % 32, (unsigned long *) &be->rw_entry.ints[(int) nodeId / 32])
-#endif
-#else
-
-inline void rw_entry_unset(bucket_entry_t *be, unsigned short nodeId) {
-    be->rw_entry.ints[(int) (nodeId / 32)] &= (~(1 << (nodeId % 32)));
+inline void rw_entry_unset(rw_entry_t *rwe, unsigned short nodeId) {
+    rwe->ints[(int) (nodeId / 32)] &= (~(1 << (nodeId % 32)));
 }
-#endif
 
-#ifdef USE_MACROS
-#define rw_entry_empty(be)              \
-        be->rw_entry.ints[0] = 0;       \
-        be->rw_entry.shorts[3] = NO_WRITER;
-#else
-inline void rw_entry_empty(bucket_entry_t *be) {
-    be->rw_entry.ints[0] = 0;
-    be->rw_entry.shorts[3] = NO_WRITER;
+inline void rw_entry_empty(rw_entry_t *rwe) {
+    rwe->ints[0] = 0;
+    rwe->shorts[3] = NO_WRITER;
 }
-#endif
 
-#ifdef USE_MACROS
-#define rw_entry_is_empty(be)           \
-        ((BOOLEAN) (be->rw_entry.ints[0] == 0 && be->rw_entry.ints[1] == NO_WRITERI))
-#else
-inline BOOLEAN rw_entry_is_empty(bucket_entry_t *be) {
-    return (BOOLEAN) (be->rw_entry.ints[0] == 0 && be->rw_entry.ints[1] == NO_WRITERI);
+inline BOOLEAN rw_entry_is_empty(rw_entry_t *rwe) {
+    return (BOOLEAN) (rwe->ints[0] == 0 && rwe->ints[1] == NO_WRITERI);
 }
-#endif
 
-inline BOOLEAN rw_entry_is_unique_reader(bucket_entry_t *be, unsigned int nodeId) {
+inline BOOLEAN rw_entry_is_unique_reader(rw_entry_t *rwe, unsigned int nodeId) {
 
     union {
         unsigned long long int lli;
@@ -90,44 +37,34 @@ inline BOOLEAN rw_entry_is_unique_reader(bucket_entry_t *be, unsigned int nodeId
     } convert;
     convert.lli = 0;
     convert.i[(int) (nodeId / 32)] = (1 << (nodeId % 32));
-    return (BOOLEAN) (convert.i[0] == be->rw_entry.ints[0] && convert.s[2] == be->rw_entry.shorts[2]);
+    return (BOOLEAN) (convert.i[0] == rwe->ints[0] && convert.s[2] == rwe->shorts[2]);
 }
 
-#ifdef USE_MACROS
-#define rw_entry_set_writer(be, nodeId)         \
-    be->rw_entry.shorts[3] = nodeId;
-#else
-inline void rw_entry_set_writer(bucket_entry_t *be, unsigned short nodeId) {
-    be->rw_entry.shorts[3] = nodeId;
+inline void rw_entry_set_writer(rw_entry_t *rwe, unsigned short nodeId) {
+    rwe->shorts[3] = nodeId;
 }
-#endif
 
-#ifdef USE_MACROS
-#define rw_entry_unset_writer(be)               \
-    be->rw_entry.shorts[3] = NO_WRITER;
-#else
-inline void rw_entry_unset_writer(bucket_entry_t *be) {
-    be->rw_entry.shorts[3] = NO_WRITER;
+inline void rw_entry_unset_writer(rw_entry_t *rwe) {
+    rwe->shorts[3] = NO_WRITER;
 }
-#endif
 
-#ifdef USE_MACROS
-#define rw_entry_has_writer(be)                 \
-        ((BOOLEAN) (be->rw_entry.shorts[3] != NO_WRITER))
-#else
-inline BOOLEAN rw_entry_has_writer(bucket_entry_t *be) {
-    return (BOOLEAN) (be->rw_entry.shorts[3] != NO_WRITER);
+inline BOOLEAN rw_entry_has_writer(rw_entry_t *rwe) {
+    return (BOOLEAN) (rwe->shorts[3] != NO_WRITER);
 }
-#endif
 
-#ifdef USE_MACROS
-#define rw_entry_is_writer(be, nodeId)          \
-        ((BOOLEAN) (be->rw_entry.shorts[3] == nodeId))
-#else
-inline BOOLEAN rw_entry_is_writer(bucket_entry_t *be, unsigned short nodeId) {
-    return (BOOLEAN) (be->rw_entry.shorts[3] == nodeId);
+inline BOOLEAN rw_entry_is_writer(rw_entry_t *rwe, unsigned short nodeId) {
+    return (BOOLEAN) (rwe->shorts[3] == nodeId);
 }
-#endif
+
+inline rw_entry_t * rw_entry_new() {
+    rw_entry_t *r = (rw_entry_t *) calloc(1, sizeof (rw_entry_t));
+    if (r == NULL) {
+        PRINTD("malloc r @ rw_entry_new");
+        return NULL;
+    }
+    r->shorts[3] = NO_WRITER;
+    return r;
+}
 
 /*  create, initialize and return a bucket_entry
  */
@@ -138,31 +75,31 @@ inline bucket_entry_t * bucket_entry_new(int address, bucket_entry_t * next) {
         return NULL;
     }
     bucket_entry->address = address;
-    bucket_entry->rw_entry.ll = 0;
-    bucket_entry->rw_entry.shorts[3] = NO_WRITER;
+    bucket_entry->rw_entry = NULL;
     bucket_entry->next = next;
 
     return bucket_entry;
 }
 
-inline void rw_entry_print_readers(bucket_entry_t *be) {
+inline void rw_entry_print_readers(rw_entry_t *rwe) {
 
     union {
         unsigned long long int lli;
         unsigned int i[2];
     } convert;
 
-    convert.i[0] = be->rw_entry.ints[0];
-    convert.i[1] = be->rw_entry.shorts[2];
+    convert.i[0] = rwe->ints[0];
+    convert.i[1] = rwe->shorts[2];
     int i;
-    for (i = 0; i < NUM_UES; i++) {
+    for (i = 0; i < 48; i++) {
         if (convert.lli & 0x01) {
             PRINTS("%d -> ", i);
         }
         convert.lli >>= 1;
     }
 
-    PRINTSF("NULL\n");
+    PRINTS("NULL\n");
+    FLUSH;
 }
 
 /*  insert a reader or a writer for the bucket_entry->address address to the bucket_entry.
@@ -171,7 +108,7 @@ inline void rw_entry_print_readers(bucket_entry_t *be) {
  * Detect possible READ/WRITE, WRITE/READ, and WRITE/WRITE conflicts and call the
  * Contention Manager.
  */
-void rw_entry_insert_bucket_entry(bucket_entry_t *bucket_entry, int nodeId, RW rw) {
+inline void rw_entry_insert_bucket_entry(bucket_entry_t *bucket_entry, int nodeId, RW rw) {
     /*
        TODO: does it make sense to check for "dupicate" entries, when
      * for example a WRITER tries to READ LOCK? Implemented, should I remove it
@@ -179,29 +116,32 @@ void rw_entry_insert_bucket_entry(bucket_entry_t *bucket_entry, int nodeId, RW r
      */
     ps_conflict_type = NO_CONFLICT;
 
+    rw_entry_t *rw_entry = bucket_entry->rw_entry;
 
-    if (bucket_entry->rw_entry.ints[0] == 0 && bucket_entry->rw_entry.ints[1] == NO_WRITERI) {
+    if (rw_entry == NULL) {
+        rw_entry = rw_entry_new();
         if (rw == WRITE) {
-            rw_entry_set_writer(bucket_entry, nodeId);
+            rw_entry_set_writer(rw_entry, nodeId);
         }
         else {
-            rw_entry_set(bucket_entry, nodeId);
+            rw_entry_set(rw_entry, nodeId);
         }
+        bucket_entry->rw_entry = rw_entry;
         return;
     }
 
     if (rw == WRITE) { /*publishing*/
-        if (rw_entry_has_writer(bucket_entry)) { /*WRITE/WRITE conflict*/
+        if (rw_entry_has_writer(rw_entry)) { /*WRITE/WRITE conflict*/
             //TODO: here the logic for WRITE -> WRITE
-            PRINTD("[X] %d tries to write %d: WRITE lock by %d", nodeId, bucket_entry->address, bucket_entry->rw_entry.shorts[3]);
+            PRINTD("[X] %d tries to write %d: WRITE lock by %d", nodeId, bucket_entry->address, rw_entry->shorts[3]);
 
             /*change it with CM*/
             ps_conflict_type = WRITE_AFTER_WRITE;
         }
-        else if (!rw_entry_is_empty(bucket_entry)) { /*Possible READ/WRITE*/
+        else if (!rw_entry_is_empty(rw_entry)) { /*Possible READ/WRITE*/
             /*if the only writer is the one that "asks"*/
-            if (rw_entry_is_unique_reader(bucket_entry, nodeId)) {
-                rw_entry_set_writer(bucket_entry, nodeId);
+            if (rw_entry_is_unique_reader(rw_entry, nodeId)) {
+                rw_entry_set_writer(rw_entry, nodeId);
             }
             else { /*READ/WRITE conflict*/
                 //TODO: here the logic for READ -> WRITE
@@ -216,19 +156,19 @@ void rw_entry_insert_bucket_entry(bucket_entry_t *bucket_entry, int nodeId, RW r
             }
         }
         else {
-            rw_entry_set_writer(bucket_entry, nodeId);
+            rw_entry_set_writer(rw_entry, nodeId);
         }
     }
     else { /*subscribing*/
-        if (rw_entry_has_writer(bucket_entry) && !rw_entry_is_writer(bucket_entry, nodeId)) { /*WRITE/READ*/
+        if (rw_entry_has_writer(rw_entry) && !rw_entry_is_writer(rw_entry, nodeId)) { /*WRITE/READ*/
             //TODO: here the logic for WRITE -> READ
-            PRINTD("[X] %d tries to read %d: WRITE lock by %d", nodeId, bucket_entry->address, bucket_entry->rw_entry.shorts[3]);
+            PRINTD("[X] %d tries to read %d: WRITE lock by %d", nodeId, bucket_entry->address, rw_entry->shorts[3]);
 
             /*change it with CM*/
             ps_conflict_type = READ_AFTER_WRITE;
         }
         else {
-            rw_entry_set(bucket_entry, nodeId);
+            rw_entry_set(rw_entry, nodeId);
         }
     }
 }
@@ -236,15 +176,10 @@ void rw_entry_insert_bucket_entry(bucket_entry_t *bucket_entry, int nodeId, RW r
 /*  insert a reader or writer for the address in the bucket. A bucket is a linked list of
  * bucket_entry that hold the metadata for addresses that hash to the same bucket
  */
-void rw_entry_insert_bucket(bucket_t *bucket, int nodeId, int address, RW rw) {
+inline void rw_entry_insert_bucket(bucket_t *bucket, int nodeId, int address, RW rw) {
 
     if (bucket->head == NULL) {
-#ifndef MEM_PREALLOC
         bucket_entry_t *bucket_entry = bucket_entry_new(address, NULL);
-
-#else
-        bucket_entry_t *bucket_entry = mem_prealloc_alloc(address, NULL);
-#endif
         rw_entry_insert_bucket_entry(bucket_entry, nodeId, rw);
         bucket->head = bucket_entry;
 
@@ -262,13 +197,7 @@ void rw_entry_insert_bucket(bucket_t *bucket, int nodeId, int address, RW rw) {
             rw_entry_insert_bucket_entry(current, nodeId, rw);
         }
         else {
-#ifndef MEM_PREALLOC
             bucket_entry_t *bucket_entry = bucket_entry_new(address, current);
-
-#else
-            bucket_entry_t *bucket_entry = mem_prealloc_alloc(address, current);
-#endif
-
             rw_entry_insert_bucket_entry(bucket_entry, nodeId, rw);
             if (current == bucket->head) {
                 bucket->head = bucket_entry;
@@ -278,7 +207,6 @@ void rw_entry_insert_bucket(bucket_t *bucket, int nodeId, int address, RW rw) {
             }
             bucket->nb_entries++;
         }
-        
     }
 }
 
@@ -307,69 +235,31 @@ inline ps_hashtable_t ps_hashtable_new() {
         ps_hashtable[i]->head = NULL;
     }
 
-#ifdef MEM_PREALLOC
-    mem_prealloc_init();
-#endif
-
     return ps_hashtable;
-}
-
-/*destroy a hashtable*/
-inline void ps_hashtable_destroy(ps_hashtable_t ht) {
-    int i;
-    for (i = 0; i < NUM_OF_BUCKETS; i++) {
-        bucket_t *bucket = ht[i];
-        bucket_entry_t *be = bucket->head, *freed;
-        while (be != NULL) {
-            freed = be;
-            be = be->next;
-#ifndef MEM_PREALLOC
-            free(freed);
-#else
-            mem_prealloc_free(freed);
-#endif
-        }
-
-        free(bucket);
-    }
-
-#ifdef MEM_PREALLOC
-    mem_prealloc_destroy();
-#endif
-
-    free(ht);
 }
 
 /* insert a reader of writer for the address into the hashatable. The hashtable is the constract that keeps
  * all the metadata for the addresses that the node is responsible.
  */
 inline void ps_hashtable_insert(ps_hashtable_t ps_hashtable, unsigned int nodeId, unsigned int address, RW rw) {
-    unsigned int h = HASH(address);
-    //unsigned int h = (address);
 
-#ifdef DEBUG_UTILIZATION
-    bucket_usages[h % NUM_OF_BUCKETS]++;
-#endif
-    
-    rw_entry_insert_bucket(ps_hashtable[h % NUM_OF_BUCKETS], nodeId, address, rw);
+    rw_entry_insert_bucket(ps_hashtable[address % NUM_OF_BUCKETS], nodeId, address, rw);
 }
 
 /*  delete a reader or a writer for the bucket_entry->address address from the bucket_entry.
  */
 inline void rw_entry_delete_bucket_entry(bucket_entry_t *bucket_entry, int nodeId, RW rw) {
-/*
     if (bucket_entry->rw_entry == NULL) {
         return;
     }
-*/
 
     if (rw == WRITE) {
-        if (rw_entry_is_writer(bucket_entry, nodeId)) {
-            rw_entry_unset_writer(bucket_entry);
+        if (rw_entry_is_writer(bucket_entry->rw_entry, nodeId)) {
+            rw_entry_unset_writer(bucket_entry->rw_entry);
         }
     }
     else { //rw == READ
-        rw_entry_unset(bucket_entry, nodeId);
+        rw_entry_unset(bucket_entry->rw_entry, nodeId);
     }
 }
 
@@ -389,7 +279,7 @@ inline void rw_entry_delete_bucket(bucket_t *bucket, int nodeId, int address, RW
         }
 
         /*if the bucket is empty, remove it*/
-        if (current != NULL && rw_entry_is_empty(current)) {
+        if (current != NULL && rw_entry_is_empty(current->rw_entry)) {
             if (bucket->head->address == current->address) {
                 bucket->head = current->next;
             }
@@ -397,12 +287,8 @@ inline void rw_entry_delete_bucket(bucket_t *bucket, int nodeId, int address, RW
                 previous->next = current->next;
             }
 
-#ifndef MEM_PREALLOC
+            free(current->rw_entry);
             free(current);
-#else
-            mem_prealloc_free(current);
-#endif
-
             bucket->nb_entries--;
         }
     }
@@ -411,9 +297,7 @@ inline void rw_entry_delete_bucket(bucket_t *bucket, int nodeId, int address, RW
 /* delete a reader of writer for the address from the hashatable.
  */
 inline void ps_hashtable_delete(ps_hashtable_t ps_hashtable, unsigned int nodeId, unsigned int address, RW rw) {
-    
-    
-    rw_entry_delete_bucket(ps_hashtable[HASH(address) % NUM_OF_BUCKETS], nodeId, address, rw);
+    rw_entry_delete_bucket(ps_hashtable[address % NUM_OF_BUCKETS], nodeId, address, rw);
 }
 
 inline void ps_hashtable_delete_node(ps_hashtable_t ps_hashtable, unsigned int nodeId) {
@@ -427,13 +311,13 @@ inline void ps_hashtable_delete_node(ps_hashtable_t ps_hashtable, unsigned int n
 
                 //TODO: do i need to check for null?? be_current->rw_entry
 
-                if (rw_entry_is_writer(be_current, nodeId)) {
-                    rw_entry_unset_writer(be_current);
+                if (rw_entry_is_writer(be_current->rw_entry, nodeId)) {
+                    rw_entry_unset_writer(be_current->rw_entry);
                 }
 
-                rw_entry_unset(be_current, nodeId);
+                rw_entry_unset(be_current->rw_entry, nodeId);
 
-                if (rw_entry_is_empty(be_current)) {
+                if (rw_entry_is_empty(be_current->rw_entry)) {
                     if (bucket->head->address == be_current->address) {
                         bucket->head = be_current->next;
                     }
@@ -441,12 +325,8 @@ inline void ps_hashtable_delete_node(ps_hashtable_t ps_hashtable, unsigned int n
                         be_previous->next = be_current->next;
                     }
 
-#ifndef MEM_PREALLOC
+                    free(be_current->rw_entry);
                     free(be_current);
-#else
-                    mem_prealloc_free(be_current);
-#endif
-
                     bucket->nb_entries--;
                 }
                 else {
@@ -471,8 +351,9 @@ inline void ps_hashtable_print(ps_hashtable_t ps_hashtable) {
         PRINTS("Bucket %-3d | #Entries: %-3d\n", i, bucket->nb_entries);
         bucket_entry_t *curbe = bucket->head;
         while (curbe != NULL) {
-            PRINTS(" [%-3d]: Write: %-3d\n   ", curbe->address, curbe->rw_entry.shorts[3]);
-            rw_entry_print_readers(curbe);
+            rw_entry_t *rwe = curbe->rw_entry;
+            PRINTS(" [%-3d]: Write: %-3d\n   ", curbe->address, rwe->shorts[3]);
+            rw_entry_print_readers(rwe);
 
 
             curbe = curbe->next;
@@ -480,76 +361,3 @@ inline void ps_hashtable_print(ps_hashtable_t ps_hashtable) {
     }
     FLUSH;
 }
-
-#ifdef MEM_PREALLOC
-mem_prealloc_t mprealloc__;
-
-void mem_prealloc_init() {
-    mprealloc__.entries = (bucket_entry_t **) malloc(PREALLOC_BUCKETS * sizeof (bucket_entry_t *));
-    if (mprealloc__.entries == NULL) {
-        PRINT("malloc @ mem_prealloc_init");
-        EXIT(-1);
-    }
-
-    int i;
-    for (i = 0; i < PREALLOC_BUCKETS; i++) {
-        mprealloc__.entries[i] = (bucket_entry_t *) malloc(sizeof (bucket_entry_t));
-        if (mprealloc__.entries[i] == NULL) {
-            PRINT("malloc @ mem_prealloc_init");
-            EXIT(-1);
-        }
-        mprealloc__.entries[i]->rw_entry.ints[0] = 0;
-        mprealloc__.entries[i]->rw_entry.ints[1] = NO_WRITERI;
-        mprealloc__.entries[i]->next = NULL;
-    }
-
-    mprealloc__.index = 0;
-
-    PRINTD("initialized %d bucket_entry_t", PREALLOC_BUCKETS);
-}
-
-/*      free the resources used by the preallocator
- */
-
-void mem_prealloc_destroy() {
-    int i;
-    for (i = 0; i < PREALLOC_BUCKETS; i++) {
-        free(mprealloc__.entries[i]);
-    }
-    free(mprealloc__.entries);
-
-    PRINTD("freed %d bucket_entry_t", PREALLOC_BUCKETS);
-}
-
-/*      allocate bucket_entry_t through the preallocator
- */
-inline bucket_entry_t * mem_prealloc_alloc(unsigned int address, bucket_entry_t * next) {
-    if (mprealloc__.index < PREALLOC_BUCKETS) {
-        mprealloc__.entries[mprealloc__.index]->address = address;
-        mprealloc__.entries[mprealloc__.index]->next = next;
-        PRINTD("Allocated %2d -- %p | Free: %d", mprealloc__.index, mprealloc__.entries[mprealloc__.index], PREALLOC_BUCKETS - mprealloc__.index - 1);
-        return mprealloc__.entries[mprealloc__.index++];
-        }
-    PRINTD("Allocated with MALLOC --");
-    return bucket_entry_new(address, next);
-            }
-
-/*      free bucket_entry_t using preallocation
- */
-inline void mem_prealloc_free(bucket_entry_t * be) {
-    if (mprealloc__.index == 0) {
-        PRINTD("Freed %p, with FREE", be);
-        free(be);
-        return;
-    }
-
-    mprealloc__.entries[--(mprealloc__.index)] = be;
-
-    be->rw_entry.ints[0] = 0;
-    be->rw_entry.ints[1] = NO_WRITERI;
-
-    PRINTD("Freed %p, placed @ %d", be, mprealloc__.index);
-
-}
-
-#endif
