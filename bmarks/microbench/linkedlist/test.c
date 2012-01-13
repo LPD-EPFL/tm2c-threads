@@ -349,6 +349,7 @@ TASKMAIN(int argc, char **argv) {
     }
 
 #ifdef STM
+/*
         int off, id2use;
     if (ID < 6) {
         off = 0;
@@ -385,6 +386,10 @@ TASKMAIN(int argc, char **argv) {
     
     shmem_init(((off * 16) * 1024 * 1024) + ((id2use/2) * 1024 * 1024));
     PRINT("shmem from %d MB", (off * 16) + id2use/2);
+*/
+    int off = ID * 1024 * 1024;
+    shmem_init(off);
+    
 #else
     shmem_init(1024*100*RCCE_ue()*sizeof(node_t) + ((initial + 2) * sizeof(node_t)));
     
