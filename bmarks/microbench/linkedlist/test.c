@@ -387,7 +387,7 @@ TASKMAIN(int argc, char **argv) {
     shmem_init(((off * 16) * 1024 * 1024) + ((id2use/2) * 1024 * 1024));
     PRINT("shmem from %d MB", (off * 16) + id2use/2);
 */
-    int off = ID * 1024 * 1024;
+    int off = ID * 1024 * 1024 * 1.5;
     shmem_init(off);
     
 #else
