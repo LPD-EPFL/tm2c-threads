@@ -32,13 +32,13 @@ extern "C" {
 #endif
 
 
-#define BACKOFF
+#define BACKOFF_
 #ifdef BACKOFF
 #define BACKOFF_MAX                     3
 #define BACKOFF_DELAY                   50
 #else
-#define BACKOFF_MAX                     5
-#define BACKOFF_DELAY                   100
+#define BACKOFF_MAX                     12
+#define BACKOFF_DELAY                   400
 #endif
 
 
