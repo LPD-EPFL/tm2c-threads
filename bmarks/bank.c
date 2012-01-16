@@ -85,16 +85,29 @@ int transfer(account_t *src, account_t *dst, int amount) {
 
     int i, j;
 
+    PF_START(2)
     /* Allow overdrafts */
     TX_START
+    PF_START(3)
 
 #ifdef LOAD_STORE
-    //TODO: test and use the TX_LOAD_STORE
-    TX_LOAD_STORE(&src->balance, -, amount, TYPE_INT);
+            //TODO: test and use the TX_LOAD_STORE
+            TX_LOAD_STORE(&src->balance, -, amount, TYPE_INT);
     TX_LOAD_STORE(&dst->balance, +, amount, TYPE_INT);
-    TX_COMMIT_NO_PUB
+
+
+    /* void *i = TX_LOAD(&src->balance);
+  void *j = TX_LOAD(&dst->balance);
+
+  int ii = *(int *) i;
+  int jj = *(int *) j;
+
+  amount = ii + jj;*/
+    PF_STOP(3)
+    TX_COMMIT_NO_PUB;
+    PF_STOP(2)
 #else
-    i = *(int *) TX_LOAD(&src->balance);
+            i = *(int *) TX_LOAD(&src->balance);
     i -= amount;
     TX_STORE(&src->balance, &i, TYPE_INT); //NEED TX_STOREI
     j = *(int *) TX_LOAD(&dst->balance);
@@ -102,7 +115,7 @@ int transfer(account_t *src, account_t *dst, int amount) {
     TX_STORE(&dst->balance, &j, TYPE_INT);
     TX_COMMIT
 #endif
-    return amount;
+            return amount;
 }
 
 int total(bank_t *bank, int transactional) {
@@ -189,13 +202,13 @@ bank_t * test(void *data, double duration, int nb_accounts) {
         PRINT("malloc bank");
         EXIT(1);
     }
-    
+
 #ifdef MC
     bank->accounts = (account_t *) RCCE_shmalloc(64 * 1024 * 1024);
 #else
     bank->accounts = (account_t *) RCCE_shmalloc(nb_accounts * sizeof (account_t));
 #endif
-    
+
     if (bank->accounts == NULL) {
         PRINT("malloc bank->accounts");
         EXIT(1);
@@ -222,6 +235,8 @@ bank_t * test(void *data, double duration, int nb_accounts) {
     BARRIER
 
     // PRINT("chk %d", chk++); //0
+
+    PF_START(0);
 
     FOR(duration) {
         if (d->id < d->read_cores) {
@@ -259,16 +274,21 @@ bank_t * test(void *data, double duration, int nb_accounts) {
                 //assert(dst >= 0);
                 if (dst == src)
                     dst = ((src + 1) % rand_max) + rand_min;
+
+                PF_START(1)
                 transfer(&bank->accounts[I(src)], &bank->accounts[I(dst)], 1);
+                PF_STOP(1)
 
                 d->nb_transfer++;
             }
         }
     }
+    PF_STOP(0);
 
     //reset(bank);
 
     PRINT("~~");
+    PF_PRINT
     BARRIER
     /* Free transaction */
     TM_END
