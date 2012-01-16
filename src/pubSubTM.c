@@ -233,7 +233,7 @@ void ps_publish_finish(void *address) {
 }
 
 void ps_finish_all(CONFLICT_TYPE conflict) {
-#define FINISH_ALL_PARALLEL
+#define FINISH_ALL_PARALLEL_
     int i;
 
 #ifdef FINISH_ALL_PARALLEL
