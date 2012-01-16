@@ -7,7 +7,7 @@
 #include "tm.h"
 
 #define SIS_SIZE 480
-#define REPS 31
+#define REPS 1000
 
 stm_tx_t *stm_tx;
 stm_tx_node_t *stm_tx_node;
@@ -22,40 +22,31 @@ MAIN(int argc, char **argv) {
     if (argc >= 1) {
         steps = atoi(argv[1]);
     }
+    
+    int *sm = (int *) RCCE_shmalloc(steps * sizeof(int));
 
-    /*
-        int once = 1;
-        TX_START
-        PRINT("will i abort? %d", once);
-        TX_LOAD_STORE(1, +, 1);
-        if (once--) {
-            TX_ABORT(NO_CONFLICT);
-        }
-        TX_COMMIT
-     */
+    BARRIER
 
     ONCE
     {
+        int sum;
+
         TX_START
-                int i;
+        sum = 0;
+        int i;
         for (i = 0; i < steps; i++) {
-            TX_LOAD_STORE(i, +, 1);
+            PF_START(0)
+            sum += *(int *) TX_LOAD(sm + i);
+            PF_STOP(0)
         }
 
         TX_COMMIT
+        
+        PRINT("sum -- %d", sum);
+        PF_PRINT
     }
     BARRIER;
 
-    ONCE
-    {
-        TX_START
-                int i, k = (int) ((double) steps / 10) + 1;
-        for (i = 0; i < steps; i += k) {
-            PRINT("address %2d, value %2d", i, TX_LOAD(i));
-        }
-
-        TX_COMMIT
-    }
     TM_END
     EXIT(0);
 }
