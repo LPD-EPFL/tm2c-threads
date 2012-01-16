@@ -1,6 +1,8 @@
 #ifndef _MEASUREMENTS_H_
 #define _MEASUREMENTS_H_
 
+#include "common.h"
+
 #ifndef INLINED
 #if __GNUC__ && !__GNUC_STDC_INLINE__
 #define INLINED extern inline
