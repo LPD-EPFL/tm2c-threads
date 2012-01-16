@@ -50,7 +50,6 @@ inline long rand_range_re(unsigned int *seed, long r) {
     return v;
 }
 
-
 typedef struct thread_data {
     val_t first;
     long range;
@@ -508,14 +507,16 @@ TASKMAIN(int argc, char **argv) {
 
     BARRIER
 
+    srand_core();
+    FLUSH
+#ifdef STM
+            udelay(rand_range(123));
+#endif
+    srand_core();
+
     ONCE
     {
-        srand_core();
-        FLUSH
-#ifdef STM
-                udelay(rand_range(123));
-#endif
-        srand_core();
+
         i = 0;
         maxhtlength = (int) (initial / load_factor);
         while (i < initial) {
@@ -540,7 +541,7 @@ TASKMAIN(int argc, char **argv) {
     BARRIER
 
 #if defined(STM) && !defined(SEQUENTIAL)
-        int off, id2use;
+            int off, id2use;
     if (ID < 6) {
         off = 0;
         id2use = ID;
@@ -561,7 +562,7 @@ TASKMAIN(int argc, char **argv) {
         off = 2;
         id2use = ID - 24;
     }
-    else if (ID < 36){
+    else if (ID < 36) {
         off = 3;
         id2use = ID - 30;
     }
@@ -573,18 +574,18 @@ TASKMAIN(int argc, char **argv) {
         off = 3;
         id2use = ID - 36;
     }
-    
+
 #ifdef DSL
-    shmem_init(((off * 16) * 1024 * 1024) + ((id2use/2) * 1024 * 1024));
-    PRINT("shmem from %d MB", (off * 16) + id2use/2);
+    shmem_init(((off * 16) * 1024 * 1024) + ((id2use / 2) * 1024 * 1024));
+    PRINT("shmem from %d MB", (off * 16) + id2use / 2);
 #else
     shmem_init(((off * 16) * 1024 * 1024) + ((id2use) * 1024 * 1024));
     PRINT("shmem from %d MB", (off * 16) + id2use);
 #endif
 #else
-    shmem_init(1024*100*RCCE_ue()*sizeof(node_t) + (initial + 2)*sizeof(node_t));
+            shmem_init(1024 * 100 * RCCE_ue() * sizeof (node_t) + (initial + 2) * sizeof (node_t));
 #endif
-    
+
 
     data->first = last;
     data->range = range;
@@ -607,11 +608,11 @@ TASKMAIN(int argc, char **argv) {
     data->nb_found = 0;
     data->set = set;
     data->seed = seed;
-    
+
     BARRIER
 
     BARRIER
-            
+
     test(data, duration);
 
     BARRIER
@@ -630,11 +631,11 @@ TASKMAIN(int argc, char **argv) {
 #ifdef SEQUENTIAL
     int total_ops = data->nb_add + data->nb_contains + data->nb_remove + data->nb_move + data->nb_snapshot;
     printf("#Ops          : %d\n", total_ops);
-/*
-    printf("#Ops/s        : %d\n", (int) (total_ops / duration__));
-    printf("#Latency      : %f\n", duration__ / total_ops);
-*/
-        printf("))) %d\t100\t%.3f\t(Throughput, Commit Rate, Latency)", (int) (total_ops / duration__), 1000 * duration__ / total_ops);
+    /*
+        printf("#Ops/s        : %d\n", (int) (total_ops / duration__));
+        printf("#Latency      : %f\n", duration__ / total_ops);
+     */
+    printf("))) %d\t100\t%.3f\t(Throughput, Commit Rate, Latency)", (int) (total_ops / duration__), 1000 * duration__ / total_ops);
 #endif
     FLUSH;
 
