@@ -160,21 +160,21 @@ CONFLICT_TYPE ps_subscribe(void *address) {
 
     nodes_contacted[responsible_node]++;
 
-    PF_START(1)
+    //PF_START(1)
 #ifdef PGAS
             //ps_send_rl(responsible_node, (unsigned int) address);
             ps_send_rl(responsible_node, SHRINK(address));
 #else
-    PF_START(2)
+    //PF_START(2)
     ps_sendb(responsible_node, PS_SUBSCRIBE, address_offs, NO_CONFLICT);
-    PF_STOP(2)
+    //PF_STOP(2)
 
 #endif
             //    PRINTD("[SUB] addr: %d to %02d", address_offs, responsible_node);
-    PF_START(3)
+    //PF_START(3)
     ps_recvb(responsible_node);
-    PF_STOP(3)
-    PF_STOP(1)
+    //PF_STOP(3)
+   // PF_STOP(1)
 
     return ps_response;
 }
