@@ -37,17 +37,20 @@ MAIN(int argc, char **argv) {
     {
         int sum;
 
-        TX_START
-        sum = 0;
-        int i;
-        for (i = 0; i < steps; i++) {
-            PF_START(0)
-            sum += *(int *) TX_LOAD(sm + i);
-            PF_STOP(0)
+        int rounds = 1;
+
+        while (REPS * rounds++ < steps) {
+            TX_START
+            sum = 0;
+            int i;
+            for (i = 0; i < REPS; i++) {
+                PF_START(0)
+                sum += *(int *) TX_LOAD(sm + i + (rounds * REPS));
+                PF_STOP(0)
+            }
+
+            TX_COMMIT
         }
-
-        TX_COMMIT
-
         PRINT("sum -- %d", sum);
         PF_PRINT
     }
