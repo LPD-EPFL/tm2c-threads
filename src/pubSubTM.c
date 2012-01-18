@@ -160,15 +160,21 @@ CONFLICT_TYPE ps_subscribe(void *address) {
 
     nodes_contacted[responsible_node]++;
 
+    PF_START(1)
 #ifdef PGAS
-    //ps_send_rl(responsible_node, (unsigned int) address);
-    ps_send_rl(responsible_node, SHRINK(address));
+            //ps_send_rl(responsible_node, (unsigned int) address);
+            ps_send_rl(responsible_node, SHRINK(address));
 #else
+    PF_START(2)
     ps_sendb(responsible_node, PS_SUBSCRIBE, address_offs, NO_CONFLICT);
+    PF_STOP(2)
 
 #endif
-    //    PRINTD("[SUB] addr: %d to %02d", address_offs, responsible_node);
+            //    PRINTD("[SUB] addr: %d to %02d", address_offs, responsible_node);
+    PF_START(3)
     ps_recvb(responsible_node);
+    PF_STOP(3)
+    PF_STOP(1)
 
     return ps_response;
 }
@@ -204,10 +210,10 @@ CONFLICT_TYPE ps_store_inc(unsigned int address, int increment) {
     unsigned int address_offs;
     unsigned short int responsible_node = DHT_get_responsible_node(address, &address_offs);
     nodes_contacted[responsible_node]++;
-    
+
     ps_send_winc(responsible_node, SHRINK(address), increment);
     ps_recv_wl(responsible_node);
-    
+
     return ps_response;
 }
 #endif
