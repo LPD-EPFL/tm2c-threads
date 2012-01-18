@@ -39,7 +39,7 @@ MAIN(int argc, char **argv) {
 
         int rounds = 1;
 
-        while (REPS * rounds++ < steps) {
+        while (REPS * rounds++ <= steps) {
             TX_START
             sum = 0;
             int i;
