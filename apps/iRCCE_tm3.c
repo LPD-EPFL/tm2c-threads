@@ -17,13 +17,19 @@ MAIN(int argc, char **argv) {
     int steps = REPS;
 
 
+    PF_MSG(0, "TX_LOAD");
+    PF_MSG(1, "send & receive");
+    PF_MSG(2, "send");
+    PF_MSG(3, "receive");
+
+
     TM_INIT
 
     if (argc >= 1) {
         steps = atoi(argv[1]);
     }
-    
-    int *sm = (int *) RCCE_shmalloc(steps * sizeof(int));
+
+    int *sm = (int *) RCCE_shmalloc(steps * sizeof (int));
 
     BARRIER
 
@@ -41,7 +47,7 @@ MAIN(int argc, char **argv) {
         }
 
         TX_COMMIT
-        
+
         PRINT("sum -- %d", sum);
         PF_PRINT
     }
