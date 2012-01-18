@@ -11,8 +11,6 @@
 #endif
 #endif
 
-#define DO_TIMINGS_      /*ENABLE / DISABLE performing measurements*/
-
 #define DO_TIMINGS_TICKS
 
 #ifdef	__cplusplus
