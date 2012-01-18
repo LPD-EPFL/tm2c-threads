@@ -48,7 +48,6 @@ inline long rand_range_re(unsigned int *seed, long r) {
     return v;
 }
 
-
 typedef struct thread_data {
     val_t first;
     long range;
@@ -341,15 +340,15 @@ TASKMAIN(int argc, char **argv) {
         }
         size = set_size(set);
         printf("Set size     : %d\n", size);
-        /*
-                set_print(set);
-         */
+
+        set_print(set);
+
         assert(size == initial);
         FLUSH
     }
 
 #ifdef STM
-        int off, id2use;
+    int off, id2use;
     if (ID < 6) {
         off = 0;
         id2use = ID;
@@ -370,7 +369,7 @@ TASKMAIN(int argc, char **argv) {
         off = 2;
         id2use = ID - 24;
     }
-    else if (ID < 36){
+    else if (ID < 36) {
         off = 3;
         id2use = ID - 30;
     }
@@ -382,13 +381,13 @@ TASKMAIN(int argc, char **argv) {
         off = 3;
         id2use = ID - 36;
     }
-    
-    shmem_init(((off * 16) * 1024 * 1024) + ((id2use/2) * 1024 * 1024));
-    PRINT("shmem from %d MB", (off * 16) + id2use/2);
-    
+
+    shmem_init(((off * 16) * 1024 * 1024) + ((id2use / 2) * 1024 * 1024));
+    PRINT("shmem from %d MB", (off * 16) + id2use / 2);
+
 #else
-    shmem_init(1024*100*RCCE_ue()*sizeof(node_t) + ((initial + 2) * sizeof(node_t)));
-    
+    shmem_init(1024 * 100 * RCCE_ue() * sizeof (node_t) + ((initial + 2) * sizeof (node_t)));
+
 #endif
 
     /* Access set from all threads */
@@ -422,7 +421,7 @@ TASKMAIN(int argc, char **argv) {
     FLUSH;
     /* Delete set */
 
-    
+
     BARRIER
 
             int *changes;
@@ -435,6 +434,7 @@ TASKMAIN(int argc, char **argv) {
     ONCE
     {
         size_after = set_size(set);
+        set_print(set);
         *changes = 0;
         *sequencer = 1;
     }
