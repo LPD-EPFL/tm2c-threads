@@ -341,7 +341,9 @@ TASKMAIN(int argc, char **argv) {
         size = set_size(set);
         printf("Set size     : %d\n", size);
 
+/*
         set_print(set);
+*/
 
         assert(size == initial);
         FLUSH
@@ -434,7 +436,7 @@ TASKMAIN(int argc, char **argv) {
     ONCE
     {
         size_after = set_size(set);
-        set_print(set);
+        //set_print(set);
         *changes = 0;
         *sequencer = 1;
     }
