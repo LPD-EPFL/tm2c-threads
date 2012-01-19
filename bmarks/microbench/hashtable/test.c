@@ -100,7 +100,7 @@ void *test(void *data, double duration) {
                 if (last == -1) val = rand_range_re(&d->seed, d->range);
                 else val = last;
                 val2 = rand_range_re(&d->seed, d->range);
-                if (ht_move(d->set, val, val2, TRANSACTIONAL)) {
+                if (ht_move_naive(d->set, val, val2, TRANSACTIONAL)) {
                     d->nb_moved++;
                     last = -1;
                 }
