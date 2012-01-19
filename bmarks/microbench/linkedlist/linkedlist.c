@@ -123,7 +123,9 @@ int set_contains(intset_t *set, val_t val, int transactional) {
     val_t v = 0;
 
     TX_START
+    printf("--> %u", set->head);
     prev = ND(set->head);
+    printf("--> %u", prev->next);
     next = ND(*(nxt_t *) TX_LOAD(&prev->next));
     while (1) {
         v = next->val;
@@ -133,11 +135,13 @@ int set_contains(intset_t *set, val_t val, int transactional) {
         rls = prev;
 #endif
         prev = next;
+        printf("--> %u", prev->next);
         next = ND(*(nxt_t *) TX_LOAD(&prev->next));
 #ifdef EARLY_RELEASE
         TX_RRLS(&rls->next);
 #endif
     }
+    FLUSH
     TX_COMMIT
     result = (v == val);
 
@@ -196,7 +200,7 @@ static int set_seq_add(intset_t *set, val_t val) {
     if (result) {
         prev->next = OF(new_node(val, OF(next), 0));
     }
-    
+
 
 #ifdef LOCKS
     global_lock_release();
