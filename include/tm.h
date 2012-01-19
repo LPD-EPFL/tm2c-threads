@@ -252,6 +252,8 @@ extern "C" {
 
     inline void * tx_load(write_set_t *ws, read_set_t *rs, void *addr) {
 #endif
+        
+        PRINT("loading: %p", addr);
 
 #ifdef PGAS
         //PRINT("(loading: %d)", addr);
