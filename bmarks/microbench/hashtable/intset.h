@@ -40,6 +40,7 @@ int ht_remove(ht_intset_t *set, int val, int transactional);
  * It is equivalent to changing the key associated with some value.
  */
 int ht_move(ht_intset_t *set, int val1, int val2, int transactional);
+int ht_move_naive(ht_intset_t *set, int val1, int val2, int transactional);
 
 /*
  * Atomic snapshot of the hash table.
