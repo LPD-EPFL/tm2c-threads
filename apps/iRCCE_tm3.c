@@ -66,6 +66,7 @@ MAIN(int argc, char **argv) {
             sum = 0;
             int i;
             for (i = 0; i < REPS; i++) {
+                printf("(%d)", ((i + (rounds * REPS) + ID) % steps));
                 int *addr = sm + ((i + (rounds * REPS) + ID) % steps);
                 PF_START(0)
                 sum += *(int *) TX_LOAD(addr);
