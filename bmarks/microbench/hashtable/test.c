@@ -643,7 +643,14 @@ TASKMAIN(int argc, char **argv) {
     /*
         ht_delete(set);
      */
+    
+    BARRIER
+    ONCE {
+        print("Set size after: %d", ht_size(data->set));
+    }
 
+    BARRIER
+    
     free(data);
 
     BARRIER
