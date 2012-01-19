@@ -148,7 +148,6 @@ int ht_move_naive(ht_intset_t *set, int val1, int val2, int transactional) {
         next = ND(*(nxt_t *) TX_LOAD(&prev->next));
     }
     if (v == val1) {
-        PRINT("found val1");
         /* Physically removing */
         nxt = (nxt_t *) TX_LOAD(&next->next);
         TX_STORE(&prev->next, nxt, TYPE_UINT);
@@ -175,7 +174,6 @@ int ht_move_naive(ht_intset_t *set, int val1, int val2, int transactional) {
         result = 1;
     }
     else {
-        PRINT("NOT found val1");
         result = 0;
     }
     TX_COMMIT
