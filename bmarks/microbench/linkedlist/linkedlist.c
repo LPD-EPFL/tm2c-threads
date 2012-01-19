@@ -137,6 +137,7 @@ int set_contains(intset_t *set, val_t val, int transactional) {
         prev = next;
         PRINT("--> %u", prev->next);
         next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+        PRINT("<--");
 #ifdef EARLY_RELEASE
         TX_RRLS(&rls->next);
 #endif
