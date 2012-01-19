@@ -123,9 +123,9 @@ int set_contains(intset_t *set, val_t val, int transactional) {
     val_t v = 0;
 
     TX_START
-    printf("--> %u", set->head);
+    PRINT("--> %u", set->head);
     prev = ND(set->head);
-    printf("--> %u", prev->next);
+    PRINT("--> %u", prev->next);
     next = ND(*(nxt_t *) TX_LOAD(&prev->next));
     while (1) {
         v = next->val;
@@ -135,7 +135,7 @@ int set_contains(intset_t *set, val_t val, int transactional) {
         rls = prev;
 #endif
         prev = next;
-        printf("--> %u", prev->next);
+        PRINT("--> %u", prev->next);
         next = ND(*(nxt_t *) TX_LOAD(&prev->next));
 #ifdef EARLY_RELEASE
         TX_RRLS(&rls->next);
