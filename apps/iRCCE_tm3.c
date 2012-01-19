@@ -32,7 +32,7 @@ MAIN(int argc, char **argv) {
     int *sm = (int *) RCCE_shmalloc(steps * sizeof (int));
 
     BARRIER
-    if (argc < 2) { //ONLY 1 cores sending messages
+    if (argc < 3) { //ONLY 1 cores sending messages
         ONCE
         {
             int sum;
