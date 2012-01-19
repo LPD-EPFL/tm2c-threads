@@ -646,7 +646,7 @@ TASKMAIN(int argc, char **argv) {
     
     BARRIER
     ONCE {
-        print("Set size after: %d", ht_size(data->set));
+        PRINT("Set size after: %d", ht_size(data->set));
     }
 
     BARRIER
