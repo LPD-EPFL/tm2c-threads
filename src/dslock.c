@@ -149,8 +149,8 @@ static void dsl_communication() {
                     //PRINT("RL addr: %3d, val: %d", ps_remote->address, PGAS_read(ps_remote->address));
                     ps_send(sender, PS_SUBSCRIBE_RESPONSE, PGAS_read(ps_remote->address), try_subscribe(sender, ps_remote->address));
 #else
-                    ps_send(sender, PS_SUBSCRIBE_RESPONSE, ps_remote->address, try_subscribe(sender, ps_remote->address));
-                    //ps_send(sender, PS_SUBSCRIBE_RESPONSE, ps_remote->address, NO_CONFLICT);
+                    //ps_send(sender, PS_SUBSCRIBE_RESPONSE, ps_remote->address, try_subscribe(sender, ps_remote->address));
+                    ps_send(sender, PS_SUBSCRIBE_RESPONSE, ps_remote->address, NO_CONFLICT);
 #endif
                     //ps_send(sender, PS_SUBSCRIBE_RESPONSE, ps_remote->address, NO_CONFLICT);
                     break;
