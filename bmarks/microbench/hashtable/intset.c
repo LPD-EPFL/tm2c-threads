@@ -130,12 +130,13 @@ int ht_move_naive(ht_intset_t *set, int val1, int val2, int transactional) {
 #elif defined STM
 
     int v, addr1, addr2;
-    node_t *n, *prev, *next;
-
+    node_t *prev, *next, *prev1, *next1;;
+    nxt_t *nxt;
+    
     TX_START
     addr1 = val1 % maxhtlength;
     OFFSET(set->buckets[addr1]);
-    prev = ND(*(nxt_t *) TX_LOAD(&set->buckets[addr1]->head));
+    prev = ND(set->buckets[addr1]->head);
     next = ND(*(nxt_t *) TX_LOAD(&prev->next));
     while (1) {
         v = next->val; //was TX
@@ -147,26 +148,26 @@ int ht_move_naive(ht_intset_t *set, int val1, int val2, int transactional) {
     }
     if (v == val1) {
         /* Physically removing */
-        nxt_t *nxt = (nxt_t *) TX_LOAD(&next->next);
+        *nxt = (nxt_t *) TX_LOAD(&next->next);
         TX_STORE(&prev->next, nxt, TYPE_UINT);
         TX_SHFREE(next);
         /* Inserting */
         addr2 = val2 % maxhtlength;
         OFFSET(set->buckets[addr2]);
-        prev = ND(*(nxt_t *) TX_LOAD(&set->buckets[addr2]->head));
-        next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+        prev1 = ND(set->buckets[addr2]->head);
+        next1 = ND(*(nxt_t *) TX_LOAD(&prev->next));
         while (1) {
-            v = next->val; //was TX
+            v = next1->val; //was TX
             if (v >= val2) {
                 break;
             }
-            prev = next;
-            next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+            prev1 = next1;
+            next1 = ND(*(nxt_t *) TX_LOAD(&prev->next));
         }
         if (v != val2) {
-            nxt_t nxt = OF(new_node(val2, OF(next), transactional));
+            nxt_t nxt1 = OF(new_node(val2, OF(next), transactional));
             //PRINTD("Created node %5d. Value: %d", nxt, val);
-            TX_STORE(&prev->next, &nxt, TYPE_UINT);
+            TX_STORE(&prev->next, &nxt1, TYPE_UINT);
         }
         /* Even if the key is already in, the operation succeeds */
         result = 1;
