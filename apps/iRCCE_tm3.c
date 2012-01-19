@@ -32,9 +32,31 @@ MAIN(int argc, char **argv) {
     int *sm = (int *) RCCE_shmalloc(steps * sizeof (int));
 
     BARRIER
+    if (argc < 2) { //ONLY 1 cores sending messages
+        ONCE
+        {
+            int sum;
 
-    ONCE
-    {
+            int rounds = 1;
+
+            while (REPS * rounds++ <= steps) {
+                TX_START
+                sum = 0;
+                int i;
+                for (i = 0; i < REPS; i++) {
+                    int *addr = sm + i + (rounds * REPS);
+                    PF_START(0)
+                    sum += *(int *) TX_LOAD(addr);
+                    PF_STOP(0)
+                }
+
+                TX_COMMIT
+            }
+            PRINT("sum -- %d", sum);
+            PF_PRINT
+        }
+    }
+    else { //ALL cores sending messages
         int sum;
 
         int rounds = 1;
@@ -44,8 +66,9 @@ MAIN(int argc, char **argv) {
             sum = 0;
             int i;
             for (i = 0; i < REPS; i++) {
+                int *addr = sm + ((i + (rounds * REPS) + ID) % steps);
                 PF_START(0)
-                sum += *(int *) TX_LOAD(sm + i + (rounds * REPS));
+                sum += *(int *) TX_LOAD(addr);
                 PF_STOP(0)
             }
 
@@ -54,6 +77,8 @@ MAIN(int argc, char **argv) {
         PRINT("sum -- %d", sum);
         PF_PRINT
     }
+
+
     BARRIER;
 
     TM_END
