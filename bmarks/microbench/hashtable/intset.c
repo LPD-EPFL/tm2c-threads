@@ -28,11 +28,11 @@ intset_t *offset;
 int ht_contains(ht_intset_t *set, int val, int transactional) {
     int addr, result;
 
-/*
-#if defined(SEQUENTIAL) && defined(LOCKS)
-    global_lock();
-#endif
-*/
+    /*
+    #if defined(SEQUENTIAL) && defined(LOCKS)
+        global_lock();
+    #endif
+     */
 
     addr = val % maxhtlength;
     if (transactional == 5)
@@ -40,11 +40,11 @@ int ht_contains(ht_intset_t *set, int val, int transactional) {
     else
         result = set_contains(set->buckets[addr], val, transactional);
 
-/*
-#if defined(SEQUENTIAL) && defined(LOCKS)
-    global_lock_release();
-#endif
-*/
+    /*
+    #if defined(SEQUENTIAL) && defined(LOCKS)
+        global_lock_release();
+    #endif
+     */
 
     return result;
 }
@@ -52,11 +52,11 @@ int ht_contains(ht_intset_t *set, int val, int transactional) {
 int ht_add(ht_intset_t *set, int val, int transactional) {
     int addr, result;
 
-/*
-#if defined(SEQUENTIAL) && defined(LOCKS)
-    global_lock();
-#endif
-*/
+    /*
+    #if defined(SEQUENTIAL) && defined(LOCKS)
+        global_lock();
+    #endif
+     */
 
     addr = val % maxhtlength;
     if (transactional == 5)
@@ -64,12 +64,12 @@ int ht_add(ht_intset_t *set, int val, int transactional) {
     else
         result = set_add(set->buckets[addr], val, transactional);
 
-/*
-#if defined(SEQUENTIAL) && defined(LOCKS)
-    global_lock_release();
-#endif
-*/
-    
+    /*
+    #if defined(SEQUENTIAL) && defined(LOCKS)
+        global_lock_release();
+    #endif
+     */
+
     return result;
 
 }
@@ -77,11 +77,11 @@ int ht_add(ht_intset_t *set, int val, int transactional) {
 int ht_remove(ht_intset_t *set, int val, int transactional) {
     int addr, result;
 
-/*
-#if defined(SEQUENTIAL) && defined(LOCKS)
-    global_lock();
-#endif
-*/
+    /*
+    #if defined(SEQUENTIAL) && defined(LOCKS)
+        global_lock();
+    #endif
+     */
 
     addr = val % maxhtlength;
     if (transactional == 5)
@@ -89,12 +89,12 @@ int ht_remove(ht_intset_t *set, int val, int transactional) {
     else
         result = set_remove(set->buckets[addr], val, transactional);
 
-/*
-#if defined(SEQUENTIAL) && defined(LOCKS)
-    global_lock_release();
-#endif
-*/
-    
+    /*
+    #if defined(SEQUENTIAL) && defined(LOCKS)
+        global_lock_release();
+    #endif
+     */
+
     return result;
 
 }
@@ -130,9 +130,10 @@ int ht_move_naive(ht_intset_t *set, int val1, int val2, int transactional) {
 #elif defined STM
 
     int v, addr1, addr2;
-    node_t *prev, *next, *prev1, *next1;;
+    node_t *prev, *next, *prev1, *next1;
+    ;
     nxt_t *nxt;
-    
+
     TX_START
     addr1 = val1 % maxhtlength;
     OFFSET(set->buckets[addr1]);
@@ -147,6 +148,7 @@ int ht_move_naive(ht_intset_t *set, int val1, int val2, int transactional) {
         next = ND(*(nxt_t *) TX_LOAD(&prev->next));
     }
     if (v == val1) {
+        PRINT("found val1");
         /* Physically removing */
         nxt = (nxt_t *) TX_LOAD(&next->next);
         TX_STORE(&prev->next, nxt, TYPE_UINT);
@@ -172,7 +174,10 @@ int ht_move_naive(ht_intset_t *set, int val1, int val2, int transactional) {
         /* Even if the key is already in, the operation succeeds */
         result = 1;
     }
-    else result = 0;
+    else {
+        PRINT("NOT found val1");
+        result = 0;
+    }
     TX_COMMIT
 
 #endif
