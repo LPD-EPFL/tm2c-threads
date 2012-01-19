@@ -148,7 +148,7 @@ int ht_move_naive(ht_intset_t *set, int val1, int val2, int transactional) {
     }
     if (v == val1) {
         /* Physically removing */
-        *nxt = (nxt_t *) TX_LOAD(&next->next);
+        nxt = (nxt_t *) TX_LOAD(&next->next);
         TX_STORE(&prev->next, nxt, TYPE_UINT);
         TX_SHFREE(next);
         /* Inserting */
