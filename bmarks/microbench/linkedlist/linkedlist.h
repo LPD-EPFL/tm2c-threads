@@ -20,8 +20,6 @@
 
 #include "tm.h"
 
-extern nxt_t offs__;
-
 /*______________________________________________________________________________
  * SETTINGS
  * _____________________________________________________________________________
@@ -75,6 +73,8 @@ typedef struct intset {
     };
 
 } intset_t;
+
+extern nxt_t offs__;
 
 #define N2O(set, node)                  (nxt_t) ((nxt_t) (node) - (nxt_t) (set))
 #define O2N(set, offset)                ((void *) (offs__ = offset) == NULL ? NULL : (node_t *) ((nxt_t) (set) + (offs__)))
