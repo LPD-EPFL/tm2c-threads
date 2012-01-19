@@ -123,9 +123,9 @@ int set_contains(intset_t *set, val_t val, int transactional) {
     val_t v = 0;
 
     TX_START
-    PRINT("--> %u", set->head);
+    PRINT("head-> %u", set->head);
     prev = ND(set->head);
-    PRINT("--> %u", prev->next);
+    PRINT("head->next-> %u", prev->next);
     next = ND(*(nxt_t *) TX_LOAD(&prev->next));
     while (1) {
         v = next->val;
