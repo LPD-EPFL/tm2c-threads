@@ -10,6 +10,8 @@
 
 #include "linkedlist.h"
 
+nxt_t * offs__;
+
 void *shmem_init(size_t offset) {
     return (void *) (RCCE_shmalloc(offset) + offset);
 }
