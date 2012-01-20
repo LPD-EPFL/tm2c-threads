@@ -452,7 +452,7 @@ TASKMAIN(int argc, char **argv) {
 
     if (seed == 0) {
         srand_core();
-        seed = rand_range((ID + 17) * 123);
+        seed = rand_range((RCCE_ue() + 17) * 123);
         srand(seed);
     }
     else
