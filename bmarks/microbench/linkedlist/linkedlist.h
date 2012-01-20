@@ -24,7 +24,7 @@
  * SETTINGS
  * _____________________________________________________________________________
  */
-#define SEQUENTIAL_
+#define SEQUENTIAL
 #define LOCKS_
 #define STM
 #define EARLY_RELEASE_
