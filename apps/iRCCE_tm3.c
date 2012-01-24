@@ -39,18 +39,18 @@ MAIN(int argc, char **argv) {
 
             int rounds = 1;
 
+            PF_START(0)
             while (REPS * rounds++ <= steps) {
                 TX_START
                 sum = 0;
                 int i;
-                PF_START(0)
                 for (i = 0; i < REPS; i++) {
                     int *addr = sm + i + (rounds * REPS);
                     sum += *(int *) TX_LOAD(addr);
                 }
-                PF_STOP(0)
                 TX_COMMIT
             }
+            PF_STOP(0)
             PRINT("sum -- %d", sum);
             PF_PRINT
         }
