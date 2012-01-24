@@ -41,7 +41,7 @@ extern "C" {
 #include <stdio.h>
 #include <math.h>
 
-#define REF_SPEED_GHZ           0.533
+#define REF_SPEED_GHZ           0.8
 
     // =============================== GETTIMEOFDAY ================================ {{{
 #ifdef DO_TIMINGS_STD
