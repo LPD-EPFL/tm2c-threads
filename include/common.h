@@ -19,7 +19,7 @@ extern "C" {
     
 #define DEBUG_UTILIZATION_
     
-#define DO_TIMINGS_      /*ENABLE / DISABLE performing measurements*/
+#define DO_TIMINGS      /*ENABLE / DISABLE performing measurements*/
 
 #define DSLNDPERNODES   2 /* 1 dedicated DS-Locking core per DSLNDPERNODES cores*/
 #define NUM_DSL_UES     ((int) ((RCCE_num_ues() / DSLNDPERNODES)) + (RCCE_num_ues() % DSLNDPERNODES ? 1 : 0))
