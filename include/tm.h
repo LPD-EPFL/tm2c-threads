@@ -38,7 +38,7 @@ extern "C" {
 #define BACKOFF_DELAY                   50
 #else
 #define BACKOFF_MAX                     5
-#define BACKOFF_DELAY                   10
+#define BACKOFF_DELAY                   70
 #endif
 
 
