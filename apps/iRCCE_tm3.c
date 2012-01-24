@@ -43,13 +43,12 @@ MAIN(int argc, char **argv) {
                 TX_START
                 sum = 0;
                 int i;
+                PF_START(0)
                 for (i = 0; i < REPS; i++) {
                     int *addr = sm + i + (rounds * REPS);
-                    PF_START(0)
                     sum += *(int *) TX_LOAD(addr);
-                    PF_STOP(0)
                 }
-
+                PF_STOP(0)
                 TX_COMMIT
             }
             PRINT("sum -- %d", sum);
