@@ -16,7 +16,7 @@ extern "C" {
 
 #include "common.h"
 
-#define SHMEM_SIZE      (2048)           //1 KB
+#define SHMEM_SIZE      (4192)           //1 KB
 //#define SHMEM_SIZE      ((int) (3840 /NUM_DSL_NODES))           //1 KB
 #define SHMEM           shmem__
 #define PGAS_TYPE       long long
