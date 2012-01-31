@@ -24,7 +24,8 @@ extern "C" {
     typedef unsigned int pgas_addr_t;
     //#define NUM_DSL_NODES 2
 
-    extern void * SHMEM;
+//    extern void * SHMEM;
+    extern int * SHMEM;
     extern unsigned int shmem_index;
     extern unsigned int id__m1d2;
     extern unsigned int num_ues_d2;
@@ -39,7 +40,8 @@ extern "C" {
 #define SHRINK(addr)    ROUND((double) (addr) / NUM_DSL_NODES)
 
 #define PGAS_write(addr, val, type)             \
-        *((type *) ((type *) SHMEM + addr)) = (type) (val)
+        *(SHMEM + addr) = (val)
+        //*((type *) ((type *) SHMEM + addr)) = (type) (val)
     //*((type *) ((type *) SHMEM + ROUND((double) (addr) / NUM_DSL_NODES))) = (type) (val)
 
 #define PGAS_read(addr)                         \
