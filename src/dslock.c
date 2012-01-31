@@ -146,7 +146,9 @@ static void dsl_communication() {
 #endif
 
 #ifdef PGAS
+/*
                     PRINT("RL addr: %3d, val: %d", ps_remote->address, PGAS_read(ps_remote->address));
+*/
                     ps_send(sender, PS_SUBSCRIBE_RESPONSE, PGAS_read(ps_remote->address), try_subscribe(sender, ps_remote->address));
 #else
                     ps_send(sender, PS_SUBSCRIBE_RESPONSE, ps_remote->address, try_subscribe(sender, ps_remote->address));
@@ -184,9 +186,6 @@ static void dsl_communication() {
 #ifdef DEBUG_UTILIZATION
                     write_reqs_num++;
 #endif
-                    PRINT("winc for %d", ps_remote->address);
-                    
-
                     CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
                     if (conflict == NO_CONFLICT) {
                         /*
