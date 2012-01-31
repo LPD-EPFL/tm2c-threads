@@ -33,6 +33,23 @@
 /* Hashtable length (# of buckets) */
 unsigned int maxhtlength;
 
+/* ################################################################### *
+ * RANDOM
+ * ################################################################### */
+
+/* Re-entrant version of rand_range(r) */
+inline long rand_range_re(unsigned int *seed, long r) {
+    int m = RAND_MAX;
+    long d, v = 0;
+
+    do {
+        d = (m > r ? r : m);
+        v += 1 + (long) (d * ((double) rand_r(seed) / ((double) (m) + 1.0)));
+        r -= m;
+    } while (r > 0);
+    return v;
+}
+
 typedef struct thread_data {
     val_t first;
     long range;
