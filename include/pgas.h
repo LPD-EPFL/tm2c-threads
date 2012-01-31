@@ -45,7 +45,8 @@ extern "C" {
     //*((type *) ((type *) SHMEM + ROUND((double) (addr) / NUM_DSL_NODES))) = (type) (val)
 
 #define PGAS_read(addr)                         \
-        *((int *) SHMEM + addr)
+        *(SHMEM + addr)
+//        *((int *) SHMEM + addr)
     //        *((int *) SHMEM + ROUND((double) (addr) / NUM_DSL_NODES))
 
 
