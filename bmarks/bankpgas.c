@@ -115,7 +115,7 @@ int total(bank_t *bank, int transactional) {
             //PRINTN("(l %d)", i);
             total += TX_LOAD(i);
         }
-        TX_COMMIT
+        TX_COMMIT_NO_STATS
     }
     else {
         TX_START
