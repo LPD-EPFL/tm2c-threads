@@ -184,6 +184,8 @@ static void dsl_communication() {
 #ifdef DEBUG_UTILIZATION
                     write_reqs_num++;
 #endif
+                    PRINT("winc for %d", ps_remote->address);
+                    
 
                     CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
                     if (conflict == NO_CONFLICT) {
