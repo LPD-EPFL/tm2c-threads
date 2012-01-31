@@ -194,13 +194,7 @@ static void dsl_communication() {
                         write_set_pgas_insert(PGAS_write_sets[sender], PGAS_read(ps_remote->address) + ps_remote->write_value,
                                 ps_remote->address);
                     }
-                    else {
-                        /*
-                                                PRINT("PS_WRITE_INC from %2d for %3d, CONFLICT", sender, ps_remote->address);
-                         */
-                    }
                     ps_send(sender, PS_PUBLISH_RESPONSE, ps_remote->address, conflict);
-
                     break;
                 }
 #endif
