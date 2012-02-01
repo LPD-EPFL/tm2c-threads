@@ -214,7 +214,7 @@ extern "C" {
 
 #ifdef PGAS
 #define TX_LOAD_STORE(addr, op, value)                                  \
-        tx_wlock(addr, op(value));
+        tx_store_inc(addr, op(value));
 #else
 #define TX_LOAD_STORE(addr, op, value, datatype)                        \
     {tx_wlock((void *) (addr));                                         \
@@ -323,6 +323,37 @@ retry:
 #else
 
     inline void tx_wlock(void *address) {
+#endif
+
+        CONFLICT_TYPE conflict;
+#ifdef BACKOFF
+        unsigned int num_delays = 0;
+        unsigned int delay = BACKOFF_DELAY;
+
+retry:
+#endif
+#ifdef PGAS
+        if ((conflict = ps_publish(address, value)) != NO_CONFLICT) {
+#else      
+        if ((conflict = ps_publish((void *) address)) != NO_CONFLICT) {
+#endif
+#ifdef BACKOFF
+            if (num_delays++ < BACKOFF_MAX) {
+                udelay(delay);
+                delay *= 2;
+                goto retry;
+            }
+#endif
+            TX_ABORT(conflict);
+        }
+    }
+
+#ifdef PGAS
+
+    inline void tx_store_inc(unsigned int address, int value) {
+#else
+
+    inline void tx_store_inc(void *address) {
 #endif
 
         CONFLICT_TYPE conflict;
