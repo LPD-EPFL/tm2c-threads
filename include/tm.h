@@ -112,6 +112,14 @@ extern "C" {
 #define WSET_PERSIST(stm_tx) write_set_persist(stm_tx)
 #endif
 
+#ifdef EAGER_WRITE_ACQ
+#define WLOCKS_ACQUIRE()
+#define WLOCK_ACQUIRE(addr)     tx_wlock((void*) (addr))
+#else
+#define WLOCKS_ACQUIRE()        ps_publish_all()
+#define WLOCK_ACQUIRE(addr) 
+#endif
+
 #define TX_START                                                        \
     { PRINTD("|| Starting new tx");                                     \
     short int reason;                                                   \
@@ -129,7 +137,7 @@ extern "C" {
 
 #define TX_COMMIT                                                       \
     PRINTD("|| commiting tx");                                          \
-    ps_publish_all();                                                   \
+    WLOCKS_ACQUIRE();                                                   \
     WSET_PERSIST(stm_tx->write_set);                                    \
     ps_finish_all(NO_CONFLICT);                                         \
     mem_info_on_commit(stm_tx->mem_info);                               \
@@ -147,7 +155,7 @@ extern "C" {
 
 #define TX_COMMIT_NO_STATS                                              \
     PRINTD("|| commiting tx");                                          \
-    ps_publish_all();                                                   \
+    WLOCKS_ACQUIRE();                                                   \
     WSET_PERSIST(stm_tx->write_set);                                    \
     ps_finish_all(NO_CONFLICT);                                         \
     mem_info_on_commit(stm_tx->mem_info);                               \
@@ -195,7 +203,9 @@ extern "C" {
 
 #ifdef PGAS
 #define TX_STORE(addr, val)                                             \
-    write_set_pgas_update(stm_tx->write_set, val, addr)
+    WLOCK_ACQUIRE(addr);                               
+    //not using a write_set in pgas
+    //write_set_pgas_update(stm_tx->write_set, val, addr)
 #else
 #define TX_STORE(addr, ptr, datatype)                                   \
     write_set_update(stm_tx->write_set, datatype, ((void *) (ptr)), ((void *) (addr)))
@@ -252,7 +262,7 @@ extern "C" {
 
     inline void * tx_load(write_set_t *ws, read_set_t *rs, void *addr) {
 #endif
-        
+
 #ifdef PGAS
         //PRINT("(loading: %d)", addr);
         write_entry_pgas_t *we;
