@@ -336,7 +336,6 @@ TASKMAIN(int argc, char **argv) {
                 val = rand_range(range);
             } while (buf[val]);
             buf[val] = 1;
-            PRINT("added %d", i);
             if (set_add(set, val, 0)) {
                 last = val;
                 i++;
