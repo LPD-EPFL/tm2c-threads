@@ -498,10 +498,15 @@ TASKMAIN(int argc, char **argv) {
         PGAS_alloc_init(1);
         set = ht_new();
 
+        char *buf = (char *) calloc(range, sizeof (char));
+
         i = 0;
         maxhtlength = (int) (initial / load_factor);
         while (i < initial) {
-            val = rand_range(range);
+            do {
+                val = rand_range(range);
+            } while (buf[val]);
+            buf[val] = 1;
             if (ht_add(set, val, 0)) {
                 last = val;
                 i++;
