@@ -356,9 +356,14 @@ TASKMAIN(int argc, char **argv) {
         /* Populate set */
         PRINT("Adding %d entries to set", initial);
 
+        char *buf = (char) calloc(range * sizeof (char));
+
         i = 0;
         while (i < initial) {
-            val = rand_range(range);
+            do {
+                val = rand_range(range);
+            } while (buf[val]);
+            buf[val] = 1;
             if (set_add(set, val, 0)) {
                 last = val;
                 i++;
