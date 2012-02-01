@@ -114,7 +114,7 @@ extern "C" {
 
 #ifdef EAGER_WRITE_ACQ
 #define WLOCKS_ACQUIRE()
-#define WLOCK_ACQUIRE(addr, val)     tx_wlock((void*) (addr), val)
+#define WLOCK_ACQUIRE(addr, val)     tx_wlock((addr), (val))
 #else
 #define WLOCKS_ACQUIRE()        ps_publish_all()
 #define WLOCK_ACQUIRE(addr, val) 
