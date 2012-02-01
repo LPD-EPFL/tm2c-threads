@@ -14,7 +14,7 @@ extern "C" {
 
 #define DSL
 
-#define PGAS           /*ENABLE / DISABLE PGAS*/
+#define PGAS_           /*ENABLE / DISABLE PGAS*/
 #define READ_BUF_OFF
 
 #define DEBUG_UTILIZATION_
