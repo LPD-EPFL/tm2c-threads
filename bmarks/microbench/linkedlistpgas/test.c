@@ -335,6 +335,7 @@ TASKMAIN(int argc, char **argv) {
         while (i < initial) {
             do {
                 val = rand_range(range);
+                PRINT("val: %4d, buf[val]: %d", val, buf[val]);
             } while (buf[val]);
             buf[val] = 1;
             if (set_add(set, val, 0)) {
