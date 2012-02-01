@@ -114,10 +114,10 @@ extern "C" {
 
 #ifdef EAGER_WRITE_ACQ
 #define WLOCKS_ACQUIRE()
-#define WLOCK_ACQUIRE(addr)     tx_wlock((void*) (addr))
+#define WLOCK_ACQUIRE(addr, val)     tx_wlock((void*) (addr), val)
 #else
 #define WLOCKS_ACQUIRE()        ps_publish_all()
-#define WLOCK_ACQUIRE(addr) 
+#define WLOCK_ACQUIRE(addr, val) 
 #endif
 
 #define TX_START                                                        \
@@ -203,7 +203,7 @@ extern "C" {
 
 #ifdef PGAS
 #define TX_STORE(addr, val)                                             \
-    WLOCK_ACQUIRE(addr);                               
+    WLOCK_ACQUIRE(addr, val);                               
     //not using a write_set in pgas
     //write_set_pgas_update(stm_tx->write_set, val, addr)
 #else
