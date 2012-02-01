@@ -329,7 +329,7 @@ TASKMAIN(int argc, char **argv) {
         /* Populate set */
         PRINT("Adding %d entries to set", initial);
 
-        char *buf = (char *) calloc(range * sizeof (char));
+        char *buf = (char *) calloc(range, sizeof (char));
 
         i = 0;
         while (i < initial) {
