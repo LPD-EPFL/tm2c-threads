@@ -123,7 +123,6 @@ static int set_seq_add(intset_t *set, val_t val) {
     pgas_addr_t prev_addr;
 
     TX_START
-    PRINT("adding %d", val);
     prev = (node_t) TX_LOAD(set->head);
     prev_addr = set->head;
     next = (node_t) TX_LOAD(prev.next);
