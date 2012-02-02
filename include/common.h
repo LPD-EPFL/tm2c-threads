@@ -8,6 +8,14 @@
 #ifndef COMMON_H
 #define	COMMON_H
 
+#ifndef INLINED
+# if __GNUC__ && !__GNUC_STDC_INLINE__
+#  define INLINED static inline __attribute__((always_inline))
+# else
+#  define INLINED inline
+# endif
+#endif
+
 #ifdef	__cplusplus
 extern "C" {
 #endif

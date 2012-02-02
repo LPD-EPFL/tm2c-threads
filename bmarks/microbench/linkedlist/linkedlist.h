@@ -96,13 +96,13 @@ int set_remove(intset_t *set, val_t val, int transactional);
 
 void set_print(intset_t *set);
 
-inline void global_lock() {
+INLINED void global_lock() {
     PRINTD("askking for global lock");
     RCCE_acquire_lock(0);
     PRINTD("got global lock");
 }
 
-inline void global_lock_release() {
+INLINED void global_lock_release() {
     RCCE_release_lock(0);
     PRINTD("released global lock");
 }

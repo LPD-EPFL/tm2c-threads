@@ -61,7 +61,7 @@ extern "C" {
      * the granularity of rand() could be lower-bounded by the 32767^th which might 
      * be too high for given values of range and initial.
      */
-    inline long rand_range(long r) {
+    INLINED long rand_range(long r) {
         int m = RAND_MAX;
         long d, v = 0;
 
@@ -76,7 +76,7 @@ extern "C" {
     /*
      * Seeding the rand()
      */
-    inline void srand_core() {
+    INLINED void srand_core() {
         double timed_ = RCCE_wtime();
         unsigned int timeprfx_ = (unsigned int) timed_;
         unsigned int time_ = (unsigned int) ((timed_ - timeprfx_) * 1000000);
@@ -254,7 +254,7 @@ extern "C" {
 #define TX_SHFREE(addr)                                                   \
     stm_shfree(stm_tx->mem_info, (t_vcharp) addr)
 
-    inline void udelay(unsigned int micros) {
+    INLINED void udelay(unsigned int micros) {
         double __ts_end = RCCE_wtime() + ((double) micros / 1000000);
         while (RCCE_wtime() < __ts_end);
     }
@@ -263,10 +263,10 @@ extern "C" {
 
 #ifdef PGAS
 
-    inline int tx_load(write_set_pgas_t *ws, read_set_t *rs, unsigned int addr) {
+    INLINED int tx_load(write_set_pgas_t *ws, read_set_t *rs, unsigned int addr) {
 #else
 
-    inline void * tx_load(write_set_t *ws, read_set_t *rs, void *addr) {
+    INLINED void * tx_load(write_set_t *ws, read_set_t *rs, void *addr) {
 #endif
 
 #ifdef PGAS
@@ -325,10 +325,10 @@ retry:
      */
 #ifdef PGAS
 
-    inline void tx_wlock(unsigned int address, int value) {
+    INLINED void tx_wlock(unsigned int address, int value) {
 #else
 
-    inline void tx_wlock(void *address) {
+    INLINED void tx_wlock(void *address) {
 #endif
 
         CONFLICT_TYPE conflict;

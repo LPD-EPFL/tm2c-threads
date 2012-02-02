@@ -59,7 +59,7 @@ extern "C" {
         unsigned long aborts_waw;
     } stm_tx_node_t;
 
-    inline void tx_metadata_node_print(stm_tx_node_t * stm_tx_node) {
+    INLINED void tx_metadata_node_print(stm_tx_node_t * stm_tx_node) {
         printf("TXs Statistics for node --------------------------------------\n");
         printf("Starts      \t: %lu\n", stm_tx_node->tx_starts);
         printf("Commits     \t: %lu\n", stm_tx_node->tx_commited);
@@ -72,7 +72,7 @@ extern "C" {
         fflush(stdout);
     }
 
-    inline void tx_metadata_print(stm_tx_t * stm_tx) {
+    INLINED void tx_metadata_print(stm_tx_t * stm_tx) {
         printf("TX Statistics ------------------------------------------------\n");
         printf("Retries     \t: %lu\n", stm_tx->retries);
         printf("Aborts      \t: %lu\n", stm_tx->aborts);
@@ -84,7 +84,7 @@ extern "C" {
         fflush(stdout);
     }
 
-    inline stm_tx_node_t * tx_metadata_node_new() {
+    INLINED stm_tx_node_t * tx_metadata_node_new() {
         stm_tx_node_t *stm_tx_node_temp = (stm_tx_node_t *) malloc(sizeof (stm_tx_node_t));
         if (stm_tx_node_temp == NULL) {
             printf("malloc stm_tx_node @ tx_metadata_node_new");
@@ -102,7 +102,7 @@ extern "C" {
         return stm_tx_node_temp;
     }
 
-    inline stm_tx_t * tx_metadata_new(TX_STATE state) {
+    INLINED stm_tx_t * tx_metadata_new(TX_STATE state) {
         stm_tx_t *stm_tx_temp = (stm_tx_t *) malloc(sizeof (stm_tx_t));
         if (stm_tx_temp == NULL) {
             printf("malloc stm_tx @ tx_metadata_new");
@@ -128,7 +128,7 @@ extern "C" {
         return stm_tx_temp;
     }
 
-    inline stm_tx_t * tx_metadata_empty(stm_tx_t *stm_tx_temp) {
+    INLINED stm_tx_t * tx_metadata_empty(stm_tx_t *stm_tx_temp) {
 
         stm_tx_temp->read_set = read_set_empty(stm_tx_temp->read_set);
 #ifdef PGAS
@@ -148,7 +148,7 @@ extern "C" {
         return stm_tx_temp;
     }
 
-    inline void tx_metadata_free(stm_tx_t **stm_tx) {
+    INLINED void tx_metadata_free(stm_tx_t **stm_tx) {
         //TODO: "clear" insted of freeing the stm_tx
 
 #ifdef PGAS

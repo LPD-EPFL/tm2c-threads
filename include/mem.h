@@ -61,7 +61,7 @@ extern "C" {
     /*
      * Called by the CURRENT thread to allocate memory within a transaction.
      */
-    inline void *stm_malloc(mem_info_t *stm_mem_info, size_t size) {
+    INLINED void *stm_malloc(mem_info_t *stm_mem_info, size_t size) {
         /* Memory will be freed upon abort */
         mem_block_t *mb; 
 
@@ -86,7 +86,7 @@ extern "C" {
     /*
      * Called by the CURRENT thread to allocate shared memory within a transaction.
      */
-    inline void *stm_shmalloc(mem_info_t *stm_mem_info, size_t size) {
+    INLINED void *stm_shmalloc(mem_info_t *stm_mem_info, size_t size) {
         /* Memory will be freed upon abort */
         mem_block_t *mb; 
 
@@ -111,7 +111,7 @@ extern "C" {
     /*
      * Called by the CURRENT thread to free memory within a transaction.
      */
-    inline void stm_free(mem_info_t *stm_mem_info, void *addr) {
+    INLINED void stm_free(mem_info_t *stm_mem_info, void *addr) {
         /* Memory disposal is delayed until commit */
         mem_block_t *mb; 
 
@@ -128,7 +128,7 @@ extern "C" {
     /*
      * Called by the CURRENT thread to free memory within a transaction.
      */
-    inline void stm_shfree(mem_info_t *stm_mem_info, t_vcharp addr) {
+    INLINED void stm_shfree(mem_info_t *stm_mem_info, t_vcharp addr) {
         /* Memory disposal is delayed until commit */
         mem_block_t *mb; 
 
@@ -145,7 +145,7 @@ extern "C" {
     /*
      * Called to create new mem_info
      */
-    inline mem_info_t * mem_info_new() {
+    INLINED mem_info_t * mem_info_new() {
         mem_info_t *mi__;
 
         if ((mi__ = (mem_info_t *) malloc(sizeof (mem_info_t))) == NULL) {
@@ -162,14 +162,14 @@ extern "C" {
     /*
      * Called to free the memory info
      */
-    inline void mem_info_free(mem_info_t * mi) {
+    INLINED void mem_info_free(mem_info_t * mi) {
         free(mi);
     }
     
     /*
      * Called to free the global stm_mem_info variable
      */
-    inline void stm_mem_info_free(mem_info_t *stm_mem_info) {
+    INLINED void stm_mem_info_free(mem_info_t *stm_mem_info) {
         free(stm_mem_info);
     }
 
@@ -177,7 +177,7 @@ extern "C" {
     /*
      * Called upon transaction commit.
      */
-    inline void mem_info_on_commit(mem_info_t *stm_mem_info) {
+    INLINED void mem_info_on_commit(mem_info_t *stm_mem_info) {
         mem_block_t *mb, *next;
 
         /* Keep memory allocated during transaction */
@@ -230,7 +230,7 @@ extern "C" {
     /*
      * Called upon transaction abort.
      */
-    inline void mem_info_on_abort(mem_info_t *stm_mem_info) {
+    INLINED void mem_info_on_abort(mem_info_t *stm_mem_info) {
         mem_block_t *mb, *next;
 
         /* Dispose of memory allocated during transaction */
