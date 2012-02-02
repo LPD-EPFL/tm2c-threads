@@ -169,7 +169,7 @@ extern "C" {
  */
 
 
-#define WRITE_SET_PGAS_SIZE 2
+#define WRITE_SET_PGAS_SIZE     384
 
 typedef struct write_entry_pgas {
     unsigned int address;
