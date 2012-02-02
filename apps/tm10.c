@@ -45,7 +45,7 @@ MAIN(int argc, char **argv) {
     }
 
     BMSTART("ps_finish_all()")
-    ps_finish_all();
+    ps_finish_all(NO_CONFLICT);
     BMEND
 
     TX_COMMIT

@@ -51,7 +51,7 @@ char dummy = 0;
 //
 //
 
-int RCCE_APP(int argc, char **argv)
+int main(int argc, char **argv)
 {
   int i;
   int num_ranks;

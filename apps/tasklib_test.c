@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include "pubSubTM.h"
 
+#include "task.h"
 
 void run(void *arg);
 

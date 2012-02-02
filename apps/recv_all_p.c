@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <pthread.h>
 
 
 BOOLEAN tm_has_command;

@@ -20,6 +20,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "common.h"
+
 #include "iRCCE.h"
 
 #define MASTER 0
@@ -57,7 +59,7 @@ iRCCE_SEND_REQUEST *send_requests;
 //
 //
 
-int RCCE_APP(int argc, char **argv)
+MAIN(int argc, char **argv)
 {
 	int i, n;
 	char * ptr;

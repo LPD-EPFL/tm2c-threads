@@ -1,5 +1,7 @@
+#include "tm.h"
 #include "pubSubTM.h"
-#include "hashtable.h"
+/*#include "hashtable.h"*/
+#include "task.h"
 
 #define I 1000
 #define J 48
@@ -7,7 +9,7 @@
 
 void run(void * args);
 
-MAIN(int argc, char **argv) {
+void taskmain(int argc, char **argv) {
     RCCE_init(&argc, &argv);
 
     taskcreate(run, NULL, 20480);

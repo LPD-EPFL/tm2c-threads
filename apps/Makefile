@@ -22,14 +22,17 @@ PROGRAMS = tm1 tm2 tm3 tm4 tm5 tm6 tm7 tm8 tm9 tm10 \
 		   madmonkey spam
 
 # programs that need tasklib in order to compile
-TASKLIB_PROGRAMS = \
+TASKLIB_PROGRAMS = ps_hashtable \
+				   shmem_map
 
 # this is a list of programs that do not work, for whatever reason
 NON_WORKING = \
 			  RCCE_locks \
+			  ps_hashtable_ex \
+			  simple \
+			  recv_all \
 			  tasklib tasklib_test \
-			  recv_all recv_all_p recv_all_i simple \
-			  shmem_map ps_hashtable ps_hashtable_ex 
+			  recv_all recv_all_p recv_all_i
 
 ALL_PROGRAMS = $(PROGRAMS) $(TASKLIB_PROGRAMS)
 ALL_OBJS = $(addsuffix .o,$(ALL_PROGRAMS))

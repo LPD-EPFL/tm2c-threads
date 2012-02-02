@@ -1,8 +1,9 @@
 #include "common.h"
+#include "task.h"
 
 #define MEMSIZE 480
 
-MAIN(int argc, char **argv) {
+void taskmain(int argc, char **argv) {
 
     RCCE_init(&argc, &argv);
 

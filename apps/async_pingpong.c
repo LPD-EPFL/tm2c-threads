@@ -16,7 +16,7 @@
 #define DATA 128
 #define M printf("%d: ", ME)
 
-int RCCE_APP(int argc, char **argv) {
+int main(int argc, char **argv) {
    
     RCCE_init(&argc, &argv);
     iRCCE_init();

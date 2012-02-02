@@ -3,6 +3,8 @@
 
 #include "pubSubTM.h"
 
+#include "task.h"
+
 void run(void *);
 
 MAIN(int argc, char **argv) {

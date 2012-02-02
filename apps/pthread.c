@@ -19,7 +19,7 @@ char data[32];
 
 iRCCE_WAIT_LIST waitlist, sendlist;
 
-int RCCE_APP(int argc, char **argv) {
+int main(int argc, char **argv) {
 
     RCCE_init(&argc, &argv);
     int ID = RCCE_ue();

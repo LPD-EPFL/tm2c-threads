@@ -1,11 +1,14 @@
 /*working
  */
 
+#include "tm.h"
 #include "pubSubTM.h"
+
+#include "task.h"
 
 void run(void *);
 
-MAIN(int argc, char **argv) {
+void taskmain(int argc, char **argv) {
 
     RCCE_init(&argc, &argv);
     ps_init_();
@@ -77,7 +80,7 @@ MAIN(int argc, char **argv) {
 
 void run(void *data) {
 
-    ps_init();
+    ps_init_();
 
     taskexit(0);
 }
