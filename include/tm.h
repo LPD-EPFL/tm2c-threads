@@ -209,7 +209,7 @@ extern "C" {
     //write_set_pgas_update(stm_tx->write_set, val, addr)
 #else
 #define TX_STORE(addr, val)                                             \
-    WLOCK_ACQUIRE(addr, val);                                           \           
+    WLOCK_ACQUIRE(addr, val);                                           \          
     write_set_pgas_update(stm_tx->write_set, val, addr)
 #endif
 #else
