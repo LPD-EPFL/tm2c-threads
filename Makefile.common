@@ -1,0 +1,28 @@
+# The common Makefile, read by all Makefiles in the subdirs
+
+TOP := $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST))))
+
+SRCPATH := $(TOP)/src
+MAININCLUDE := $(TOP)/include
+
+INCLUDES := -I$(MAININCLUDE) -I$(TOP)/external/include
+LIBS := -L$(TOP)/external/lib \
+		-lm \
+		$(PLATFORM_LIBS)
+
+# EXTRA_DEFINES are passed through the command line
+DEFINES := $(PLATFORM_DEFINES) $(EXTRA_DEFINES)
+
+DEBUG_FLAGS := #-O0 -g -ggdb #-DDEBUG 
+
+CFLAGS := $(CFLAGS) $(DEFINES) $(PLATFORM_CFLAGS) \
+		  $(DEBUG_FLAGS) $(INCLUDES) $(EXTRA_CFLAGS)
+CFLAGSP := $(CFLAGS) -I$(MAININCLUDE) -I../extra/include -pthread
+
+ifdef $(CCOMPILE)
+C = $(CCOMPILE)
+else
+C = gcc
+endif
+
+DSTM_ARCHIVE:= $(TOP)/dtm.a

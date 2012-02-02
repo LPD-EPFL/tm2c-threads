@@ -1,0 +1,12 @@
+PLATFORM_CFLAGS = -arch i386 -O3 -Wall 
+PLATFORM_LDFLAGS = 
+PLATFORM_LIBS = -lzmq -lconfig 
+PLATFORM_DEFINES = -DRUNS_ON_CLUSTER \
+				   -DDO_TIMINGS -DDO_TIMINGS_TICKS
+
+HELPER_APPS += barrier_syncer
+
+barrier_syncer: $(SRCPATH)/barrier_syncer.c
+	$(C) -o $@ $(CFLAGS) $(LIBS) $^
+
+SRCS_PURE += clustermem.c

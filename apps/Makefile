@@ -1,282 +1,57 @@
-RCCEPATH=/home/trigonak/rcce/latest
-SYMBOLSPATH=/home/trigonak/rcce/latest/common/symbols
-iRCCEINCLUDE := ../include
+PLATFORM = iRCCE
 
-LIBTASK=../src/libtask/libtask.a
+include ../Makefile.common
 
-include $(SYMBOLSPATH)
+sinclude ../Makefile.$(PLATFORM)
 
-CFLAGS := $(CFLAGS) -I$(iRCCEINCLUDE)
-CFLAGSP := $(CFLAGS) -I$(iRCCEINCLUDE) -pthread
-TMH := ../src/pubSubTM.c $(iRCCEINCLUDE)/pubSubTM.h $(iRCCEINCLUDE)/common.h $(iRCCEINCLUDE)/tm.h $(iRCCEINCLUDE)/stm.h \
-	    $(iRCCEINCLUDE)/hashtable.h $(iRCCEINCLUDE)/rwhash.h $(iRCCEINCLUDE)/log.h
+INCLUDES += -I$(MAININCLUDE)
 
-PINGPONGOBJS  := iRCCE_pingpong.o   $(ARCHIVE)
-RCVALLOBJS  := iRCCE_recv_all.o  $(LIBTASK) $(ARCHIVE)
-ALL2ALLOBJS  := iRCCE_all2all.o  $(LIBTASK) $(ARCHIVE)
-ALLOBJS  := iRCCE_all.o  $(LIBTASK) $(ARCHIVE)
-TMOBJS  := iRCCE_tm.o  $(LIBTASK) $(ARCHIVE)
-TM9OBJS  := iRCCE_tm9.o  $(LIBTASK) $(ARCHIVE)
-TMO8BJS  := iRCCE_tm8.o  $(LIBTASK) $(ARCHIVE)
-TM7OBJS  := iRCCE_tm7.o  $(LIBTASK) $(ARCHIVE)
-TM6OBJS  := iRCCE_tm6.o  $(LIBTASK) $(ARCHIVE)
-TM5OBJS  := iRCCE_tm5.o  $(LIBTASK) $(ARCHIVE)
-TM4OBJS  := iRCCE_tm4.o  $(LIBTASK) $(ARCHIVE)
-TM3OBJS  := iRCCE_tm3.o  $(LIBTASK) $(ARCHIVE)
-TM2OBJS  := iRCCE_tm2.o  $(LIBTASK) $(ARCHIVE)
-TM1OBJS  := iRCCE_tm1.o  $(LIBTASK) $(ARCHIVE)
-SIMPLEOBJS  := iRCCE_simple.o  $(LIBTASK) $(ARCHIVE)
-RCVALLPOBJS  := iRCCE_recv_all_p.o   $(ARCHIVE)
-RCVALLIOBJS  := iRCCE_recv_all_i.o   $(ARCHIVE)
-RINGOBJS  := iRCCE_ring.o   $(ARCHIVE)
-RINGTOBJS  := iRCCE_ring_token.o   $(ARCHIVE)
-RINGSOBJS  := iRCCE_ring_simple.o   $(ARCHIVE)
-SIGOBJS  := iRCCE_signal.o   $(LIBTASK) $(ARCHIVE)
-RCVALLTOBJS  := iRCCE_tasklib.o  $(LIBTASK) $(ARCHIVE)
-TASKLIBTESTOBJS  := tasklib_test.o   $(ARCHIVE)
-SHMEMMAPOBJS  := shmem_map.o   $(ARCHIVE)
-IPTHREADOBJS  := iRCCE_pthread.o   $(ARCHIVE)
-HASHTABLEOBJS  := ps_hashtable.o   $(ARCHIVE)
-BMRAMSOBJS  := bm_rams.o   $(ARCHIVE)
-GCLOBJS  := global_clock.o   $(ARCHIVE)
-IHASHTABLEOBJS  := iRCCE_ps_hashtable.o   $(ARCHIVE)
-APINGPONGOBJS  := iRCCE_async_pingpong.o   $(ARCHIVE)
-PINGPINGOBJS  := iRCCE_pingping.o   $(ARCHIVE)
-MADMONKEYOBJS := iRCCE_madmonkey.o  $(ARCHIVE)
-IRCCESPAMOBJS := iRCCE_spam.o  $(ARCHIVE)
-
-.PHONY: all default clean iRCCE_pingpong iRCCE_pingping iRCCE_madmonkey iRCCE_spam
+.PHONY: all default clean 
 
 default:
-	@echo "Usage: make pingpong  "
-	@echo "       make pingping  "
-	@echo "       make apingpong  "
-	@echo "       make recvall  "
-	@echo "       make recvallp  "
-	@echo "       make recvalli  "
-	@echo "       make recvallt  "
-	@echo "       make tasklibt  "
-	@echo "       make shmemmap  "
-	@echo "       make ipthread  "
-	@echo "       make madmonkey "
-	@echo "       make spam      "
-	@echo "       make all       "
+	@echo "Platform: $(PLATFORM)"
+	@echo "Usage: make all       "
 	@echo "       make clean     "
 
-#all: pingpong pingping madmonkey spam apingpong recvall ipthread recvallp
+PROGRAMS = tm1 tm2 tm3 tm4 tm5 tm6 tm7 tm8 tm9 tm10 \
+		   toall all2all \
+		   pingpong async_pingpong \
+		   ring ring_token ring_simple \
+		   pthread \
+		   bm_rams global_clock \
+		   madmonkey spam
 
+# programs that need tasklib in order to compile
+TASKLIB_PROGRAMS = \
 
-pingpong: $(PINGPONGOBJS)
-	$(CCOMPILE) -o pingpong $(PINGPONGOBJS) $(CFLAGS)
+# this is a list of programs that do not work, for whatever reason
+NON_WORKING = \
+			  RCCE_locks \
+			  tasklib tasklib_test \
+			  recv_all recv_all_p recv_all_i simple \
+			  shmem_map ps_hashtable ps_hashtable_ex 
 
-recvall: $(RCVALLOBJS)
-	$(CCOMPILE) -o recvall $(RCVALLOBJS) $(CFLAGS)
+ALL_PROGRAMS = $(PROGRAMS) $(TASKLIB_PROGRAMS)
+ALL_OBJS = $(addsuffix .o,$(ALL_PROGRAMS))
+ALL_SRCS = $(addsuffix .c,$(ALL_PROGRAMS))
 
-all2all: $(ALL2ALLOBJS)
-	$(CCOMPILE) -o all2all $(ALL2ALLOBJS) $(CFLAGS)
+LIBS += -lpthread
 
-all: $(ALLOBJS)
-	$(CCOMPILE) -o all $(ALLOBJS) $(CFLAGS)
+all: $(ALL_PROGRAMS)
 
-tm: $(TMOBJS)
-	$(CCOMPILE) -o tm $(TMOBJS) $(CFLAGS)
+%.o: %.c
+	$(C) $(CFLAGS) -o $@ -c $<
 
-tm9: $(TM9OBJS)
-	$(CCOMPILE) -o tm9 $(TM9OBJS) $(CFLAGS)
+%: %.c
+	$(C) $(CFLAGS) $(LDFLAGS) -o $@ $< $(DSTM_ARCHIVE) $(LIBS)
 
-tm8: $(TMO8BJS)
-	$(CCOMPILE) -o tm8 $(TMO8BJS) $(CFLAGS)
+$(TASKLIB_PROGRAMS):
+	$(C) $(CFLAGS) $(LDFLAGS) -o $@ $(addsuffix .c,$@) $(DSTM_ARCHIVE) $(LIBS) -ltask
 
-tm7: $(TM7OBJS)
-	$(CCOMPILE) -o tm7 $(TM7OBJS) $(CFLAGS)
-
-tm6: $(TM6OBJS)
-	$(CCOMPILE) -o tm6 $(TM6OBJS) $(CFLAGS)
-
-tm5: $(TM5OBJS)
-	$(CCOMPILE) -o tm5 $(TM5OBJS) $(CFLAGS)
-
-tm4: $(TM4OBJS)
-	$(CCOMPILE) -o tm4 $(TM4OBJS) $(CFLAGS)
-
-tm3: $(TM3OBJS)
-	$(CCOMPILE) -o tm3 $(TM3OBJS) $(CFLAGS)
-
-tm2: $(TM2OBJS)
-	$(CCOMPILE) -o tm2 $(TM2OBJS) $(CFLAGS)
-
-tm1: $(TM1OBJS)
-	$(CCOMPILE) -o tm1 $(TM1OBJS) $(CFLAGS)
-
-simple: $(SIMPLEOBJS)
-	$(CCOMPILE) -o simple $(SIMPLEOBJS) $(CFLAGS)
-
-recvallp: $(RCVALLPOBJS)
-	$(CCOMPILE) -o recvallp $(RCVALLPOBJS) $(CFLAGSP)
-
-recvallt: $(RCVALLTOBJS)
-	$(CCOMPILE) -o recvallt $(RCVALLTOBJS) $(CFLAGS)
-
-tasklibt: $(TASKLIBTESTOBJS)
-	$(CCOMPILE) -o tasklibt $(TASKLIBTESTOBJS) $(CFLAGS)
-
-shmemmap: $(SHMEMMAPOBJS)
-	$(CCOMPILE) -o shmemmap $(SHMEMMAPOBJS) $(CFLAGS)
-
-recvalli: $(RCVALLIOBJS)
-	$(CCOMPILE) -o recvalli $(RCVALLIOBJS) $(CFLAGSP)
-
-ring: $(RINGOBJS)
-	$(CCOMPILE) -o ring $(RINGOBJS) $(CFLAGS)
-
-ringtoken: $(RINGTOBJS)
-	$(CCOMPILE) -o ringtoken $(RINGTOBJS) $(CFLAGS)
-
-ringsimple: $(RINGSOBJS)
-	$(CCOMPILE) -o ringsimple $(RINGSOBJS) $(CFLAGS)
-
-sig: $(SIGOBJS)
-	$(CCOMPILE) -o sig $(SIGOBJS) $(CFLAGS)
-
-ipthread: $(IPTHREADOBJS)
-	$(CCOMPILE) -o ipthread $(IPTHREADOBJS) $(CFLAGSP)
-
-hashtable: $(HASHTABLEOBJS)
-	$(CCOMPILE) -o hashtable $(HASHTABLEOBJS) $(CFLAGS)
-
-bmrams: $(BMRAMSOBJS)
-	$(CCOMPILE) -o bmrams $(BMRAMSOBJS) $(CFLAGS)
-
-gcl: $(GCLOBJS)
-	$(CCOMPILE) -o gcl $(GCLOBJS) $(CFLAGS)
-
-ihashtable: $(IHASHTABLEOBJS)
-	$(CCOMPILE) -o ihashtable $(IHASHTABLEOBJS) $(CFLAGS)
-
-apingpong: $(APINGPONGOBJS)
-	$(CCOMPILE) -o apingpong $(APINGPONGOBJS) $(CFLAGS)
-
-iRCCE_pingpong: pingpong
-
-iRCCE_pingpong.o: iRCCE_pingpong.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h
-	$(CCOMPILE) -c $(CFLAGS) iRCCE_pingpong.c
-
-iRCCE_recv_all.o: iRCCE_recv_all.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h
-	$(CCOMPILE) -c $(CFLAGS) iRCCE_recv_all.c
-
-iRCCE_all2all.o: iRCCE_all2all.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h
-	$(CCOMPILE) -c $(CFLAGS) iRCCE_all2all.c
-
-iRCCE_all.o: iRCCE_all.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h
-	$(CCOMPILE) -c $(CFLAGS) iRCCE_all.c
-
-iRCCE_tm.o: iRCCE_tm.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h $(TMH)
-	$(CCOMPILE) -c $(CFLAGS) iRCCE_tm.c
-
-iRCCE_tm9.o: iRCCE_tm9.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h $(TMH)
-	$(CCOMPILE) -c $(CFLAGS) iRCCE_tm9.c
-
-iRCCE_tm8.o: iRCCE_tm8.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h $(TMH)
-	$(CCOMPILE) -c $(CFLAGS) iRCCE_tm8.c
-
-iRCCE_tm7.o: iRCCE_tm7.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h $(TMH)
-	$(CCOMPILE) -c $(CFLAGS) iRCCE_tm7.c
-
-iRCCE_tm6.o: iRCCE_tm6.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h $(TMH)
-	$(CCOMPILE) -c $(CFLAGS) iRCCE_tm6.c
-
-iRCCE_tm5.o: iRCCE_tm5.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h $(TMH)
-	$(CCOMPILE) -c $(CFLAGS) iRCCE_tm5.c
-
-iRCCE_tm4.o: iRCCE_tm4.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h $(TMH)
-	$(CCOMPILE) -c $(CFLAGS) iRCCE_tm4.c
-
-iRCCE_tm3.o: iRCCE_tm3.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h $(TMH)
-	$(CCOMPILE) -c $(CFLAGS) iRCCE_tm3.c
-
-iRCCE_tm2.o: iRCCE_tm2.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h $(TMH)
-	$(CCOMPILE) -c $(CFLAGS) iRCCE_tm2.c
-
-iRCCE_tm1.o: iRCCE_tm1.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h $(TMH)
-	$(CCOMPILE) -c $(CFLAGS) iRCCE_tm1.c
-
-iRCCE_simple.o: iRCCE_simple.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h
-	$(CCOMPILE) -c $(CFLAGS) iRCCE_simple.c
-
-iRCCE_recv_all_p.o: iRCCE_recv_all_p.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h
-	$(CCOMPILE) -c $(CFLAGSP) iRCCE_recv_all_p.c
-
-iRCCE_recv_all_i.o: iRCCE_recv_all_i.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h
-	$(CCOMPILE) -c $(CFLAGSP) iRCCE_recv_all_i.c
-
-iRCCE_ring.o: iRCCE_ring.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h
-	$(CCOMPILE) -c $(CFLAGS) iRCCE_ring.c
-
-iRCCE_ring_token.o: iRCCE_ring_token.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h
-	$(CCOMPILE) -c $(CFLAGS) iRCCE_ring_token.c
-
-iRCCE_ring_simple.o: iRCCE_ring_simple.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h
-	$(CCOMPILE) -c $(CFLAGS) iRCCE_ring_simple.c
-
-iRCCE_signal.o: iRCCE_signal.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h $(TMH)
-	$(CCOMPILE) -c $(CFLAGS) iRCCE_signal.c 
-
-iRCCE_tasklib.o: iRCCE_tasklib.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h
-	$(CCOMPILE) -c $(CFLAGS) iRCCE_tasklib.c
-
-tasklib_test.o: tasklib_test.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h $(iRCCEINCLUDE)/pubSubTM.h
-	$(CCOMPILE) -c $(CFLAGS) tasklib_test.c
-
-shmem_map.o: shmem_map.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h $(iRCCEINCLUDE)/pubSubTM.h
-	$(CCOMPILE) -c $(CFLAGS) shmem_map.c
-	
-iRCCE_pthread.o: iRCCE_pthread.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h
-	$(CCOMPILE) -c $(CFLAGSP) iRCCE_pthread.c
-
-ps_hashtable.o: ps_hashtable.c $(iRCCEINCLUDE)/pubSubTM.h $(iRCCEINCLUDE)/hashtable.h
-	$(CCOMPILE) -c $(CFLAGS) ps_hashtable.c
-
-bm_rams.o: bm_rams.c $(RCCEINCLUDE)/RCCE.h
-	$(CCOMPILE) -c $(CFLAGS) bm_rams.c
-
-global_clock.o: global_clock.c $(RCCEINCLUDE)/RCCE.h
-	$(CCOMPILE) -c $(CFLAGS) global_clock.c
-
-iRCCE_ps_hashtable.o: iRCCE_ps_hashtable.c $(iRCCEINCLUDE)/pubSubTM.h $(iRCCEINCLUDE)/hashtable.h
-	$(CCOMPILE) -c $(CFLAGS) iRCCE_ps_hashtable.c
-
-iRCCE_async_pingpong.o: iRCCE_async_pingpong.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h
-	$(CCOMPILE) -c $(CFLAGS) iRCCE_async_pingpong.c
-
-pingping: $(PINGPINGOBJS)
-	$(CCOMPILE) -o pingping $(PINGPINGOBJS) $(CFLAGS)
-
-iRCCE_pingping: pingping
-
-iRCCE_pingping.o: iRCCE_pingping.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h
-	$(CCOMPILE) -c $(CFLAGS) iRCCE_pingping.c
-
-
-madmonkey: $(MADMONKEYOBJS)
-	$(CCOMPILE) -o madmonkey $(MADMONKEYOBJS) $(CFLAGS)
-
-iRCCE_madmonkey: madmonkey
-
-iRCCE_madmonkey.o: iRCCE_madmonkey.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h
-	$(CCOMPILE) -c $(CFLAGS) iRCCE_madmonkey.c
-
-
-spam: $(IRCCESPAMOBJS)
-	$(CCOMPILE) -o spam $(IRCCESPAMOBJS) $(CFLAGS)
-
-iRCCE_spam: spam
-
-iRCCE_spam.o: iRCCE_spam.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h
-	$(CCOMPILE) -c $(CFLAGS) iRCCE_spam.c
-
+$(ALL_PROGRAMS): $(ALL_SRCS) $(DSTM_ARCHIVE)
 
 clean:
-	@ rm -f *.o pingpong pingping madmonkey spam apingpong recvall ipthread recvallp recvalli recvallt tasklibt
-
-
+	@rm -f *.o $(ALL_OBJS)
+	@rm -f $(ALL_PROGRAMS)
+	@rm -rf $(addsuffix .dSYM, $(ALL_PROGRAMS))
 
