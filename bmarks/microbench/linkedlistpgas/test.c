@@ -341,6 +341,9 @@ TASKMAIN(int argc, char **argv) {
                 i++;
             }
         }
+        
+        free(buf);
+        
         size = set_size(set);
         printf("Set size     : %d\n", size);
         //set_print(set);
