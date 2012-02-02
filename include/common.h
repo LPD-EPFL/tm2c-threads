@@ -22,7 +22,7 @@ extern "C" {
 #define DO_TIMINGS_      /*ENABLE / DISABLE performing measurements*/
 
 #ifdef PGAS
-#define EAGER_WRITE_ACQ_         /*ENABLE eager write lock acquisition*/
+#define EAGER_WRITE_ACQ         /*ENABLE eager write lock acquisition*/
 #endif
 
 #define DSLNDPERNODES   2 /* 1 dedicated DS-Locking core per DSLNDPERNODES cores*/
