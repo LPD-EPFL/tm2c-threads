@@ -512,6 +512,9 @@ TASKMAIN(int argc, char **argv) {
                 i++;
             }
         }
+        
+        free(buf);
+        
         size = ht_size(set);
         printf("Set size     : %d\n", size);
         printf("Bucket amount: %d\n", maxhtlength);
