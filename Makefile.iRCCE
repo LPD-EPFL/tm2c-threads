@@ -10,17 +10,16 @@ PLATFORM_LDFLAGS =
 PLATFORM_LIBS = 
 PLATFORM_DEFINES =
 
+HAS_TASKLIB = no
+
 iRCCE_SRCS +=iRCCE_isend.c iRCCE_irecv.c iRCCE_isend32.c iRCCE_irecv32.c \
 			 iRCCE_admin.c iRCCE_synch.c iRCCE_send.c iRCCE_recv.c \
 			 iRCCE_get.c iRCCE_put.c iRCCE_waitlist.c 
 
-SRCS_PURE += $(addprefix iRCCE/, $(iRCCE_SRCS))
+ARCHIVE_SRCS_PURE += $(addprefix iRCCE/, $(iRCCE_SRCS))
 
 INCLUDES += -I$(RCCEPATH)
 DEFINES  += $(PLATFORM_DEFINES)
-
-CFLAGS := $(CFLAGS) $(DEFINES) $(PLATFORM_CFLAGS) \
-		  $(DEBUG_FLAGS) $(INCLUDES) $(EXTRA_CFLAGS)
 
 $(SRCPATH)/iRCCE/%.o:: $(SRCPATH)/iRCCE/%.c
 	$(C) $(CFLAGS) $(RCCE_FLAGS) -o $@ -c $<
