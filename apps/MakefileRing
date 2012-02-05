@@ -20,14 +20,9 @@ all: ring ringsimple
 ring: $(RINGOBJS)
 	$(CCOMPILE) -o ring $(RINGOBJS) $(CFLAGS)
 
-ringsimple: $(RINGSOBJS)
-	$(CCOMPILE) -o ringsimple $(RINGSOBJS) $(CFLAGS)
 
 iRCCE_ring.o: iRCCE_ring.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h
 	$(CCOMPILE) -c $(CFLAGS) iRCCE_ring.c
-
-iRCCE_ring_simple.o: iRCCE_ring_simple.c $(RCCEINCLUDE)/RCCE.h $(iRCCEINCLUDE)/iRCCE.h
-	$(CCOMPILE) -c $(CFLAGS) iRCCE_ring_simple.c
 
 clean:
 	@ rm -f *.o ring ringsimple

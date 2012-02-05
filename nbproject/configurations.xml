@@ -3,6 +3,7 @@
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <df name="iRCCE" root=".">
       <df name="apps">
+        <in>RCCE_locks.c</in>
         <in>bm_rams.c</in>
         <in>global_clock.c</in>
         <in>iRCCE_all.c</in>
@@ -24,6 +25,7 @@
         <in>iRCCE_tasklib.c</in>
         <in>iRCCE_tm.c</in>
         <in>iRCCE_tm1.c</in>
+        <in>iRCCE_tm10.c</in>
         <in>iRCCE_tm2.c</in>
         <in>iRCCE_tm3.c</in>
         <in>iRCCE_tm4.c</in>
@@ -36,45 +38,68 @@
         <in>shmem_map.c</in>
         <in>tasklib_test.c</in>
       </df>
+      <df name="bmarks">
+        <df name="mapreduce">
+          <in>mr.c</in>
+        </df>
+        <df name="microbench">
+          <df name="hashtable">
+            <in>hashtable.c</in>
+            <in>hashtable.h</in>
+            <in>intset.c</in>
+            <in>intset.h</in>
+            <in>test.c</in>
+          </df>
+          <df name="hashtablepgas">
+            <in>hashtable.c</in>
+            <in>hashtable.h</in>
+            <in>intset.c</in>
+            <in>intset.h</in>
+            <in>test.c</in>
+          </df>
+          <df name="linkedlist">
+            <in>harris.c</in>
+            <in>harris.h</in>
+            <in>intset.h</in>
+            <in>linkedlist.c</in>
+            <in>linkedlist.h</in>
+            <in>test.c</in>
+          </df>
+          <df name="linkedlistpgas">
+            <in>harris.c</in>
+            <in>harris.h</in>
+            <in>intset.h</in>
+            <in>linkedlist.c</in>
+            <in>linkedlist.h</in>
+            <in>test.c</in>
+          </df>
+        </df>
+        <in>bank.c</in>
+        <in>bankpgas.c</in>
+        <in>bankseq.c</in>
+        <in>mtest.c</in>
+        <in>readonly.c</in>
+      </df>
       <df name="doc">
       </df>
       <df name="include">
+        <in>bitopts.h</in>
         <in>common.h</in>
         <in>hashtable.h</in>
         <in>iRCCE.h</in>
         <in>iRCCE_lib.h</in>
         <in>log.h</in>
+        <in>measurements.h</in>
+        <in>mem.h</in>
+        <in>pgas.h</in>
         <in>pubSubTM.h</in>
         <in>rwhash.h</in>
         <in>scc_memcpy.h</in>
         <in>stm.h</in>
-        <in>task.h</in>
         <in>tm.h</in>
       </df>
       <df name="src">
-        <df name="libtask">
-          <in>386-ucontext.h</in>
-          <in>amd64-ucontext.h</in>
-          <in>asm.S</in>
-          <in>channel.c</in>
-          <in>context.c</in>
-          <in>fd.c</in>
-          <in>httpload.c</in>
-          <in>mips-ucontext.h</in>
-          <in>net.c</in>
-          <in>power-ucontext.h</in>
-          <in>primes.c</in>
-          <in>print.c</in>
-          <in>qlock.c</in>
-          <in>rendez.c</in>
-          <in>task.c</in>
-          <in>task.h</in>
-          <in>taskimpl.h</in>
-          <in>tcpproxy.c</in>
-          <in>testdelay.c</in>
-          <in>testdelay1.c</in>
-        </df>
-        <in>RCCE_barrier_nb.c</in>
+        <in>dslock.c</in>
         <in>hashtable.c</in>
         <in>iRCCE_admin.c</in>
         <in>iRCCE_get.c</in>
@@ -88,6 +113,8 @@
         <in>iRCCE_synch.c</in>
         <in>iRCCE_waitlist.c</in>
         <in>log.c</in>
+        <in>measurements.c</in>
+        <in>pgas.c</in>
         <in>pubSubTM.c</in>
         <in>rwhash.c</in>
         <in>tm.c</in>
