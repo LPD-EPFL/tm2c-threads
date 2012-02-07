@@ -203,12 +203,12 @@ extern "C" {
 
 #ifdef PGAS
 #ifdef EAGER_WRITE_ACQ
-#define TX_STORE(addr, val)                                             \
+#define TX_STORE(addr, val, datatype)                                   \
     WLOCK_ACQUIRE(addr, val);                               
     //not using a write_set in pgas
     //write_set_pgas_update(stm_tx->write_set, val, addr)
 #else
-#define TX_STORE(addr, val)                                             \
+#define TX_STORE(addr, val, datatype)                                   \
     WLOCK_ACQUIRE(addr, val);                                           \
     write_set_pgas_update(stm_tx->write_set, val, addr)
 #endif
@@ -219,7 +219,7 @@ extern "C" {
 
 
 #ifdef PGAS
-#define TX_LOAD_STORE(addr, op, value)                                  \
+#define TX_LOAD_STORE(addr, op, value, datatype)                        \
         tx_store_inc(addr, op(value));
 #else
 #define TX_LOAD_STORE(addr, op, value, datatype)                        \
@@ -356,10 +356,10 @@ retry:
 
 #ifdef PGAS
 
-    inline void tx_store_inc(unsigned int address, int value) {
+    INLINED void tx_store_inc(unsigned int address, int value) {
 #else
 
-    inline void tx_store_inc(void *address) {
+    INLINED void tx_store_inc(void *address) {
 #endif
 
         CONFLICT_TYPE conflict;
