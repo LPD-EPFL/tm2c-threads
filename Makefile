@@ -88,14 +88,24 @@ ARCHIVE_DEPS = $(ARCHIVE_SRCS:.c=.d)
 $(SRCPATH)/%.o:: $(SRCPATH)/%.c
 	$(C) $(CFLAGS) -o $@ -c $<
 
-$(DSTM_ARCHIVE): $(ARCHIVE_OBJS)
+# We do this only on iRCCE
+ifeq ($(PLATFORM),iRCCE)
+$(ARCHIVE):
+	@(cd $(RCCEPATH) ; make)
+endif
+
+$(DSTM_ARCHIVE): $(ARCHIVE) $(ARCHIVE_OBJS)
 	@echo Archive name = $(DSTM_ARCHIVE) 
 ifeq ($(PLATFORM),iRCCE)
-	@(cd $(RCCEPATH) ; make)
-	# because we somehow need to fetch rcce's .a ARCHIVE
-	mv $(ARCHIVE) $(DSTM_ARCHIVE)
+	@rm -rf .ar-lib
+	@mkdir .ar-lib
+	@(cd .ar-lib && ar x $(ARCHIVE))
+	@$(AR) cr $(DSTM_ARCHIVE) $(ARCHIVE_OBJS) .ar-lib/*.o
+	@rm -rf .ar-lib
+else
+	$(AR) cr $(DSTM_ARCHIVE) $(ARCHIVE_OBJS)
 endif
-	ar -r $(DSTM_ARCHIVE) $(ARCHIVE_OBJS)
+	ranlib $(DSTM_ARCHIVE)
 
 archive: $(DSTM_ARCHIVE)
 
@@ -166,7 +176,7 @@ benchmarks: $(ALL_BMARKS)
 
 clean_archive:
 	@echo "Cleaning archives (libraries)..."
-	rm -f $(ARCHIVE) $(ARCHIVE_OBJS)
+	rm -f $(ARCHIVE_OBJS)
 	rm -f $(DSTM_ARCHIVE)
 
 clean_apps:

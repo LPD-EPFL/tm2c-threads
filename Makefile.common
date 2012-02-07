@@ -25,4 +25,8 @@ else
 C = gcc
 endif
 
+CDEP = $(C)
+AR = ar
+LD = ld
+
 DSTM_ARCHIVE:= $(TOP)/dtm.a
