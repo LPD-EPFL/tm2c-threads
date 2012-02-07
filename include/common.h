@@ -16,18 +16,14 @@
 # endif
 #endif
 
+#ifdef PGAS
+#define EAGER_WRITE_ACQ         /*ENABLE eager write lock acquisition*/
+#endif
+
 #ifdef	__cplusplus
 extern "C" {
 #endif
 
-#define DSL
-
-#define PGAS           /*ENABLE / DISABLE PGAS*/
-#define READ_BUF_OFF
-
-#define DEBUG_UTILIZATION_
-
-#define DO_TIMINGS_      /*ENABLE / DISABLE performing measurements*/
 
 #ifdef PGAS
 #define EAGER_WRITE_ACQ         /*ENABLE eager write lock acquisition*/
@@ -37,8 +33,6 @@ extern "C" {
 #define NUM_DSL_UES     ((int) ((RCCE_num_ues() / DSLNDPERNODES)) + (RCCE_num_ues() % DSLNDPERNODES ? 1 : 0))
 #define NUM_APP_UES     (RCCE_num_ues() - NUM_DSL_UES)
     extern unsigned int NUM_DSL_NODES;
-
-#define DEBUG_
 
 #define MED printf("[%02d] ", RCCE_ue());
 #define PRINT(args...) printf("[%02d] ", RCCE_ue()); printf(args); printf("\n"); fflush(stdout)
