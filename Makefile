@@ -148,8 +148,6 @@ $(BMARKS_DIR)/%: $(BMARKS_DIR)/%.c
 	$(C) $(CFLAGS) $(LDFLAGS) -o $@ $< $(DSTM_ARCHIVE) $(LIBS)
 
 $(BMARKS_DIR)/mbll: $(filter $(BMARKS_DIR)/$(MB_LL)/%,$(BMARKS_OBJS)) $(DSTM_ARCHIVE)
-	@echo $^
-	@echo $(filter $(BMARKS_DIR)/$(MB_LL)/%,$(BMARKS_OBJS)) 
 	$(C) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(LIBS)
 
 $(BMARKS_DIR)/mbht: $(filter $(BMARKS_DIR)/$(MB_HT)/%,$(BMARKS_OBJS)) $(BMARKS_DIR)/$(MB_LL)/linkedlist.o $(DSTM_ARCHIVE)
