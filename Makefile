@@ -5,8 +5,6 @@ PLATFORM = iRCCE
 
 include Makefile.common
 
-DEPENDFILE:= .depends
-
 ## Archive ##
 ARCHIVE_SRCS_PURE:= pubSubTM.c tm.c rwhash.c log.c dslock.c \
 			measurements.c pgas.c
@@ -65,7 +63,12 @@ endif
 
 # Include the platform specific Makefile
 # This file has the modifications related to the current platform
-sinclude Makefile.$(PLATFORM)
+-include Makefile.$(PLATFORM)
+
+# dependency tracking stuff, works with gcc
+ifeq ($(C),gcc)
+EXTRA_CFLAGS = -MMD -MG
+endif
 
 LDFLAGS := $(LDFLAGS) $(PLATFORM_LDFLAGS)
 LIBS    := $(LIBS) $(PLATFORM_LIBS) -lm -lpthread
@@ -80,6 +83,7 @@ all: archive $(HELPER_APPS) applications benchmarks
 ## Archive specific stuff ##
 ARCHIVE_SRCS := $(addprefix $(SRCPATH)/, $(ARCHIVE_SRCS_PURE))
 ARCHIVE_OBJS = $(ARCHIVE_SRCS:.c=.o)
+ARCHIVE_DEPS = $(ARCHIVE_SRCS:.c=.d)
 
 $(SRCPATH)/%.o:: $(SRCPATH)/%.c
 	$(C) $(CFLAGS) -o $@ -c $<
@@ -104,6 +108,7 @@ endif
 APPS := $(addprefix $(APPS_DIR)/,$(APPS))
 APP_OBJS = $(addsuffix .o,$(APPS))
 APP_SRCS = $(addsuffix .c,$(APPS))
+APP_DEPS = $(addsuffix .d,$(APPS))
 
 $(APPS): $(DSTM_ARCHIVE) $(APP_SRCS)
 
@@ -131,9 +136,11 @@ endif
 ALL_BMARK_FILES := $(addprefix $(BMARKS_DIR)/, $(ALL_BMARK_FILES))
 BMARKS_OBJS = $(addsuffix .o,$(ALL_BMARK_FILES)) 
 BMARKS_SRCS = $(addsuffix .c,$(ALL_BMARK_FILES))
+BMARKS_DEPS = $(addsuffix .d,$(ALL_BMARK_FILES))
 
 # set the proper directory
 ALL_BMARKS := $(addprefix $(BMARKS_DIR)/, $(ALL_BMARKS))
+BMARKS_DEPS += $(addsuffix .d,$(ALL_BMARKS))
 
 $(ALL_BMARKS): $(DSTM_ARCHIVE)
 
@@ -157,7 +164,7 @@ $(BMARKS_DIR)/mbhtpgas: $(filter $(BMARKS_DIR)/$(MB_HTPGAS)/%,$(BMARKS_OBJS)) $(
 $(BMARKS_DIR)/mr: $(filter $(BMARKS_DIR)/$(MR)/%,$(BMARKS_OBJS)) $(DSTM_ARCHIVE)
 	$(C) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(LIBS)
 
-benchmarks: $(DSTM_ARCHIVE) $(ALL_BMARKS)
+benchmarks: $(ALL_BMARKS)
 
 clean_archive:
 	@echo "Cleaning archives (libraries)..."
@@ -177,13 +184,20 @@ clean_bmarks:
 	rm -rf $(addsuffix .dSYM, $(ALL_BMARKS))
 
 clean: clean_archive clean_apps clean_bmarks
-	rm -f $(DEPENDFILE)
 
-.PHONY: clean clean_bmarks clean_apps clean_archive
-# depend: $(ARCHIVE_SRCS) $(DEPENDFILE)
+realclean: clean
+	rm -f $(ARCHIVE_DEPS)
+	rm -f $(APP_DEPS)
+	rm -f $(BMARKS_DEPS)
 
-# $(DEPENDFILE):
-# 	$(C) -MM $(CFLAGS) $(SRCPATH)/*.c >$(DEPENDFILE)
+.PHONY: clean clean_bmarks clean_apps clean_archive realclean
 
-# sinclude $(DEPENDFILE)
+ifeq ($(C),gcc)
+depend: $(ARCHIVE_DEPS) $(APP_DEPS) $(BMARKS_DEPS)
 
+ifeq (,$(filter %clean,$(MAKECMDGOALS)))
+-include $(ARCHIVE_DEPS)
+-include $(APP_DEPS)
+-include $(BMARKS_DEPS)
+endif
+endif
