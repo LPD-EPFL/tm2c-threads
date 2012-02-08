@@ -66,9 +66,7 @@ endif
 -include Makefile.$(PLATFORM)
 
 # dependency tracking stuff, works with gcc
-ifeq ($(C),gcc)
 EXTRA_CFLAGS = -MMD -MG
-endif
 
 LDFLAGS := $(LDFLAGS) $(PLATFORM_LDFLAGS)
 LIBS    := $(LIBS) $(PLATFORM_LIBS) -lm -lpthread
@@ -200,12 +198,10 @@ realclean: clean
 
 .PHONY: clean clean_bmarks clean_apps clean_archive realclean
 
-ifeq ($(C),gcc)
 depend: $(ARCHIVE_DEPS) $(APP_DEPS) $(BMARKS_DEPS)
 
 ifeq (,$(filter %clean,$(MAKECMDGOALS)))
 -include $(ARCHIVE_DEPS)
 -include $(APP_DEPS)
 -include $(BMARKS_DEPS)
-endif
 endif
