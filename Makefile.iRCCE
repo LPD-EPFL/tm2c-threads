@@ -24,7 +24,6 @@ iRCCE_SRCS +=iRCCE_isend.c iRCCE_irecv.c iRCCE_isend32.c iRCCE_irecv32.c \
 ARCHIVE_SRCS_PURE += $(addprefix iRCCE/, $(iRCCE_SRCS))
 
 INCLUDES += -I$(RCCEPATH)
-DEFINES  += $(PLATFORM_DEFINES)
 
 $(SRCPATH)/iRCCE/%.o:: $(SRCPATH)/iRCCE/%.c
 	$(C) $(CFLAGS) $(RCCE_FLAGS) -o $@ -c $<
