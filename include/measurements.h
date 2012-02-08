@@ -3,11 +3,11 @@
 
 #include "common.h"
 
-#ifndef INLINED
+#ifndef EXINLINED
 #if __GNUC__ && !__GNUC_STDC_INLINE__
-#define INLINED extern inline
+#define EXINLINED extern inline
 #else
-#define INLINED inline
+#define EXINLINED inline
 #endif
 #endif
 
@@ -46,11 +46,11 @@ extern "C" {
     // =============================== GETTIMEOFDAY ================================ {{{
 #ifdef DO_TIMINGS_STD
 #define ENTRY_TIMES_SIZE 8
-    INLINED struct timeval entry_time[ENTRY_TIMES_SIZE];
-    INLINED bool entry_time_valid[ENTRY_TIMES_SIZE];
-    INLINED long long total_sum_sec[ENTRY_TIMES_SIZE];
-    INLINED long long total_sum_usec[ENTRY_TIMES_SIZE];
-    INLINED long long total_samples[ENTRY_TIMES_SIZE];
+    EXINLINED struct timeval entry_time[ENTRY_TIMES_SIZE];
+    EXINLINED bool entry_time_valid[ENTRY_TIMES_SIZE];
+    EXINLINED long long total_sum_sec[ENTRY_TIMES_SIZE];
+    EXINLINED long long total_sum_usec[ENTRY_TIMES_SIZE];
+    EXINLINED long long total_samples[ENTRY_TIMES_SIZE];
 
 #define ENTRY_TIME ENTRY_TIME_POS(0)
 #define EXIT_TIME EXIT_TIME_POS(0)
@@ -100,7 +100,7 @@ do {\
 #include <stdint.h>
     typedef uint64_t ticks;
 
-    INLINED ticks getticks(void) {
+    EXINLINED ticks getticks(void) {
         ticks ret;
 
         __asm__ __volatile__("rdtsc" : "=A" (ret));
@@ -189,7 +189,7 @@ while (0);
 
 #define trunc
 
-    INLINED void prints_ticks_stats(int start, int end) {
+    EXINLINED void prints_ticks_stats(int start, int end) {
         int i, mpoints = 0;
         unsigned long long tsamples = 0;
         ticks tticks = 0;

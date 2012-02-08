@@ -1,4 +1,4 @@
-#define INLINED
+#define EXINLINED
 #include "measurements.h"
 
 #ifdef DO_TIMINGS
