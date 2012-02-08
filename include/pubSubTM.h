@@ -16,12 +16,6 @@
 #include "common.h"
 #include "stm.h"
 
-#ifdef OLDHASH
-#include "hashtable.h"
-#else
-#include "rwhash.h"
-#endif
-
 #ifdef	__cplusplus
 extern "C" {
 #endif

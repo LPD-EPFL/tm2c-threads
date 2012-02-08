@@ -12,6 +12,8 @@
 #include <unistd.h>
 #include <math.h>
 
+#include "ps_hashtable.h"
+
 #define SENDLIST
 
 iRCCE_WAIT_LIST waitlist;

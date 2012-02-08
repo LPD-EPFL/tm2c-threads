@@ -6,7 +6,7 @@ PLATFORM = iRCCE
 include Makefile.common
 
 ## Archive ##
-ARCHIVE_SRCS_PURE:= pubSubTM.c tm.c rwhash.c log.c dslock.c \
+ARCHIVE_SRCS_PURE:= pubSubTM.c tm.c log.c dslock.c \
 			measurements.c pgas.c
 
 ## Apps ##
@@ -67,6 +67,8 @@ endif
 
 # dependency tracking stuff, works with gcc
 EXTRA_CFLAGS = -MMD -MG
+
+EXTRA_CFLAGS += -DUSE_HASHTABLE_VTHASH
 
 LDFLAGS := $(LDFLAGS) $(PLATFORM_LDFLAGS)
 LIBS    := $(LIBS) $(PLATFORM_LIBS) -lm -lpthread
