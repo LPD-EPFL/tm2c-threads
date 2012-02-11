@@ -3,7 +3,20 @@
 # For platform, choose one out of: iRCCE,MCORE,CLUSTER
 PLATFORM = iRCCE
 
-include Makefile.common
+TOP := $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST))))
+
+SRCPATH := $(TOP)/src
+MAININCLUDE := $(TOP)/include
+
+INCLUDES := -I$(MAININCLUDE) -I$(TOP)/external/include
+LIBS := -L$(TOP)/external/lib \
+		-lm \
+		$(PLATFORM_LIBS)
+
+# EXTRA_DEFINES are passed through the command line
+DEFINES := $(PLATFORM_DEFINES) $(EXTRA_DEFINES)
+
+DEBUG_FLAGS := #-O0 -g -ggdb #-DDEBUG 
 
 ## Archive ##
 ARCHIVE_SRCS_PURE:= pubSubTM.c tm.c log.c dslock.c \
@@ -64,6 +77,42 @@ endif
 # Include the platform specific Makefile
 # This file has the modifications related to the current platform
 -include Makefile.$(PLATFORM)
+
+# define the compiler now, if platform makefile exported something through
+# CCOMPILE
+ifneq (,$(CCOMPILE))
+C := $(CCOMPILE)
+else
+C := gcc
+endif
+
+CDEP := $(C)
+AR := ar
+LD := ld
+
+DSTM_ARCHIVE:= $(TOP)/dtm.a
+
+### Pretty output control ###
+# Set up compiler and linker commands that either is quiet (does not print 
+# the command line being executed) or verbose (print the command line). 
+_C := $(C)
+_CDEP := $(CDEP)
+_LD := $(LD)
+_AR := $(AR)
+
+ifeq ($(V),1)
+ override V_PREFIX :=
+ override C = $(_C)
+ override LD = $(_LD)
+ override CDEP = $(_CDEP)
+ override AR = $(_AR)
+else
+ override V_PREFIX := @
+ override C = @echo -e     "\tCOMPILE         $<"; $(_C)
+ override LD = @echo -e    "\tLINKING         $@"; $(_LD)
+ override CDEP = @echo -e  "\tDEPGEN          $@"; $(_CDEP)
+ override AR = @echo -e    "\tARCHIVE         $@ ($^)"; $(_AR)
+endif
 
 # dependency tracking stuff, works with gcc
 EXTRA_CFLAGS = -MMD -MG
