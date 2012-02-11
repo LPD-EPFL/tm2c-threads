@@ -244,6 +244,7 @@ ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId, int address, R
 		el->rw_entry = rw_entry;
 		HASH_ADD_INT((*ps_hashtable), address, el);
 	}
+	return NO_CONFLICT;
 }
 
 INLINED void
