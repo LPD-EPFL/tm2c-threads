@@ -203,6 +203,9 @@ BMARKS_DEPS += $(addsuffix .d,$(ALL_BMARKS))
 
 $(ALL_BMARKS): $(DSTM_ARCHIVE)
 
+$(BMARKS_DIR)/%.o:: $(BMARKS_DIR)/%.c
+	$(C) $(CFLAGS) -o $@ -c $<
+
 $(BMARKS_DIR)/%: $(BMARKS_DIR)/%.c
 	$(C) $(CFLAGS) $(LDFLAGS) -o $@ $< $(DSTM_ARCHIVE) $(LIBS)
 
