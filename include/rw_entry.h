@@ -120,6 +120,7 @@ INLINED rw_entry_t* rw_entry_new();
 
 INLINED CONFLICT_TYPE rw_entry_is_conflicting(rw_entry_t* rw_entry, nodeid_t nodeId, RW rw);
 
+INLINED void rw_entry_print_readers(rw_entry_t *rwe);
 
 /*___________________________________________________________________________________________________
  * Implementation
@@ -239,6 +240,28 @@ rw_entry_is_conflicting(rw_entry_t* rw_entry, nodeid_t nodeId, RW rw)
         	return NO_CONFLICT;
         }
     }
+}
+
+INLINED void 
+rw_entry_print_readers(rw_entry_t *rwe) 
+{
+    union {
+        unsigned long long int lli;
+        unsigned int i[2];
+    } convert;
+
+    convert.i[0] = rwe->ints[0];
+    convert.i[1] = rwe->shorts[2];
+    int i;
+    for (i = 0; i < 48; i++) {
+        if (convert.lli & 0x01) {
+            PRINTS("%d -> ", i);
+        }
+        convert.lli >>= 1;
+    }
+
+    PRINTS("NULL\n");
+    FLUSH;
 }
 
 #ifdef	__cplusplus
