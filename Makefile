@@ -11,6 +11,7 @@ MAININCLUDE := $(TOP)/include
 INCLUDES := -I$(MAININCLUDE) -I$(TOP)/external/include
 LIBS := -L$(TOP)/external/lib \
 		-lm \
+		-lconfig \
 		$(PLATFORM_LIBS)
 
 # EXTRA_DEFINES are passed through the command line
@@ -20,7 +21,7 @@ DEBUG_FLAGS := #-O0 -g -ggdb #-DDEBUG
 
 ## Archive ##
 ARCHIVE_SRCS_PURE:= pubSubTM.c tm.c log.c dslock.c \
-			measurements.c pgas.c
+			measurements.c pgas.c config.c
 
 ## Apps ##
 APPS_DIR := apps

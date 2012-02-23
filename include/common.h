@@ -102,6 +102,11 @@ extern "C" {
 #define BARRIER RCCE_barrier(&RCCE_COMM_APP);
 #define BARRIERW RCCE_barrier(&RCCE_COMM_WORLD);
 
+// configuration...
+#include <libconfig.h>
+extern config_t *the_config;
+void init_configuration(int*argc, char**argv[]);
+
 #ifdef	__cplusplus
 }
 #endif
