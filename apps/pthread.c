@@ -170,7 +170,7 @@ iRCCE_SEND_REQUEST send(int core) {
     PRINTD("alloc - %p", g);
 */
     sprintf(data, "%c%p", oper, g);
-    RCCE_shfree(g);
+    sys_shfree(g);
 
     /* Issue send. */
     iRCCE_isend(data, 32, target, &s);

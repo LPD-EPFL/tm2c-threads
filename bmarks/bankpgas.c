@@ -293,8 +293,8 @@ notrun:
 TASKMAIN(int argc, char **argv) {
     dup2(STDOUT_FILENO, STDERR_FILENO);
 
-    RCCE_init(&argc, &argv);
-    iRCCE_init();
+    init_configuration(&argc, &argv);
+    init_system(&argc, &argv);
 
     struct option long_options[] = {
         // These options don't set a flag

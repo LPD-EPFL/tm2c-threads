@@ -33,12 +33,12 @@ int main(int argc, char **argv) {
     if (RCCE_ue() % 2 == 1) {
 
         if (!shmem_start_address) {
-            char *start = (char *) RCCE_shmalloc(sizeof (char));
+            char *start = (char *) sys_shmalloc(sizeof (char));
             if (start == NULL) {
                 PRINTD("shmalloc shmem_init_start_address");
             }
             shmem_start_address = (unsigned int) start;
-            RCCE_shfree((volatile unsigned char *) start);
+            sys_shfree((volatile unsigned char *) start);
         }
 
 
@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
             exit(1);
         }
 
-        bank->accounts = (account_t *) RCCE_shmalloc(NBACC * sizeof (account_t));
+        bank->accounts = (account_t *) sys_shmalloc(NBACC * sizeof (account_t));
         if (bank->accounts == NULL) {
             PRINTD("bank->accounts null");
             exit(1);
@@ -132,7 +132,7 @@ int main(int argc, char **argv) {
 
         BARRIER
 
-        RCCE_shfree((t_vcharp) bank->accounts);
+        sys_shfree((t_vcharp) bank->accounts);
         free(bank);
     }
     else {

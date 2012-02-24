@@ -29,7 +29,7 @@ MAIN(int argc, char **argv) {
         steps = atoi(argv[1]);
     }
 
-    int *sm = (int *) RCCE_shmalloc(steps * sizeof (int));
+    int *sm = (int *) sys_shmalloc(steps * sizeof (int));
 
     BARRIER
     if (argc < 3) { //ONLY 1 cores sending messages

@@ -12,7 +12,7 @@ MAIN(int argc, char **argv) {
     int ID = RCCE_ue();
     int NUM_UES = RCCE_num_ues();
     
-    int *sis = (int *) RCCE_shmalloc(S * sizeof(int));
+    int *sis = (int *) sys_shmalloc(S * sizeof(int));
     int *pis = (int *) malloc(S * sizeof(int));
     if (sis == NULL || pis == NULL) {
         PRINTD("sis || pis == NULL");

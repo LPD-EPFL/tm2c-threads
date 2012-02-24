@@ -109,9 +109,9 @@ MAIN(int argc, char** argv) {
     udelay(rand_range(11 * (ID + 1)));
     srand_core();
 
-    int *memory = (int *) RCCE_shmalloc(memsize * sizeof (int));
+    int *memory = (int *) sys_shmalloc(memsize * sizeof (int));
     if (memory == NULL) {
-        PRINT("RCCE_shmalloc memory @ main");
+        PRINT("sys_shmalloc memory @ main");
     }
 
     ONCE
@@ -242,7 +242,7 @@ void run_uniq(int* memory) {
 }
 
 void run_check_granularity() {
-    char *cp = (char *) RCCE_shmalloc(100);
+    char *cp = (char *) sys_shmalloc(100);
 
     int i = 10;
     while (i--) {

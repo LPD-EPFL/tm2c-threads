@@ -13,7 +13,7 @@
 nxt_t offs__;
 
 void *shmem_init(size_t offset) {
-    return (void *) (RCCE_shmalloc(offset) + offset);
+    return (void *) (sys_shmalloc(offset) + offset);
 }
 
 node_t *new_node(val_t val, nxt_t next, int transactional) {
@@ -23,7 +23,7 @@ node_t *new_node(val_t val, nxt_t next, int transactional) {
         node = (node_t *) TX_SHMALLOC(sizeof (node_t));
     }
     else {
-        node = (node_t *) RCCE_shmalloc(sizeof (node_t));
+        node = (node_t *) sys_shmalloc(sizeof (node_t));
     }
     if (node == NULL) {
         perror("malloc");
@@ -40,7 +40,7 @@ intset_t *set_new() {
     intset_t *set;
     node_t *min, *max;
 
-    if ((set = (intset_t *) RCCE_shmalloc(sizeof (intset_t))) == NULL) {
+    if ((set = (intset_t *) sys_shmalloc(sizeof (intset_t))) == NULL) {
         perror("malloc");
         EXIT(1);
     }
@@ -56,10 +56,10 @@ void set_delete(intset_t *set) {
     node = ND(set->head);
     while (node != NULL) {
         next = ND(node->next);
-        RCCE_shfree((t_vcharp) node);
+        sys_shfree((t_vcharp) node);
         node = next;
     }
-    RCCE_shfree((t_vcharp) set);
+    sys_shfree((t_vcharp) set);
 }
 
 int set_size(intset_t *set) {
@@ -357,7 +357,7 @@ int set_remove(intset_t *set, val_t val, int transactional) {
     result = (next->val == val);
     if (result) {
         prev->next = next->next;
-        RCCE_shfree((t_vcharp) next);
+        sys_shfree((t_vcharp) next);
     }
 
 #ifdef LOCKS

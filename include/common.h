@@ -107,6 +107,8 @@ extern "C" {
 extern config_t *the_config;
 void init_configuration(int*argc, char**argv[]);
 
+#include "tm_sys.h"
+
 #ifdef	__cplusplus
 }
 #endif

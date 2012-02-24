@@ -14,9 +14,9 @@ MAIN(int argc, char **argv) {
 
     TM_INIT
 
-            int *sis = (int *) RCCE_shmalloc(SIS_SIZE * sizeof (int));
+            int *sis = (int *) sys_shmalloc(SIS_SIZE * sizeof (int));
     if (sis == NULL) {
-        PRINTD("RCCE_shmalloc");
+        PRINTD("sys_shmalloc");
         EXIT(-1);
     }
 

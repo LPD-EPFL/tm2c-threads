@@ -25,7 +25,7 @@ MAIN(int argc, char **argv) {
     long long int i = 1;
 
 
-    void *shmp = (void *) RCCE_shmalloc(1);
+    void *shmp = (void *) sys_shmalloc(1);
     if (shmp == NULL) {
         PRINTD("got null");
         taskexit(-1);

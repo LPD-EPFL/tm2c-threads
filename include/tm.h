@@ -90,8 +90,8 @@ extern "C" {
 
 
 #define TM_INIT                                                         \
-    RCCE_init(&argc, &argv);                                            \
-    iRCCE_init();                                                       \
+    init_configuration(&argc, &argv);                                   \
+    init_system(&argc, &argv);                                          \
     {                                                                   \
         ID = RCCE_ue();                                                 \
         NUM_UES = RCCE_num_ues();                                       \
@@ -191,6 +191,9 @@ extern "C" {
     tx_metadata_node_print(stm_tx_node);                                \
     free(stm_tx_node); }                                  
 
+#define TM_TERM                                                         \
+    /*tm_term();*/                                                      \
+    term_system();
 
 #ifdef PGAS
 #define TX_LOAD(addr)                                                   \

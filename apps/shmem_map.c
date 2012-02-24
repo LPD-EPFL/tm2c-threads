@@ -10,7 +10,7 @@ void taskmain(int argc, char **argv) {
     unsigned short int ID = RCCE_ue();
     unsigned short int NUM_UES = RCCE_num_ues();
     
-    int *is = (int *) RCCE_shmalloc(MEMSIZE * sizeof(int));
+    int *is = (int *) sys_shmalloc(MEMSIZE * sizeof(int));
     if (is == NULL) {
         PRINTD("alloc xx");
         EXIT(-1);

@@ -42,9 +42,9 @@ MAIN(int argc, char **argv) {
         SIS_SIZE = atoi(argv[1]);
     }
 
-    int *sis = (int *) RCCE_shmalloc(SIS_SIZE * sizeof (int));
+    int *sis = (int *) sys_shmalloc(SIS_SIZE * sizeof (int));
     if (sis == NULL) {
-        PRINT("RCCE_shmalloc");
+        PRINT("sys_shmalloc");
         EXIT(-1);
     }
 
@@ -86,7 +86,7 @@ MAIN(int argc, char **argv) {
 
     PF_PRINT
 
-    RCCE_shfree((t_vcharp) sis);
+    sys_shfree((t_vcharp) sis);
 
     TM_END
 

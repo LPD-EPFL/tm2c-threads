@@ -204,9 +204,9 @@ bank_t * test(void *data, double duration, int nb_accounts) {
     }
 
 #ifdef MC
-    bank->accounts = (account_t *) RCCE_shmalloc(64 * 1024 * 1024);
+    bank->accounts = (account_t *) sys_shmalloc(64 * 1024 * 1024);
 #else
-    bank->accounts = (account_t *) RCCE_shmalloc(nb_accounts * sizeof (account_t));
+    bank->accounts = (account_t *) sys_shmalloc(nb_accounts * sizeof (account_t));
 #endif
 
     if (bank->accounts == NULL) {
@@ -300,8 +300,8 @@ bank_t * test(void *data, double duration, int nb_accounts) {
 TASKMAIN(int argc, char **argv) {
     dup2(STDOUT_FILENO, STDERR_FILENO);
 
-    RCCE_init(&argc, &argv);
-    iRCCE_init();
+    init_configuration(&argc, &argv);
+    init_system(&argc, &argv);
 
     struct option long_options[] = {
         // These options don't set a flag
@@ -471,7 +471,7 @@ TASKMAIN(int argc, char **argv) {
 
     /* Delete bank and accounts */
 
-    RCCE_shfree((volatile unsigned char *) bank->accounts);
+    sys_shfree((volatile unsigned char *) bank->accounts);
     free(bank);
 
     free(data);

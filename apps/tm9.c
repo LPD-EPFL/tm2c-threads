@@ -23,7 +23,7 @@ MAIN(int argc, char **argv) {
         PRINT("Repetitions %d", reps);
     }
     
-    int *j = (int *) RCCE_shmalloc(reps);
+    int *j = (int *) sys_shmalloc(reps);
 
     BARRIER
     

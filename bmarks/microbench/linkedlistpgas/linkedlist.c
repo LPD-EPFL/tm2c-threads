@@ -11,7 +11,7 @@
 #include "linkedlist.h"
 
 void *shmem_init(size_t offset) {
-    return (void *) (RCCE_shmalloc(offset) + offset);
+    return (void *) (sys_shmalloc(offset) + offset);
 }
 
 new_node_t new_node(val_t val, nxt_t next, int transactional) {

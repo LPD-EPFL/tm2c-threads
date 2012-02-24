@@ -127,10 +127,10 @@ MAIN(int argc, char** argv) {
         EXIT(1);
     }
 
-    int *chunk_index = (int *) RCCE_shmalloc(sizeof (int));
-    int *stats = (int *) RCCE_shmalloc(sizeof (int) * 27);
+    int *chunk_index = (int *) sys_shmalloc(sizeof (int));
+    int *stats = (int *) sys_shmalloc(sizeof (int) * 27);
     if (chunk_index == NULL || stats == NULL) {
-        PRINT("RCCE_shmalloc memory @ main");
+        PRINT("sys_shmalloc memory @ main");
         EXIT(1);
     }
 

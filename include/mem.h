@@ -97,9 +97,9 @@ extern "C" {
             PRINT("malloc @ stm_shmalloc");
             EXIT(1);
         }
-        if ((mb->addr = (void *) RCCE_shmalloc(size)) == NULL) {
+        if ((mb->addr = (void *) sys_shmalloc(size)) == NULL) {
             free(mb);
-            PRINT("RCCE_shmalloc @ stm_shmalloc");
+            PRINT("sys_shmalloc @ stm_shmalloc");
             EXIT(1);
         }
         mb->next = stm_mem_info->allocated_shmem;
@@ -219,7 +219,7 @@ extern "C" {
             mb = stm_mem_info->freed_shmem;
             while (mb != NULL) {
                 next = mb->next;
-                RCCE_shfree((t_vcharp) mb->addr);
+                sys_shfree((t_vcharp) mb->addr);
                 free(mb);
                 mb = next;
             }
@@ -250,7 +250,7 @@ extern "C" {
             mb = stm_mem_info->allocated_shmem;
             while (mb != NULL) {
                 next = mb->next;
-                RCCE_shfree((t_vcharp) mb->addr);
+                sys_shfree((t_vcharp) mb->addr);
                 free(mb);
                 mb = next;
             }
