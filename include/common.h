@@ -86,6 +86,8 @@ extern "C" {
 
     extern unsigned int ID; //=RCCE_ue()
     extern unsigned int NUM_UES;
+    
+    typedef unsigned int nodeid_t;
 
 #include "iRCCE.h"
 #include <stdlib.h>
