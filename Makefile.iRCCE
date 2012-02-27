@@ -1,5 +1,5 @@
-RCCEPATH=/opt/src/RCCE_src/rcce
-SYMBOLSPATH=/opt/src/RCCE_src/rcce/common/symbols
+RCCEPATH=/home/knl/work/DSTM/rcce
+SYMBOLSPATH=/home/knl/work/DSTM/rcce/common/symbols
 
 API          := nongory
 
@@ -9,7 +9,7 @@ PLATFORM_CFLAGS =
 PLATFORM_LDFLAGS =
 PLATFORM_LIBS = 
 PLATFORM_DEFINES = -DDSL \
-                   -UPGAS \
+                   -DPGAS \
                    -DREAD_BUF_OFF \
                    -UDEBUG_UTILIZATION \
                    -UDO_TIMINGS \
