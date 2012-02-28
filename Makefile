@@ -118,7 +118,7 @@ endif
 # dependency tracking stuff, works with gcc
 EXTRA_CFLAGS = -MMD -MG
 
-EXTRA_CFLAGS += -DUSE_HASHTABLE_VT
+EXTRA_CFLAGS += -DUSE_HASHTABLE_VTHASH
 
 LDFLAGS := $(LDFLAGS) $(PLATFORM_LDFLAGS)
 LIBS    := $(LIBS) $(PLATFORM_LIBS) -lm -lpthread
