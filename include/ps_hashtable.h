@@ -302,9 +302,9 @@ ps_hashtable_print(ps_hashtable_t ps_hashtable)
 
 	for (el = (*ps_hashtable); el != NULL; el = el->hh.next) {
 		rw_entry_t* entry = el->rw_entry;
-        PRINTS(" [%-3d]: Write: %-3d\n   ", el->address, entry->shorts[3]);
+		PRINTS(" [%-3d]: Write: %-3d\n   ", el->address, entry->shorts[3]);
 
-        rw_entry_print_readers(entry);
+		rw_entry_print_readers(entry);
 	}
 }
 
