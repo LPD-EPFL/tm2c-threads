@@ -3,6 +3,10 @@
 # For platform, choose one out of: iRCCE,MCORE,CLUSTER
 PLATFORM = iRCCE
 
+.PHONY: all 
+
+all:
+
 TOP := $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST))))
 
 SRCPATH := $(TOP)/src
