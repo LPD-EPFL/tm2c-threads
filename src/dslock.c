@@ -282,14 +282,12 @@ static inline void ps_send(unsigned short int target, PS_COMMAND_TYPE command, u
 
 static inline CONFLICT_TYPE try_subscribe(int nodeId, int shmem_address) {
 
-    ps_hashtable_insert(ps_hashtable, nodeId, shmem_address, READ);
-    return ps_conflict_type;
+    return ps_hashtable_insert(ps_hashtable, nodeId, shmem_address, READ);;
 }
 
 static inline CONFLICT_TYPE try_publish(int nodeId, int shmem_address) {
 
-    ps_hashtable_insert(ps_hashtable, nodeId, shmem_address, WRITE);
-    return ps_conflict_type;
+    return ps_hashtable_insert(ps_hashtable, nodeId, shmem_address, WRITE);;
 }
 
 static inline void unsubscribe(int nodeId, int shmem_address) {
