@@ -123,7 +123,7 @@ EXTRA_CFLAGS = -MMD -MG
 EXTRA_CFLAGS += -DUSE_HASHTABLE_VTHASH
 
 LDFLAGS := $(LDFLAGS) $(PLATFORM_LDFLAGS)
-LIBS    := $(LIBS) $(PLATFORM_LIBS) -lm -lpthread
+LIBS    := $(LIBS) $(PLATFORM_LIBS)
 CFLAGS  := $(CFLAGS) $(DEFINES) $(PLATFORM_DEFINES) \
 		   $(PLATFORM_CFLAGS) \
 		   $(DEBUG_FLAGS) $(INCLUDES) $(EXTRA_CFLAGS)
@@ -173,6 +173,10 @@ APP_SRCS = $(addsuffix .c,$(APPS))
 APP_DEPS = $(addsuffix .d,$(APPS))
 
 $(APPS): $(DSTM_ARCHIVE) $(APP_SRCS)
+
+# an exception
+$(APPS_DIR)/pthread: $(APPS_DIR)/pthread.c
+	$(C) $(CFLAGS) $(LDFLAGS) -o $@ $< $(DSTM_ARCHIVE) $(LIBS) -lpthread
 
 $(APPS_DIR)/%: $(APPS_DIR)/%.c
 	$(C) $(CFLAGS) $(LDFLAGS) -o $@ $< $(DSTM_ARCHIVE) $(LIBS)
