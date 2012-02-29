@@ -20,6 +20,6 @@ void term_system();
 
 typedef volatile unsigned char* sys_t_vcharp;
 sys_t_vcharp sys_shmalloc(size_t);
-int sys_shfree(sys_t_vcharp);
+void sys_shfree(sys_t_vcharp);
 
 #endif

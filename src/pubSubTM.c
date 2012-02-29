@@ -51,7 +51,8 @@ void ps_init_(void) {
     }
     shmem_init_start_address();
 
-    int j, dsln = 0;
+    int dsln = 0;
+    unsigned int j;
     for (j = 0; j < NUM_UES; j++) {
         nodes_contacted[j] = 0;
         if (j % DSLNDPERNODES == 0) {

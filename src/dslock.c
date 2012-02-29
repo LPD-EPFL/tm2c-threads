@@ -39,7 +39,7 @@ PS_COMMAND *ps_command, *ps_remote, *psc;
 write_set_pgas_t **PGAS_write_sets;
 #endif
 
-unsigned int stats_total = 0, stats_commits = 0, stats_aborts = 0, stats_max_retries = 0, stats_aborts_war = 0,
+unsigned long int stats_total = 0, stats_commits = 0, stats_aborts = 0, stats_max_retries = 0, stats_aborts_war = 0,
         stats_aborts_raw = 0, stats_aborts_waw = 0, stats_received = 0;
 double stats_duration = 0;
 
@@ -70,8 +70,6 @@ void dsl_init(void) {
         PRINTD("malloc ps_command == NULL || ps_remote == NULL || psc == NULL || buf == NULL");
     }
 
-    int i;
-
 #ifdef PGAS
     PGAS_init();
 
@@ -81,10 +79,11 @@ void dsl_init(void) {
         EXIT(-1);
     }
 
-    for (i = 0; i < NUM_UES; i++) {
-        if (i % DSLNDPERNODES) { /*only for non DSL cores*/
-            PGAS_write_sets[i] = write_set_pgas_new();
-            if (PGAS_write_sets[i] == NULL) {
+    unsigned int j;
+    for (j = 0; j < NUM_UES; j++) {
+        if (j % DSLNDPERNODES) { /*only for non DSL cores*/
+            PGAS_write_sets[j] = write_set_pgas_new();
+            if (PGAS_write_sets[j] == NULL) {
                 PRINT("malloc PGAS_write_sets[i] == NULL");
                 EXIT(-1);
             }
@@ -106,6 +105,7 @@ void dsl_init(void) {
     }
 
     // Create recv request for each possible (other) core.
+    unsigned int i;
     for (i = 0; i < NUM_UES; i++) {
         if (i % DSLNDPERNODES) { /*only for non DSL cores*/
             iRCCE_irecv(buf + i * PS_BUFFER_SIZE, PS_BUFFER_SIZE, i, &recv_requests[i]);
@@ -321,7 +321,8 @@ static void print_global_stats() {
     stats_aborts_waw /= stats_duration;
     stats_commits /= stats_duration;
     stats_total /= stats_duration;
-    int stats_commits_total = stats_commits;
+
+    unsigned long int stats_commits_total = stats_commits;
 
     printf(":: PER SECOND TOTAL AVG --------------------------------------\n");
     printf("TA| Starts      \t: %lu\t/s\n", stats_total);

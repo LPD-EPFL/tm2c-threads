@@ -14,15 +14,14 @@ term_system()
 	// noop
 }
 
-sys_t_vcharp 
+sys_t_vcharp
 sys_shmalloc(size_t size)
 {
 	return RCCE_shmalloc(size);
 }
 
-int
+void
 sys_shfree(sys_t_vcharp ptr)
 {
 	RCCE_shfree(ptr);
 }
-

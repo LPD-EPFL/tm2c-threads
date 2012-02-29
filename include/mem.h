@@ -128,7 +128,7 @@ extern "C" {
     /*
      * Called by the CURRENT thread to free memory within a transaction.
      */
-    INLINED void stm_shfree(mem_info_t *stm_mem_info, t_vcharp addr) {
+    INLINED void stm_shfree(mem_info_t *stm_mem_info, sys_t_vcharp addr) {
         /* Memory disposal is delayed until commit */
         mem_block_t *mb; 
 
@@ -219,7 +219,7 @@ extern "C" {
             mb = stm_mem_info->freed_shmem;
             while (mb != NULL) {
                 next = mb->next;
-                sys_shfree((t_vcharp) mb->addr);
+                sys_shfree((sys_t_vcharp) mb->addr);
                 free(mb);
                 mb = next;
             }
@@ -250,7 +250,7 @@ extern "C" {
             mb = stm_mem_info->allocated_shmem;
             while (mb != NULL) {
                 next = mb->next;
-                sys_shfree((t_vcharp) mb->addr);
+                sys_shfree((sys_t_vcharp) mb->addr);
                 free(mb);
                 mb = next;
             }
