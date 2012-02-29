@@ -136,6 +136,7 @@ ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId, int address, R
         k = kh_put(rw_entry_address, ps_hashtable, address, &ret);
         kh_value(ps_hashtable, k) = rw_entry;
 	}
+	return NO_CONFLICT;
 }
 
 INLINED void
