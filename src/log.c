@@ -124,7 +124,7 @@ inline void write_set_insert(write_set_t *write_set, DATATYPE datatype, void *va
 }
 
 inline void write_set_update(write_set_t *write_set, DATATYPE datatype, void *value, void *address_shmem) {
-    int i;
+    unsigned int i;
     for (i = 0; i < write_set->nb_entries; i++) {
         if (write_set->write_entries[i].address_shmem == address_shmem) {
             write_entry_set_value(&write_set->write_entries[i], value);
@@ -229,7 +229,7 @@ inline void write_entry_print(write_entry_t *we) {
 
 inline void write_set_print(write_set_t *write_set) {
     PRINTSME("WRITE SET (elements: %d, size: %d) --------------\n", write_set->nb_entries, write_set->size);
-    int i;
+    unsigned int i;
     for (i = 0; i < write_set->nb_entries; i++) {
         write_entry_print(&write_set->write_entries[i]);
     }
@@ -237,15 +237,15 @@ inline void write_set_print(write_set_t *write_set) {
 }
 
 inline void write_set_persist(write_set_t *write_set) {
-    int i;
+    unsigned int i;
     for (i = 0; i < write_set->nb_entries; i++) {
         write_entry_persist(&write_set->write_entries[i]);
     }
 }
 
 inline write_entry_t * write_set_contains(write_set_t *write_set, void *address_shmem) {
-    int i;
-    for (i = write_set->nb_entries - 1; i >= 0; i--) {
+    unsigned int i;
+    for (i = write_set->nb_entries; i-- > 0; ) {
         if (write_set->write_entries[i].address_shmem == address_shmem) {
             return &write_set->write_entries[i];
         }
@@ -343,7 +343,7 @@ inline BOOLEAN read_set_update(read_set_t *read_set, DATATYPE datatype, void *ad
 
 inline BOOLEAN read_set_update(read_set_t *read_set, void *address_shmem) {
 #endif
-    int i;
+    unsigned int i;
     for (i = 0; i < read_set->nb_entries; i++) {
         if (read_set->read_entries[i].address_shmem == address_shmem) {
             return TRUE;
@@ -358,8 +358,8 @@ inline BOOLEAN read_set_update(read_set_t *read_set, void *address_shmem) {
 }
 
 inline read_entry_l_t * read_set_contains(read_set_t *read_set, void *address_shmem) {
-    int i;
-    for (i = read_set->nb_entries - 1; i >= 0; i--) {
+    unsigned int i;
+    for (i = read_set->nb_entries; i-- > 0;) {
         if (read_set->read_entries[i].address_shmem == address_shmem) {
             return &read_set->read_entries[i];
         }
@@ -449,7 +449,7 @@ inline void write_set_pgas_insert(write_set_pgas_t *write_set_pgas, int value, u
 }
 
 inline void write_set_pgas_update(write_set_pgas_t *write_set_pgas, int value, unsigned int address) {
-    int i;
+    unsigned int i;
     for (i = 0; i < write_set_pgas->nb_entries; i++) {
         if (write_set_pgas->write_entries[i].address == address) {
             write_set_pgas->write_entries[i].value = value;
@@ -470,7 +470,7 @@ inline void write_entry_pgas_print(write_entry_pgas_t *we) {
 
 inline void write_set_pgas_print(write_set_pgas_t *write_set_pgas) {
     PRINTSME("WRITE SET PGAS (elements: %d, size: %d) --------------\n", write_set_pgas->nb_entries, write_set_pgas->size);
-    int i;
+    unsigned int i;
     for (i = 0; i < write_set_pgas->nb_entries; i++) {
         write_entry_pgas_print(&write_set_pgas->write_entries[i]);
     }
@@ -478,15 +478,15 @@ inline void write_set_pgas_print(write_set_pgas_t *write_set_pgas) {
 }
 
 inline void write_set_pgas_persist(write_set_pgas_t *write_set_pgas) {
-    int i;
+    unsigned int i;
     for (i = 0; i < write_set_pgas->nb_entries; i++) {
         write_entry_pgas_persist(&write_set_pgas->write_entries[i]);
     }
 }
 
 inline write_entry_pgas_t * write_set_pgas_contains(write_set_pgas_t *write_set_pgas, unsigned int address) {
-    int i;
-    for (i = write_set_pgas->nb_entries - 1; i >= 0; i--) {
+    unsigned int i;
+    for (i = write_set_pgas->nb_entries; i-- > 0;) {
         if (write_set_pgas->write_entries[i].address == address) {
             return &write_set_pgas->write_entries[i];
         }
