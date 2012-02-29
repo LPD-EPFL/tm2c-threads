@@ -106,17 +106,15 @@ _LD := $(LD)
 _AR := $(AR)
 
 ifeq ($(V),1)
- override V_PREFIX :=
  override C = $(_C)
  override LD = $(_LD)
  override CDEP = $(_CDEP)
  override AR = $(_AR)
 else
- override V_PREFIX := @
- override C = @echo -e     "\tCOMPILE         $<"; $(_C)
- override LD = @echo -e    "\tLINKING         $@"; $(_LD)
- override CDEP = @echo -e  "\tDEPGEN          $@"; $(_CDEP)
- override AR = @echo -e    "\tARCHIVE         $@ ($^)"; $(_AR)
+ override C    = @echo "    COMPILE         $<"; $(_C)
+ override LD   = @echo "    LINKING         $@"; $(_LD)
+ override CDEP = @echo "    DEPGEN          $@"; $(_CDEP)
+ override AR   = @echo "    ARCHIVE         $@ ($^)"; $(_AR)
 endif
 
 # dependency tracking stuff, works with gcc
