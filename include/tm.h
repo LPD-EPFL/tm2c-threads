@@ -122,7 +122,7 @@ extern "C" {
 #define TX_START                                                        \
     { PRINTD("|| Starting new tx");                                     \
     short int reason;                                                   \
-    if (reason = sigsetjmp(stm_tx->env, 0)) {                           \
+    if ((reason = sigsetjmp(stm_tx->env, 0)) != 0) {                    \
         PRINTD("|| restarting due to %d", reason);                      \
         stm_tx->write_set = WSET_EMPTY(stm_tx->write_set);              \
         stm_tx->read_set = read_set_empty(stm_tx->read_set);            \
