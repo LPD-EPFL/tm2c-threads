@@ -32,7 +32,6 @@ extern "C" {
 #define DSLNDPERNODES   2 /* 1 dedicated DS-Locking core per DSLNDPERNODES cores*/
 #define NUM_DSL_UES     ((int) ((RCCE_num_ues() / DSLNDPERNODES)) + (RCCE_num_ues() % DSLNDPERNODES ? 1 : 0))
 #define NUM_APP_UES     (RCCE_num_ues() - NUM_DSL_UES)
-    extern unsigned int NUM_DSL_NODES;
 
 #define MED printf("[%02d] ", RCCE_ue());
 #define PRINT(args...) printf("[%02d] ", RCCE_ue()); printf(args); printf("\n"); fflush(stdout)
@@ -86,11 +85,16 @@ extern "C" {
 
     extern unsigned int ID; //=RCCE_ue()
     extern unsigned int NUM_UES;
+    extern unsigned int NUM_DSL_NODES;
     
     typedef unsigned int nodeid_t;
     typedef void* tm_addr_t;
 
+#ifdef PLATFORM_iRCCE
 #include "iRCCE.h"
+extern RCCE_COMM RCCE_COMM_APP;
+#endif 
+
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>

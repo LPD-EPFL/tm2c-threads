@@ -9,14 +9,7 @@
 #include "../include/common.h"
 #include "../include/pubSubTM.h"
 
-#define SENDLIST
-
-iRCCE_WAIT_LIST waitlist;
-
-extern unsigned int ID; //=RCCE_ue()
-extern unsigned int NUM_UES;
 unsigned int *dsl_nodes;
-char *buf;
 unsigned short nodes_contacted[48];
 CONFLICT_TYPE ps_response; //TODO: make it more sophisticated
 
@@ -46,10 +39,10 @@ void ps_init_(void) {
     }
 
     psc = (PS_COMMAND *) malloc(sizeof (PS_COMMAND)); //TODO: free at finalize + check for null
-    buf = (char *) malloc(NUM_UES * PS_BUFFER_SIZE); //TODO: free at finalize + check for null
-    if (psc == NULL || buf == NULL) {
-        PRINT("malloc ps_command == NULL || ps_remote == NULL || psc == NULL || buf == NULL");
+    if (psc == NULL) {
+        PRINT("malloc psc == NULL");
     }
+
     shmem_init_start_address();
 
     int dsln = 0;
@@ -61,10 +54,6 @@ void ps_init_(void) {
         }
     }
 
-
-    iRCCE_init_wait_list(&waitlist);
-
-    RCCE_barrier(&RCCE_COMM_WORLD);
     PRINT("[APP NODE] Initialized pub-sub..");
 }
 
@@ -75,51 +64,35 @@ static inline void ps_send_rl(unsigned short int target, tm_addr_t address) {
     psc->type = PS_SUBSCRIBE;
     psc->address = address;
 
-    char data[PS_BUFFER_SIZE];
-
-    memcpy(data, psc, sizeof (PS_COMMAND));
-    iRCCE_isend(data, PS_BUFFER_SIZE, target, NULL);
+    sys_sendcmd(psc, sizeof(PS_COMMAND), target);
 }
 
-static inline void ps_send_wl(unsigned short int target, unsigned int address, int value) {
+static inline void ps_send_wl(unsigned short int target, tm_addr_t address, int value) {
 
     psc->type = PS_PUBLISH;
     psc->address = address;
     psc->write_value = value;
 
-    char data[PS_BUFFER_SIZE];
-
-    memcpy(data, psc, sizeof (PS_COMMAND));
-    iRCCE_isend(data, PS_BUFFER_SIZE, target, NULL);
+    sys_sendcmd(psc, sizeof(PS_COMMAND), target);
 }
 
-static inline void ps_send_winc(unsigned short int target, unsigned int address, int value) {
+static inline void ps_send_winc(unsigned short int target, tm_addr_t address, int value) {
 
     psc->type = PS_WRITE_INC;
     psc->address = address;
     psc->write_value = value;
 
-    char data[PS_BUFFER_SIZE];
-
-    memcpy(data, psc, sizeof (PS_COMMAND));
-    iRCCE_isend(data, PS_BUFFER_SIZE, target, NULL);
+    sys_sendcmd(psc, sizeof(PS_COMMAND), target);
 }
 
 static inline void ps_recv_wl(unsigned short int from) {
-    char data[PS_BUFFER_SIZE];
-    iRCCE_irecv(data, PS_BUFFER_SIZE, from, NULL);
-    PS_COMMAND * cmd = (PS_COMMAND *) data; //TODO : remove cmd variable
+    // XXX: this could be written much better, without globals
+    PS_COMMAND cmd; 
+
+    sys_recvcmd(&cmd, sizeof(PS_COMMAND), from);
     ps_response = cmd->response;
 }
 #endif
-
-static inline void 
-ps_send(unsigned short int target, PS_COMMAND_TYPE command,
-		tm_addr_t address, iRCCE_SEND_REQUEST *s, char * data)
-{
-
-
-}
 
 static inline void 
 ps_sendb(unsigned short int target, PS_COMMAND_TYPE command,
@@ -130,20 +103,18 @@ ps_sendb(unsigned short int target, PS_COMMAND_TYPE command,
     psc->address = (uintptr_t)address;
     psc->response = response;
 
-    char data[PS_BUFFER_SIZE];
-
-    memcpy(data, psc, sizeof (PS_COMMAND));
-    iRCCE_isend(data, PS_BUFFER_SIZE, target, NULL);
+    sys_sendcmd(psc, sizeof(PS_COMMAND), target);
 }
 
 static inline void ps_recvb(unsigned short int from) {
-    char data[PS_BUFFER_SIZE];
-    iRCCE_irecv(data, PS_BUFFER_SIZE, from, NULL);
-    PS_COMMAND * cmd = (PS_COMMAND *) data; //TODO : remove cmd variable
-    ps_response = cmd->response;
+    // XXX: this could be written much better, without globals
+    PS_COMMAND cmd; 
+
+    sys_recvcmd(&cmd, sizeof(PS_COMMAND), from);
+    ps_response = cmd.response;
 #ifdef PGAS
     PF_START(0)
-    read_value = cmd->value;
+    read_value = cmd.value;
     PF_STOP(0)
 #endif
 }
@@ -242,7 +213,6 @@ void ps_publish_finish(tm_addr_t address) {
 
 void ps_finish_all(CONFLICT_TYPE conflict) {
 #define FINISH_ALL_PARALLEL_
-
 #ifdef FINISH_ALL_PARALLEL
     iRCCE_SEND_REQUEST sends[NUM_UES];
     char data[PS_BUFFER_SIZE];

@@ -13,6 +13,7 @@
 #include <setjmp.h>
 #include "common.h"
 #include "pubSubTM.h"
+#include "dslock.h"
 #include "stm.h"
 #include "mem.h"
 
@@ -46,8 +47,6 @@ extern "C" {
     extern double duration__;
 
     extern const char *conflict_reasons[4];
-    extern RCCE_COMM RCCE_COMM_APP;
-
 
     /*______________________________________________________________________________
      * Help functions
@@ -87,7 +86,6 @@ extern "C" {
      * TM Interface                                                                                         |
      *______________________________________________________________________________________________________|
      */
-
 
 #define TM_INIT                                                         \
     init_configuration(&argc, &argv);                                   \

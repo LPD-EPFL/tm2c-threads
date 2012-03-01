@@ -88,21 +88,12 @@ extern "C" {
     } PS_COMMAND;
 
     //TODO: remove ? have them at .c file
-    extern iRCCE_WAIT_LIST waitlist; //the send-recv buffer
     extern BOOLEAN tm_has_command;
-    extern PS_COMMAND *ps_command;
     extern int read_value;
 
 
     //void ps_init(void);
     void ps_init_(void);
-    void dsl_init(void);
-    /* Pushes both the sends and receive messages that queued in the node.
-     * Pushing is necessary in order to proceed, else there could be a
-     * "deadlock" case where no node delivers any messages.
-     */
-    inline void iRCCE_ipush(void);
-
 
     /*
 

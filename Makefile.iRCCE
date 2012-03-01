@@ -8,12 +8,14 @@ API          := nongory
 PLATFORM_CFLAGS = 
 PLATFORM_LDFLAGS =
 PLATFORM_LIBS = 
-PLATFORM_DEFINES = -DDSL \
+PLATFORM_DEFINES = -DPLATFORM_iRCCE \
+                   -DDSL \
                    -UPGAS \
                    -DREAD_BUF_OFF \
                    -UDEBUG_UTILIZATION \
                    -UDO_TIMINGS \
                    -DBACKOFF \
+                   -DSENDLIST \
 
 HAS_TASKLIB = no
 

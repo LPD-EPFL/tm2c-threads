@@ -22,4 +22,17 @@ typedef volatile unsigned char* sys_t_vcharp;
 sys_t_vcharp sys_shmalloc(size_t);
 void sys_shfree(sys_t_vcharp);
 
+/*
+ * Various helper initialization functions
+ * (sys_X is called from X initialization function)
+ */
+void sys_tm_init(unsigned int ID);
+void sys_ps_init_(void);
+void sys_dsl_init(void);
+
+/*
+ * Networking functions
+ */
+int sys_sendcmd(void* data, size_t len, nodeid_t target);
+int sys_recvcmd(void* data, size_t len, nodeid_t target);
 #endif

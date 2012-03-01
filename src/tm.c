@@ -28,21 +28,16 @@ const char *conflict_reasons[4] = {
     "WRITE_AFTER_READ",
     "WRITE_AFTER_WRITE"
 };
-RCCE_COMM RCCE_COMM_APP;
 
 /*______________________________________________________________________________________________________
  * TM Interface                                                                                         |
  *______________________________________________________________________________________________________|
  */
 
-int color(int id, void *aux) {
-    return !(id % DSLNDPERNODES);
-}
-
 void tm_init(unsigned int ID) {
     NUM_DSL_NODES = (int) ((NUM_UES / DSLNDPERNODES)) + (NUM_UES % DSLNDPERNODES ? 1 : 0);
 
-    RCCE_comm_split(color, NULL, &RCCE_COMM_APP);
+    sys_tm_init(ID);
 
     if (ID % DSLNDPERNODES == 0) {
         //dsl node
@@ -148,7 +143,7 @@ retry:
 
 void ps_unsubscribe_all() {
     read_entry_l_t *read_entries = stm_tx->read_set->read_entries;
-    int i;
+    unsigned int i;
     for (i = 0; i < stm_tx->read_set->nb_entries; i++) {
         ps_unsubscribe((void *) read_entries[i].address_shmem);
     }
