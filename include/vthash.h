@@ -54,20 +54,20 @@ INLINED vthash_bucket_entry_t* vthash_bucket_entry_new(int address, vthash_bucke
  *
  * Detect possible READ/WRITE, WRITE/READ, and WRITE/WRITE conflicts.
  */
-INLINED CONFLICT_TYPE vthash_insert_bucket_entry(vthash_bucket_entry_t *_bucket_entry, int nodeId, RW rw);
+INLINED CONFLICT_TYPE vthash_insert_bucket_entry(vthash_bucket_entry_t *_bucket_entry, nodeid_t nodeId, RW rw);
 
 /*  insert a reader or writer for the address in the bucket. A bucket is a linked list of
  * bucket_entry that hold the metadata for addresses that hash to the same bucket
  */
-INLINED CONFLICT_TYPE vthash_insert_bucket(vthash_bucket_t *bucket, int nodeId, int address, RW rw);
+INLINED CONFLICT_TYPE vthash_insert_bucket(vthash_bucket_t *bucket, nodeid_t nodeId, int address, RW rw);
 
 /*  delete a reader or a writer for the bucket_entry->address address from the bucket_entry.
 */
-INLINED void vthash_delete_bucket_entry(vthash_bucket_entry_t *bucket_entry, int nodeId, RW rw);
+INLINED void vthash_delete_bucket_entry(vthash_bucket_entry_t *bucket_entry, nodeid_t nodeId, RW rw);
 
 /*  delete a reader or writer from the address in the bucket.
 */
-INLINED void vthash_delete_bucket(vthash_bucket_t *bucket, int nodeId, int address, RW rw);
+INLINED void vthash_delete_bucket(vthash_bucket_t *bucket, nodeid_t nodeId, int address, RW rw);
 
 
 INLINED vthash_bucket_entry_t* 
@@ -86,7 +86,7 @@ vthash_bucket_entry_new(int address, vthash_bucket_entry_t * next)
 }
 
 INLINED CONFLICT_TYPE 
-vthash_insert_bucket_entry(vthash_bucket_entry_t *bucket_entry, int nodeId, RW rw) 
+vthash_insert_bucket_entry(vthash_bucket_entry_t *bucket_entry, nodeid_t nodeId, RW rw) 
 {
     /*
        TODO: does it make sense to check for "dupicate" entries, when
@@ -123,7 +123,7 @@ vthash_insert_bucket_entry(vthash_bucket_entry_t *bucket_entry, int nodeId, RW r
 }
 
 INLINED CONFLICT_TYPE
-vthash_insert_bucket(vthash_bucket_t *bucket, int nodeId, int address, RW rw) 
+vthash_insert_bucket(vthash_bucket_t *bucket, nodeid_t nodeId, int address, RW rw) 
 {
 	CONFLICT_TYPE conflict = NO_CONFLICT;
     if (bucket->head == NULL) {
@@ -161,7 +161,7 @@ vthash_insert_bucket(vthash_bucket_t *bucket, int nodeId, int address, RW rw)
 }
 
 INLINED void 
-vthash_delete_bucket_entry(vthash_bucket_entry_t *bucket_entry, int nodeId, RW rw) 
+vthash_delete_bucket_entry(vthash_bucket_entry_t *bucket_entry, nodeid_t nodeId, RW rw) 
 {
     if (bucket_entry->rw_entry == NULL) {
         return;
@@ -178,7 +178,7 @@ vthash_delete_bucket_entry(vthash_bucket_entry_t *bucket_entry, int nodeId, RW r
 }
 
 INLINED void 
-vthash_delete_bucket(vthash_bucket_t *bucket, int nodeId, int address, RW rw) 
+vthash_delete_bucket(vthash_bucket_t *bucket, nodeid_t nodeId, int address, RW rw) 
 {
     if (bucket->head != NULL) {
         vthash_bucket_entry_t *current = bucket->head;
