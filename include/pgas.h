@@ -21,7 +21,7 @@ extern "C" {
 #define SHMEM           shmem__
 #define PGAS_TYPE       long long
 #define PGAS_GRAN       sizeof(long long int)
-    typedef unsigned int pgas_addr_t;
+    typedef uintptr_t pgas_addr_t;
     //#define NUM_DSL_NODES 2
 
 //    extern void * SHMEM;
@@ -35,9 +35,7 @@ extern "C" {
     extern unsigned int PGAS_size();
     extern void PGAS_free(void *);
 
-    //#define ROUND(n)        (((int) n) == n ? (int) n : (int) n + 1)
-#define ROUND(n)        ((int) (n))
-#define SHRINK(addr)    ROUND((double) (addr) / NUM_DSL_NODES)
+#define SHRINK(addr)    ((void*)(((uintptr_t)(addr)+ptrdiff_t(1))/NUM_DSL_NODES))
 
 #define PGAS_write(addr, val, type)             \
         *(SHMEM + addr) = (val)

@@ -26,7 +26,7 @@ extern "C" {
  * and the readers'  list
  */
 typedef struct vthash_bucket_entry {
-    unsigned int address;
+    uintptr_t address;
     rw_entry_t *rw_entry;
     struct vthash_bucket_entry *next;
 } vthash_bucket_entry_t;
@@ -47,7 +47,7 @@ typedef struct vthash_bucket {
 /*
  * create, initialize and return a bucket_entry
  */
-INLINED vthash_bucket_entry_t* vthash_bucket_entry_new(int address, vthash_bucket_entry_t * next);
+INLINED vthash_bucket_entry_t* vthash_bucket_entry_new(uintptr_t address, vthash_bucket_entry_t * next);
 
 /*  insert a reader or a writer for the bucket_entry->address address to the bucket_entry.
  *  A bucket_entry keeps information about the readers and writer of the bucket_entry->address.
@@ -59,7 +59,7 @@ INLINED CONFLICT_TYPE vthash_insert_bucket_entry(vthash_bucket_entry_t *_bucket_
 /*  insert a reader or writer for the address in the bucket. A bucket is a linked list of
  * bucket_entry that hold the metadata for addresses that hash to the same bucket
  */
-INLINED CONFLICT_TYPE vthash_insert_bucket(vthash_bucket_t *bucket, nodeid_t nodeId, int address, RW rw);
+INLINED CONFLICT_TYPE vthash_insert_bucket(vthash_bucket_t *bucket, nodeid_t nodeId, uintptr_t address, RW rw);
 
 /*  delete a reader or a writer for the bucket_entry->address address from the bucket_entry.
 */
@@ -67,11 +67,11 @@ INLINED void vthash_delete_bucket_entry(vthash_bucket_entry_t *bucket_entry, nod
 
 /*  delete a reader or writer from the address in the bucket.
 */
-INLINED void vthash_delete_bucket(vthash_bucket_t *bucket, nodeid_t nodeId, int address, RW rw);
+INLINED void vthash_delete_bucket(vthash_bucket_t *bucket, nodeid_t nodeId, uintptr_t address, RW rw);
 
 
 INLINED vthash_bucket_entry_t* 
-vthash_bucket_entry_new(int address, vthash_bucket_entry_t * next) 
+vthash_bucket_entry_new(uintptr_t address, vthash_bucket_entry_t * next) 
 {
     vthash_bucket_entry_t *bucket_entry = (vthash_bucket_entry_t *) malloc(sizeof (vthash_bucket_entry_t));
     if (bucket_entry == NULL) {
@@ -123,7 +123,7 @@ vthash_insert_bucket_entry(vthash_bucket_entry_t *bucket_entry, nodeid_t nodeId,
 }
 
 INLINED CONFLICT_TYPE
-vthash_insert_bucket(vthash_bucket_t *bucket, nodeid_t nodeId, int address, RW rw) 
+vthash_insert_bucket(vthash_bucket_t *bucket, nodeid_t nodeId, uintptr_t address, RW rw) 
 {
 	CONFLICT_TYPE conflict = NO_CONFLICT;
     if (bucket->head == NULL) {
@@ -178,7 +178,7 @@ vthash_delete_bucket_entry(vthash_bucket_entry_t *bucket_entry, nodeid_t nodeId,
 }
 
 INLINED void 
-vthash_delete_bucket(vthash_bucket_t *bucket, nodeid_t nodeId, int address, RW rw) 
+vthash_delete_bucket(vthash_bucket_t *bucket, nodeid_t nodeId, uintptr_t address, RW rw) 
 {
     if (bucket->head != NULL) {
         vthash_bucket_entry_t *current = bucket->head;

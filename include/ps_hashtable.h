@@ -41,7 +41,7 @@ typedef khash_t(rw_entry_address)* ps_hashtable_t;
 #include "uthash.h"
 
 struct uthash_elem_struct {
-    int address;            /* we'll use this field as the key */
+    uintptr_t address;            /* we'll use this field as the key */
     rw_entry_t* rw_entry;
     UT_hash_handle hh; /* makes this structure hashable */
 };
@@ -75,13 +75,13 @@ INLINED ps_hashtable_t ps_hashtable_new();
  * Returns: type of TM conflict caused by inserting given values
  */
 INLINED CONFLICT_TYPE ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
-                                int address, RW rw);
+                                uintptr_t address, RW rw);
 
 /*
  * delete a reader of writer for the address from the hashatable.
  */
 INLINED void ps_hashtable_delete(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
-                                int address, RW rw);
+                                uintptr_t address, RW rw);
 
 INLINED void ps_hashtable_delete_node(ps_hashtable_t ps_hashtable, nodeid_t nodeId);
 
@@ -107,7 +107,7 @@ ps_hashtable_new()
 }
 
 INLINED CONFLICT_TYPE
-ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId, int address, RW rw)
+ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId, uintptr_t address, RW rw)
 {
 	khiter_t k;
 
@@ -140,7 +140,7 @@ ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId, int address, R
 }
 
 INLINED void
-ps_hashtable_delete(ps_hashtable_t ps_hashtable, nodeid_t nodeId, int address, RW rw)
+ps_hashtable_delete(ps_hashtable_t ps_hashtable, nodeid_t nodeId, uintptr_t address, RW rw)
 {
 	khiter_t k;
 
@@ -208,7 +208,7 @@ ps_hashtable_new()
 }
 
 INLINED CONFLICT_TYPE
-ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId, int address, RW rw)
+ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId, uintptr_t address, RW rw)
 {
 	struct uthash_elem_struct *el;
 
@@ -249,7 +249,7 @@ ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId, int address, R
 }
 
 INLINED void
-ps_hashtable_delete(ps_hashtable_t ps_hashtable, nodeid_t nodeId, int address, RW rw)
+ps_hashtable_delete(ps_hashtable_t ps_hashtable, nodeid_t nodeId, uintptr_t address, RW rw)
 {
 	struct uthash_elem_struct *el;
 
@@ -342,14 +342,14 @@ ps_hashtable_new()
 
 INLINED CONFLICT_TYPE
 ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
-                                int address, RW rw)
+                                uintptr_t address, RW rw)
 {
     return vthash_insert_bucket(ps_hashtable[address % NUM_OF_BUCKETS], nodeId, address, rw);
 }
 
 INLINED void
 ps_hashtable_delete(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
-                                int address, RW rw)
+                                uintptr_t address, RW rw)
 {
     vthash_delete_bucket(ps_hashtable[address % NUM_OF_BUCKETS], nodeId, address, rw);
 }

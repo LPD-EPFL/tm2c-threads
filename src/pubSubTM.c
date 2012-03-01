@@ -19,23 +19,24 @@ unsigned int *dsl_nodes;
 char *buf;
 unsigned short nodes_contacted[48];
 CONFLICT_TYPE ps_response; //TODO: make it more sophisticated
-SHMEM_START_ADDRESS shmem_start_address = NULL;
+
+tm_addr_t shmem_start_address = NULL;
+
 PS_COMMAND *psc;
 
 int read_value;
 
-static inline void ps_sendb(unsigned short int target, PS_COMMAND_TYPE operation, unsigned int address, CONFLICT_TYPE response);
+static inline void ps_sendb(unsigned short int target, PS_COMMAND_TYPE operation,
+							tm_addr_t address, CONFLICT_TYPE response);
 static inline void ps_recvb(unsigned short int from);
 
 inline BOOLEAN shmem_init_start_address();
-inline void unsubscribe(int nodeId, int shmem_address);
-static inline unsigned int shmem_address_offset(void *shmem_address);
-#ifdef PGAS
-static inline unsigned int DHT_get_responsible_node(unsigned int shmem_address, unsigned int *address_offset);
-#else
-static inline unsigned int DHT_get_responsible_node(void *shmem_address, unsigned int *address_offset);
-#endif
-inline void publish_finish(int nodeId, int shmem_address);
+inline void unsubscribe(nodeid_t nodeId, tm_addr_t shmem_address);
+
+static inline tm_addr_t shmem_address_offset(tm_addr_t shmem_address);
+static inline unsigned int DHT_get_responsible_node(tm_addr_t shmem_address, tm_addr_t* address_offset);
+
+inline void publish_finish(nodeid_t nodeId, tm_addr_t shmem_address);
 
 void ps_init_(void) {
     PRINTD("NUM_DSL_NODES = %d", NUM_DSL_NODES);
@@ -69,7 +70,7 @@ void ps_init_(void) {
 
 #ifdef PGAS
 
-static inline void ps_send_rl(unsigned short int target, unsigned int address) {
+static inline void ps_send_rl(unsigned short int target, tm_addr_t address) {
 
     psc->type = PS_SUBSCRIBE;
     psc->address = address;
@@ -112,16 +113,21 @@ static inline void ps_recv_wl(unsigned short int from) {
 }
 #endif
 
-static inline void ps_send(unsigned short int target, PS_COMMAND_TYPE command, unsigned int address,
-        iRCCE_SEND_REQUEST *s, char * data) {
+static inline void 
+ps_send(unsigned short int target, PS_COMMAND_TYPE command,
+		tm_addr_t address, iRCCE_SEND_REQUEST *s, char * data)
+{
 
 
 }
 
-static inline void ps_sendb(unsigned short int target, PS_COMMAND_TYPE command, unsigned int address, CONFLICT_TYPE response) {
+static inline void 
+ps_sendb(unsigned short int target, PS_COMMAND_TYPE command,
+		tm_addr_t address, CONFLICT_TYPE response)
+{
 
     psc->type = command;
-    psc->address = address;
+    psc->address = (uintptr_t)address;
     psc->response = response;
 
     char data[PS_BUFFER_SIZE];
@@ -148,15 +154,8 @@ static inline void ps_recvb(unsigned short int from) {
  * ____________________________________________________________________________________________|
  */
 
-#ifdef PGAS
-
-CONFLICT_TYPE ps_subscribe(unsigned int address) {
-#else
-
-CONFLICT_TYPE ps_subscribe(void *address) {
-#endif
-
-    unsigned int address_offs;
+CONFLICT_TYPE ps_subscribe(tm_addr_t address) {
+    tm_addr_t address_offs;
     unsigned short int responsible_node = DHT_get_responsible_node(address, &address_offs);
 
     nodes_contacted[responsible_node]++;
@@ -182,13 +181,13 @@ CONFLICT_TYPE ps_subscribe(void *address) {
 
 #ifdef PGAS
 
-CONFLICT_TYPE ps_publish(unsigned int address, int value) {
+CONFLICT_TYPE ps_publish(tm_addr_t address, int value) {
 #else
 
-CONFLICT_TYPE ps_publish(void *address) {
+CONFLICT_TYPE ps_publish(tm_addr_t address) {
 #endif
 
-    unsigned int address_offs;
+    tm_addr_t address_offs;
     unsigned short int responsible_node = DHT_get_responsible_node(address, &address_offs);
 
     nodes_contacted[responsible_node]++;
@@ -207,8 +206,8 @@ CONFLICT_TYPE ps_publish(void *address) {
 
 #ifdef PGAS
 
-CONFLICT_TYPE ps_store_inc(unsigned int address, int increment) {
-    unsigned int address_offs;
+CONFLICT_TYPE ps_store_inc(tm_addr_t address, int increment) {
+    tm_addr_t address_offs;
     unsigned short int responsible_node = DHT_get_responsible_node(address, &address_offs);
     nodes_contacted[responsible_node]++;
 
@@ -219,15 +218,8 @@ CONFLICT_TYPE ps_store_inc(unsigned int address, int increment) {
 }
 #endif
 
-#ifdef PGAS
-
-void ps_unsubscribe(unsigned int address) {
-#else
-
-void ps_unsubscribe(void *address) {
-#endif
-
-    unsigned int address_offs;
+void ps_unsubscribe(tm_addr_t address) {
+    tm_addr_t address_offs;
     unsigned short int responsible_node = DHT_get_responsible_node(address, &address_offs);
 
     nodes_contacted[responsible_node]--;
@@ -238,9 +230,9 @@ void ps_unsubscribe(void *address) {
 #endif
 }
 
-void ps_publish_finish(void *address) {
+void ps_publish_finish(tm_addr_t address) {
 
-    unsigned int address_offs;
+    tm_addr_t address_offs;
     unsigned short int responsible_node = DHT_get_responsible_node(address, &address_offs);
 
     nodes_contacted[responsible_node]--;
@@ -250,7 +242,6 @@ void ps_publish_finish(void *address) {
 
 void ps_finish_all(CONFLICT_TYPE conflict) {
 #define FINISH_ALL_PARALLEL_
-    int i;
 
 #ifdef FINISH_ALL_PARALLEL
     iRCCE_SEND_REQUEST sends[NUM_UES];
@@ -260,6 +251,7 @@ void ps_finish_all(CONFLICT_TYPE conflict) {
     memcpy(data, psc, sizeof (PS_COMMAND));
 #endif
 
+    unsigned int i;
     for (i = 0; i < NUM_UES; i++) {
         if (nodes_contacted[i] != 0) { //can be changed to non-blocking
 
@@ -307,37 +299,31 @@ void ps_send_stats(stm_tx_node_t* stats, double duration) {
  */
 
 inline BOOLEAN shmem_init_start_address() {
-    if (!shmem_start_address) {
-        char *start = (char *) RCCE_shmalloc(sizeof (char));
+    if (shmem_start_address == NULL) {
+        char *start = (char *) sys_shmalloc(sizeof (char));
         if (start == NULL) {
             PRINTD("shmalloc shmem_init_start_address");
         }
-        shmem_start_address = (SHMEM_START_ADDRESS) start;
-        RCCE_shfree((volatile unsigned char *) start);
+        shmem_start_address = (tm_addr_t) start;
+        sys_shfree((volatile unsigned char *) start);
         return TRUE;
     }
 
     return FALSE;
 }
 
-static inline unsigned int shmem_address_offset(void *shmem_address) {
-    return ((int) shmem_address) -shmem_start_address;
+static inline tm_addr_t shmem_address_offset(tm_addr_t shmem_address) {
+    return (tm_addr_t)((uintptr_t)shmem_address - (uintptr_t)shmem_start_address);
 }
 
-#ifdef PGAS
-
-static inline unsigned int DHT_get_responsible_node(unsigned int shmem_address, unsigned int *address_offset) {
-#else
-
-static inline unsigned int DHT_get_responsible_node(void *shmem_address, unsigned int *address_offset) {
-#endif
+static inline unsigned int DHT_get_responsible_node(tm_addr_t shmem_address, tm_addr_t* address_offset) {
     /* shift right by DHT_ADDRESS_MASK, thus making 2^DHT_ADDRESS_MASK continuous
         address handled by the same node*/
 #ifdef PGAS
     return dsl_nodes[shmem_address % NUM_DSL_NODES];
 #else
     *address_offset = shmem_address_offset(shmem_address);
-    return dsl_nodes[(*address_offset >> DHT_ADDRESS_MASK) % NUM_DSL_NODES];
+    return dsl_nodes[((uintptr_t)(*address_offset) >> DHT_ADDRESS_MASK) % NUM_DSL_NODES];
 
 #endif
 

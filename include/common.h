@@ -88,9 +88,11 @@ extern "C" {
     extern unsigned int NUM_UES;
     
     typedef unsigned int nodeid_t;
+    typedef void* tm_addr_t;
 
 #include "iRCCE.h"
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <stddef.h>
 #include <unistd.h>

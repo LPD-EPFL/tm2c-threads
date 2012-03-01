@@ -58,8 +58,8 @@ extern "C" {
                 };
 
                 union {
-                    unsigned int address;
-                    int value;
+                    uintptr_t address;
+                    int32_t   value;
                 };
             };
 
@@ -87,10 +87,6 @@ extern "C" {
         };
     } PS_COMMAND;
 
-
-    typedef unsigned int SHMEM_START_ADDRESS;
-
-
     //TODO: remove ? have them at .c file
     extern iRCCE_WAIT_LIST waitlist; //the send-recv buffer
     extern BOOLEAN tm_has_command;
@@ -116,29 +112,26 @@ extern "C" {
 
     /* Try to subscribe the TX for reading the address
      */
-#ifdef PGAS
-    CONFLICT_TYPE ps_subscribe(unsigned int address);
-#else
-    CONFLICT_TYPE ps_subscribe(void *address);
-#endif
+    CONFLICT_TYPE ps_subscribe(tm_addr_t address);
+
     /* Try to publish a write on the address
      */
 #ifdef PGAS
-    CONFLICT_TYPE ps_publish(unsigned int address, int value);
+    CONFLICT_TYPE ps_publish(tm_addr_t address, int value);
 
     /*  Try to increment by increment and store (so, write) address
      */
-    CONFLICT_TYPE ps_store_inc(unsigned int address, int increment);
+    CONFLICT_TYPE ps_store_inc(tm_addr_t address, int increment);
 #else
-    CONFLICT_TYPE ps_publish(void *address);
+    CONFLICT_TYPE ps_publish(tm_addr_t address);
 #endif
     /* Unsubscribes the TX from the address
      */
-    void ps_unsubscribe(void *address);
+    void ps_unsubscribe(tm_addr_t address);
     /* Notifies the pub-sub that the publishing is done, so the value
      * is written on the shared mem
      */
-    void ps_publish_finish(void *address);
+    void ps_publish_finish(tm_addr_t address);
 
     void ps_finish_all(CONFLICT_TYPE conflict);
     //
