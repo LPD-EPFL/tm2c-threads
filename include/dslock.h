@@ -5,6 +5,11 @@
 #include "pubSubTM.h"
 #include "ps_hashtable.h"
 
+#ifdef PGAS
+#include "pgas.h"
+extern write_set_pgas_t **PGAS_write_sets;
+#endif
+
 void dsl_init(void);
 
 void dsl_communication();

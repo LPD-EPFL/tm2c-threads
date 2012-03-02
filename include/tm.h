@@ -193,13 +193,8 @@ extern "C" {
     /*tm_term();*/                                                      \
     term_system();
 
-#ifdef PGAS
 #define TX_LOAD(addr)                                                   \
-    tx_load(stm_tx->write_set, stm_tx->read_set, (unsigned int)(addr))
-#else
-#define TX_LOAD(addr)                                                   \
-    tx_load(stm_tx->write_set, stm_tx->read_set, ((void *) (addr)))
-#endif
+    tx_load(stm_tx->write_set, stm_tx->read_set, (addr))
 
 #ifdef PGAS
 #ifdef EAGER_WRITE_ACQ
@@ -214,7 +209,7 @@ extern "C" {
 #endif
 #else
 #define TX_STORE(addr, ptr, datatype)                                   \
-    write_set_update(stm_tx->write_set, datatype, ((void *) (ptr)), ((void *) (addr)))
+    write_set_update(stm_tx->write_set, datatype, ((void *) (ptr)), (addr))
 #endif
 
 
@@ -223,7 +218,7 @@ extern "C" {
         tx_store_inc(addr, op(value));
 #else
 #define TX_LOAD_STORE(addr, op, value, datatype)                        \
-    {tx_wlock((void *) (addr));                                         \
+    {tx_wlock(addr);                                                    \
     int temp__ = (*(int *) (addr)) op (value);                          \
     write_set_update(stm_tx->write_set, TYPE_INT, &temp__, addr);}
 #endif
@@ -262,13 +257,10 @@ extern "C" {
     void handle_abort(stm_tx_t *stm_tx, CONFLICT_TYPE reason);
 
 #ifdef PGAS
-
-    INLINED int tx_load(write_set_pgas_t *ws, read_set_t *rs, unsigned int addr) {
+    INLINED int tx_load(write_set_pgas_t *ws, read_set_t *rs, tm_addr_t addr) {
 #else
-
-    INLINED void * tx_load(write_set_t *ws, read_set_t *rs, void *addr) {
+    INLINED void * tx_load(write_set_t *ws, read_set_t *rs, tm_addr_t addr) {
 #endif
-
 #ifdef PGAS
         //PRINT("(loading: %d)", addr);
         write_entry_pgas_t *we;
@@ -296,11 +288,7 @@ extern "C" {
 retry:
 #endif
 
-#ifdef PGAS
                 if ((conflict = ps_subscribe(addr)) != NO_CONFLICT) {
-#else
-                if ((conflict = ps_subscribe((void *) addr)) != NO_CONFLICT) {
-#endif
 #ifdef BACKOFF
                     if (num_delays++ < BACKOFF_MAX) {
                         udelay(delay);
@@ -325,10 +313,10 @@ retry:
      */
 #ifdef PGAS
 
-    INLINED void tx_wlock(unsigned int address, int value) {
+    INLINED void tx_wlock(tm_addr_t address, int value) {
 #else
 
-    INLINED void tx_wlock(void *address) {
+    INLINED void tx_wlock(tm_addr_t address) {
 #endif
 
         CONFLICT_TYPE conflict;
@@ -341,7 +329,7 @@ retry:
 #ifdef PGAS
         if ((conflict = ps_publish(address, value)) != NO_CONFLICT) {
 #else      
-        if ((conflict = ps_publish((void *) address)) != NO_CONFLICT) {
+        if ((conflict = ps_publish(address)) != NO_CONFLICT) {
 #endif
 #ifdef BACKOFF
             if (num_delays++ < BACKOFF_MAX) {
@@ -356,10 +344,10 @@ retry:
 
 #ifdef PGAS
 
-    INLINED void tx_store_inc(unsigned int address, int value) {
+    INLINED void tx_store_inc(tm_addr_t address, int value) {
 #else
 
-    INLINED void tx_store_inc(void *address) {
+    INLINED void tx_store_inc(tm_addr_t address) {
 #endif
 
         CONFLICT_TYPE conflict;
@@ -372,7 +360,7 @@ retry:
 #ifdef PGAS
         if ((conflict = ps_store_inc(address, value)) != NO_CONFLICT) {
 #else      
-        if ((conflict = ps_publish((void *) address)) != NO_CONFLICT) {
+        if ((conflict = ps_publish(address)) != NO_CONFLICT) {
 #endif
 #ifdef BACKOFF
             if (num_delays++ < BACKOFF_MAX) {

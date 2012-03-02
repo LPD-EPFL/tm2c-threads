@@ -35,7 +35,7 @@ extern "C" {
     extern unsigned int PGAS_size();
     extern void PGAS_free(void *);
 
-#define SHRINK(addr)    ((void*)(((uintptr_t)(addr)+ptrdiff_t(1))/NUM_DSL_NODES))
+#define SHRINK(addr)    ((void*)(((uintptr_t)(addr)+(ptrdiff_t)(1))/NUM_DSL_NODES))
 
 #define PGAS_write(addr, val, type)             \
         *(SHMEM + addr) = (val)
@@ -43,7 +43,7 @@ extern "C" {
     //*((type *) ((type *) SHMEM + ROUND((double) (addr) / NUM_DSL_NODES))) = (type) (val)
 
 #define PGAS_read(addr)                         \
-        *(SHMEM + addr)
+        (SHMEM + addr)
 //        *((int *) SHMEM + addr)
     //        *((int *) SHMEM + ROUND((double) (addr) / NUM_DSL_NODES))
 

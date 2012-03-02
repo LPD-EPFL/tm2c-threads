@@ -62,7 +62,7 @@ void ps_init_(void) {
 static inline void ps_send_rl(unsigned short int target, tm_addr_t address) {
 
     psc->type = PS_SUBSCRIBE;
-    psc->address = address;
+    psc->address = (uintptr_t)address;
 
     sys_sendcmd(psc, sizeof(PS_COMMAND), target);
 }
@@ -70,7 +70,7 @@ static inline void ps_send_rl(unsigned short int target, tm_addr_t address) {
 static inline void ps_send_wl(unsigned short int target, tm_addr_t address, int value) {
 
     psc->type = PS_PUBLISH;
-    psc->address = address;
+    psc->address = (uintptr_t)address;
     psc->write_value = value;
 
     sys_sendcmd(psc, sizeof(PS_COMMAND), target);
@@ -79,7 +79,7 @@ static inline void ps_send_wl(unsigned short int target, tm_addr_t address, int 
 static inline void ps_send_winc(unsigned short int target, tm_addr_t address, int value) {
 
     psc->type = PS_WRITE_INC;
-    psc->address = address;
+    psc->address = (uintptr_t)address;
     psc->write_value = value;
 
     sys_sendcmd(psc, sizeof(PS_COMMAND), target);
@@ -90,7 +90,7 @@ static inline void ps_recv_wl(unsigned short int from) {
     PS_COMMAND cmd; 
 
     sys_recvcmd(&cmd, sizeof(PS_COMMAND), from);
-    ps_response = cmd->response;
+    ps_response = cmd.response;
 }
 #endif
 
@@ -208,7 +208,11 @@ void ps_publish_finish(tm_addr_t address) {
 
     nodes_contacted[responsible_node]--;
 
+#ifdef PGAS
+    ps_sendb(responsible_node, PS_PUBLISH_FINISH, SHRINK(address), NO_CONFLICT);
+#else
     ps_sendb(responsible_node, PS_PUBLISH_FINISH, address_offs, NO_CONFLICT);
+#endif
 }
 
 void ps_finish_all(CONFLICT_TYPE conflict) {
@@ -290,7 +294,7 @@ static inline unsigned int DHT_get_responsible_node(tm_addr_t shmem_address, tm_
     /* shift right by DHT_ADDRESS_MASK, thus making 2^DHT_ADDRESS_MASK continuous
         address handled by the same node*/
 #ifdef PGAS
-    return dsl_nodes[shmem_address % NUM_DSL_NODES];
+    return dsl_nodes[(uintptr_t)shmem_address % NUM_DSL_NODES];
 #else
     *address_offset = shmem_address_offset(shmem_address);
     return dsl_nodes[((uintptr_t)(*address_offset) >> DHT_ADDRESS_MASK) % NUM_DSL_NODES];

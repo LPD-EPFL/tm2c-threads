@@ -123,9 +123,9 @@ void ps_publish_all() {
 retry:
 #endif
 #ifdef PGAS
-        if ((conflict = ps_publish(write_entries[locked].address, write_entries[locked].value)) != NO_CONFLICT) {
+        if ((conflict = ps_publish((tm_addr_t)write_entries[locked].address, write_entries[locked].value)) != NO_CONFLICT) {
 #else
-        if ((conflict = ps_publish((void *) write_entries[locked].address_shmem)) != NO_CONFLICT) {
+        if ((conflict = ps_publish(write_entries[locked].address_shmem)) != NO_CONFLICT) {
 #endif
             //ps_publish_finish_all(locked);
 #ifdef BACKOFF

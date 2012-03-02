@@ -21,7 +21,6 @@ ps_hashtable_t ps_hashtable;
 unsigned int NUM_UES_APP;
 
 #ifdef PGAS
-#include "pgas.h"
 write_set_pgas_t **PGAS_write_sets;
 #endif
 

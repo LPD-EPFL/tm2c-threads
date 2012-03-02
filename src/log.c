@@ -115,7 +115,7 @@ inline void write_entry_set_value(write_entry_t *we, void *value) {
     }
 }
 
-inline void write_set_insert(write_set_t *write_set, DATATYPE datatype, void *value, void *address_shmem) {
+inline void write_set_insert(write_set_t *write_set, DATATYPE datatype, void *value, tm_addr_t address_shmem) {
     write_entry_t *we = write_set_entry(write_set);
 
     we->datatype = datatype;
@@ -123,7 +123,7 @@ inline void write_set_insert(write_set_t *write_set, DATATYPE datatype, void *va
     write_entry_set_value(we, value);
 }
 
-inline void write_set_update(write_set_t *write_set, DATATYPE datatype, void *value, void *address_shmem) {
+inline void write_set_update(write_set_t *write_set, DATATYPE datatype, void *value, tm_addr_t address_shmem) {
     unsigned int i;
     for (i = 0; i < write_set->nb_entries; i++) {
         if (write_set->write_entries[i].address_shmem == address_shmem) {
@@ -243,7 +243,7 @@ inline void write_set_persist(write_set_t *write_set) {
     }
 }
 
-inline write_entry_t * write_set_contains(write_set_t *write_set, void *address_shmem) {
+inline write_entry_t * write_set_contains(write_set_t *write_set, tm_addr_t address_shmem) {
     unsigned int i;
     for (i = write_set->nb_entries; i-- > 0; ) {
         if (write_set->write_entries[i].address_shmem == address_shmem) {
@@ -324,10 +324,10 @@ inline read_entry_l_t * read_set_entry(read_set_t *read_set) {
 
 #ifdef READDATATYPE
 
-inline void read_set_insert(read_set_t *read_set, DATATYPE datatype, void *address_shmem) {
+inline void read_set_insert(read_set_t *read_set, DATATYPE datatype, tm_addr_t address_shmem) {
 #else
 
-inline void read_set_insert(read_set_t *read_set, void *address_shmem) {
+inline void read_set_insert(read_set_t *read_set, tm_addr_t address_shmem) {
 #endif
     read_entry_l_t *re = read_set_entry(read_set);
 #ifdef READDATATYPE
@@ -338,10 +338,10 @@ inline void read_set_insert(read_set_t *read_set, void *address_shmem) {
 
 #ifdef READDATATYPE
 
-inline BOOLEAN read_set_update(read_set_t *read_set, DATATYPE datatype, void *address_shmem) {
+inline BOOLEAN read_set_update(read_set_t *read_set, DATATYPE datatype, tm_addr_t address_shmem) {
 #else
 
-inline BOOLEAN read_set_update(read_set_t *read_set, void *address_shmem) {
+inline BOOLEAN read_set_update(read_set_t *read_set, tm_addr_t address_shmem) {
 #endif
     unsigned int i;
     for (i = 0; i < read_set->nb_entries; i++) {
@@ -357,7 +357,7 @@ inline BOOLEAN read_set_update(read_set_t *read_set, void *address_shmem) {
     return FALSE;
 }
 
-inline read_entry_l_t * read_set_contains(read_set_t *read_set, void *address_shmem) {
+inline read_entry_l_t * read_set_contains(read_set_t *read_set, tm_addr_t address_shmem) {
     unsigned int i;
     for (i = read_set->nb_entries; i-- > 0;) {
         if (read_set->read_entries[i].address_shmem == address_shmem) {
@@ -441,17 +441,17 @@ inline write_entry_pgas_t * write_set_pgas_entry(write_set_pgas_t *write_set_pga
     return &write_set_pgas->write_entries[write_set_pgas->nb_entries++];
 }
 
-inline void write_set_pgas_insert(write_set_pgas_t *write_set_pgas, int value, unsigned int address) {
+inline void write_set_pgas_insert(write_set_pgas_t *write_set_pgas, int value, tm_addr_t address) {
     write_entry_pgas_t *we = write_set_pgas_entry(write_set_pgas);
 
-    we->address = address;
+    we->address = (uintptr_t)address;
     we->value = value;
 }
 
-inline void write_set_pgas_update(write_set_pgas_t *write_set_pgas, int value, unsigned int address) {
+inline void write_set_pgas_update(write_set_pgas_t *write_set_pgas, int value, tm_addr_t address) {
     unsigned int i;
     for (i = 0; i < write_set_pgas->nb_entries; i++) {
-        if (write_set_pgas->write_entries[i].address == address) {
+        if (write_set_pgas->write_entries[i].address == (uintptr_t)address) {
             write_set_pgas->write_entries[i].value = value;
             return;
         }
@@ -484,10 +484,10 @@ inline void write_set_pgas_persist(write_set_pgas_t *write_set_pgas) {
     }
 }
 
-inline write_entry_pgas_t * write_set_pgas_contains(write_set_pgas_t *write_set_pgas, unsigned int address) {
+inline write_entry_pgas_t * write_set_pgas_contains(write_set_pgas_t *write_set_pgas, tm_addr_t address) {
     unsigned int i;
     for (i = write_set_pgas->nb_entries; i-- > 0;) {
-        if (write_set_pgas->write_entries[i].address == address) {
+        if (write_set_pgas->write_entries[i].address == (uintptr_t)address) {
             return &write_set_pgas->write_entries[i];
         }
     }
