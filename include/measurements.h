@@ -11,9 +11,7 @@
 #endif
 #endif
 
-#define DO_TIMINGS_TICKS
-
-#ifdef	__cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -36,6 +34,14 @@ extern "C" {
 #define PF_PRINT_TICKS          REPORT_TIMINGS
 #define PF_PRINT                REPORT_TIMINGS_SECS
 #define PF_EXCLUDE(pos)         EXCLUDE_ENTRY(pos)
+#endif
+
+#ifdef DO_TIMINGS
+#ifndef DO_TIMINGS_STD
+#ifndef DO_TIMINGS_TICKS
+#error Define either DO_TIMINGS_STD or DO_TIMINGS_TICKS
+#endif
+#endif
 #endif
 
 #include <stdio.h>
