@@ -70,7 +70,7 @@ MAIN(int argc, char **argv) {
 
     BARRIER
     
-    sys_shfree((t_vcharp) sis);
+    sys_shfree((sys_t_vcharp) sis);
 
     TM_END
 
