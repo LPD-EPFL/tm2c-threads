@@ -1,4 +1,3 @@
-#define EXINLINED
 #include "common.h"
 #include "iRCCE.h"
 #include "pubSubTM.h"
@@ -29,13 +28,13 @@ sys_shfree(sys_t_vcharp ptr)
 	RCCE_shfree(ptr);
 }
 
-EXINLINED nodeid_t
+nodeid_t
 NODE_ID(void)
 {
 	return (nodeid_t)RCCE_ue();
 }
 
-EXINLINED nodeid_t
+nodeid_t
 TOTAL_NODES(void)
 {
 	return (nodeid_t)RCCE_num_ues();
@@ -127,7 +126,7 @@ sys_ps_term(void)
 	// noop
 }
 
-EXINLINED int
+int
 sys_sendcmd(void* data, size_t len, nodeid_t to)
 {
 	char buf[PS_BUFFER_SIZE];
@@ -135,7 +134,7 @@ sys_sendcmd(void* data, size_t len, nodeid_t to)
 	return (iRCCE_isend(buf, PS_BUFFER_SIZE, to, NULL) == iRCCE_SUCCESS);
 }
 
-EXINLINED int
+int
 sys_sendcmd_all(void* data, size_t len)
 {
 	char buf[PS_BUFFER_SIZE];
@@ -149,7 +148,7 @@ sys_sendcmd_all(void* data, size_t len)
 	return res;
 }
 
-EXINLINED int
+int
 sys_recvcmd(void* data, size_t len, nodeid_t from)
 {
 	int res = iRCCE_irecv(data, PS_BUFFER_SIZE, from, NULL);
@@ -354,7 +353,7 @@ void dsl_communication() {
 /*
  * Seeding the rand()
  */
-EXINLINED void
+void
 srand_core()
 {
     double timed_ = RCCE_wtime();
@@ -363,13 +362,13 @@ srand_core()
     srand(time_ + (13 * (RCCE_ue() + 1)));
 }
 
-EXINLINED double
+double
 wtime(void)
 {
 	return RCCE_wtime();
 }
 
-EXINLINED void 
+void 
 udelay(unsigned int micros)
 {
     double __ts_end = RCCE_wtime() + ((double) micros / 1000000);

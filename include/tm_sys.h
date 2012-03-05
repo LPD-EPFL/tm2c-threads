@@ -26,8 +26,8 @@ void sys_shfree(sys_t_vcharp);
 /*
  * Functions to deal with the number of nodes.
  */
-EXINLINED nodeid_t NODE_ID(void);
-EXINLINED nodeid_t TOTAL_NODES(void);
+nodeid_t NODE_ID(void);
+nodeid_t TOTAL_NODES(void);
 
 /*
  * Various helper initialization/termination functions
@@ -43,21 +43,21 @@ void sys_ps_term(void);
 /*
  * Networking functions
  */
-EXINLINED int sys_sendcmd(void* data, size_t len, nodeid_t target);
-EXINLINED int sys_recvcmd(void* data, size_t len, nodeid_t target);
+int sys_sendcmd(void* data, size_t len, nodeid_t target);
+int sys_recvcmd(void* data, size_t len, nodeid_t target);
 
-EXINLINED int sys_sendcmd_all(void* data, size_t len);
+int sys_sendcmd_all(void* data, size_t len);
 
 /*
  * Random numbers related functions
  */
-EXINLINED void srand_core();
+void srand_core();
 
 /*
  * Helper functions
  */
-EXINLINED void udelay(unsigned int micros);
+void udelay(unsigned int micros);
 
-EXINLINED double wtime(void);
+double wtime(void);
 
 #endif
