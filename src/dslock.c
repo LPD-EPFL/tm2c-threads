@@ -6,8 +6,6 @@
  * working
  */
 
-#include "../include/common.h"
-#include "../include/pubSubTM.h"
 #include "dslock.h"
 #include <stdio.h> //TODO: clean the includes
 #include <unistd.h>
