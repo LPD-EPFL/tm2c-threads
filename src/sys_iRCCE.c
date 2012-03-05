@@ -66,7 +66,9 @@ void
 sys_dsl_init(void)
 {
     iRCCE_init_wait_list(&waitlist);
+#ifdef SENDLIST
     iRCCE_init_wait_list(&sendlist);
+#endif
 
     recv_requests = (iRCCE_RECV_REQUEST*) calloc(NUM_UES, sizeof (iRCCE_RECV_REQUEST));
     if (recv_requests == NULL) {
@@ -150,8 +152,10 @@ sys_ps_command_send(unsigned short int target,
 
     memcpy(data, psc, sizeof (PS_COMMAND));
     if (iRCCE_isend(data, PS_BUFFER_SIZE, target, s) != iRCCE_SUCCESS) {
+#ifdef SENDLIST
         iRCCE_add_send_to_wait_list(&sendlist, s);
         //iRCCE_add_to_wait_list(&sendlist, s, NULL);
+#endif
     }
     else {
         free(s);
@@ -166,12 +170,14 @@ void dsl_communication() {
 
     while (1) {
 
+#ifdef SENDLIST
         iRCCE_test_any(&sendlist, &send_current, NULL);
         if (send_current != NULL) {
             free(send_current->privbuf);
             free(send_current);
             continue;
         }
+#endif
         //test if any send or recv completed
         iRCCE_test_any(&waitlist, NULL, &recv_current);
         if (recv_current != NULL) {
