@@ -5,6 +5,12 @@
 
 config_t* the_config;
 
+/*
+ * The init_configuration assumes that there is a parameter in the form
+ * -config=configurationFileName is in the list of params.
+ * It will consume it, and read that particular configuration file.
+ * Other parameters will remain intact.
+ */
 void init_configuration(int* argc, char** argv[]) {
 	the_config = (config_t*)malloc(sizeof(config_t));
 	if (the_config == NULL) {
