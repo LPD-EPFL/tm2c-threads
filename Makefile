@@ -42,7 +42,10 @@ APPS_NON_WORKING = \
 				   simple \
 				   recv_all \
 				   tasklib tasklib_test \
-				   recv_all recv_all_p recv_all_i
+				   recv_all recv_all_p recv_all_i \
+				   pthread \
+				   bm_rams global_clock \
+				   madmonkey spam
 
 ## Benchmarks ##
 BMARKS_DIR := bmarks

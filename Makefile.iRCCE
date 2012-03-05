@@ -30,10 +30,7 @@ ARCHIVE_SRCS_PURE += sys_iRCCE.c
 # These are RCCE-only apps
 APPS += toall all2all \
 	  	pingpong pingping async_pingpong \
-	  	pthread \
-	  	madmonkey spam \
-	  	ring ring_token ring_simple \
-	  	bm_rams global_clock
+	  	ring ring_token ring_simple
 
 INCLUDES += -I$(RCCEPATH)/include
 
