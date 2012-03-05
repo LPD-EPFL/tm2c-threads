@@ -54,6 +54,7 @@ void ps_init_(void) {
         }
     }
 
+    sys_ps_init_();
     PRINT("[APP NODE] Initialized pub-sub..");
 }
 
