@@ -67,15 +67,15 @@ BMARKS_NON_WORKING =
 # all bmarks that need to be built
 ALL_BMARKS = $(BMARKS) mbll mbht mr
 
-ifneq (,$(findstring PGAS,$(CFLAGS)))
-ALL_BMARKS += bankpgas mbllpgas mbhtpgas
-endif
-
 ## The rest of the Makefile ##
 
 # Include the platform specific Makefile
 # This file has the modifications related to the current platform
 -include Makefile.$(PLATFORM)
+
+#ifneq (,$(findstring PGAS,$(PLATFORM_DEFINES)))
+#ALL_BMARKS += bankpgas mbllpgas mbhtpgas
+#endif
 
 # define the compiler now, if platform makefile exported something through
 # CCOMPILE
