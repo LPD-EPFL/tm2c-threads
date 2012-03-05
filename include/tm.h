@@ -21,15 +21,15 @@
 extern "C" {
 #endif
 
-#define FOR(seconds)                    double starting__ = RCCE_wtime();\
-                                            while ((duration__ =\
-                                            (RCCE_wtime() - starting__)) < (seconds))
+#define FOR(seconds)            double starting__ = wtime();\
+                                while ((duration__ =\
+                                       (wtime() - starting__)) < (seconds))
 
 #ifdef DSL
-#define ONCE                            if (RCCE_ue() == 1 || RCCE_num_ues() == 1)
-#define OTHERS                          if (RCCE_ue() != 1)
+#define ONCE                            if (NODE_ID() == 1 || TOTAL_NODES() == 1)
+#define OTHERS                          if (NODE_ID() != 1)
 #else
-#define ONCE                            if (RCCE_ue() == 0 || RCCE_num_ues() == 1)
+#define ONCE                            if (NODE_ID() == 0 || TOTAL_NODES() == 1)
 #endif
 
 
@@ -71,17 +71,6 @@ extern "C" {
         return v;
     }
 
-    /*
-     * Seeding the rand()
-     */
-    INLINED void srand_core() {
-        double timed_ = RCCE_wtime();
-        unsigned int timeprfx_ = (unsigned int) timed_;
-        unsigned int time_ = (unsigned int) ((timed_ - timeprfx_) * 1000000);
-        srand(time_ + (13 * (RCCE_ue() + 1)));
-    }
-
-
     /*______________________________________________________________________________________________________
      * TM Interface                                                                                         |
      *______________________________________________________________________________________________________|
@@ -91,14 +80,14 @@ extern "C" {
     init_configuration(&argc, &argv);                                   \
     init_system(&argc, &argv);                                          \
     {                                                                   \
-        ID = RCCE_ue();                                                 \
-        NUM_UES = RCCE_num_ues();                                       \
+        ID = NODE_ID();                                                 \
+        NUM_UES = TOTAL_NODES();                                       \
         tm_init(ID);
 
 #define TM_INITs                                                        \
     {                                                                   \
-        ID = RCCE_ue();                                                 \
-        NUM_UES = RCCE_num_ues();                                       \
+        ID = NODE_ID();                                                 \
+        NUM_UES = TOTAL_NODES();                                       \
         tm_init(ID);
 
 #ifdef PGAS
@@ -248,11 +237,6 @@ extern "C" {
 
 #define TX_SHFREE(addr)                                                   \
     stm_shfree(stm_tx->mem_info, (t_vcharp) addr)
-
-    INLINED void udelay(unsigned int micros) {
-        double __ts_end = RCCE_wtime() + ((double) micros / 1000000);
-        while (RCCE_wtime() < __ts_end);
-    }
 
     void handle_abort(stm_tx_t *stm_tx, CONFLICT_TYPE reason);
 

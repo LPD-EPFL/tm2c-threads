@@ -27,7 +27,7 @@ MAIN(int argc, char **argv) {
 
             int sum;
 
-    double ts = RCCE_wtime();
+    double ts = wtime();
     TX_START
 
     sum = 0;
@@ -40,13 +40,13 @@ MAIN(int argc, char **argv) {
     }
 
     TX_COMMIT
-            double te = RCCE_wtime();
+            double te = wtime();
 
 
     PRINTD("\t\t\t\t\t\t\t\t\t[TX] sum: %d in %f secs", sum, te - ts);
 
 
-    ts = RCCE_wtime();
+    ts = wtime();
 
     sum = 0;
     for (i = 0; i < SIS_SIZE; i++) {
@@ -57,7 +57,7 @@ MAIN(int argc, char **argv) {
         sum += val;
     }
 
-    te = RCCE_wtime();
+    te = wtime();
 
 
     PRINTD("\t\t\t\t\t\t\t\t\t[NO TX] sum: %d in %f secs", sum, te - ts);

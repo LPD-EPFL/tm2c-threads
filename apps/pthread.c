@@ -86,14 +86,14 @@ void listen() {
         }
     }
 
-    double sent_last = RCCE_wtime();
+    double sent_last = wtime();
 
     while (1) {
         /* Push recieves & sends. */
         iRCCE_irecv_push();
         iRCCE_isend_push();
 
-        double now = RCCE_wtime();
+        double now = wtime();
         if (now - sent_last > 0.3) {
             sent_last = now;
             iRCCE_SEND_REQUEST s = send(-1);

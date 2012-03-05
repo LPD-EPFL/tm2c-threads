@@ -45,8 +45,8 @@ inline long rand_range(long r) {
 /*
  * Seeding the rand()
  */
-inline void srand_core() {
-    double timed_ = RCCE_wtime();
+static inline void srand_core() {
+    double timed_ = wtime();
     unsigned int timeprfx_ = (unsigned int) timed_;
     unsigned int time_ = (unsigned int) ((timed_ - timeprfx_) * 1000000);
     srand(time_ + (13 * (RCCE_ue() + 1)));
@@ -105,7 +105,7 @@ void listen(int repeats) {
     PRINTD("started..");
 
     int debug = 0;
-    double time_last_send = RCCE_wtime();
+    double time_last_send = wtime();
 
     while (1) {
         /*if all sends are completed*/
@@ -129,7 +129,7 @@ void listen(int repeats) {
             free(send_current);
 
             scounter++;
-            time_last_send = RCCE_wtime();
+            time_last_send = wtime();
         }
 
         /*test any recv for completion*/
@@ -149,12 +149,12 @@ void listen(int repeats) {
             rcounter++;
         }
         
-        if (RCCE_wtime() - time_last_send > 2.0 && debug) {
+        if (wtime() - time_last_send > 2.0 && debug) {
             PRINTD("STUCK?? Sent: %d, Sent confirmed: %d, Received: %d\n" \
                         "\tWaitlist length: %d", snccounter, scounter, rcounter, iRCCE_wait_list_length(&sendlist));
             iRCCE_print_sendlist(&sendlist, RCCE_ue());
 
-            time_last_send = RCCE_wtime();
+            time_last_send = wtime();
             debug = 0;
         }
     }

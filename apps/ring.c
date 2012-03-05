@@ -76,7 +76,7 @@ void loop() {
                 print_s = 1;
                 to_send = 0; //w8 this request to be complete before sending a new one
             }
-            send_time = RCCE_wtime();
+            send_time = wtime();
         }
 
         //if there is a pending send msg (!send), do iRCCE_isend_test
@@ -86,7 +86,7 @@ void loop() {
             to_send = 1;
         }
         //if there is a outgoing request not delivered for ~2 seconds
-        else if (print_s && RCCE_wtime() - send_time > 2) {
+        else if (print_s && wtime() - send_time > 2) {
             ME; printf("|| NO SEND 2s> SNC: %d, SC: %d, RC: %d\n\tLast sent msg: %s\n", snccounter, scounter, rcounter, data);
             print_send_req(&s); //print the details of the request
             print_s = 0;
@@ -98,12 +98,12 @@ void loop() {
             //keep a copy of the previous recv request for printing
             memcpy(&previous_request, &recv_request, sizeof(iRCCE_RECV_REQUEST));
             iRCCE_irecv(buf, 32, RECEIVING_FROM, &recv_request);
-            recv_time = RCCE_wtime();
+            recv_time = wtime();
             print_r = 1;
         }
         /*if there are still msgs to be delivered (rcounter < nummsgs) but no
          msg was delivered the last 2 seconds*/
-        else if (print_r && RCCE_wtime() - recv_time > 2 && rcounter < nummsgs) {
+        else if (print_r && wtime() - recv_time > 2 && rcounter < nummsgs) {
             ME; printf("|| NO RECV 2s> RC: %d\n\tMsg in the incoming buffer: %s\n", rcounter, buf);
             printf("|  Previous recv request (recv# %d)\n", rcounter - 1);
             print_recv_req(&previous_request); //print the previous successful request

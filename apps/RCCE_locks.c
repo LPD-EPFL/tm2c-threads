@@ -12,8 +12,8 @@
 unsigned int ID;
 #define ME printf("[%02d] ", RCCE_ue())
 #define P(args...) ME; printf(args); printf("\n"); fflush(stdout)
-#define BMS { double __duration, __stime; __stime = RCCE_wtime();
-#define BME __duration = RCCE_wtime() - __stime; P("Duration: %f", __duration);}
+#define BMS { double __duration, __stime; __stime = wtime();
+#define BME __duration = wtime() - __stime; P("Duration: %f", __duration);}
 
 int main(int argc, char** argv) {
     RCCE_init(&argc, &argv);

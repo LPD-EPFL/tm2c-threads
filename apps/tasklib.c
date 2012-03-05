@@ -40,10 +40,10 @@ MAIN(int argc, char **argv) {
         taskudelay(wait_time);
 
         shmp += ID;
-        double start = RCCE_wtime();
+        double start = wtime();
         //ps_subscribe(shmp);
         ps_publish(shmp);
-        double diff = RCCE_wtime() - start;
+        double diff = wtime() - start;
         totaltime += diff;
         //PRINTD("\t\t\t\t %lld|completed for %d in %f", (i - 1), target, diff);
 

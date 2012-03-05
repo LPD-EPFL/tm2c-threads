@@ -20,7 +20,7 @@ void taskmain(int argc, char **argv) {
 
     double totaltime = 0;
     if (ID > 0) {
-        double start = RCCE_wtime();
+        double start = wtime();
 /*
         if (ps_subscribe(0)) {
             PRINTD("subscribed to addr 0");
@@ -32,7 +32,7 @@ void taskmain(int argc, char **argv) {
         ps_subscribe(0);
 
 
-        double diff = RCCE_wtime() - start;
+        double diff = wtime() - start;
         totaltime += diff;
         PRINTD("\t\t\t\t |completed in %f", diff);
     }
@@ -55,11 +55,11 @@ void taskmain(int argc, char **argv) {
         } while (target == RCCE_ue());
 
 
-        double start = RCCE_wtime();
+        double start = wtime();
         ps_publish(target);
         ps_subscribe(target);
 
-        double diff = RCCE_wtime() - start;
+        double diff = wtime() - start;
         totaltime += diff;
         //PRINTD("\t\t\t\t %lld|completed for %d in %f", (i - 1), target, diff);
 

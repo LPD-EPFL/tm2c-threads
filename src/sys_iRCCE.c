@@ -1,3 +1,4 @@
+#define EXINLINED
 #include "common.h"
 #include "iRCCE.h"
 #include "pubSubTM.h"
@@ -26,6 +27,18 @@ void
 sys_shfree(sys_t_vcharp ptr)
 {
 	RCCE_shfree(ptr);
+}
+
+EXINLINED nodeid_t
+NODE_ID(void)
+{
+	return (nodeid_t)RCCE_ue();
+}
+
+EXINLINED nodeid_t
+TOTAL_NODES(void)
+{
+	return (nodeid_t)RCCE_num_ues();
 }
 
 static int color(int id, void *aux) {
@@ -311,6 +324,31 @@ void dsl_communication() {
 
         }
     }
+}
+
+/*
+ * Seeding the rand()
+ */
+EXINLINED void
+srand_core()
+{
+    double timed_ = RCCE_wtime();
+    unsigned int timeprfx_ = (unsigned int) timed_;
+    unsigned int time_ = (unsigned int) ((timed_ - timeprfx_) * 1000000);
+    srand(time_ + (13 * (RCCE_ue() + 1)));
+}
+
+EXINLINED double
+wtime(void)
+{
+	return RCCE_wtime();
+}
+
+EXINLINED void 
+udelay(unsigned int micros)
+{
+    double __ts_end = RCCE_wtime() + ((double) micros / 1000000);
+    while (RCCE_wtime() < __ts_end);
 }
 
 

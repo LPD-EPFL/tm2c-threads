@@ -16,6 +16,14 @@
 # endif
 #endif
 
+#ifndef EXINLINED
+#if __GNUC__ && !__GNUC_STDC_INLINE__
+#define EXINLINED extern inline
+#else
+#define EXINLINED inline
+#endif
+#endif
+
 #ifdef PGAS
 #define EAGER_WRITE_ACQ         /*ENABLE eager write lock acquisition*/
 #endif
@@ -24,36 +32,35 @@
 extern "C" {
 #endif
 
-
 #ifdef PGAS
 #define EAGER_WRITE_ACQ         /*ENABLE eager write lock acquisition*/
 #endif
 
 #define DSLNDPERNODES   2 /* 1 dedicated DS-Locking core per DSLNDPERNODES cores*/
-#define NUM_DSL_UES     ((int) ((RCCE_num_ues() / DSLNDPERNODES)) + (RCCE_num_ues() % DSLNDPERNODES ? 1 : 0))
-#define NUM_APP_UES     (RCCE_num_ues() - NUM_DSL_UES)
+#define NUM_DSL_UES     ((int) ((TOTAL_NODES() / DSLNDPERNODES)) + (TOTAL_NODES() % DSLNDPERNODES ? 1 : 0))
+#define NUM_APP_UES     (TOTAL_NODES() - NUM_DSL_UES)
 
-#define MED printf("[%02d] ", RCCE_ue());
-#define PRINT(args...) printf("[%02d] ", RCCE_ue()); printf(args); printf("\n"); fflush(stdout)
-#define PRINTN(args...) printf("[%02d] ", RCCE_ue()); printf(args); fflush(stdout)
+#define MED printf("[%02d] ", NODE_ID());
+#define PRINT(args...) printf("[%02d] ", NODE_ID()); printf(args); printf("\n"); fflush(stdout)
+#define PRINTN(args...) printf("[%02d] ", NODE_ID()); printf(args); fflush(stdout)
 #define PRINTS(args...)  printf(args);
 #define PRINTSF(args...)  printf(args); fflush(stdout)
-#define PRINTSME(args...)  printf("[%02d] ", RCCE_ue()); printf(args);
+#define PRINTSME(args...)  printf("[%02d] ", NODE_ID()); printf(args);
 
-#define BMSTART(what) {const char *__bchm_target = what; double __start_time = RCCE_wtime();
-#define BMEND double __end_time = RCCE_wtime(); ME; printf("[benchmarking] "); printf("%s", __bchm_target);\
+#define BMSTART(what) {const char *__bchm_target = what; double __start_time = wtime();
+#define BMEND double __end_time = wtime(); ME; printf("[benchmarking] "); printf("%s", __bchm_target);\
         printf(" | %f secs\n", __end_time - __start_time); fflush(stdout);}
 
 
 #define FLUSH fflush(stdout);
 #ifdef DEBUG
 #define FLUSHD fflush(stdout);
-#define ME printf("%d: ", RCCE_ue())
+#define ME printf("%d: ", NODE_ID())
 #define PRINTF(args...) printf(args)
 #define PRINTD(args...) ME; printf(args); printf("\n"); fflush(stdout)
 #define PRINTDNN(args...) ME; printf(args); fflush(stdout)
-#define PRINTD1(UE, args...) if(RCCE_ue() == (UE)) { ME; printf(args); printf("\n"); fflush(stdout); }
-#define TS printf("[%f] ", RCCE_wtime())
+#define PRINTD1(UE, args...) if(NODE_ID() == (UE)) { ME; printf(args); printf("\n"); fflush(stdout); }
+#define TS printf("[%f] ", wtime())
 #else
 #define FLUSHD
 #define ME
@@ -83,13 +90,13 @@ extern "C" {
         WRITE
     } RW;
 
-    extern unsigned int ID; //=RCCE_ue()
-    extern unsigned int NUM_UES;
-    extern unsigned int NUM_DSL_NODES;
-    
     typedef unsigned int nodeid_t;
     typedef void* tm_addr_t;
 
+    extern nodeid_t ID;
+    extern nodeid_t NUM_UES;
+    extern nodeid_t NUM_DSL_NODES;
+    
 #ifdef PLATFORM_iRCCE
 #include "iRCCE.h"
 extern RCCE_COMM RCCE_COMM_APP;

@@ -32,7 +32,7 @@ void run(void * args) {
     ps_hashtable_t ps_hashtable = ps_hashtable_new();
 
     int i, j;
-    double start = RCCE_wtime();
+    double start = wtime();
     for (i = 0; i < I; i++) {
         for (j = 0; j < J; j++) {
             
@@ -47,14 +47,14 @@ void run(void * args) {
         }
     }
 
-    double diff = RCCE_wtime() - start;
+    double diff = wtime() - start;
     PRINTD("insterted %d entries in %f micros | avg: %f", i*j, diff, diff / (i * j));
 
     /*
         ps_hashtable_print(ps_hashtable);
      */
 
-    start = RCCE_wtime();
+    start = wtime();
     for (i = 0; i < I; i++) {
         for (j = 0; j < J; j++) {
             int ij = i*j;
@@ -66,7 +66,7 @@ void run(void * args) {
         }
     }
 
-    diff = RCCE_wtime() - start;
+    diff = wtime() - start;
     PRINTD("deleted %d entries in %f micros | avg: %f", i*j, diff, diff / (i * j));
 
     // ps_hashtable_print(ps_hashtable);

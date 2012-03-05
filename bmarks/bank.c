@@ -329,9 +329,9 @@ TASKMAIN(int argc, char **argv) {
     double duration = DEFAULT_DURATION;
     int nb_accounts = DEFAULT_NB_ACCOUNTS;
 #ifdef DSL
-    int nb_app_cores = RCCE_num_ues() / 2;
+    int nb_app_cores = TOTAL_NODES() / 2;
 #else
-    int nb_app_cores = RCCE_num_ues();
+    int nb_app_cores = TOTAL_NODES();
 #endif
     int read_all = DEFAULT_READ_ALL;
     int read_cores = DEFAULT_READ_THREADS;
@@ -442,9 +442,9 @@ TASKMAIN(int argc, char **argv) {
 
 
 #ifdef DSL
-            data->id = (RCCE_ue() - 1) / 2;
+            data->id = (NODE_ID() - 1) / 2;
 #else
-            data->id = RCCE_ue();
+            data->id = NODE_ID();
 #endif
     data->read_all = read_all;
     data->read_cores = read_cores;
@@ -459,7 +459,7 @@ TASKMAIN(int argc, char **argv) {
 
     bank = test(data, duration, nb_accounts);
 
-    printf("---Core %d\n", RCCE_ue());
+    printf("---Core %d\n", NODE_ID());
     printf("  #transfer   : %lu\n", data->nb_transfer);
     printf("  #read-all   : %lu\n", data->nb_read_all);
     printf("  #write-all  : %lu\n", data->nb_write_all);

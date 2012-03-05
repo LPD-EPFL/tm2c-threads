@@ -98,9 +98,9 @@ void listen(void *arg) {
         if (iRCCE_irecv_test(&recv_request, NULL) == iRCCE_SUCCESS) {
             rcounter++;
             iRCCE_irecv(buf1, 32, recv, &recv_request);
-            recv_time = RCCE_wtime();
+            recv_time = wtime();
         }
-        else if (RCCE_wtime() - recv_time > 4.0) {
+        else if (wtime() - recv_time > 4.0) {
             PRINTD("No Recv for 4 secs.");
             print_recv_req(&recv_request);
             recv_time *= 2;
@@ -108,7 +108,7 @@ void listen(void *arg) {
                         if (iRCCE_irecv_cancel(&recv_request, NULL) == iRCCE_SUCCESS) {
                             PRINTD("Cancelled and created new recv.");
                             iRCCE_irecv(buf1, 32, recv, &recv_request);
-                            recv_time = RCCE_wtime();
+                            recv_time = wtime();
                         }
              */
         }
@@ -140,11 +140,11 @@ void sendb(int target) {
         PRINTD("sending");
      */
 
-    double started_sending = RCCE_wtime();
+    double started_sending = wtime();
     iRCCE_isend(data, 32, target, &s);
     while (iRCCE_isend_test(&s, NULL) != iRCCE_SUCCESS) {
         taskndelay(10);
-        if (RCCE_wtime() - started_sending > 2.0 && print) {
+        if (wtime() - started_sending > 2.0 && print) {
             PRINTD("STUCK! In msg %d. Have received: %d", scounter, rcounter);
             print_send_req(&s);
             print = 0;

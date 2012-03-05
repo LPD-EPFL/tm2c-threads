@@ -66,7 +66,7 @@ void taskmain(int argc, char *argv[]) {
 
         /*
                 if (snccounger < 500) { //
-                    double now = RCCE_wtime();
+                    double now = wtime();
                     if (now - sent_last > wait_time) {
                         sent_last = now;
                         sendb(-1);

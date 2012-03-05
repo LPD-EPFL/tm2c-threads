@@ -238,7 +238,7 @@ inline long rand_range(long r) {
  * Seeding the rand()
  */
 inline void srand_core() {
-    double timed_ = RCCE_wtime();
+    double timed_ = wtime();
     unsigned int timeprfx_ = (unsigned int) timed_;
     unsigned int time_ = (unsigned int) ((timed_ - timeprfx_) * 1000000);
     srand(time_ + (13 * (RCCE_ue() + 1)));

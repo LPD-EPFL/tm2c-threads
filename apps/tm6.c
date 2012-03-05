@@ -38,9 +38,9 @@ MAIN(int argc, char **argv) {
     TX_START
     int i;
     for (i = 0; i < SIS_SIZE; i++) {
-        start_ = RCCE_wtime();
+        start_ = wtime();
         int j = *(int *) TX_LOAD(sis + i);
-        duration += RCCE_wtime() - start_;
+        duration += wtime() - start_;
     }
     TX_COMMIT
     
@@ -55,14 +55,14 @@ MAIN(int argc, char **argv) {
     TX_START
     int i;
     for (i = 0; i < SIS_SIZE; i++) {
-        start_ = RCCE_wtime();
+        start_ = wtime();
         int j = *(int *) TX_LOAD(sis + i);
-        duration += RCCE_wtime() - start_;
+        duration += wtime() - start_;
     }
     for (i = 0; i < SIS_SIZE; i++) {
-        start_ = RCCE_wtime();
+        start_ = wtime();
         int j = *(int *) TX_LOAD(sis + i);
-        duration += RCCE_wtime() - start_;
+        duration += wtime() - start_;
     }
     TX_COMMIT
     

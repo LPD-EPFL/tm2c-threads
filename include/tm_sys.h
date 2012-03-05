@@ -19,20 +19,45 @@ void term_system();
  */
 
 typedef volatile unsigned char* sys_t_vcharp;
+
 sys_t_vcharp sys_shmalloc(size_t);
 void sys_shfree(sys_t_vcharp);
 
 /*
- * Various helper initialization functions
- * (sys_X is called from X initialization function)
+ * Functions to deal with the number of nodes.
+ */
+EXINLINED nodeid_t NODE_ID(void);
+EXINLINED nodeid_t TOTAL_NODES(void);
+
+/*
+ * Various helper initialization/termination functions
+ * (sys_X is called from X initialization/termination function)
  */
 void sys_tm_init(unsigned int ID);
 void sys_ps_init_(void);
 void sys_dsl_init(void);
 
+void sys_dsl_term(void);
+void sys_ps_term(void);
+
 /*
  * Networking functions
  */
-int sys_sendcmd(void* data, size_t len, nodeid_t target);
-int sys_recvcmd(void* data, size_t len, nodeid_t target);
+EXINLINED int sys_sendcmd(void* data, size_t len, nodeid_t target);
+EXINLINED int sys_recvcmd(void* data, size_t len, nodeid_t target);
+
+EXINLINED int sys_sendcmd_all(void* data, size_t len);
+
+/*
+ * Random numbers related functions
+ */
+EXINLINED void srand_core();
+
+/*
+ * Helper functions
+ */
+EXINLINED void udelay(unsigned int micros);
+
+EXINLINED double wtime(void);
+
 #endif

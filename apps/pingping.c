@@ -131,7 +131,7 @@ int RCCE_APP(int argc, char **argv)
       iRCCE_irecv_wait(&recv_request);
       
       /* start timer: */
-      if(round==0) timer = RCCE_wtime();
+      if(round==0) timer = wtime();
 
 #ifdef _ERROR_CHECK_
       {
@@ -149,7 +149,7 @@ int RCCE_APP(int argc, char **argv)
     }
     
     /* stop timer: */
-    timer = RCCE_wtime() - timer;
+    timer = wtime() - timer;
     
     if(my_rank == 0) printf("%d\t\t%1.2lf\t\t%1.2lf\n", length, timer/(numrounds)*1000000, (length / (timer/(numrounds))) / (1024*1024) );
   }

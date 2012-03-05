@@ -211,8 +211,8 @@ void random_string_work()
 	randstr = (char*)malloc(strlen(word_copy)*sizeof(char));
 
 	//printf("Starting to generate.\n");
-	timer = RCCE_wtime();
-	timer = RCCE_wtime();
+	timer = wtime();
+	timer = wtime();
 
 	done = 0;
 	while (!done) {
@@ -241,7 +241,7 @@ void random_string_work()
 		}
 	}
 
-	timer = RCCE_wtime() -timer;
+	timer = wtime() -timer;
 
 
 	if (signal == 0) {

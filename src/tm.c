@@ -12,9 +12,9 @@
 #include "pgas.h"
 #endif
 
-unsigned int ID; //=RCCE_ue()
-unsigned int NUM_UES;
-unsigned int NUM_DSL_NODES;
+nodeid_t ID; //=RCCE_ue()
+nodeid_t NUM_UES;
+nodeid_t NUM_DSL_NODES;
 
 
 stm_tx_t *stm_tx = NULL;

@@ -3,14 +3,6 @@
 
 #include "common.h"
 
-#ifndef EXINLINED
-#if __GNUC__ && !__GNUC_STDC_INLINE__
-#define EXINLINED extern inline
-#else
-#define EXINLINED inline
-#endif
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif

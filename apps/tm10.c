@@ -39,9 +39,9 @@ MAIN(int argc, char **argv) {
     TX_START
             int i;
     for (i = 0; i < SIS_SIZE; i++) {
-        start_ = RCCE_wtime();
+        start_ = wtime();
         int j = *(int *) TX_LOAD(sis + i);
-        duration += RCCE_wtime() - start_;
+        duration += wtime() - start_;
     }
 
     BMSTART("ps_finish_all()")
@@ -59,9 +59,9 @@ MAIN(int argc, char **argv) {
     TX_START
             int i;
     for (i = 0; i < SIS_SIZE; i++) {
-        start_ = RCCE_wtime();
+        start_ = wtime();
         int j = *(int *) TX_LOAD(sis + i);
-        duration += RCCE_wtime() - start_;
+        duration += wtime() - start_;
     }
 
     

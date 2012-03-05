@@ -26,10 +26,10 @@ extern unsigned long int stats_total, stats_commits, stats_aborts, stats_max_ret
 extern double stats_duration;
 
 extern ps_hashtable_t ps_hashtable;
-extern unsigned int NUM_UES_APP;
 
-extern unsigned int ID; //=RCCE_ue()
-extern unsigned int NUM_UES;
+extern nodeid_t ID;
+extern nodeid_t NUM_UES;
+extern nodeid_t NUM_UES_APP;
 
 INLINED CONFLICT_TYPE try_subscribe(nodeid_t nodeId, tm_addr_t shmem_address) {
 

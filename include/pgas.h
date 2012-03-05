@@ -55,11 +55,11 @@ extern "C" {
 
 #define PGAS_alloc_init(offset)                 \
             shmem_index = offset;               \
-            id__m1d2 = (((RCCE_ue()) - 1)>>1);  \
-            num_ues_d2 = (RCCE_num_ues())>>1;
+            id__m1d2 = (((NODE_ID()) - 1)>>1);  \
+            num_ues_d2 = (TOTAL_NODES())>>1;
 
 #define PGAS_alloc_offs(offs)                   \
-        id__m1d2 = (((RCCE_ue())-1)>>1) + offs; \
+        id__m1d2 = (((NODE_ID())-1)>>1) + offs; \
     
 #define PGAS_alloc_id(id)                       \
         id__m1d2 = (((id) - 1)>>1)

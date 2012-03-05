@@ -42,12 +42,12 @@ int RCCE_APP(int argc, char **argv) {
 
 void *run(void *data) {
     double wait_time = 0.3 + 0.033*(ID + 1);
-    double sent_last = RCCE_wtime();
+    double sent_last = wtime();
     double totaltime = 0;
     long long int i = 1;
 
     while (i < 30) {
-        double now = RCCE_wtime();
+        double now = wtime();
         if (now - sent_last > wait_time) {
             sent_last = now;
             i++;
@@ -58,10 +58,10 @@ void *run(void *data) {
             } while (target == RCCE_ue());
 
             //PRINTD("atemmpt..");
-            double start = RCCE_wtime();
+            double start = wtime();
             ps_subscribe(target);
             ps_publish(target, 0);
-            double diff = RCCE_wtime() - start;
+            double diff = wtime() - start;
             totaltime += diff;
             PRINTD("\t\t\t\t %lld|completed for %d in %f", (i - 1), target, diff);
         }

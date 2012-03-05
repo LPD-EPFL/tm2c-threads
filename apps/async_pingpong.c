@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
 
     int i = 0;
     while(i < size) {
-        long int seed1 = (long int) (RCCE_wtime()*1000);
+        long int seed1 = (long int) (wtime()*1000);
         srand((seed1 % 128) * 7);
         long int time = rand() % 1000;
         M; printf("1.sleeps for %ld usec\n", time);
@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
 
         int send = iRCCE_isend((sbuffer + i), sizeof(char), OTHER, &send_req);
 
-        seed1 = (long int) (RCCE_wtime()*1000);
+        seed1 = (long int) (wtime()*1000);
         srand((seed1 % 128) * 7);
         time = rand() % 1000;
         M; printf("2.sleeps for %ld usec\n", time);
