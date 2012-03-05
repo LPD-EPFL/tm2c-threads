@@ -148,7 +148,7 @@ sys_ps_command_send(unsigned short int target,
     psc->type = command;
 #ifdef PGAS
     if (value != NULL) {
-        psc->value = value;
+        psc->value = *value;
     } else {
         psc->address = (uintptr_t)address;
     }
