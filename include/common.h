@@ -97,9 +97,13 @@ extern "C" {
     extern nodeid_t NUM_UES;
     extern nodeid_t NUM_DSL_NODES;
     
+/*  ------- Plug platform related things here BEGIN ------- */
 #ifdef PLATFORM_iRCCE
 #include "iRCCE.h"
 extern RCCE_COMM RCCE_COMM_APP;
+#define BARRIER RCCE_barrier(&RCCE_COMM_APP);
+#define BARRIERW RCCE_barrier(&RCCE_COMM_WORLD);
+
 #endif 
 
 #include <stdlib.h>
@@ -113,9 +117,6 @@ extern RCCE_COMM RCCE_COMM_APP;
 #define MAIN int main
 #define EXIT(reason) exit(reason);
 #define EXITALL(reason) exit((reason))
-
-#define BARRIER RCCE_barrier(&RCCE_COMM_APP);
-#define BARRIERW RCCE_barrier(&RCCE_COMM_WORLD);
 
 // configuration...
 #include <libconfig.h>
