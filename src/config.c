@@ -25,7 +25,7 @@ void init_configuration(int* argc, char** argv[]) {
 			&& strcmp("-config=",(*argv)[p]) != 0)
 		p++;
 	if (p < *argc) {
-		char *cf = (*argv)[p]+8; // to skip "-config="
+		char *cf = (*argv)[p]+strlen("-config="); // to skip "-config="
 
 		if (config_read_file(the_config, cf) == CONFIG_FALSE) {
 			fprintf(stderr, "There was an error with reading the configuration from %s:\nline %d: %s\n",
