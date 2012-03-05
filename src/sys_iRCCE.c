@@ -115,7 +115,19 @@ sys_dsl_init(void)
     RCCE_barrier(&RCCE_COMM_WORLD);
 }
 
-int
+void
+sys_dsl_term(void)
+{
+	// noop
+}
+
+void
+sys_ps_term(void)
+{
+	// noop
+}
+
+EXINLINED int
 sys_sendcmd(void* data, size_t len, nodeid_t to)
 {
 	char buf[PS_BUFFER_SIZE];
@@ -175,7 +187,6 @@ sys_ps_command_send(unsigned short int target,
         free(data);
     }
 }
-
 
 void dsl_communication() {
     int sender;

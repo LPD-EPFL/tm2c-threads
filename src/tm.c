@@ -34,7 +34,7 @@ const char *conflict_reasons[4] = {
  *______________________________________________________________________________________________________|
  */
 
-void tm_init(unsigned int ID) {
+void tm_init(nodeid_t ID) {
     NUM_DSL_NODES = (int) ((NUM_UES / DSLNDPERNODES)) + (NUM_UES % DSLNDPERNODES ? 1 : 0);
 
     sys_tm_init(ID);
@@ -55,6 +55,28 @@ void tm_init(unsigned int ID) {
 #ifdef PGAS
         PGAS_alloc_init(0);
 #endif
+    }
+}
+
+/*
+ * Trampolining code for terminating everything
+ */
+void
+tm_term()
+{
+    if (ID % DSLNDPERNODES == 0) {
+        // DSL node
+        // common stuff
+
+        // platform specific stuff
+        sys_dsl_term();
+    }
+    else { 
+    	//app node
+        // common stuff
+
+        // plaftom specific stuff
+        sys_ps_term();
     }
 }
 

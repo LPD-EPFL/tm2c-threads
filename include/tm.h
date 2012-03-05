@@ -179,7 +179,7 @@ extern "C" {
     free(stm_tx_node); }                                  
 
 #define TM_TERM                                                         \
-    /*tm_term();*/                                                      \
+    tm_term();                                                          \
     term_system();
 
 #define TX_LOAD(addr)                                                   \
@@ -363,7 +363,8 @@ retry:
 
     int color(int id, void *aux);
 
-    void tm_init(unsigned int ID);
+    void tm_init(nodeid_t ID);
+    void tm_term();
 
     void ps_publish_finish_all(unsigned int locked);
 
