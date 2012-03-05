@@ -258,13 +258,7 @@ void ps_send_stats(stm_tx_node_t* stats, double duration) {
     psc->max_retries = stats->max_retries;
     psc->tx_duration = duration;
 
-    char data[PS_BUFFER_SIZE];
-
-    memcpy(data, psc, sizeof (PS_COMMAND));
-    int i;
-    for (i = 0; i < NUM_DSL_UES; i++) {
-        iRCCE_isend(data, PS_BUFFER_SIZE, dsl_nodes[i], NULL);
-    }
+    sys_sendcmd_all(psc, sizeof(PS_COMMAND));
 }
 
 /*

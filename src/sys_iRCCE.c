@@ -135,7 +135,21 @@ sys_sendcmd(void* data, size_t len, nodeid_t to)
 	return (iRCCE_isend(buf, PS_BUFFER_SIZE, to, NULL) == iRCCE_SUCCESS);
 }
 
-int
+EXINLINED int
+sys_sendcmd_all(void* data, size_t len)
+{
+	char buf[PS_BUFFER_SIZE];
+	memcpy(buf, data, len);
+	int res = 1;
+	nodeid_t to;
+	for (to=0; to < NUM_DSL_UES; to++) {
+		res = res 
+			&& (iRCCE_isend(buf, PS_BUFFER_SIZE, to, NULL) == iRCCE_SUCCESS);
+	}
+	return res;
+}
+
+EXINLINED int
 sys_recvcmd(void* data, size_t len, nodeid_t from)
 {
 	int res = iRCCE_irecv(data, PS_BUFFER_SIZE, from, NULL);
