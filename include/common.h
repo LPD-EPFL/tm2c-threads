@@ -106,6 +106,33 @@ extern RCCE_COMM RCCE_COMM_APP;
 
 #endif 
 
+#ifdef PLATFORM_CLUSTER
+extern void*  zmq_context;             // here, we keep the context (seems necessary)
+extern void*  the_responder;           // for dsl nodes, it will be the responder socket; for app node, it will be NULL
+extern void** the_sockets;             // for app nodes, it will be the list containing sockets; for dsl nodes, it should be NULL
+
+extern void*  zmq_barrier_subscriber; // socket for the barrier subscriber
+extern void*  zmq_barrier_client;     // socket for applying for the barrier
+
+EXINLINED char *zmq_s_recv(void *socket);
+EXINLINED int zmq_s_send(void *socket, char *string);
+#define BARRIER_(type)    do {                                               \
+    PRINT("BARRIER %s\n", type);                                             \
+    if ((ID % DSLNDPERNODES == 0) && !strcmp(type,"app")) break;             \
+       PRINT("Waiting at the barrier\n");                                    \
+       zmq_s_send(zmq_barrier_client, type);                                 \
+       char *received = zmq_s_recv(zmq_barrier_client);                      \
+       free(received);                                                       \
+       received = zmq_s_recv(zmq_barrier_subscriber);                        \
+       free(received);                                                       \
+       PRINT("Passed through the barrier\n");                                \
+} while (0);
+
+#define BARRIER    BARRIER_("app")
+#define BARRIERW   BARRIER_("all")
+#endif
+/*  ------- Plug platform related things here END   ------- */
+
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>

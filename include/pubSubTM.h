@@ -47,6 +47,9 @@ extern "C" {
 
     typedef struct {
         unsigned int type; //PS_COMMAND_TYPE
+#ifdef PLATFORM_CLUSTER
+		nodeid_t nodeId;
+#endif
 
         union {
 

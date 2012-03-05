@@ -1,14 +1,23 @@
-PLATFORM_CFLAGS = -arch i386 -O3 -Wall 
+PLATFORM_CFLAGS = -O3 -Wall 
 PLATFORM_LDFLAGS = 
-PLATFORM_LIBS = -lzmq -lconfig
-PLATFORM_DEFINES = -DRUNS_ON_CLUSTER \
-				   -DDO_TIMINGS -DDO_TIMINGS_TICKS
+PLATFORM_LIBS = -lzmq
+PLATFORM_DEFINES = -DPLATFORM_CLUSTER \
+				   -DDSL \
+				   -DPGAS \
+                   -UDEBUG_UTILIZATION \
+                   -UDO_TIMINGS \
+                   -DBACKOFF \
 
 HELPER_APPS += barrier_syncer
 
-HAS_TASKLIB = yes
+HAS_TASKLIB = no
 
 barrier_syncer: $(SRCPATH)/barrier_syncer.c
 	$(C) -o $@ $(CFLAGS) $(LIBS) $^
 
-SRCS_PURE += clustermem.c
+ARCHIVE_SRCS_PURE += sys_CLUSTER.c
+ARCHIVE_SRCS_PURE += clustermem.c
+
+# non-pgas experiments will not work
+ALL_BMARKS = bank
+

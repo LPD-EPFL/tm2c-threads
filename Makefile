@@ -29,13 +29,7 @@ ARCHIVE_SRCS_PURE:= pubSubTM.c tm.c log.c dslock.c \
 
 ## Apps ##
 APPS_DIR := apps
-APPS = tm1 tm2 tm3 tm4 tm5 tm6 tm7 tm8 tm9 tm10 \
-	   toall all2all \
-	   pingpong async_pingpong \
-	   ring ring_token ring_simple \
-	   pthread \
-	   bm_rams global_clock \
-	   madmonkey spam
+APPS = tm1 tm2 tm3 tm4 tm5 tm6 tm7 tm8 tm9 tm10
 
 # apps that need tasklib in order to compile
 APPS_TASKLIB = ps_hashtable \
