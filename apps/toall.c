@@ -27,7 +27,7 @@
 void listen(int repeats);
 void send(int, int);
 inline long rand_range(long r);
-inline void srand_core();
+static inline void srand_core();
 
 /*variables*/
 int rcounter = 0; /*receives counter  */
