@@ -14,12 +14,12 @@ void dsl_init(void);
 
 void dsl_communication();
 
-inline CONFLICT_TYPE try_subscribe(nodeid_t nodeId, tm_addr_t shmem_address);
-inline CONFLICT_TYPE try_publish(nodeid_t nodeId, tm_addr_t shmem_address);
-inline void unsubscribe(nodeid_t nodeId, tm_addr_t shmem_address);
-inline void publish_finish(nodeid_t nodeId, tm_addr_t shmem_address);
-inline void print_global_stats();
-inline void print_hashtable_usage();
+INLINED CONFLICT_TYPE try_subscribe(nodeid_t nodeId, tm_addr_t shmem_address);
+INLINED CONFLICT_TYPE try_publish(nodeid_t nodeId, tm_addr_t shmem_address);
+INLINED void unsubscribe(nodeid_t nodeId, tm_addr_t shmem_address);
+INLINED void publish_finish(nodeid_t nodeId, tm_addr_t shmem_address);
+void print_global_stats();
+void print_hashtable_usage();
 
 extern unsigned long int stats_total, stats_commits, stats_aborts, stats_max_retries, stats_aborts_war,
         stats_aborts_raw, stats_aborts_waw, stats_received;
@@ -30,5 +30,23 @@ extern unsigned int NUM_UES_APP;
 
 extern unsigned int ID; //=RCCE_ue()
 extern unsigned int NUM_UES;
+
+INLINED CONFLICT_TYPE try_subscribe(nodeid_t nodeId, tm_addr_t shmem_address) {
+
+    return ps_hashtable_insert(ps_hashtable, nodeId, (uintptr_t)shmem_address, READ);;
+}
+
+INLINED CONFLICT_TYPE try_publish(nodeid_t nodeId, tm_addr_t shmem_address) {
+
+    return ps_hashtable_insert(ps_hashtable, nodeId, (uintptr_t)shmem_address, WRITE);;
+}
+
+INLINED void unsubscribe(nodeid_t nodeId, tm_addr_t shmem_address) {
+    ps_hashtable_delete(ps_hashtable, nodeId, (uintptr_t)shmem_address, READ);
+}
+
+INLINED void publish_finish(nodeid_t nodeId, tm_addr_t shmem_address) {
+    ps_hashtable_delete(ps_hashtable, nodeId, (uintptr_t)shmem_address, WRITE);
+}
 
 #endif

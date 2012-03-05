@@ -66,25 +66,7 @@ void dsl_init(void) {
     dsl_communication();
 }
 
-inline CONFLICT_TYPE try_subscribe(nodeid_t nodeId, tm_addr_t shmem_address) {
-
-    return ps_hashtable_insert(ps_hashtable, nodeId, (uintptr_t)shmem_address, READ);;
-}
-
-inline CONFLICT_TYPE try_publish(nodeid_t nodeId, tm_addr_t shmem_address) {
-
-    return ps_hashtable_insert(ps_hashtable, nodeId, (uintptr_t)shmem_address, WRITE);;
-}
-
-inline void unsubscribe(nodeid_t nodeId, tm_addr_t shmem_address) {
-    ps_hashtable_delete(ps_hashtable, nodeId, (uintptr_t)shmem_address, READ);
-}
-
-inline void publish_finish(nodeid_t nodeId, tm_addr_t shmem_address) {
-    ps_hashtable_delete(ps_hashtable, nodeId, (uintptr_t)shmem_address, WRITE);
-}
-
-inline void print_global_stats() {
+void print_global_stats() {
     stats_duration /= NUM_UES_APP;
 
     printf("||||||||||||||||||||||||||||||||||||||||||||||||||||||\n");
@@ -142,7 +124,7 @@ inline void print_global_stats() {
     fflush(stdout);
 }
 
-inline void print_hashtable_usage() {
+void print_hashtable_usage() {
 #ifdef DEBUG_UTILIZATION
     PRINTSME("USAGE ()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()\n");
 
