@@ -27,9 +27,12 @@ void init_configuration(int* argc, char** argv[]) {
 	}
 
 	int p = 1;
+	int clen = strlen("-config=");
 	while (p < *argc
-			&& strcmp("-config=",(*argv)[p]) != 0)
+			&& strncmp("-config=",(*argv)[p], clen) != 0) {
 		p++;
+	}
+
 	if (p < *argc) {
 		char *cf = (*argv)[p]+strlen("-config="); // to skip "-config="
 
