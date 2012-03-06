@@ -101,7 +101,7 @@ MAIN(int argc, char **argv) {
 inline void ro_tx(int * sis) {
     int i;
     for (i = 0; i < NUM_TXOPS; i++) {
-        ptrdiff_t rnd = (ptrdiff_t)rand_range(SHMEM_SIZE1);
+        long rnd = rand_range(SHMEM_SIZE1);
 #ifdef PGAS
         sum = TX_LOAD(sis + rnd);
 #else
@@ -120,7 +120,7 @@ inline void ro_tx(int * sis) {
 inline void update_tx(int * sis) {
     int i;
     for (i = 0; i < NUM_TXOPS; i++) {
-        ptrdiff_t rnd = (ptrdiff_t)rand_range(SHMEM_SIZE1);
+        long rnd = rand_range(SHMEM_SIZE1);
 
         ROLL(WRITE_PRCNT) {
 #ifdef PGAS
