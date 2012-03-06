@@ -263,7 +263,7 @@ inline write_entry_t * write_set_contains(write_set_t *write_set, tm_addr_t addr
 inline read_set_t * read_set_new() {
     read_set_t *read_set;
 
-    if ((read_set = (read_set_t *) malloc(sizeof (read_entry_l_t))) == NULL) {
+    if ((read_set = (read_set_t *) malloc(sizeof (read_set_t))) == NULL) {
         PRINTD("Could not initialize the read set");
         return NULL;
     }
