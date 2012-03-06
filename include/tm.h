@@ -282,15 +282,15 @@ retry:
 #endif
                     TX_ABORT(conflict);
                 }
+#ifndef READ_BUF_OFF
             }
+#endif
 #ifdef PGAS
             return read_value;
 #else
             return addr;
 #endif
-#ifndef READ_BUF_OFF
         }
-#endif
     }
 
     /*  get a tx write lock for address addr
