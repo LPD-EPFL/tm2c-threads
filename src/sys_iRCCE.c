@@ -129,6 +129,9 @@ sys_ps_term(void)
 int
 sys_sendcmd(void* data, size_t len, nodeid_t to)
 {
+	if (len > PS_BUFFER_SIZE) {
+		return 0;
+	}
 	char buf[PS_BUFFER_SIZE];
 	memcpy(buf, data, len);
 	return (iRCCE_isend(buf, PS_BUFFER_SIZE, to, NULL) == iRCCE_SUCCESS);
@@ -151,7 +154,7 @@ sys_sendcmd_all(void* data, size_t len)
 int
 sys_recvcmd(void* data, size_t len, nodeid_t from)
 {
-	int res = iRCCE_irecv(data, PS_BUFFER_SIZE, from, NULL);
+	int res = iRCCE_irecv(data, len, from, NULL);
 	return (res == RCCE_SUCCESS);
 }
 
