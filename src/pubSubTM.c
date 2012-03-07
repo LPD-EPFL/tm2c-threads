@@ -213,6 +213,9 @@ void ps_unsubscribe(tm_addr_t address) {
 #else
     ps_sendb(responsible_node, PS_UNSUBSCRIBE, address_offs, NO_CONFLICT);
 #endif
+#ifdef PLATFORM_CLUSTER
+	ps_recvb(responsible_node);
+#endif
 }
 
 void ps_publish_finish(tm_addr_t address) {
@@ -227,6 +230,9 @@ void ps_publish_finish(tm_addr_t address) {
 #else
     ps_sendb(responsible_node, PS_PUBLISH_FINISH, address_offs, NO_CONFLICT);
 #endif
+#ifdef PLATFORM_CLUSTER
+	ps_recvb(responsible_node);
+#endif
 }
 
 void ps_finish_all(CONFLICT_TYPE conflict) {
@@ -239,12 +245,16 @@ void ps_finish_all(CONFLICT_TYPE conflict) {
     memcpy(data, psc, sizeof (PS_COMMAND));
 #endif
 
-    unsigned int i;
+    nodeid_t i;
     for (i = 0; i < NUM_UES; i++) {
         if (nodes_contacted[i] != 0) { //can be changed to non-blocking
 
 #ifndef FINISH_ALL_PARALLEL
             ps_sendb(i, PS_REMOVE_NODE, 0, conflict);
+#ifdef PLATFORM_CLUSTER
+			// need a dummy receive, due to the way how ZMQ works
+			ps_recvb(i);
+#endif
 #else
             if (iRCCE_isend(data, PS_BUFFER_SIZE, i, &sends[i]) != iRCCE_SUCCESS) {
                 iRCCE_add_send_to_wait_list(&waitlist, &sends[i]);
