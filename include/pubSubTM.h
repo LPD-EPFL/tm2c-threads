@@ -48,6 +48,7 @@ extern "C" {
     typedef struct {
         unsigned int type; //PS_COMMAND_TYPE
 #ifdef PLATFORM_CLUSTER
+		// we need IDs on networked systems
 		nodeid_t nodeId;
 #endif
 

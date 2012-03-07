@@ -6,10 +6,12 @@
  * 
  */
 
-#include "../include/common.h"
-#include "../include/pubSubTM.h"
+#include "common.h"
+#include "pubSubTM.h"
 
-unsigned int *dsl_nodes;
+nodeid_t *dsl_nodes; // holds the ids of the nodes. ids are in range 0..48 (possibly more)
+// To get the address of the node, one must call id_to_addr
+
 unsigned short nodes_contacted[48];
 CONFLICT_TYPE ps_response; //TODO: make it more sophisticated
 
@@ -19,15 +21,15 @@ PS_COMMAND *psc;
 
 int read_value;
 
-static inline void ps_sendb(unsigned short int target, PS_COMMAND_TYPE operation,
+static inline void ps_sendb(nodeid_t target, PS_COMMAND_TYPE operation,
 							tm_addr_t address, CONFLICT_TYPE response);
-static inline void ps_recvb(unsigned short int from);
+static inline void ps_recvb(nodeid_t from);
 
 inline BOOLEAN shmem_init_start_address();
 inline void unsubscribe(nodeid_t nodeId, tm_addr_t shmem_address);
 
 static inline tm_addr_t shmem_address_offset(tm_addr_t shmem_address);
-static inline unsigned int DHT_get_responsible_node(tm_addr_t shmem_address, tm_addr_t* address_offset);
+static inline nodeid_t DHT_get_responsible_node(tm_addr_t shmem_address, tm_addr_t* address_offset);
 
 inline void publish_finish(nodeid_t nodeId, tm_addr_t shmem_address);
 
@@ -60,16 +62,22 @@ void ps_init_(void) {
 
 #ifdef PGAS
 
-static inline void ps_send_rl(unsigned short int target, tm_addr_t address) {
+static inline void ps_send_rl(nodeid_t target, tm_addr_t address) {
 
+#ifdef PLATFORM_CLUSTER
+	psc->nodeId = ID;
+#endif
     psc->type = PS_SUBSCRIBE;
     psc->address = (uintptr_t)address;
 
     sys_sendcmd(psc, sizeof(PS_COMMAND), target);
 }
 
-static inline void ps_send_wl(unsigned short int target, tm_addr_t address, int value) {
+static inline void ps_send_wl(nodeid_t target, tm_addr_t address, int value) {
 
+#ifdef PLATFORM_CLUSTER
+	psc->nodeId = ID;
+#endif
     psc->type = PS_PUBLISH;
     psc->address = (uintptr_t)address;
     psc->write_value = value;
@@ -77,8 +85,11 @@ static inline void ps_send_wl(unsigned short int target, tm_addr_t address, int 
     sys_sendcmd(psc, sizeof(PS_COMMAND), target);
 }
 
-static inline void ps_send_winc(unsigned short int target, tm_addr_t address, int value) {
+static inline void ps_send_winc(nodeid_t target, tm_addr_t address, int value) {
 
+#ifdef PLATFORM_CLUSTER
+	psc->nodeId = ID;
+#endif
     psc->type = PS_WRITE_INC;
     psc->address = (uintptr_t)address;
     psc->write_value = value;
@@ -86,7 +97,7 @@ static inline void ps_send_winc(unsigned short int target, tm_addr_t address, in
     sys_sendcmd(psc, sizeof(PS_COMMAND), target);
 }
 
-static inline void ps_recv_wl(unsigned short int from) {
+static inline void ps_recv_wl(nodeid_t from) {
     // XXX: this could be written much better, without globals
     PS_COMMAND cmd; 
 
@@ -96,10 +107,12 @@ static inline void ps_recv_wl(unsigned short int from) {
 #endif
 
 static inline void 
-ps_sendb(unsigned short int target, PS_COMMAND_TYPE command,
+ps_sendb(nodeid_t target, PS_COMMAND_TYPE command,
 		tm_addr_t address, CONFLICT_TYPE response)
 {
-
+#ifdef PLATFORM_CLUSTER
+	psc->nodeId = ID;
+#endif
     psc->type = command;
     psc->address = (uintptr_t)address;
     psc->response = response;
@@ -107,7 +120,7 @@ ps_sendb(unsigned short int target, PS_COMMAND_TYPE command,
     sys_sendcmd(psc, sizeof(PS_COMMAND), target);
 }
 
-static inline void ps_recvb(unsigned short int from) {
+static inline void ps_recvb(nodeid_t from) {
     // XXX: this could be written much better, without globals
     PS_COMMAND cmd; 
 
@@ -128,7 +141,7 @@ static inline void ps_recvb(unsigned short int from) {
 
 CONFLICT_TYPE ps_subscribe(tm_addr_t address) {
     tm_addr_t address_offs;
-    unsigned short int responsible_node = DHT_get_responsible_node(address, &address_offs);
+    nodeid_t responsible_node = DHT_get_responsible_node(address, &address_offs);
 
     nodes_contacted[responsible_node]++;
 
@@ -160,7 +173,7 @@ CONFLICT_TYPE ps_publish(tm_addr_t address) {
 #endif
 
     tm_addr_t address_offs;
-    unsigned short int responsible_node = DHT_get_responsible_node(address, &address_offs);
+    nodeid_t responsible_node = DHT_get_responsible_node(address, &address_offs);
 
     nodes_contacted[responsible_node]++;
 
@@ -180,7 +193,7 @@ CONFLICT_TYPE ps_publish(tm_addr_t address) {
 
 CONFLICT_TYPE ps_store_inc(tm_addr_t address, int increment) {
     tm_addr_t address_offs;
-    unsigned short int responsible_node = DHT_get_responsible_node(address, &address_offs);
+    nodeid_t responsible_node = DHT_get_responsible_node(address, &address_offs);
     nodes_contacted[responsible_node]++;
 
     ps_send_winc(responsible_node, SHRINK(address), increment);
@@ -192,7 +205,7 @@ CONFLICT_TYPE ps_store_inc(tm_addr_t address, int increment) {
 
 void ps_unsubscribe(tm_addr_t address) {
     tm_addr_t address_offs;
-    unsigned short int responsible_node = DHT_get_responsible_node(address, &address_offs);
+    nodeid_t responsible_node = DHT_get_responsible_node(address, &address_offs);
 
     nodes_contacted[responsible_node]--;
 #ifdef PGAS
@@ -205,7 +218,7 @@ void ps_unsubscribe(tm_addr_t address) {
 void ps_publish_finish(tm_addr_t address) {
 
     tm_addr_t address_offs;
-    unsigned short int responsible_node = DHT_get_responsible_node(address, &address_offs);
+    nodeid_t responsible_node = DHT_get_responsible_node(address, &address_offs);
 
     nodes_contacted[responsible_node]--;
 
@@ -285,11 +298,12 @@ static inline tm_addr_t shmem_address_offset(tm_addr_t shmem_address) {
     return (tm_addr_t)((uintptr_t)shmem_address - (uintptr_t)shmem_start_address);
 }
 
-static inline unsigned int DHT_get_responsible_node(tm_addr_t shmem_address, tm_addr_t* address_offset) {
+static inline nodeid_t DHT_get_responsible_node(tm_addr_t shmem_address, tm_addr_t* address_offset) {
     /* shift right by DHT_ADDRESS_MASK, thus making 2^DHT_ADDRESS_MASK continuous
         address handled by the same node*/
 #ifdef PGAS
-    return dsl_nodes[(uintptr_t)shmem_address % NUM_DSL_NODES];
+	nodeid_t node = (nodeid_t)((uintptr_t)shmem_address % NUM_DSL_NODES);
+    return dsl_nodes[node];
 #else
     *address_offset = shmem_address_offset(shmem_address);
     return dsl_nodes[((uintptr_t)(*address_offset) >> DHT_ADDRESS_MASK) % NUM_DSL_NODES];
