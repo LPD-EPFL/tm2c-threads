@@ -45,6 +45,7 @@ extern "C" {
 #ifdef PGAS
 #define EAGER_WRITE_ACQ         /*ENABLE eager write lock acquisition*/
 #endif
+#define MAX_NODES 256 /* Maximum expected number of nodes */
 
 #define DSLNDPERNODES   2 /* 1 dedicated DS-Locking core per DSLNDPERNODES cores*/
 #define NUM_DSL_UES     ((int) ((TOTAL_NODES() / DSLNDPERNODES)) + (TOTAL_NODES() % DSLNDPERNODES ? 1 : 0))
