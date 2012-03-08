@@ -16,6 +16,7 @@ PLATFORM_DEFINES = -DPLATFORM_iRCCE \
                    -UDO_TIMINGS \
                    -DBACKOFF \
                    -DSENDLIST \
+                   -UFINISH_ALL_PARALLEL \
 
 HAS_TASKLIB = no
 
