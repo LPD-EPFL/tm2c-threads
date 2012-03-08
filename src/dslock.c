@@ -16,7 +16,6 @@ BOOLEAN tm_has_command;
 #endif
 
 ps_hashtable_t ps_hashtable;
-unsigned int NUM_UES_APP;
 
 #ifdef PGAS
 write_set_pgas_t **PGAS_write_sets;
@@ -32,8 +31,6 @@ unsigned int write_reqs_num = 0;
 #endif
 
 void dsl_init(void) {
-    NUM_UES_APP = NUM_UES - NUM_DSL_UES;
-
 #ifdef PGAS
     PGAS_init();
 
@@ -65,10 +62,10 @@ void dsl_init(void) {
 }
 
 void print_global_stats() {
-    stats_duration /= NUM_UES_APP;
+    stats_duration /= NUM_APP_NODES;
 
     printf("||||||||||||||||||||||||||||||||||||||||||||||||||||||\n");
-    printf("TXs Statistics : %02d Nodes, %02d App Nodes|||||||||||||||||||||||\n", NUM_UES, NUM_UES_APP);
+    printf("TXs Statistics : %02d Nodes, %02d App Nodes|||||||||||||||||||||||\n", NUM_UES, NUM_APP_NODES);
     printf(":: TOTAL -----------------------------------------------------\n");
     printf("T | Avg Duration\t: %.3f s\n", stats_duration);
     printf("T | Starts      \t: %lu\n", stats_total);
@@ -96,7 +93,7 @@ void print_global_stats() {
     printf("TA| Aborts RAW  \t: %lu\t/s\n", stats_aborts_raw);
     printf("TA| Aborts WAW  \t: %lu\t/s\n", stats_aborts_waw);
 
-    int stats_commits_app = stats_commits / NUM_UES_APP;
+    int stats_commits_app = stats_commits / NUM_APP_NODES;
 
     stats_aborts /= NUM_UES;
     stats_aborts_raw /= NUM_UES;

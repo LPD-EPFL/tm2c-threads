@@ -15,7 +15,7 @@
 nodeid_t ID; //=RCCE_ue()
 nodeid_t NUM_UES;
 nodeid_t NUM_DSL_NODES;
-
+nodeid_t NUM_APP_NODES;
 
 stm_tx_t *stm_tx = NULL;
 stm_tx_node_t *stm_tx_node = NULL;
@@ -35,7 +35,11 @@ const char *conflict_reasons[4] = {
  */
 
 void tm_init(nodeid_t ID) {
-    NUM_DSL_NODES = (int) ((NUM_UES / DSLNDPERNODES)) + (NUM_UES % DSLNDPERNODES ? 1 : 0);
+	/* initialize globals */
+	ID            = NODE_ID();
+	NUM_UES       = TOTAL_NODES();
+	NUM_DSL_NODES = ((NUM_UES/DSLNDPERNODES)) + (NUM_UES%DSLNDPERNODES ? 1 : 0);
+	NUM_APP_NODES = NUM_UES-NUM_DSL_NODES;
 
     sys_tm_init(ID);
 

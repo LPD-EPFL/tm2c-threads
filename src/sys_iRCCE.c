@@ -144,7 +144,7 @@ sys_sendcmd_all(void* data, size_t len)
 	memcpy(buf, data, len);
 	int res = 1;
 	nodeid_t to;
-	for (to=0; to < NUM_DSL_UES; to++) {
+	for (to=0; to < NUM_DSL_NODES; to++) {
 		res = res 
 			&& (iRCCE_isend(buf, PS_BUFFER_SIZE, to, NULL) == iRCCE_SUCCESS);
 	}
@@ -327,7 +327,7 @@ void dsl_communication() {
                     stats_max_retries = stats_max_retries < ps_remote->max_retries ? ps_remote->max_retries : stats_max_retries;
                     stats_total += ps_remote->commits + ps_remote->aborts;
 
-                    if (++stats_received >= NUM_UES_APP) {
+                    if (++stats_received >= NUM_APP_NODES) {
                         if (RCCE_ue() == 0) {
                             print_global_stats();
 

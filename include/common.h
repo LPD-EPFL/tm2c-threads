@@ -48,8 +48,6 @@ extern "C" {
 #define MAX_NODES 256 /* Maximum expected number of nodes */
 
 #define DSLNDPERNODES   2 /* 1 dedicated DS-Locking core per DSLNDPERNODES cores*/
-#define NUM_DSL_UES     ((int) ((TOTAL_NODES() / DSLNDPERNODES)) + (TOTAL_NODES() % DSLNDPERNODES ? 1 : 0))
-#define NUM_APP_UES     (TOTAL_NODES() - NUM_DSL_UES)
 
 #define MED printf("[%02d] ", NODE_ID());
 #define PRINT(args...) printf("[%02d] ", NODE_ID()); printf(args); printf("\n"); fflush(stdout)
@@ -98,7 +96,7 @@ extern "C" {
 
 	extern nodeid_t ID;
 	extern nodeid_t NUM_UES;
-	extern nodeid_t NUM_UES_APP;
+	extern nodeid_t NUM_APP_NODES;
 	extern nodeid_t NUM_DSL_NODES;
     
 /*  ------- Plug platform related things here BEGIN ------- */

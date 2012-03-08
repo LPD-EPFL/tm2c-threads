@@ -80,14 +80,10 @@ extern "C" {
     init_configuration(&argc, &argv);                                   \
     init_system(&argc, &argv);                                          \
     {                                                                   \
-        ID = NODE_ID();                                                 \
-        NUM_UES = TOTAL_NODES();                                       \
         tm_init(ID);
 
 #define TM_INITs                                                        \
     {                                                                   \
-        ID = NODE_ID();                                                 \
-        NUM_UES = TOTAL_NODES();                                       \
         tm_init(ID);
 
 #ifdef PGAS
