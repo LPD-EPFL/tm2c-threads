@@ -24,6 +24,8 @@
 #endif
 #endif
 
+#include "tm_types.h"
+
 #ifdef PGAS
 #define EAGER_WRITE_ACQ         /*ENABLE eager write lock acquisition*/
 #endif
@@ -72,11 +74,6 @@ extern "C" {
 #endif
 
     typedef enum {
-        FALSE, //0
-        TRUE //1
-    } BOOLEAN;
-
-    typedef enum {
         NO_CONFLICT,
         READ_AFTER_WRITE,
         WRITE_AFTER_READ,
@@ -90,8 +87,6 @@ extern "C" {
         WRITE
     } RW;
 
-    typedef unsigned int nodeid_t;
-    typedef void* tm_addr_t;
 	extern nodeid_t ID;
 	extern nodeid_t NUM_UES;
 	extern nodeid_t NUM_UES_APP;

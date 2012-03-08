@@ -1,6 +1,8 @@
 #ifndef TM_SYS_H
 #define TM_SYS_H
 
+#include "tm_types.h"
+
 /*
  * This method is called to initialize all necessary things
  * immediately upon startup
@@ -17,8 +19,6 @@ void term_system();
  *
  * On RCCE that is the main shared memory. On cluster, we fake it...
  */
-
-typedef volatile unsigned char* sys_t_vcharp;
 
 sys_t_vcharp sys_shmalloc(size_t);
 void sys_shfree(sys_t_vcharp);
