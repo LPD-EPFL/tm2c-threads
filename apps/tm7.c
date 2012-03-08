@@ -18,8 +18,8 @@
 #define LOST            else
 
 
-inline void update_tx(int * sis);
-inline void ro_tx(int * sis);
+static inline void update_tx(int * sis);
+static inline void ro_tx(int * sis);
 
 
 /* GLOBALS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -98,7 +98,7 @@ MAIN(int argc, char **argv) {
 /*
  * Operations executed for a read-only Tx
  */
-inline void ro_tx(int * sis) {
+static inline void ro_tx(int * sis) {
     int i;
     for (i = 0; i < NUM_TXOPS; i++) {
         long rnd = rand_range(SHMEM_SIZE1);
@@ -117,7 +117,7 @@ inline void ro_tx(int * sis) {
 /*
  * Operations executed for an update Tx
  */
-inline void update_tx(int * sis) {
+static inline void update_tx(int * sis) {
     int i;
     for (i = 0; i < NUM_TXOPS; i++) {
         long rnd = rand_range(SHMEM_SIZE1);
