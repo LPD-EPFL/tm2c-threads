@@ -38,7 +38,7 @@ void
 sys_shfree(sys_t_vcharp ptr)
 {
 #ifdef PGAS
-	fakemem_free(ptr);
+	fakemem_free((void*)ptr);
 #else
 	RCCE_shfree(ptr);
 #endif
