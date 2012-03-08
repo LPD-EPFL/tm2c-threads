@@ -8,6 +8,13 @@
 #ifndef COMMON_H
 #define	COMMON_H
 
+#include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
+#include <stddef.h>
+#include <unistd.h>
+#include <libconfig.h>
+
 #ifndef INLINED
 # if __GNUC__ && !__GNUC_STDC_INLINE__
 #  define INLINED static inline __attribute__((always_inline))
@@ -24,6 +31,7 @@
 #endif
 #endif
 
+#include "measurements.h"
 #include "tm_types.h"
 
 #ifdef PGAS
@@ -128,20 +136,12 @@ EXINLINED int zmq_s_send(void *socket, char *string);
 #endif
 /*  ------- Plug platform related things here END   ------- */
 
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
-#include <stddef.h>
-#include <unistd.h>
-#include "measurements.h"
-
 #define TASKMAIN MAIN
 #define MAIN int main
 #define EXIT(reason) exit(reason);
 #define EXITALL(reason) exit((reason))
 
 // configuration...
-#include <libconfig.h>
 extern config_t *the_config;
 void init_configuration(int*argc, char**argv[]);
 
