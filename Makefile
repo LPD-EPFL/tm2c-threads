@@ -25,7 +25,7 @@ DEBUG_FLAGS := #-O0 -g -ggdb #-DDEBUG
 
 ## Archive ##
 ARCHIVE_SRCS_PURE:= pubSubTM.c tm.c log.c dslock.c \
-			measurements.c pgas.c config.c
+			measurements.c pgas.c config.c fakemem.c
 
 ## Apps ##
 APPS_DIR := apps
