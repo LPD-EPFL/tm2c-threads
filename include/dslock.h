@@ -26,10 +26,6 @@ extern double stats_duration;
 
 extern ps_hashtable_t ps_hashtable;
 
-extern nodeid_t ID;
-extern nodeid_t NUM_UES;
-extern nodeid_t NUM_UES_APP;
-
 INLINED CONFLICT_TYPE try_subscribe(nodeid_t nodeId, tm_addr_t shmem_address) {
 
     return ps_hashtable_insert(ps_hashtable, nodeId, (uintptr_t)shmem_address, READ);;

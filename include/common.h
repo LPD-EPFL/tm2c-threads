@@ -92,10 +92,10 @@ extern "C" {
 
     typedef unsigned int nodeid_t;
     typedef void* tm_addr_t;
-
-    extern nodeid_t ID;
-    extern nodeid_t NUM_UES;
-    extern nodeid_t NUM_DSL_NODES;
+	extern nodeid_t ID;
+	extern nodeid_t NUM_UES;
+	extern nodeid_t NUM_UES_APP;
+	extern nodeid_t NUM_DSL_NODES;
     
 /*  ------- Plug platform related things here BEGIN ------- */
 #ifdef PLATFORM_iRCCE
