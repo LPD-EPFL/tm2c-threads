@@ -184,28 +184,37 @@ extern "C" {
 #ifdef PGAS
 #ifdef EAGER_WRITE_ACQ
 #define TX_STORE(addr, val, datatype)                                   \
-    WLOCK_ACQUIRE(addr, val);                               
+	do {                                                                \
+		tx_wlock(addr, val);                                            \
+	} while (1)
     //not using a write_set in pgas
     //write_set_pgas_update(stm_tx->write_set, val, addr)
-#else
+#else /* !EAGER_WRITE_ACQ */
 #define TX_STORE(addr, val, datatype)                                   \
-    WLOCK_ACQUIRE(addr, val);                                           \
-    write_set_pgas_update(stm_tx->write_set, val, addr)
+	do {                                                                \
+		write_set_pgas_update(stm_tx->write_set, val, addr);            \
+	} while (1)
 #endif
-#else
+#else /* !PGAS */
 #define TX_STORE(addr, ptr, datatype)                                   \
-    write_set_update(stm_tx->write_set, datatype, ((void *) (ptr)), (addr))
+	do {                                                                \
+		write_set_update(stm_tx->write_set,                             \
+		                 datatype,                                      \
+		                 ((void *)(ptr)), (addr));                      \
+	} while (1)
 #endif
 
 
 #ifdef PGAS
 #define TX_LOAD_STORE(addr, op, value, datatype)                        \
-        tx_store_inc(addr, op(value));
+	do { tx_store_inc(addr, op(value)); } while (1)
 #else
 #define TX_LOAD_STORE(addr, op, value, datatype)                        \
-    {tx_wlock(addr);                                                    \
-    int temp__ = (*(int *) (addr)) op (value);                          \
-    write_set_update(stm_tx->write_set, TYPE_INT, &temp__, addr);}
+	do {                                                                \
+		tx_wlock(addr);                                                 \
+		int temp__ = (*(int *) (addr)) op (value);                      \
+		write_set_update(stm_tx->write_set, TYPE_INT, &temp__, addr);   \
+	} while (1)
 #endif
 
 
