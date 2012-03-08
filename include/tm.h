@@ -145,7 +145,7 @@ extern "C" {
 
 #define TX_COMMIT_NO_PUB                                                \
     PRINTD("|| commiting tx");                                          \
-    write_set_persist(stm_tx->write_set);                               \
+    WSET_PERSIST(stm_tx->write_set);                                    \
     ps_finish_all(NO_CONFLICT);                                         \
     mem_info_on_commit(stm_tx->mem_info);                               \
     stm_tx_node->tx_starts += stm_tx->retries;                          \
