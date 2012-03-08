@@ -199,7 +199,7 @@ sys_recvcmd(void* data, size_t len, nodeid_t from)
 static inline void 
 sys_ps_command_send(unsigned short int target,
                     PS_COMMAND_TYPE command, 
-                    tm_addr_t address, 
+                    tm_intern_addr_t address, 
                     uint32_t* value, 
                     CONFLICT_TYPE response) 
 {
@@ -214,10 +214,10 @@ sys_ps_command_send(unsigned short int target,
     if (value != NULL) {
         psc->value = *value;
     } else {
-        psc->address = (uintptr_t)address;
+        psc->address = address;
     }
 #else
-    psc->address = (uintptr_t)address;
+    psc->address = address;
 #endif
     psc->response = response;
 
@@ -276,14 +276,14 @@ void dsl_communication() {
                     PRINT("RL addr: %3d, val: %d", ps_remote->address, PGAS_read(ps_remote->address));
 */
                     sys_ps_command_send(sender, PS_SUBSCRIBE_RESPONSE,
-                    		(tm_addr_t)ps_remote->address, 
+                    		ps_remote->address, 
                     		PGAS_read(ps_remote->address),
-							try_subscribe(sender, (tm_addr_t)ps_remote->address));
+							try_subscribe(sender, ps_remote->address));
 #else
                     sys_ps_command_send(sender, PS_SUBSCRIBE_RESPONSE, 
-                    		(tm_addr_t)ps_remote->address, 
+                    		ps_remote->address, 
                     		NULL,
-                    		try_subscribe(sender, (tm_addr_t)ps_remote->address));
+                    		try_subscribe(sender, ps_remote->address));
                     //sys_ps_command_send(sender, PS_SUBSCRIBE_RESPONSE, ps_remote->address, NO_CONFLICT);
 #endif
                     break;
@@ -294,7 +294,7 @@ void dsl_communication() {
                     write_reqs_num++;
 #endif
 
-                    CONFLICT_TYPE conflict = try_publish(sender, (tm_addr_t)ps_remote->address);
+                    CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
 #ifdef PGAS
                     if (conflict == NO_CONFLICT) {
                         /*
@@ -305,11 +305,13 @@ void dsl_communication() {
                                                 convert.i = ps_remote->write_value;
                                                 PRINT("\t\t\tWriting (val:%d|nxt:%d) to address %d", convert.s[0], convert.s[1], ps_remote->address);
                          */
-                        write_set_pgas_insert(PGAS_write_sets[sender], ps_remote->write_value, (tm_addr_t)(ps_remote->address));
+						write_set_pgas_insert(PGAS_write_sets[sender],
+						                      ps_remote->write_value, 
+						                      ps_remote->address);
                     }
 #endif
                     sys_ps_command_send(sender, PS_PUBLISH_RESPONSE, 
-							(tm_addr_t)(ps_remote->address),
+							ps_remote->address,
 							NULL,
 							conflict);
                     break;
@@ -321,7 +323,7 @@ void dsl_communication() {
 #ifdef DEBUG_UTILIZATION
                     write_reqs_num++;
 #endif
-                    CONFLICT_TYPE conflict = try_publish(sender, (tm_addr_t)ps_remote->address);
+                    CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
                     if (conflict == NO_CONFLICT) {
                         /*
                                                 PRINT("PS_WRITE_INC from %2d for %3d, old: %3d, new: %d", sender, ps_remote->address, PGAS_read(ps_remote->address),
@@ -329,10 +331,10 @@ void dsl_communication() {
                          */
                         write_set_pgas_insert(PGAS_write_sets[sender], 
                         		*PGAS_read(ps_remote->address) + ps_remote->write_value,
-                                (tm_addr_t)ps_remote->address);
+                                ps_remote->address);
                     }
                     sys_ps_command_send(sender, PS_PUBLISH_RESPONSE,
-                    		(tm_addr_t)ps_remote->address,
+                    		ps_remote->address,
                     		NULL,
                     		conflict);
                     break;
