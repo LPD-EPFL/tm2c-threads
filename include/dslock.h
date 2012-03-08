@@ -14,8 +14,8 @@ void dsl_init(void);
 
 void dsl_communication();
 
-INLINED CONFLICT_TYPE try_subscribe(nodeid_t nodeId, tm_addr_t shmem_address);
-INLINED CONFLICT_TYPE try_publish(nodeid_t nodeId, tm_addr_t shmem_address);
+INLINED CONFLICT_TYPE try_subscribe(nodeid_t nodeId, tm_intern_addr_t tm_address);
+INLINED CONFLICT_TYPE try_publish(nodeid_t nodeId, tm_intern_addr_t tm_address);
 
 void print_global_stats();
 void print_hashtable_usage();
@@ -32,22 +32,28 @@ extern double stats_duration;
 
 extern ps_hashtable_t ps_hashtable;
 
-INLINED CONFLICT_TYPE try_subscribe(nodeid_t nodeId, tm_addr_t shmem_address) {
-
-    return ps_hashtable_insert(ps_hashtable, nodeId, (uintptr_t)shmem_address, READ);;
+INLINED CONFLICT_TYPE
+try_subscribe(nodeid_t nodeId, tm_intern_addr_t tm_address) 
+{
+	return ps_hashtable_insert(ps_hashtable, nodeId, tm_address, READ);
 }
 
-INLINED CONFLICT_TYPE try_publish(nodeid_t nodeId, tm_addr_t shmem_address) {
-
-    return ps_hashtable_insert(ps_hashtable, nodeId, (uintptr_t)shmem_address, WRITE);;
+INLINED CONFLICT_TYPE
+try_publish(nodeid_t nodeId, tm_intern_addr_t tm_address) 
+{
+	return ps_hashtable_insert(ps_hashtable, nodeId, tm_address, WRITE);
 }
 
-INLINED void unsubscribe(nodeid_t nodeId, tm_addr_t shmem_address) {
-    ps_hashtable_delete(ps_hashtable, nodeId, (uintptr_t)shmem_address, READ);
+INLINED void
+unsubscribe(nodeid_t nodeId, tm_intern_addr_t tm_address)
+{
+	ps_hashtable_delete(ps_hashtable, nodeId, tm_address, READ);
 }
 
-INLINED void publish_finish(nodeid_t nodeId, tm_addr_t shmem_address) {
-    ps_hashtable_delete(ps_hashtable, nodeId, (uintptr_t)shmem_address, WRITE);
+INLINED void
+publish_finish(nodeid_t nodeId, tm_intern_addr_t tm_address)
+{
+	ps_hashtable_delete(ps_hashtable, nodeId, tm_address, WRITE);
 }
 
 #endif

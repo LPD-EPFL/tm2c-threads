@@ -62,7 +62,8 @@ extern "C" {
                 };
 
                 union {
-                    uintptr_t address;
+                    tm_intern_addr_t address; /* address of the data, internal
+                    							 representation */
                     int32_t   value;
                 };
             };

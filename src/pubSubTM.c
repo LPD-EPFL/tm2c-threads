@@ -15,21 +15,21 @@ nodeid_t *dsl_nodes; // holds the ids of the nodes. ids are in range 0..48 (poss
 unsigned short nodes_contacted[48];
 CONFLICT_TYPE ps_response; //TODO: make it more sophisticated
 
-tm_addr_t shmem_start_address = NULL;
-
 PS_COMMAND *psc;
 
 int read_value;
 
 static inline void ps_sendb(nodeid_t target, PS_COMMAND_TYPE operation,
-							tm_addr_t address, CONFLICT_TYPE response);
+                            tm_intern_addr_t address, CONFLICT_TYPE response);
 static inline void ps_recvb(nodeid_t from);
 
-inline BOOLEAN shmem_init_start_address();
 inline void unsubscribe(nodeid_t nodeId, tm_addr_t shmem_address);
 
-static inline tm_addr_t shmem_address_offset(tm_addr_t shmem_address);
-static inline nodeid_t DHT_get_responsible_node(tm_addr_t shmem_address, tm_addr_t* address_offset);
+/*
+ * Takes the local representation of the address, and finds the node
+ * responsible for it.
+ */
+static inline nodeid_t get_responsible_node(tm_intern_addr_t addr);
 
 inline void publish_finish(nodeid_t nodeId, tm_addr_t shmem_address);
 
@@ -44,8 +44,6 @@ void ps_init_(void) {
     if (psc == NULL) {
         PRINT("malloc psc == NULL");
     }
-
-    shmem_init_start_address();
 
     int dsln = 0;
     unsigned int j;
@@ -62,65 +60,72 @@ void ps_init_(void) {
 
 #ifdef PGAS
 
-static inline void ps_send_rl(nodeid_t target, tm_addr_t address) {
-
+static inline void
+ps_send_rl(nodeid_t target, tm_intern_addr_t address)
+{
 #ifdef PLATFORM_CLUSTER
 	psc->nodeId = ID;
 #endif
     psc->type = PS_SUBSCRIBE;
-    psc->address = (uintptr_t)address;
+    psc->address = address;
 
     sys_sendcmd(psc, sizeof(PS_COMMAND), target);
 }
 
-static inline void ps_send_wl(nodeid_t target, tm_addr_t address, int value) {
-
+static inline void
+ps_send_wl(nodeid_t target, tm_intern_addr_t address, int value)
+{
 #ifdef PLATFORM_CLUSTER
 	psc->nodeId = ID;
 #endif
     psc->type = PS_PUBLISH;
-    psc->address = (uintptr_t)address;
+    psc->address = address;
     psc->write_value = value;
 
     sys_sendcmd(psc, sizeof(PS_COMMAND), target);
 }
 
-static inline void ps_send_winc(nodeid_t target, tm_addr_t address, int value) {
-
+static inline void
+ps_send_winc(nodeid_t target, tm_intern_addr_t address, int value)
+{
 #ifdef PLATFORM_CLUSTER
 	psc->nodeId = ID;
 #endif
     psc->type = PS_WRITE_INC;
-    psc->address = (uintptr_t)address;
+    psc->address = address;
     psc->write_value = value;
 
     sys_sendcmd(psc, sizeof(PS_COMMAND), target);
 }
 
-static inline void ps_recv_wl(nodeid_t from) {
+static inline void
+ps_recv_wl(nodeid_t from)
+{
     // XXX: this could be written much better, without globals
     PS_COMMAND cmd; 
 
     sys_recvcmd(&cmd, sizeof(PS_COMMAND), from);
     ps_response = cmd.response;
 }
-#endif
+#endif /* PGAS */
 
 static inline void 
 ps_sendb(nodeid_t target, PS_COMMAND_TYPE command,
-		tm_addr_t address, CONFLICT_TYPE response)
+         tm_intern_addr_t address, CONFLICT_TYPE response)
 {
 #ifdef PLATFORM_CLUSTER
 	psc->nodeId = ID;
 #endif
     psc->type = command;
-    psc->address = (uintptr_t)address;
+    psc->address = address;
     psc->response = response;
 
     sys_sendcmd(psc, sizeof(PS_COMMAND), target);
 }
 
-static inline void ps_recvb(nodeid_t from) {
+static inline void
+ps_recvb(nodeid_t from)
+{
     // XXX: this could be written much better, without globals
     PS_COMMAND cmd; 
 
@@ -139,19 +144,22 @@ static inline void ps_recvb(nodeid_t from) {
  * ____________________________________________________________________________________________|
  */
 
-CONFLICT_TYPE ps_subscribe(tm_addr_t address) {
-    tm_addr_t address_offs;
-    nodeid_t responsible_node = DHT_get_responsible_node(address, &address_offs);
+CONFLICT_TYPE
+ps_subscribe(tm_addr_t address)
+{
+	tm_intern_addr_t intern_addr = to_intern_addr(address);
+
+    nodeid_t responsible_node = get_responsible_node(intern_addr);
 
     nodes_contacted[responsible_node]++;
 
     //PF_START(1)
 #ifdef PGAS
     //ps_send_rl(responsible_node, (unsigned int) address);
-    ps_send_rl(responsible_node, SHRINK(address));
+    ps_send_rl(responsible_node, intern_addr);
 #else
     //PF_START(2)
-    ps_sendb(responsible_node, PS_SUBSCRIBE, address_offs, NO_CONFLICT);
+    ps_sendb(responsible_node, PS_SUBSCRIBE, intern_addr, NO_CONFLICT);
     //PF_STOP(2)
 
 #endif
@@ -172,16 +180,16 @@ CONFLICT_TYPE ps_publish(tm_addr_t address, int value) {
 CONFLICT_TYPE ps_publish(tm_addr_t address) {
 #endif
 
-    tm_addr_t address_offs;
-    nodeid_t responsible_node = DHT_get_responsible_node(address, &address_offs);
+	tm_intern_addr_t intern_addr = to_intern_addr(address);
+    nodeid_t responsible_node = get_responsible_node(intern_addr);
 
     nodes_contacted[responsible_node]++;
 
 #ifdef PGAS
-    ps_send_wl(responsible_node, SHRINK(address), value);
+    ps_send_wl(responsible_node, intern_addr, value);
     ps_recv_wl(responsible_node);
 #else
-    ps_sendb(responsible_node, PS_PUBLISH, address_offs, NO_CONFLICT); //make sync
+    ps_sendb(responsible_node, PS_PUBLISH, intern_addr, NO_CONFLICT); //make sync
     ps_recvb(responsible_node);
 
 #endif
@@ -192,11 +200,12 @@ CONFLICT_TYPE ps_publish(tm_addr_t address) {
 #ifdef PGAS
 
 CONFLICT_TYPE ps_store_inc(tm_addr_t address, int increment) {
-    tm_addr_t address_offs;
-    nodeid_t responsible_node = DHT_get_responsible_node(address, &address_offs);
+	tm_intern_addr_t intern_addr = to_intern_addr(address);
+    nodeid_t responsible_node = get_responsible_node(intern_addr);
+
     nodes_contacted[responsible_node]++;
 
-    ps_send_winc(responsible_node, SHRINK(address), increment);
+    ps_send_winc(responsible_node, intern_addr, increment);
     ps_recv_wl(responsible_node);
 
     return ps_response;
@@ -204,32 +213,26 @@ CONFLICT_TYPE ps_store_inc(tm_addr_t address, int increment) {
 #endif
 
 void ps_unsubscribe(tm_addr_t address) {
-    tm_addr_t address_offs;
-    nodeid_t responsible_node = DHT_get_responsible_node(address, &address_offs);
+	tm_intern_addr_t intern_addr = to_intern_addr(address);
+    nodeid_t responsible_node = get_responsible_node(intern_addr);
 
     nodes_contacted[responsible_node]--;
-#ifdef PGAS
-    ps_sendb(responsible_node, PS_UNSUBSCRIBE, SHRINK(address), NO_CONFLICT);
-#else
-    ps_sendb(responsible_node, PS_UNSUBSCRIBE, address_offs, NO_CONFLICT);
-#endif
+
+    ps_sendb(responsible_node, PS_UNSUBSCRIBE, intern_addr, NO_CONFLICT);
+
 #ifdef PLATFORM_CLUSTER
 	ps_recvb(responsible_node);
 #endif
 }
 
 void ps_publish_finish(tm_addr_t address) {
-
-    tm_addr_t address_offs;
-    nodeid_t responsible_node = DHT_get_responsible_node(address, &address_offs);
+	tm_intern_addr_t intern_addr = to_intern_addr(address);
+    nodeid_t responsible_node = get_responsible_node(intern_addr);
 
     nodes_contacted[responsible_node]--;
 
-#ifdef PGAS
-    ps_sendb(responsible_node, PS_PUBLISH_FINISH, SHRINK(address), NO_CONFLICT);
-#else
-    ps_sendb(responsible_node, PS_PUBLISH_FINISH, address_offs, NO_CONFLICT);
-#endif
+    ps_sendb(responsible_node, PS_PUBLISH_FINISH, intern_addr, NO_CONFLICT);
+
 #ifdef PLATFORM_CLUSTER
 	ps_recvb(responsible_node);
 #endif
@@ -284,40 +287,15 @@ void ps_send_stats(stm_tx_node_t* stats, double duration) {
     sys_sendcmd_all(psc, sizeof(PS_COMMAND));
 }
 
-/*
- * ____________________________________________________________________________________________
- "DHT"  functions _____________________________________________________________________________|
- * ____________________________________________________________________________________________|
- */
-
-inline BOOLEAN shmem_init_start_address() {
-    if (shmem_start_address == NULL) {
-        char *start = (char *) sys_shmalloc(sizeof (char));
-        if (start == NULL) {
-            PRINTD("shmalloc shmem_init_start_address");
-        }
-        shmem_start_address = (tm_addr_t) start;
-        sys_shfree((volatile unsigned char *) start);
-        return TRUE;
-    }
-
-    return FALSE;
-}
-
-static inline tm_addr_t shmem_address_offset(tm_addr_t shmem_address) {
-    return (tm_addr_t)((uintptr_t)shmem_address - (uintptr_t)shmem_start_address);
-}
-
-static inline nodeid_t DHT_get_responsible_node(tm_addr_t shmem_address, tm_addr_t* address_offset) {
-    /* shift right by DHT_ADDRESS_MASK, thus making 2^DHT_ADDRESS_MASK continuous
-        address handled by the same node*/
+static inline nodeid_t
+get_responsible_node(tm_intern_addr_t addr)
+{
 #ifdef PGAS
-	nodeid_t node = (nodeid_t)((uintptr_t)shmem_address % NUM_DSL_NODES);
+	nodeid_t node = (nodeid_t)(addr % NUM_DSL_NODES);
     return dsl_nodes[node];
 #else
-    *address_offset = shmem_address_offset(shmem_address);
-    return dsl_nodes[((uintptr_t)(*address_offset) >> DHT_ADDRESS_MASK) % NUM_DSL_NODES];
-
+    /* shift right by DHT_ADDRESS_MASK, thus making 2^DHT_ADDRESS_MASK continuous
+        address handled by the same node*/
+    return dsl_nodes[((addr) >> DHT_ADDRESS_MASK) % NUM_DSL_NODES];
 #endif
-
 }

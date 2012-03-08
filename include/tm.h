@@ -236,10 +236,15 @@ extern "C" {
 
     void handle_abort(stm_tx_t *stm_tx, CONFLICT_TYPE reason);
 
+/*
+ * API function
+ * accepts the machine-local address, which must be translated to the appropriate
+ * internal address
+ */
 #ifdef PGAS
     INLINED int tx_load(write_set_pgas_t *ws, read_set_t *rs, tm_addr_t addr) {
 #else
-    INLINED void * tx_load(write_set_t *ws, read_set_t *rs, tm_addr_t addr) {
+    INLINED tm_addr_t tx_load(write_set_t *ws, read_set_t *rs, tm_addr_t addr) {
 #endif
 #ifdef PGAS
         //PRINT("(loading: %d)", addr);

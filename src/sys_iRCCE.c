@@ -3,6 +3,14 @@
 #include "pubSubTM.h"
 #include "dslock.h"
 
+#ifdef PGAS
+/*
+ * Under PGAS we're using fakemem allocator, to have fake allocations, that
+ * mimic those of RCCE_shmalloc
+ */
+#include "fakemem.h"
+#endif
+
 void 
 init_system(int* argc, char** argv[])
 {
@@ -19,13 +27,21 @@ term_system()
 sys_t_vcharp
 sys_shmalloc(size_t size)
 {
+#ifdef PGAS
+	return fakemem_malloc(size);
+#else
 	return RCCE_shmalloc(size);
+#endif
 }
 
 void
 sys_shfree(sys_t_vcharp ptr)
 {
+#ifdef PGAS
+	fakemem_free(ptr);
+#else
 	RCCE_shfree(ptr);
+#endif
 }
 
 nodeid_t
@@ -60,10 +76,30 @@ static char *buf;
 static CONFLICT_TYPE ps_response; //TODO: make it more sophisticated
 static PS_COMMAND *ps_command, *ps_remote, *psc;
 
+#ifndef PGAS
+/*
+ * Pointer to the minimum address we get from the iRCCE_shmalloc
+ * Used for offsets, set in tm_init
+ * Not used with PGAS, as there we rely on fakemem_malloc
+ */
+static tm_addr_t shmem_start_address;
+#endif
+
 void
 sys_tm_init(unsigned int ID)
 {
     RCCE_comm_split(color, NULL, &RCCE_COMM_APP);
+
+#ifndef PGAS
+    if (shmem_start_address == NULL) {
+        char *start = (char *)RCCE_shmalloc(sizeof (char));
+        if (start == NULL) {
+            PRINTD("shmalloc shmem_init_start_address");
+        }
+        shmem_start_address = (tm_addr_t)start;
+        RCCE_shfree((volatile unsigned char*) start);
+    }
+#endif
 }
 
 void
@@ -351,6 +387,16 @@ void dsl_communication() {
 
         }
     }
+}
+
+tm_intern_addr_t
+to_intern_addr(tm_addr_t addr)
+{
+#ifdef PGAS
+	return fakemem_offset((void*)addr);
+#else
+	return ((tm_intern_addr_t)((uintptr_t)addr - (uintptr_t)shmem_start_address));
+#endif
 }
 
 /*
