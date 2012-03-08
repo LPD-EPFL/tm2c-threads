@@ -20,8 +20,14 @@ INLINED CONFLICT_TYPE try_publish(nodeid_t nodeId, tm_addr_t shmem_address);
 void print_global_stats();
 void print_hashtable_usage();
 
-extern unsigned long int stats_total, stats_commits, stats_aborts, stats_max_retries, stats_aborts_war,
-        stats_aborts_raw, stats_aborts_waw, stats_received;
+extern unsigned long int stats_total,
+	                     stats_commits,
+	                     stats_aborts,
+	                     stats_max_retries,
+	                     stats_aborts_war,
+	                     stats_aborts_raw,
+	                     stats_aborts_waw,
+	                     stats_received;
 extern double stats_duration;
 
 extern ps_hashtable_t ps_hashtable;

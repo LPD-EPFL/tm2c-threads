@@ -21,8 +21,14 @@ ps_hashtable_t ps_hashtable;
 write_set_pgas_t **PGAS_write_sets;
 #endif
 
-unsigned long int stats_total = 0, stats_commits = 0, stats_aborts = 0, stats_max_retries = 0, stats_aborts_war = 0,
-        stats_aborts_raw = 0, stats_aborts_waw = 0, stats_received = 0;
+unsigned long int stats_total = 0,
+                  stats_commits = 0,
+                  stats_aborts = 0,
+                  stats_max_retries = 0,
+                  stats_aborts_war = 0,
+                  stats_aborts_raw = 0,
+                  stats_aborts_waw = 0,
+                  stats_received = 0;
 double stats_duration = 0;
 
 #ifdef DEBUG_UTILIZATION
