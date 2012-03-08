@@ -192,15 +192,17 @@ extern "C" {
 #else /* !EAGER_WRITE_ACQ */
 #define TX_STORE(addr, val, datatype)                                   \
 	do {                                                                \
-		write_set_pgas_update(stm_tx->write_set, val, addr);            \
+		tm_intern_addr_t intern_addr = to_intern_addr(addr);            \
+		write_set_pgas_update(stm_tx->write_set, val, intern_addr);     \
 	} while (1)
 #endif
 #else /* !PGAS */
 #define TX_STORE(addr, ptr, datatype)                                   \
 	do {                                                                \
+		tm_intern_addr_t intern_addr = to_intern_addr(addr);            \
 		write_set_update(stm_tx->write_set,                             \
 		                 datatype,                                      \
-		                 ((void *)(ptr)), (addr));                      \
+		                 ((void *)(ptr)), intern_addr);                 \
 	} while (1)
 #endif
 
@@ -255,15 +257,16 @@ extern "C" {
 #else
     INLINED tm_addr_t tx_load(write_set_t *ws, read_set_t *rs, tm_addr_t addr) {
 #endif
+		tm_intern_addr_t intern_addr = to_intern_addr(addr);
 #ifdef PGAS
         //PRINT("(loading: %d)", addr);
         write_entry_pgas_t *we;
-        if ((we = write_set_pgas_contains(ws, addr)) != NULL) {
+        if ((we = write_set_pgas_contains(ws, intern_addr)) != NULL) {
             return we->value;
         }
 #else
         write_entry_t *we;
-        if ((we = write_set_contains(ws, addr)) != NULL) {
+        if ((we = write_set_contains(ws, intern_addr)) != NULL) {
             //read_set_update(rs, addr);
             return (void *) &we->i;
         }
@@ -271,7 +274,7 @@ extern "C" {
 
         else {
 #ifndef READ_BUF_OFF
-            if (!read_set_update(rs, addr)) {
+            if (!read_set_update(rs, intern_addr)) {
 #endif
                 //the node is NOT already subscribed for the address
                 CONFLICT_TYPE conflict;

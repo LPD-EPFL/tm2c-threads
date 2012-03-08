@@ -128,7 +128,7 @@ void ps_publish_finish_all(unsigned int locked) {
 #ifdef PGAS
         // ps_publish_finish(we_current->address, we_current->value);
 #else
-        ps_publish_finish((void *) we_current[locked].address_shmem);
+        ps_publish_finish((void *) we_current[locked].address);
 #endif
     }
 }
@@ -151,7 +151,7 @@ retry:
 #ifdef PGAS
         if ((conflict = ps_publish((tm_addr_t)write_entries[locked].address, write_entries[locked].value)) != NO_CONFLICT) {
 #else
-        if ((conflict = ps_publish(write_entries[locked].address_shmem)) != NO_CONFLICT) {
+        if ((conflict = ps_publish(write_entries[locked].address)) != NO_CONFLICT) {
 #endif
             //ps_publish_finish_all(locked);
 #ifdef BACKOFF
@@ -171,6 +171,6 @@ void ps_unsubscribe_all() {
     read_entry_l_t *read_entries = stm_tx->read_set->read_entries;
     unsigned int i;
     for (i = 0; i < stm_tx->read_set->nb_entries; i++) {
-        ps_unsubscribe((void *) read_entries[i].address_shmem);
+        ps_unsubscribe((void *) read_entries[i].address);
     }
 }

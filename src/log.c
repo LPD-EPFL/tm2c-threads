@@ -115,115 +115,115 @@ inline void write_entry_set_value(write_entry_t *we, void *value) {
     }
 }
 
-inline void write_set_insert(write_set_t *write_set, DATATYPE datatype, void *value, tm_addr_t address_shmem) {
+inline void write_set_insert(write_set_t *write_set, DATATYPE datatype, void *value, tm_intern_addr_t address) {
     write_entry_t *we = write_set_entry(write_set);
 
     we->datatype = datatype;
-    we->address_shmem = address_shmem;
+    we->address = address;
     write_entry_set_value(we, value);
 }
 
-inline void write_set_update(write_set_t *write_set, DATATYPE datatype, void *value, tm_addr_t address_shmem) {
+inline void write_set_update(write_set_t *write_set, DATATYPE datatype, void *value, tm_intern_addr_t address) {
     unsigned int i;
     for (i = 0; i < write_set->nb_entries; i++) {
-        if (write_set->write_entries[i].address_shmem == address_shmem) {
+        if (write_set->write_entries[i].address == address) {
             write_entry_set_value(&write_set->write_entries[i], value);
             return;
         }
     }
 
-    write_set_insert(write_set, datatype, value, address_shmem);
+    write_set_insert(write_set, datatype, value, address);
 }
 
 inline void write_entry_persist(write_entry_t *we) {
     switch (we->datatype) {
         case TYPE_CHAR:
-            CAST_CHAR(we->address_shmem) = we->c;
+            CAST_CHAR(we->address) = we->c;
             break;
         case TYPE_DOUBLE:
-            CAST_DOUBLE(we->address_shmem) = we->d;
+            CAST_DOUBLE(we->address) = we->d;
             break;
         case TYPE_FLOAT:
-            CAST_FLOAT(we->address_shmem) = we->f;
+            CAST_FLOAT(we->address) = we->f;
             break;
         case TYPE_INT:
-            CAST_INT(we->address_shmem) = we->i;
+            CAST_INT(we->address) = we->i;
             break;
         case TYPE_LONG:
-            CAST_LONG(we->address_shmem) = we->li;
+            CAST_LONG(we->address) = we->li;
             break;
         case TYPE_LONGLONG:
-            CAST_LONGLONG(we->address_shmem) = we->lli;
+            CAST_LONGLONG(we->address) = we->lli;
             break;
         case TYPE_SHORT:
-            CAST_SHORT(we->address_shmem) = we->s;
+            CAST_SHORT(we->address) = we->s;
             break;
         case TYPE_UCHAR:
-            CAST_UCHAR(we->address_shmem) = we->uc;
+            CAST_UCHAR(we->address) = we->uc;
             break;
         case TYPE_UINT:
-            CAST_UINT(we->address_shmem) = we->ui;
+            CAST_UINT(we->address) = we->ui;
             break;
         case TYPE_ULONG:
-            CAST_ULONG(we->address_shmem) = we->uli;
+            CAST_ULONG(we->address) = we->uli;
             break;
         case TYPE_ULONGLONG:
-            CAST_ULONGLONG(we->address_shmem) = we->ulli;
+            CAST_ULONGLONG(we->address) = we->ulli;
             break;
         case TYPE_USHORT:
-            CAST_USHORT(we->address_shmem) = we->us;
+            CAST_USHORT(we->address) = we->us;
             break;
         case TYPE_POINTER:
-            we->address_shmem = we->p;
+            we->address = we->p;
             break;
         default:
-            memcpy(we->address_shmem, we->p, we->datatype);
+            memcpy(we->address, we->p, we->datatype);
     }
 }
 
 inline void write_entry_print(write_entry_t *we) {
     switch (we->datatype) {
         case TYPE_CHAR:
-            PRINTSME("[%p :  %c]", (we->address_shmem), we->c);
+            PRINTSME("[%"PRIxIA" :  %c]", (we->address), we->c);
             break;
         case TYPE_DOUBLE:
-            PRINTSME("[%p :  %f]", (we->address_shmem), we->d);
+            PRINTSME("[%"PRIxIA" :  %f]", (we->address), we->d);
             break;
         case TYPE_FLOAT:
-            PRINTSME("[%p :  %f]", (we->address_shmem), we->f);
+            PRINTSME("[%"PRIxIA" :  %f]", (we->address), we->f);
             break;
         case TYPE_INT:
-            PRINTSME("[%p :  %d]", (we->address_shmem), we->i);
+            PRINTSME("[%"PRIxIA" :  %d]", (we->address), we->i);
             break;
         case TYPE_LONG:
-            PRINTSME("[%p :  %ld]", (we->address_shmem), we->li);
+            PRINTSME("[%"PRIxIA" :  %ld]", (we->address), we->li);
             break;
         case TYPE_LONGLONG:
-            PRINTSME("[%p :  %lld]", (we->address_shmem), we->lli);
+            PRINTSME("[%"PRIxIA" :  %lld]", (we->address), we->lli);
             break;
         case TYPE_SHORT:
-            PRINTSME("[%p :  %i]", (we->address_shmem), we->s);
+            PRINTSME("[%"PRIxIA" :  %i]", (we->address), we->s);
             break;
         case TYPE_UCHAR:
-            PRINTSME("[%p :  %c]", (we->address_shmem), we->uc);
+            PRINTSME("[%"PRIxIA" :  %c]", (we->address), we->uc);
             break;
         case TYPE_UINT:
-            PRINTSME("[%p :  %u]", (we->address_shmem), we->ui);
+            PRINTSME("[%"PRIxIA" :  %u]", (we->address), we->ui);
             break;
         case TYPE_ULONG:
-            PRINTSME("[%p :  %lu]", (we->address_shmem), we->uli);
+            PRINTSME("[%"PRIxIA" :  %lu]", (we->address), we->uli);
             break;
         case TYPE_ULONGLONG:
-            PRINTSME("[%p :  %llu]", (we->address_shmem), we->ulli);
+            PRINTSME("[%"PRIxIA" :  %llu]", (we->address), we->ulli);
             break;
         case TYPE_USHORT:
-            PRINTSME("[%p :  %us]", (we->address_shmem), we->us);
+            PRINTSME("[%"PRIxIA" :  %us]", (we->address), we->us);
             break;
         case TYPE_POINTER:
-            PRINTSME("[%p :  %p]", we->address_shmem, we->p);
+            PRINTSME("[%"PRIxIA" :  %p]", we->address, we->p);
             break;
         default:
-            PRINTSME("[%p :  %s]", (char *) we->address_shmem, (const char *) we->p);
+            PRINTSME("[%"PRIxIA" :  %s]", (char *) we->address, (const char *) we->p);
     }
 }
 
@@ -243,10 +243,10 @@ inline void write_set_persist(write_set_t *write_set) {
     }
 }
 
-inline write_entry_t * write_set_contains(write_set_t *write_set, tm_addr_t address_shmem) {
+inline write_entry_t * write_set_contains(write_set_t *write_set, tm_intern_addr_t address) {
     unsigned int i;
     for (i = write_set->nb_entries; i-- > 0; ) {
-        if (write_set->write_entries[i].address_shmem == address_shmem) {
+        if (write_set->write_entries[i].address == address) {
             return &write_set->write_entries[i];
         }
     }
@@ -324,43 +324,43 @@ inline read_entry_l_t * read_set_entry(read_set_t *read_set) {
 
 #ifdef READDATATYPE
 
-inline void read_set_insert(read_set_t *read_set, DATATYPE datatype, tm_addr_t address_shmem) {
+inline void read_set_insert(read_set_t *read_set, DATATYPE datatype, tm_intern_addr_t address) {
 #else
 
-inline void read_set_insert(read_set_t *read_set, tm_addr_t address_shmem) {
+inline void read_set_insert(read_set_t *read_set, tm_intern_addr_t address) {
 #endif
     read_entry_l_t *re = read_set_entry(read_set);
 #ifdef READDATATYPE
     re->datatype = datatype;
 #endif
-    re->address_shmem = address_shmem;
+    re->address = address;
 }
 
 #ifdef READDATATYPE
 
-inline BOOLEAN read_set_update(read_set_t *read_set, DATATYPE datatype, tm_addr_t address_shmem) {
+inline BOOLEAN read_set_update(read_set_t *read_set, DATATYPE datatype, tm_intern_addr_t address) {
 #else
 
-inline BOOLEAN read_set_update(read_set_t *read_set, tm_addr_t address_shmem) {
+inline BOOLEAN read_set_update(read_set_t *read_set, tm_intern_addr_t address) {
 #endif
     unsigned int i;
     for (i = 0; i < read_set->nb_entries; i++) {
-        if (read_set->read_entries[i].address_shmem == address_shmem) {
+        if (read_set->read_entries[i].address == address) {
             return TRUE;
         }
     }
 #ifdef READDATATYPE
-    read_set_insert(read_set, datatype, address_shmem);
+    read_set_insert(read_set, datatype, address);
 #else
-    read_set_insert(read_set, address_shmem);
+    read_set_insert(read_set, address);
 #endif
     return FALSE;
 }
 
-inline read_entry_l_t * read_set_contains(read_set_t *read_set, tm_addr_t address_shmem) {
+inline read_entry_l_t * read_set_contains(read_set_t *read_set, tm_intern_addr_t address) {
     unsigned int i;
     for (i = read_set->nb_entries; i-- > 0;) {
-        if (read_set->read_entries[i].address_shmem == address_shmem) {
+        if (read_set->read_entries[i].address == address) {
             return &read_set->read_entries[i];
         }
     }
@@ -441,17 +441,17 @@ inline write_entry_pgas_t * write_set_pgas_entry(write_set_pgas_t *write_set_pga
     return &write_set_pgas->write_entries[write_set_pgas->nb_entries++];
 }
 
-inline void write_set_pgas_insert(write_set_pgas_t *write_set_pgas, int value, tm_addr_t address) {
+inline void write_set_pgas_insert(write_set_pgas_t *write_set_pgas, int value, tm_intern_addr_t address) {
     write_entry_pgas_t *we = write_set_pgas_entry(write_set_pgas);
 
-    we->address = (uintptr_t)address;
+    we->address = address;
     we->value = value;
 }
 
-inline void write_set_pgas_update(write_set_pgas_t *write_set_pgas, int value, tm_addr_t address) {
+inline void write_set_pgas_update(write_set_pgas_t *write_set_pgas, int value, tm_intern_addr_t address) {
     unsigned int i;
     for (i = 0; i < write_set_pgas->nb_entries; i++) {
-        if (write_set_pgas->write_entries[i].address == (uintptr_t)address) {
+        if (write_set_pgas->write_entries[i].address == address) {
             write_set_pgas->write_entries[i].value = value;
             return;
         }
@@ -484,10 +484,10 @@ inline void write_set_pgas_persist(write_set_pgas_t *write_set_pgas) {
     }
 }
 
-inline write_entry_pgas_t * write_set_pgas_contains(write_set_pgas_t *write_set_pgas, tm_addr_t address) {
+inline write_entry_pgas_t* write_set_pgas_contains(write_set_pgas_t *write_set_pgas, tm_intern_addr_t address) {
     unsigned int i;
     for (i = write_set_pgas->nb_entries; i-- > 0;) {
-        if (write_set_pgas->write_entries[i].address == (uintptr_t)address) {
+        if (write_set_pgas->write_entries[i].address == address) {
             return &write_set_pgas->write_entries[i];
         }
     }

@@ -5,6 +5,11 @@
  * Created on March 31, 2011, 2:27 PM
  * 
  * Read and Write logs for the TM
+ * As such, they need to keep the internal representation of the addresses
+ * (tm_intern_addr_t).
+ * In EAGER_WRITE_ACQ PGAS, only the dslock keeps the buffer.
+ * In non-EAGER_WRITE_ACQ PGAS, both sides keep the buffer.
+ * In other configurations, both sides keep the buffer.
  */
 
 #ifndef LOG_H
@@ -60,7 +65,7 @@ extern "C" {
 
     typedef struct write_entry {
         DATATYPE datatype; /* Data type */
-        tm_addr_t address_shmem;
+        tm_intern_addr_t address;
 
         union {
             void *p;
@@ -95,9 +100,9 @@ extern "C" {
 
     inline void write_entry_set_value(write_entry_t *we, void *value);
 
-    extern void write_set_insert(write_set_t *write_set, DATATYPE datatype, void *value, tm_addr_t address_shmem);
+    extern void write_set_insert(write_set_t *write_set, DATATYPE datatype, void *value, tm_intern_addr_t address);
 
-    extern void write_set_update(write_set_t *write_set, DATATYPE datatype, void *value, tm_addr_t address_shmem);
+    extern void write_set_update(write_set_t *write_set, DATATYPE datatype, void *value, tm_intern_addr_t address);
 
     inline void write_entry_persist(write_entry_t *we);
 
@@ -107,7 +112,7 @@ extern "C" {
 
     extern void write_set_persist(write_set_t *write_set);
 
-    extern write_entry_t * write_set_contains(write_set_t *write_set, tm_addr_t address_shmem);
+    extern write_entry_t * write_set_contains(write_set_t *write_set, tm_intern_addr_t address);
 
 
     /*______________________________________________________________________________________________________
@@ -121,7 +126,7 @@ extern "C" {
 #ifdef READDATATYPE
         DATATYPE datatype;
 #endif
-        tm_addr_t address_shmem;
+        tm_intern_addr_t address;
     } read_entry_l_t;
 
     typedef struct read_set {
@@ -140,21 +145,21 @@ extern "C" {
 
 #ifdef READDATATYPE
 
-    extern void read_set_insert(read_set_t *read_set, DATATYPE datatype, tm_addr_t address_shmem);
+    extern void read_set_insert(read_set_t *read_set, DATATYPE datatype, tm_intern_addr_t address);
 #else
 
-    extern void read_set_insert(read_set_t *read_set, tm_addr_t address_shmem);
+    extern void read_set_insert(read_set_t *read_set, tm_intern_addr_t address);
 #endif
 
 #ifdef READDATATYPE
 
-    extern BOOLEAN read_set_update(read_set_t *read_set, DATATYPE datatype, tm_addr_t address_shmem);
+    extern BOOLEAN read_set_update(read_set_t *read_set, DATATYPE datatype, tm_intern_addr_t address);
 #else
 
-    extern BOOLEAN read_set_update(read_set_t *read_set, tm_addr_t address_shmem);
+    extern BOOLEAN read_set_update(read_set_t *read_set, tm_intern_addr_t address);
 #endif
 
-    extern read_entry_l_t * read_set_contains(read_set_t *read_set, tm_addr_t address_shmem);
+    extern read_entry_l_t * read_set_contains(read_set_t *read_set, tm_intern_addr_t address);
 
 #ifdef	__cplusplus
 }
@@ -172,7 +177,7 @@ extern "C" {
 #define WRITE_SET_PGAS_SIZE     384
 
 typedef struct write_entry_pgas {
-    uintptr_t address;
+    tm_intern_addr_t address;
     int value;
 } write_entry_pgas_t;
 
@@ -190,9 +195,9 @@ extern write_set_pgas_t * write_set_pgas_empty(write_set_pgas_t *write_set_pgas)
 
 inline write_entry_pgas_t * write_set_pgas_entry(write_set_pgas_t *write_set_pgas);
 
-extern void write_set_pgas_insert(write_set_pgas_t *write_set_pgas, int value, tm_addr_t address);
+extern void write_set_pgas_insert(write_set_pgas_t *write_set_pgas, int value, tm_intern_addr_t address);
 
-extern void write_set_pgas_update(write_set_pgas_t *write_set_pgas, int value, tm_addr_t address);
+extern void write_set_pgas_update(write_set_pgas_t *write_set_pgas, int value, tm_intern_addr_t address);
 
 inline void write_entry_pgas_persist(write_entry_pgas_t *we);
 
@@ -202,7 +207,7 @@ extern void write_set_pgas_print(write_set_pgas_t *write_set_pgas);
 
 extern void write_set_pgas_persist(write_set_pgas_t *write_set_pgas);
 
-extern write_entry_pgas_t * write_set_pgas_contains(write_set_pgas_t *write_set_pgas, tm_addr_t address);
+extern write_entry_pgas_t * write_set_pgas_contains(write_set_pgas_t *write_set_pgas, tm_intern_addr_t address);
 
 
 #endif
