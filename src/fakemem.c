@@ -12,6 +12,7 @@
 
 #include <errno.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <unistd.h>
 #include "fakemem.h"
 
@@ -152,7 +153,8 @@ fakemem_malloc(size_t size)
 
 	PRINTD("malloc ends\n\n");
 	// finally, return the address we "allocated"
-	return FAKEMEM_ALLOC_STATE->base_vaddr + new_block->offset;
+	return ((void*)((uintptr_t)FAKEMEM_ALLOC_STATE->base_vaddr +
+	                new_block->offset));
 }
 
 void
@@ -165,7 +167,8 @@ fakemem_free(void* ptr)
 	fakemem_block* walker = FAKEMEM_ALLOC_STATE->taken;
 	fakemem_block* parent = walker;
 
-	size_t off = (size_t)(ptr - FAKEMEM_ALLOC_STATE->base_vaddr);
+	size_t off = (size_t)((uintptr_t)ptr -
+	                      (uintptr_t)FAKEMEM_ALLOC_STATE->base_vaddr);
 	PRINTD("Offset = %ld\n", off);
 	while (walker != NULL) {
 		PRINTMB("walker", walker);
@@ -269,7 +272,8 @@ fakemem_free(void* ptr)
 size_t
 fakemem_offset(void* ptr)
 {
-	return (size_t)(ptr-FAKEMEM_ALLOC_STATE->base_vaddr);
+	return (size_t)((uintptr_t)ptr -
+	                (uintptr_t)FAKEMEM_ALLOC_STATE->base_vaddr);
 }
 
 void*
