@@ -174,7 +174,7 @@ inline void write_entry_persist(write_entry_t *we) {
             CAST_USHORT(we->address) = we->us;
             break;
         case TYPE_POINTER:
-            we->address = we->p;
+            we->address = (tm_intern_addr_t)we->p;
             break;
         default:
             memcpy(we->address, we->p, we->datatype);
