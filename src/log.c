@@ -461,7 +461,7 @@ inline void write_set_pgas_update(write_set_pgas_t *write_set_pgas, int value, t
 }
 
 inline void write_entry_pgas_persist(write_entry_pgas_t *we) {
-    PGAS_write(we->address, we->value, int);
+    PGAS_write(we->address, we->value);
 }
 
 inline void write_entry_pgas_print(write_entry_pgas_t *we) {

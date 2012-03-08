@@ -11,11 +11,14 @@ int * SHMEM;
 /*
 void * SHMEM;
 */
+const size_t SHMEM_SIZE = 2048; 
+
 unsigned int shmem_index = 0;
 unsigned int id__m1d2;
 unsigned int num_ues_d2;
 
 void PGAS_init() {
+    fprintf(stderr, "SHMEM_SIZE: %d\n", SHMEM_SIZE);
     SHMEM = (int *) malloc(SHMEM_SIZE);
 /*
     SHMEM = (void *) malloc(SHMEM_SIZE);
@@ -27,14 +30,14 @@ void PGAS_init() {
     
     bzero(SHMEM, SHMEM_SIZE);
     
-    PRINT("allocated %u bytes for PGAS shmem", SHMEM_SIZE);
+    PRINT("allocated %u bytes for PGAS shmem, position %p", SHMEM_SIZE, SHMEM);
 }
 
 void PGAS_finalize() {
     free(SHMEM);
 }
 
-unsigned int PGAS_size() {
+size_t PGAS_size() {
     return SHMEM_SIZE;
 }
 
