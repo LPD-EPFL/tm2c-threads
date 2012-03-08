@@ -16,8 +16,7 @@ void dsl_communication();
 
 INLINED CONFLICT_TYPE try_subscribe(nodeid_t nodeId, tm_addr_t shmem_address);
 INLINED CONFLICT_TYPE try_publish(nodeid_t nodeId, tm_addr_t shmem_address);
-INLINED void unsubscribe(nodeid_t nodeId, tm_addr_t shmem_address);
-INLINED void publish_finish(nodeid_t nodeId, tm_addr_t shmem_address);
+
 void print_global_stats();
 void print_hashtable_usage();
 
