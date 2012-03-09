@@ -97,6 +97,10 @@ void handle_abort(stm_tx_t *stm_tx, CONFLICT_TYPE reason) {
             break;
         case WRITE_AFTER_WRITE:
             stm_tx->aborts_waw++;
+    		break;
+    	default:
+    		/* nothing */
+    		break;
     }
     //PRINTD("  | read/write_set_free");
 #ifdef PGAS
