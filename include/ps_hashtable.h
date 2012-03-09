@@ -114,7 +114,7 @@ ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId, tm_intern_addr
 	khiter_t k;
 
 	k = kh_get(rw_entry_address, ps_hashtable, address);
-	if (kh_exist(ps_hashtable, k)) { // the entry exists
+	if (k != kh_end(ps_hashtable)) { // the entry exists
 		rw_entry_t* rw_entry = kh_value(ps_hashtable, k);
 		CONFLICT_TYPE conflict = rw_entry_is_conflicting(rw_entry, nodeId, rw);
 		if (conflict != NO_CONFLICT) {
