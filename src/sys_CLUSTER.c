@@ -203,11 +203,15 @@ sys_ps_term(void)
 {
     zmq_close(zmq_barrier_client);
     zmq_close(zmq_barrier_subscriber);
-	nodeid_t j, dsln = 0;
+    nodeid_t j, dsln = 0;
     for (j = 0; j < NUM_UES; j++) {
         if (j % DSLNDPERNODES == 0) {
-            if (dsl_node_addrs[dsln] != NULL)
-            	zmq_close(dsl_node_addrs[dsln]);
+            if (dsl_node_addrs[dsln] != NULL) {
+                if (zmq_close(dsl_node_addrs[dsln]) != 0) {
+                    PRINTD("Problem closing socket %p[%u]\n",
+                           dsl_node_addrs[dsln], dsln);
+                }
+            }
             dsl_node_addrs[dsln] = NULL;
             dsln++;
         }
