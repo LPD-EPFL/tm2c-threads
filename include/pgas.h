@@ -51,14 +51,30 @@ SHRINK(tm_intern_addr_t addr)
 static inline void
 PGAS_write(tm_intern_addr_t addr, uint32_t val)
 {
-	uint32_t* ptr = (void*)((uintptr_t)SHMEM + SHRINK(addr));
+	tm_intern_addr_t off = SHRINK(addr);
+	if (off > SHMEM_SIZE) {
+		PRINT("PGAS_write: write outside of boundaries for PGAS memory: "
+			  " max %"PRIxIA", addr %"PRIxIA"\n",
+			  SHMEM_SIZE,
+			  off);
+		EXIT(139);
+	}
+	uint32_t* ptr = (void*)((uintptr_t)SHMEM + off);
 	*ptr = val;
 }
 
 static inline uint32_t*
 PGAS_read(tm_intern_addr_t addr)
 {
-	void* ptr = (void*)((uintptr_t)SHMEM + SHRINK(addr));
+	tm_intern_addr_t off = SHRINK(addr);
+	if (off > SHMEM_SIZE) {
+		PRINT("PGAS_read: read outside of boundaries for PGAS memory: "
+			  " max %"PRIxIA", addr %"PRIxIA"\n",
+			  SHMEM_SIZE,
+			  off);
+		EXIT(139);
+	}
+	void* ptr = (void*)((uintptr_t)SHMEM + off);
 	return (uint32_t*)ptr;
 }
 

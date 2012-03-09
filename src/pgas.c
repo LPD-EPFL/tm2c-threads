@@ -8,10 +8,8 @@
 #include "pgas.h"
 
 int * SHMEM;
-/*
-void * SHMEM;
-*/
-const size_t SHMEM_SIZE = 2048; 
+
+const size_t SHMEM_SIZE = 16 * 1024 * 1024 * sizeof(int); /* 16 M ints */
 
 unsigned int shmem_index = 0;
 unsigned int id__m1d2;
