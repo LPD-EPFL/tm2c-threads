@@ -147,12 +147,12 @@ void ps_publish_all() {
     unsigned int nb_entries = stm_tx->write_set->nb_entries;
     while (locked < nb_entries) {
         CONFLICT_TYPE conflict;
+        tm_addr_t addr = to_addr(write_entries[locked].address);
 #ifdef BACKOFF
         unsigned int num_delays = 1;
         unsigned int delay = BACKOFF_DELAY; //micro
 retry:
 #endif
-		tm_addr_t addr = to_addr(write_entries[locked].address);
 #ifdef PGAS
         if ((conflict = ps_publish(addr, write_entries[locked].value)) != NO_CONFLICT) {
 #else
