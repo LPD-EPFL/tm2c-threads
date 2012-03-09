@@ -277,6 +277,13 @@ fakemem_offset(void* ptr)
 }
 
 void*
+fakemem_addr_from_offset(size_t offset)
+{
+	return (void*)((uintptr_t)FAKEMEM_ALLOC_STATE->base_vaddr +
+	               offset);
+}
+
+void*
 fakemem_init()
 {
 	FAKEMEM_ALLOC_STATE = (allocator_state*)malloc(sizeof(allocator_state));
