@@ -459,6 +459,12 @@ to_intern_addr(tm_addr_t addr)
 	return fakemem_offset((void*)addr);
 }
 
+tm_addr_t
+to_addr(tm_intern_addr_t i_addr)
+{
+	return (tm_addr_t)fakemem_addr_from_offset(i_addr);
+}
+
 /*
  * Seeding the rand()
  */

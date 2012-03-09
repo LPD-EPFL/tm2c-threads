@@ -49,10 +49,13 @@ int sys_recvcmd(void* data, size_t len, nodeid_t target);
 int sys_sendcmd_all(void* data, size_t len);
 
 /*
- * This function takes the address as used by the client, and transforms it to
- * the internal address (address recognized by the server code, that holds data)
+ * to_intern_addr takes the address as used by the client, and transforms it to
+ * the internal address (address recognized by the server code, that holds data).
+ * to_addr does the opposite, takes the internal address, and transforms it to
+ * the machine address.
  */
 tm_intern_addr_t to_intern_addr(tm_addr_t addr);
+tm_addr_t to_addr(tm_intern_addr_t i_addr);
 
 /*
  * Random numbers related functions

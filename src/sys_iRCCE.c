@@ -401,6 +401,15 @@ to_intern_addr(tm_addr_t addr)
 #endif
 }
 
+tm_addr_t
+to_addr(tm_intern_addr_t i_addr)
+{
+#ifdef PGAS
+	return fakemem_addr_from_offset(i_addr);
+#else
+	return (tm_addr_t)((uintptr_t)shmem_start_address + i_addr);
+#endif
+}
 /*
  * Seeding the rand()
  */
