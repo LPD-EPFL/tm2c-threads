@@ -135,49 +135,57 @@ inline void write_set_update(write_set_t *write_set, DATATYPE datatype, void *va
     write_set_insert(write_set, datatype, value, address);
 }
 
+/*
+ * This method should persist the data. Hence, we need to write at the
+ * location represented by .address this particular data type.
+ * To do so, we need to translate this address from the tm_intern_addr_t to
+ * tm_addr_t on the system.
+ */
 inline void write_entry_persist(write_entry_t *we) {
+	tm_addr_t shmem_address = to_addr(we->address);
     switch (we->datatype) {
         case TYPE_CHAR:
-            CAST_CHAR(we->address) = we->c;
+            CAST_CHAR(shmem_address) = we->c;
             break;
         case TYPE_DOUBLE:
-            CAST_DOUBLE(we->address) = we->d;
+            CAST_DOUBLE(shmem_address) = we->d;
             break;
         case TYPE_FLOAT:
-            CAST_FLOAT(we->address) = we->f;
+            CAST_FLOAT(shmem_address) = we->f;
             break;
         case TYPE_INT:
-            CAST_INT(we->address) = we->i;
+            CAST_INT(shmem_address) = we->i;
             break;
         case TYPE_LONG:
-            CAST_LONG(we->address) = we->li;
+            CAST_LONG(shmem_address) = we->li;
             break;
         case TYPE_LONGLONG:
-            CAST_LONGLONG(we->address) = we->lli;
+            CAST_LONGLONG(shmem_address) = we->lli;
             break;
         case TYPE_SHORT:
-            CAST_SHORT(we->address) = we->s;
+            CAST_SHORT(shmem_address) = we->s;
             break;
         case TYPE_UCHAR:
-            CAST_UCHAR(we->address) = we->uc;
+            CAST_UCHAR(shmem_address) = we->uc;
             break;
         case TYPE_UINT:
-            CAST_UINT(we->address) = we->ui;
+            CAST_UINT(shmem_address) = we->ui;
             break;
         case TYPE_ULONG:
-            CAST_ULONG(we->address) = we->uli;
+            CAST_ULONG(shmem_address) = we->uli;
             break;
         case TYPE_ULONGLONG:
-            CAST_ULONGLONG(we->address) = we->ulli;
+            CAST_ULONGLONG(shmem_address) = we->ulli;
             break;
         case TYPE_USHORT:
-            CAST_USHORT(we->address) = we->us;
+            CAST_USHORT(shmem_address) = we->us;
             break;
         case TYPE_POINTER:
-            we->address = (tm_intern_addr_t)we->p;
+            *(tm_intern_addr_t*)shmem_address = (tm_intern_addr_t)we->p;
             break;
         default:
-            memcpy(we->address, we->p, we->datatype);
+            /* this is not safe */
+            memcpy(&shmem_address, we->p, we->datatype);
     }
 }
 
