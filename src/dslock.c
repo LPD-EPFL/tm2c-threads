@@ -46,7 +46,7 @@ void dsl_init(void) {
         EXIT(-1);
     }
 
-    unsigned int j;
+    nodeid_t j;
     for (j = 0; j < NUM_UES; j++) {
         if (j % DSLNDPERNODES) { /*only for non DSL cores*/
             PGAS_write_sets[j] = write_set_pgas_new();
