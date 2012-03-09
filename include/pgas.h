@@ -44,6 +44,10 @@ SHRINK(tm_intern_addr_t addr)
 	return (tm_intern_addr_t)((uintptr_t)addr/NUM_DSL_NODES);
 }
 
+/*
+ * PGAS_write write to the pgas store, for the address represented by internal
+ * address addr. It does its own translation.
+ */
 static inline void
 PGAS_write(tm_intern_addr_t addr, uint32_t val)
 {
