@@ -95,6 +95,7 @@ extern "C" {
     //TODO: remove ? have them at .c file
     extern BOOLEAN tm_has_command;
     extern int read_value;
+    extern nodeid_t* dsl_nodes;
 
 
     //void ps_init(void);

@@ -182,7 +182,7 @@ sys_sendcmd_all(void* data, size_t len)
 	nodeid_t to;
 	for (to=0; to < NUM_DSL_NODES; to++) {
 		res = res 
-			&& (iRCCE_isend(buf, PS_BUFFER_SIZE, to, NULL) == iRCCE_SUCCESS);
+			&& (iRCCE_isend(buf, PS_BUFFER_SIZE, dsl_nodes[to], NULL) == iRCCE_SUCCESS);
 	}
 	return res;
 }
