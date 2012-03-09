@@ -123,7 +123,7 @@ void* zmq_barrier_client;     /* socket of the barrier subscriber (from barrier_
 static PS_COMMAND *psc; /* buffer to hold the current command */
 
 void
-sys_tm_init(unsigned int ID)
+sys_tm_init()
 {
 }
 

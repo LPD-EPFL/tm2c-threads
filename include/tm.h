@@ -80,11 +80,11 @@ extern "C" {
     init_configuration(&argc, &argv);                                   \
     init_system(&argc, &argv);                                          \
     {                                                                   \
-        tm_init(ID);
+        tm_init();
 
 #define TM_INITs                                                        \
     {                                                                   \
-        tm_init(ID);
+        tm_init();
 
 #ifdef PGAS
 #define WSET_EMPTY           write_set_pgas_empty
@@ -377,7 +377,7 @@ retry:
 
     int color(int id, void *aux);
 
-    void tm_init(nodeid_t ID);
+    void tm_init();
     void tm_term();
 
     void ps_publish_finish_all(unsigned int locked);

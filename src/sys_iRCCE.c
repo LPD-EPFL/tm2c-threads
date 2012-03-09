@@ -86,7 +86,7 @@ static tm_addr_t shmem_start_address;
 #endif
 
 void
-sys_tm_init(unsigned int ID)
+sys_tm_init()
 {
     RCCE_comm_split(color, NULL, &RCCE_COMM_APP);
 

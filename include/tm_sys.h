@@ -33,7 +33,7 @@ nodeid_t TOTAL_NODES(void);
  * Various helper initialization/termination functions
  * (sys_X is called from X initialization/termination function)
  */
-void sys_tm_init(unsigned int ID);
+void sys_tm_init(void);
 void sys_ps_init_(void);
 void sys_dsl_init(void);
 

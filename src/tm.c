@@ -34,14 +34,14 @@ const char *conflict_reasons[4] = {
  *______________________________________________________________________________________________________|
  */
 
-void tm_init(nodeid_t ID) {
+void tm_init() {
 	/* initialize globals */
 	ID            = NODE_ID();
 	NUM_UES       = TOTAL_NODES();
 	NUM_DSL_NODES = ((NUM_UES/DSLNDPERNODES)) + (NUM_UES%DSLNDPERNODES ? 1 : 0);
 	NUM_APP_NODES = NUM_UES-NUM_DSL_NODES;
 
-    sys_tm_init(ID);
+    sys_tm_init();
 
     if (ID % DSLNDPERNODES == 0) {
         //dsl node
