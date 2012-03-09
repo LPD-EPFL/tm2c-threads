@@ -186,7 +186,7 @@ extern "C" {
 #define TX_STORE(addr, val, datatype)                                   \
 	do {                                                                \
 		tx_wlock(addr, val);                                            \
-	} while (1)
+	} while (0)
     //not using a write_set in pgas
     //write_set_pgas_update(stm_tx->write_set, val, addr)
 #else /* !EAGER_WRITE_ACQ */
@@ -194,7 +194,7 @@ extern "C" {
 	do {                                                                \
 		tm_intern_addr_t intern_addr = to_intern_addr(addr);            \
 		write_set_pgas_update(stm_tx->write_set, val, intern_addr);     \
-	} while (1)
+	} while (0)
 #endif
 #else /* !PGAS */
 #define TX_STORE(addr, ptr, datatype)                                   \
@@ -203,20 +203,20 @@ extern "C" {
 		write_set_update(stm_tx->write_set,                             \
 		                 datatype,                                      \
 		                 ((void *)(ptr)), intern_addr);                 \
-	} while (1)
+	} while (0)
 #endif
 
 
 #ifdef PGAS
 #define TX_LOAD_STORE(addr, op, value, datatype)                        \
-	do { tx_store_inc(addr, op(value)); } while (1)
+	do { tx_store_inc(addr, op(value)); } while (0)
 #else
 #define TX_LOAD_STORE(addr, op, value, datatype)                        \
 	do {                                                                \
 		tx_wlock(addr);                                                 \
 		int temp__ = (*(int *) (addr)) op (value);                      \
 		write_set_update(stm_tx->write_set, TYPE_INT, &temp__, addr);   \
-	} while (1)
+	} while (0)
 #endif
 
 
