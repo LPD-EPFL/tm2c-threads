@@ -215,7 +215,8 @@ extern "C" {
 	do {                                                                \
 		tx_wlock(addr);                                                 \
 		int temp__ = (*(int *) (addr)) op (value);                      \
-		write_set_update(stm_tx->write_set, TYPE_INT, &temp__, addr);   \
+		tm_intern_addr_t intern_addr = to_intern_addr((tm_addr_t)addr); \
+		write_set_update(stm_tx->write_set, TYPE_INT, &temp__, intern_addr);   \
 	} while (0)
 #endif
 
