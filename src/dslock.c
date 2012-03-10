@@ -11,10 +11,6 @@
 #include <unistd.h>
 #include <math.h>
 
-#ifndef SENDLIST
-BOOLEAN tm_has_command;
-#endif
-
 ps_hashtable_t ps_hashtable;
 
 #ifdef PGAS

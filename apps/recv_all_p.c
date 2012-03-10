@@ -8,7 +8,6 @@
 #include <pthread.h>
 
 
-BOOLEAN tm_has_command;
 BOOLEAN ps_has_response;
 PS_COMMAND *ps_command;
 
