@@ -297,7 +297,7 @@ sys_recvcmd(void* data, size_t len, nodeid_t from)
     int rc = zmq_recv(dsl_node_addrs[from], &message, 0);
     if (rc != 0) {
 		fprintf(stderr, "sys_recvcmd: there was a problem receiveing msg:\n%s\n",
-				strerror(NULL));
+				strerror(errno));
     	return -1;
     }
 
