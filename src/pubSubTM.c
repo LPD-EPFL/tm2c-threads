@@ -60,22 +60,6 @@ void ps_init_(void) {
     PRINT("[APP NODE] Initialized pub-sub..");
 }
 
-#ifdef PGAS
-
-static inline void
-ps_send_rl(nodeid_t target, tm_intern_addr_t address)
-{
-#ifdef PLATFORM_CLUSTER
-	psc->nodeId = ID;
-#endif
-    psc->type = PS_SUBSCRIBE;
-    psc->address = address;
-
-    sys_sendcmd(psc, sizeof(PS_COMMAND), target);
-}
-
-#endif /* PGAS */
-
 static inline void 
 ps_sendb(nodeid_t target, PS_COMMAND_TYPE command,
          tm_intern_addr_t address, CONFLICT_TYPE response)
