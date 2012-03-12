@@ -21,6 +21,9 @@ int read_value;
 
 static inline void ps_sendb(nodeid_t target, PS_COMMAND_TYPE operation,
                             tm_intern_addr_t address, CONFLICT_TYPE response);
+static inline void ps_sendbv(nodeid_t target, PS_COMMAND_TYPE operation,
+                            tm_intern_addr_t address, uint32_t value,
+                            CONFLICT_TYPE response);
 static inline void ps_recvb(nodeid_t from);
 
 inline void unsubscribe(nodeid_t nodeId, tm_addr_t shmem_address);
@@ -72,41 +75,6 @@ ps_send_rl(nodeid_t target, tm_intern_addr_t address)
     sys_sendcmd(psc, sizeof(PS_COMMAND), target);
 }
 
-static inline void
-ps_send_wl(nodeid_t target, tm_intern_addr_t address, int value)
-{
-#ifdef PLATFORM_CLUSTER
-	psc->nodeId = ID;
-#endif
-    psc->type = PS_PUBLISH;
-    psc->address = address;
-    psc->write_value = value;
-
-    sys_sendcmd(psc, sizeof(PS_COMMAND), target);
-}
-
-static inline void
-ps_send_winc(nodeid_t target, tm_intern_addr_t address, int value)
-{
-#ifdef PLATFORM_CLUSTER
-	psc->nodeId = ID;
-#endif
-    psc->type = PS_WRITE_INC;
-    psc->address = address;
-    psc->write_value = value;
-
-    sys_sendcmd(psc, sizeof(PS_COMMAND), target);
-}
-
-static inline void
-ps_recv_wl(nodeid_t from)
-{
-    // XXX: this could be written much better, without globals
-    PS_COMMAND cmd; 
-
-    sys_recvcmd(&cmd, sizeof(PS_COMMAND), from);
-    ps_response = cmd.response;
-}
 #endif /* PGAS */
 
 static inline void 
@@ -119,6 +87,22 @@ ps_sendb(nodeid_t target, PS_COMMAND_TYPE command,
     psc->type = command;
     psc->address = address;
     psc->response = response;
+
+    sys_sendcmd(psc, sizeof(PS_COMMAND), target);
+}
+
+static inline void 
+ps_sendbv(nodeid_t target, PS_COMMAND_TYPE command,
+         tm_intern_addr_t address, uint32_t value,
+         CONFLICT_TYPE response)
+{
+#ifdef PLATFORM_CLUSTER
+	psc->nodeId = ID;
+#endif
+    psc->type = command;
+    psc->address = address;
+    psc->response = response;
+    psc->write_value = value;
 
     sys_sendcmd(psc, sizeof(PS_COMMAND), target);
 }
@@ -156,12 +140,11 @@ ps_subscribe(tm_addr_t address)
     //PF_START(1)
 #ifdef PGAS
     //ps_send_rl(responsible_node, (unsigned int) address);
-    ps_send_rl(responsible_node, intern_addr);
+    ps_sendbv(responsible_node, PS_SUBSCRIBE, intern_addr, 0, NO_CONFLICT);
 #else
     //PF_START(2)
     ps_sendb(responsible_node, PS_SUBSCRIBE, intern_addr, NO_CONFLICT);
     //PF_STOP(2)
-
 #endif
     //    PRINTD("[SUB] addr: %d to %02d", address_offs, responsible_node);
     //PF_START(3)
@@ -186,13 +169,11 @@ CONFLICT_TYPE ps_publish(tm_addr_t address) {
     nodes_contacted[responsible_node]++;
 
 #ifdef PGAS
-    ps_send_wl(responsible_node, intern_addr, value);
-    ps_recv_wl(responsible_node);
+    ps_sendbv(responsible_node, PS_PUBLISH, intern_addr, value, NO_CONFLICT);
 #else
     ps_sendb(responsible_node, PS_PUBLISH, intern_addr, NO_CONFLICT); //make sync
-    ps_recvb(responsible_node);
-
 #endif
+    ps_recvb(responsible_node);
 
     return ps_response;
 }
@@ -205,8 +186,8 @@ CONFLICT_TYPE ps_store_inc(tm_addr_t address, int increment) {
 
     nodes_contacted[responsible_node]++;
 
-    ps_send_winc(responsible_node, intern_addr, increment);
-    ps_recv_wl(responsible_node);
+    ps_sendbv(responsible_node, PS_WRITE_INC, intern_addr, increment, NO_CONFLICT);
+    ps_recvb(responsible_node);
 
     return ps_response;
 }
