@@ -282,6 +282,7 @@ sys_sendcmd_all(void* data, size_t len)
 		rc = rc
 			|| zmq_send(dsl_node_addrs[to], &request, 0);
 		assert(!rc);
+		zmq_recv(dsl_node_addrs[to], &request, 0);
 	}
 	zmq_msg_close(&request);
 
@@ -414,7 +415,7 @@ fprintf(stderr, "PS_REMOVE_NODE...\n");
             kh_clear(32, memory_hashtable[sender]);
 
             ps_hashtable_delete_node(ps_hashtable, sender);
-            sys_ps_command_reply(sender, PS_REMOVE_NODE,
+            sys_ps_command_reply(sender, PS_DUMMY_REPLY,
                     (tm_addr_t)ps_remote->address,
                     NULL,
                     NO_CONFLICT);
@@ -422,10 +423,18 @@ fprintf(stderr, "PS_REMOVE_NODE...\n");
         case PS_UNSUBSCRIBE:
 fprintf(stderr, "PS_UNSUBSCRIBE...\n");
             ps_hashtable_delete(ps_hashtable, sender, ps_remote->address, READ);
+            sys_ps_command_reply(sender, PS_DUMMY_REPLY, 
+                    (tm_addr_t)ps_remote->address,
+                    0,
+                    NO_CONFLICT);
             break;
         case PS_PUBLISH_FINISH:
 fprintf(stderr, "PS_PUBLISH_FINISH...\n");
             ps_hashtable_delete(ps_hashtable, sender, ps_remote->address, WRITE);
+            sys_ps_command_reply(sender, PS_DUMMY_REPLY, 
+                    (tm_addr_t)ps_remote->address,
+                    0,
+                    NO_CONFLICT);
             break;
         case PS_STATS:
 fprintf(stderr, "PS_STATS...\n");
@@ -441,6 +450,13 @@ fprintf(stderr, "PS_STATS...\n");
             if (++stats_received >= NUM_APP_NODES) {
                 print_global_stats();
             }
+            // zmq thingy, needs a reply
+            sys_ps_command_reply(sender, PS_DUMMY_REPLY, 
+                    (tm_addr_t)ps_remote->address,
+                    0,
+                    NO_CONFLICT);
+
+            EXIT(0);
             break;
         case PS_LOAD_NONTX:
             sys_ps_command_reply(sender, PS_LOAD_NONTX_RESPONSE, 
@@ -450,7 +466,7 @@ fprintf(stderr, "PS_STATS...\n");
             break;
         case PS_STORE_NONTX:
             PGAS_write(ps_remote->address, ps_remote->value);
-            sys_ps_command_reply(sender, PS_STORE_NONTX_RESPONSE,
+            sys_ps_command_reply(sender, PS_DUMMY_REPLY,
                     (tm_addr_t)ps_remote->address,
                     NULL,
                     NO_CONFLICT);

@@ -43,7 +43,8 @@ extern "C" {
         PS_LOAD_NONTX_RESPONSE, //10
         PS_STORE_NONTX_RESPONSE, //11
         PS_STATS,
-        PS_WRITE_INC
+        PS_WRITE_INC,
+    	PS_DUMMY_REPLY // the dummy reply, no response required
     } PS_COMMAND_TYPE;
 
     //TODO: make it union with address normal int..
