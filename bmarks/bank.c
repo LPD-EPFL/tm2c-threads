@@ -200,9 +200,6 @@ bank_t * test(void *data, double duration, int nb_accounts) {
         rand_min = 0;
     }
 
-    /* Create transaction */
-    TM_INITs
-
     bank = (bank_t *) malloc(sizeof (bank_t));
     if (bank == NULL) {
         PRINT("malloc bank");
@@ -301,10 +298,6 @@ fprintf(stderr, "iteration %d\n", i);
 
     PRINT("~~");
     PF_PRINT
-    BARRIER
-    /* Free transaction */
-    TM_END
-    BARRIER
 
     return bank;
 }
@@ -446,7 +439,7 @@ TASKMAIN(int argc, char **argv) {
 
 
     /* Init STM */
-    BARRIERW
+    BARRIER
 
 
 #ifdef DSL
@@ -465,7 +458,14 @@ TASKMAIN(int argc, char **argv) {
     data->nb_write_all = 0;
     data->max_retries = 0;
 
+    /* Create transaction */
+    TM_INITs
+
     bank = test(data, duration, nb_accounts);
+
+	/* End it */
+
+    BARRIER
 
     printf("---Core %d\n", NODE_ID());
     printf("  #transfer   : %lu\n", data->nb_transfer);
@@ -480,6 +480,8 @@ TASKMAIN(int argc, char **argv) {
                 "\t\t\t~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
                 total(bank, 0));
     }
+
+	TM_END
 
     /* Delete bank and accounts */
 
