@@ -395,6 +395,29 @@ fprintf(stderr, "PS_PUBLISH...\n");
                     NULL,
                     try_publish(sender, ps_remote->address));
             break;
+#ifdef PGAS
+		case PS_WRITE_INC:
+			{
+#ifdef DEBUG_UTILIZATION
+			write_reqs_num++;
+#endif
+			CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
+			if (conflict == NO_CONFLICT) {
+				/*
+					PRINT("PS_WRITE_INC from %2d for %3d, old: %3d, new: %d", sender, ps_remote->address, PGAS_read(ps_remote->address),
+					PGAS_read(ps_remote->address) + ps_remote->write_value);
+					*/
+				write_set_pgas_insert(PGAS_write_sets[sender],
+				                      PGAS_read(ps_remote->address) + ps_remote->write_value,
+				                      ps_remote->address);
+			}
+			sys_ps_command_reply(sender, PS_PUBLISH_RESPONSE,
+			                     ps_remote->address,
+			                     NULL,
+			                     conflict);
+			}
+			break;
+#endif
         case PS_REMOVE_NODE:
 fprintf(stderr, "PS_REMOVE_NODE...\n");
             // now, see what is the action, and either persist writes or remove them all...
@@ -414,11 +437,19 @@ fprintf(stderr, "PS_REMOVE_NODE...\n");
             // clean up...
             kh_clear(32, memory_hashtable[sender]);
 
-            ps_hashtable_delete_node(ps_hashtable, sender);
-            sys_ps_command_reply(sender, PS_DUMMY_REPLY,
-                    (tm_addr_t)ps_remote->address,
-                    NULL,
-                    NO_CONFLICT);
+#ifdef PGAS
+			// XXX: maybe not needed?
+			if (ps_remote->response == NO_CONFLICT) {
+				write_set_pgas_persist(PGAS_write_sets[sender]);
+			}
+			PGAS_write_sets[sender] = write_set_pgas_empty(PGAS_write_sets[sender]);
+#endif
+
+			ps_hashtable_delete_node(ps_hashtable, sender);
+			sys_ps_command_reply(sender, PS_DUMMY_REPLY,
+			                     (tm_addr_t)ps_remote->address,
+			                     NULL,
+			                     NO_CONFLICT);
             break;
         case PS_UNSUBSCRIBE:
 fprintf(stderr, "PS_UNSUBSCRIBE...\n");
