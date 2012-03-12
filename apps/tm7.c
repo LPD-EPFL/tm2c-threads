@@ -50,12 +50,12 @@ MAIN(int argc, char **argv) {
 
     int i;
     for (i = ID; i < SIS_SIZE; i += NUM_UES) {
-        sis[i] = -1;
+		NONTX_STORE(&sis[i], -1, TYPE_INT);
     }
 
     BARRIER
 
-            int txupdate = 0;
+    int txupdate = 0;
     int txro = 0;
 
     FOR(DURATION) { //seconds
@@ -80,7 +80,9 @@ MAIN(int argc, char **argv) {
     }
 
     PRINT("%02d\t%d\t%d\t%f", NUM_UES,
-            stm_tx_node->tx_commited, (int) (stm_tx_node->tx_commited / duration__), 1000 * (duration__ / stm_tx_node->tx_commited));
+            stm_tx_node->tx_commited,
+            (int) (stm_tx_node->tx_commited / duration__),
+            1000 * (duration__ / stm_tx_node->tx_commited));
 
     BARRIER
 
@@ -92,6 +94,7 @@ MAIN(int argc, char **argv) {
 
     fprintf(stderr, "%d", sum);
 
+    TM_TERM
     EXIT(0);
 }
 
@@ -103,7 +106,7 @@ static inline void ro_tx(int * sis) {
     for (i = 0; i < NUM_TXOPS; i++) {
         long rnd = rand_range(SHMEM_SIZE1);
 #ifdef PGAS
-        sum = TX_LOAD(sis + rnd);
+        sum = TX_LOAD_T(sis + rnd, int);
 #else
         int *j = (int *) TX_LOAD(sis + rnd);
 
