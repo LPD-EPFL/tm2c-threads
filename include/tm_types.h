@@ -34,7 +34,7 @@ typedef size_t tm_intern_addr_t;
 /*
  * The format in printf to represent this address
  */
-#define PRIxIA PRIxSIZE 
+#define PRIxIA "#0" PRIxSIZE 
 #else
 /*
  * However, for the non-PGAS code, they are uintptr_t 
