@@ -20,11 +20,12 @@
  * GNU General Public License for more details.
  */
 
-#include "../include/tm.h"
 #include <assert.h>
 #include <getopt.h>
 #include <limits.h>
 #include <signal.h>
+
+#include "tm.h"
 
 /*
  * Useful macros to work with transactions. Note that, to use nested
@@ -92,22 +93,14 @@ int transfer(account_t *src, account_t *dst, int amount) {
 
 #ifdef LOAD_STORE
             //TODO: test and use the TX_LOAD_STORE
-            TX_LOAD_STORE(&src->balance, -, amount, TYPE_INT);
+	TX_LOAD_STORE(&src->balance, -, amount, TYPE_INT);
     TX_LOAD_STORE(&dst->balance, +, amount, TYPE_INT);
 
-
-    /* void *i = TX_LOAD(&src->balance);
-  void *j = TX_LOAD(&dst->balance);
-
-  int ii = *(int *) i;
-  int jj = *(int *) j;
-
-  amount = ii + jj;*/
     PF_STOP(3)
     TX_COMMIT_NO_PUB;
     PF_STOP(2)
 #else
-            i = *(int *) TX_LOAD(&src->balance);
+	i = *(int *) TX_LOAD(&src->balance);
     i -= amount;
     TX_STORE(&src->balance, &i, TYPE_INT); //NEED TX_STOREI
     j = *(int *) TX_LOAD(&dst->balance);
@@ -124,7 +117,12 @@ int total(bank_t *bank, int transactional) {
     if (!transactional) {
         total = 0;
         for (i = 0; i < bank->size; i++) {
+#ifndef PLATFORM_CLUSTER
             total += bank->accounts[I(i)].balance;
+#else
+            total += NONTX_LOAD(&bank->accounts[i].balance);
+#endif
+
         }
     }
     else {
@@ -132,7 +130,11 @@ int total(bank_t *bank, int transactional) {
         total = 0;
         for (i = 0; i < bank->size; i++) {
             //PRINTN("(l %d)", i);
+#ifndef PGAS
             total += *(int*) TX_LOAD(&bank->accounts[I(i)].balance);
+#else
+            total += TX_LOAD(&bank->accounts[i].balance);
+#endif
         }
         TX_COMMIT
     }
@@ -146,7 +148,7 @@ void reset(bank_t *bank) {
     TX_START
     for (i = 0; i < bank->size; i++) {
 #ifdef PGAS
-        TX_STORE(&bank->accounts[I(i)].balance, j, TYPE_INT);
+        TX_STORE(&bank->accounts[i].balance, j, TYPE_INT);
 #else
         TX_STORE(&bank->accounts[I(i)].balance, &j, TYPE_INT);
 #endif
@@ -219,13 +221,15 @@ bank_t * test(void *data, double duration, int nb_accounts) {
     }
 
     bank->size = nb_accounts;
+
     ONCE
     {
         int i;
         for (i = 0; i < bank->size; i++) {
             //       PRINTN("(s %d)", i);
-            bank->accounts[I(i)].number = i;
-            bank->accounts[I(i)].balance = 0;
+fprintf(stderr, "iteration %d\n", i);
+			NONTX_STORE(&bank->accounts[i].number, i, TYPE_INT);
+			NONTX_STORE(&bank->accounts[i].balance, 0, TYPE_INT);
         }
     }
 
@@ -280,7 +284,11 @@ bank_t * test(void *data, double duration, int nb_accounts) {
                     dst = ((src + 1) % rand_max) + rand_min;
 
                 PF_START(1)
-                transfer(&bank->accounts[I(src)], &bank->accounts[I(dst)], 1);
+#ifndef PLATFORM_CLUSTER
+               transfer(&bank->accounts[I(src)], &bank->accounts[I(dst)], 1);
+#else
+               transfer(&bank->accounts[src], &bank->accounts[dst], 1);
+#endif
                 PF_STOP(1)
 
                 d->nb_transfer++;
@@ -479,6 +487,8 @@ TASKMAIN(int argc, char **argv) {
     free(bank);
 
     free(data);
+
+    TM_TERM
 
     EXIT(0);
 }
