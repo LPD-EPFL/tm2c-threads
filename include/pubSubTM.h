@@ -142,10 +142,6 @@ extern "C" {
     void ps_publish_finish(tm_addr_t address);
 
     void ps_finish_all(CONFLICT_TYPE conflict);
-    //
-    //    unsigned int shmem_address_offset(void *shmem_address);
-    //
-    //    unsigned int DHT_get_responsible_node(void * shmem_address);
 
     void ps_send_stats(stm_tx_node_t *, double duration);
 #ifdef	__cplusplus
