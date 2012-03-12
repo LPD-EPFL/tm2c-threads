@@ -280,7 +280,7 @@ sys_sendcmd_all(void* data, size_t len)
 	nodeid_t to;
 	for (to=0; to < NUM_DSL_NODES; to++) {
 		rc = rc
-			&& zmq_send(dsl_node_addrs[to], &request, 0);
+			|| zmq_send(dsl_node_addrs[to], &request, 0);
 		assert(!rc);
 	}
 	zmq_msg_close(&request);
@@ -294,7 +294,13 @@ sys_recvcmd(void* data, size_t len, nodeid_t from)
     zmq_msg_t message;
     zmq_msg_init(&message);
 
-    zmq_recv(dsl_node_addrs[from], &message, 0);
+    int rc = zmq_recv(dsl_node_addrs[from], &message, 0);
+    if (rc != 0) {
+		fprintf(stderr, "sys_recvcmd: there was a problem receiveing msg:\n%s\n",
+				strerror(NULL));
+    	return -1;
+    }
+
     int size = zmq_msg_size (&message);
     memcpy(data, zmq_msg_data(&message), size);
     zmq_msg_close (&message);
