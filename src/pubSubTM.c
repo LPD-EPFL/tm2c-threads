@@ -13,7 +13,6 @@ nodeid_t *dsl_nodes; // holds the ids of the nodes. ids are in range 0..48 (poss
 // To get the address of the node, one must call id_to_addr
 
 unsigned short nodes_contacted[48];
-CONFLICT_TYPE ps_response; //TODO: make it more sophisticated
 
 PS_COMMAND *psc;
 
@@ -24,7 +23,7 @@ static inline void ps_sendb(nodeid_t target, PS_COMMAND_TYPE operation,
 static inline void ps_sendbv(nodeid_t target, PS_COMMAND_TYPE operation,
                             tm_intern_addr_t address, uint32_t value,
                             CONFLICT_TYPE response);
-static inline void ps_recvb(nodeid_t from);
+static inline CONFLICT_TYPE ps_recvb(nodeid_t from);
 
 inline void unsubscribe(nodeid_t nodeId, tm_addr_t shmem_address);
 
@@ -107,19 +106,19 @@ ps_sendbv(nodeid_t target, PS_COMMAND_TYPE command,
     sys_sendcmd(psc, sizeof(PS_COMMAND), target);
 }
 
-static inline void
+static inline CONFLICT_TYPE
 ps_recvb(nodeid_t from)
 {
     // XXX: this could be written much better, without globals
     PS_COMMAND cmd; 
 
     sys_recvcmd(&cmd, sizeof(PS_COMMAND), from);
-    ps_response = cmd.response;
 #ifdef PGAS
     PF_START(0)
     read_value = cmd.value;
     PF_STOP(0)
 #endif
+    return cmd.response;
 }
 
 /*
@@ -148,11 +147,11 @@ ps_subscribe(tm_addr_t address)
 #endif
     //    PRINTD("[SUB] addr: %d to %02d", address_offs, responsible_node);
     //PF_START(3)
-    ps_recvb(responsible_node);
+    CONFLICT_TYPE response = ps_recvb(responsible_node);
     //PF_STOP(3)
     // PF_STOP(1)
 
-    return ps_response;
+    return response;
 }
 
 #ifdef PGAS
@@ -173,9 +172,9 @@ CONFLICT_TYPE ps_publish(tm_addr_t address) {
 #else
     ps_sendb(responsible_node, PS_PUBLISH, intern_addr, NO_CONFLICT); //make sync
 #endif
-    ps_recvb(responsible_node);
+    CONFLICT_TYPE response = ps_recvb(responsible_node);
 
-    return ps_response;
+    return response;
 }
 
 #ifdef PGAS
@@ -187,9 +186,9 @@ CONFLICT_TYPE ps_store_inc(tm_addr_t address, int increment) {
     nodes_contacted[responsible_node]++;
 
     ps_sendbv(responsible_node, PS_WRITE_INC, intern_addr, increment, NO_CONFLICT);
-    ps_recvb(responsible_node);
+    CONFLICT_TYPE response = ps_recvb(responsible_node);
 
-    return ps_response;
+    return response;
 }
 #endif
 
