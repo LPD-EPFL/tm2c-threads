@@ -231,7 +231,7 @@ inline void write_entry_print(write_entry_t *we) {
             PRINTSME("[%"PRIxIA" :  %p]", we->address, we->p);
             break;
         default:
-            PRINTSME("[%"PRIxIA" :  %s]", (char *) we->address, (const char *) we->p);
+            PRINTSME("[%"PRIxIA" :  %s]", we->address, (const char *) we->p);
     }
 }
 
