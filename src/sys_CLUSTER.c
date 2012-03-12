@@ -442,21 +442,19 @@ fprintf(stderr, "PS_STATS...\n");
                 print_global_stats();
             }
             break;
-#if 0
         case PS_LOAD_NONTX:
             sys_ps_command_reply(sender, PS_LOAD_NONTX_RESPONSE, 
                     (tm_addr_t)ps_remote->address,
-                    PGAS_read(ps_remote->address), 
+                    PGAS_read(ps_remote->address),
                     NO_CONFLICT);
             break;
         case PS_STORE_NONTX:
             PGAS_write(ps_remote->address, ps_remote->value);
             sys_ps_command_reply(sender, PS_STORE_NONTX_RESPONSE,
                     (tm_addr_t)ps_remote->address,
-                    NULL
+                    NULL,
                     NO_CONFLICT);
             break;
-#endif
         default:
             PRINTD("REMOTE MSG: ??");
         }

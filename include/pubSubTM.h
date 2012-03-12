@@ -38,6 +38,10 @@ extern "C" {
         PS_PUBLISH_RESPONSE, //5
         PS_ABORTED, //6
         PS_REMOVE_NODE, //7
+        PS_LOAD_NONTX, //8
+        PS_STORE_NONTX,   //9
+        PS_LOAD_NONTX_RESPONSE, //10
+        PS_STORE_NONTX_RESPONSE, //11
         PS_STATS,
         PS_WRITE_INC
     } PS_COMMAND_TYPE;
@@ -121,6 +125,13 @@ extern "C" {
 #else
     CONFLICT_TYPE ps_publish(tm_addr_t address);
 #endif
+	
+    /* Non-transactional read of an address */
+    uint32_t ps_load(tm_addr_t address);
+
+	/* Non-transactional write to an address */
+	void ps_store(tm_addr_t address, uint32_t value);
+
     /* Unsubscribes the TX from the address
      */
     void ps_unsubscribe(tm_addr_t address);

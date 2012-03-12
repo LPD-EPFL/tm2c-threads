@@ -178,8 +178,23 @@ extern "C" {
     tm_term();                                                          \
     term_system();
 
+/*
+ * addr is the local address
+ */
 #define TX_LOAD(addr)                                                   \
-    tx_load(stm_tx->write_set, stm_tx->read_set, (addr))
+	tx_load(stm_tx->write_set, stm_tx->read_set, (addr))
+
+#define TX_LOAD_T(addr,type) (type)TX_LOAD(addr)
+
+/*
+ * addr is the local address
+ * NONTX acts as a regular load on iRCCE w/o PGAS
+ * and fetches data from remote on all other systems
+ */
+#define NONTX_LOAD(addr)                                                \
+	nontx_load(addr)
+
+#define NONTX_LOAD_T(addr,type) (type)NONTX_LOAD(addr)
 
 #ifdef PGAS
 #ifdef EAGER_WRITE_ACQ
@@ -195,7 +210,8 @@ extern "C" {
 		tm_intern_addr_t intern_addr = to_intern_addr(addr);            \
 		write_set_pgas_update(stm_tx->write_set, val, intern_addr);     \
 	} while (0)
-#endif
+#endif /* EAGER_WRITE_ACQ */
+
 #else /* !PGAS */
 #define TX_STORE(addr, ptr, datatype)                                   \
 	do {                                                                \
@@ -206,6 +222,14 @@ extern "C" {
 	} while (0)
 #endif
 
+
+#ifdef PLATFORM_CLUSTER
+#define NONTX_STORE(addr, val, datatype)                                \
+		nontx_store(addr, val)
+#else 
+#define NONTX_STORE(addr, val, datatype)                                \
+		*((__typeof__ (val)*)(addr)) = (val)
+#endif
 
 #ifdef PGAS
 #define TX_LOAD_STORE(addr, op, value, datatype)                        \
@@ -339,6 +363,31 @@ retry:
             TX_ABORT(conflict);
         }
     }
+
+    /*
+     * The non transactional load
+     */
+#ifdef PGAS
+	INLINED uint32_t nontx_load(tm_addr_t addr) {
+#ifdef PLATFORM_CLUSTER
+		return ps_load(addr);
+#else
+		return *(uint32_t*)addr;
+#endif
+	}
+#else /* PGAS */
+	INLINED tm_addr_t tx_load(tm_addr_t addr) {
+		// There is no non-PGAS cluster
+		return addr;
+	}
+#endif /* PGAS */
+
+    /*
+     * The non transactional store, only in PGAS version
+     */
+	INLINED void nontx_store(tm_addr_t addr, uint32_t value) {
+		return ps_store(addr, value);
+	}
 
 #ifdef PGAS
 

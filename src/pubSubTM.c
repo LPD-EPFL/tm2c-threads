@@ -176,6 +176,32 @@ CONFLICT_TYPE ps_store_inc(tm_addr_t address, int increment) {
 }
 #endif
 
+uint32_t
+ps_load(tm_addr_t address)
+{
+	tm_intern_addr_t intern_addr = to_intern_addr(address);
+
+    nodeid_t responsible_node = get_responsible_node(intern_addr);
+
+    ps_sendb(responsible_node, PS_LOAD_NONTX, intern_addr, NO_CONFLICT);
+
+    ps_recvb(responsible_node);
+
+    return read_value;
+}
+
+void
+ps_store(tm_addr_t address, uint32_t value)
+{
+	tm_intern_addr_t intern_addr = to_intern_addr(address);
+
+    nodeid_t responsible_node = get_responsible_node(intern_addr);
+
+    ps_sendbv(responsible_node, PS_STORE_NONTX, intern_addr, value, NO_CONFLICT);
+
+    ps_recvb(responsible_node);
+}
+
 void ps_unsubscribe(tm_addr_t address) {
 	tm_intern_addr_t intern_addr = to_intern_addr(address);
     nodeid_t responsible_node = get_responsible_node(intern_addr);
