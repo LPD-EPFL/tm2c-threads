@@ -96,15 +96,14 @@ extern "C" {
 
 #ifdef EAGER_WRITE_ACQ
 #define WLOCKS_ACQUIRE()
-#define WLOCK_ACQUIRE(addr, val)     tx_wlock((addr), (val))
 #else
 #define WLOCKS_ACQUIRE()        ps_publish_all()
-#define WLOCK_ACQUIRE(addr, val) 
 #endif
 
 #define TX_START                                                        \
-    { PRINTD("|| Starting new tx");                                     \
+    { PRINT("|| Starting new tx");                                     \
     short int reason;                                                   \
+fprintf(stderr, "TX_START: stm_tx->env is %p\n", &stm_tx->env); \
     if ((reason = sigsetjmp(stm_tx->env, 0)) != 0) {                    \
         PRINTD("|| restarting due to %d", reason);                      \
         stm_tx->write_set = WSET_EMPTY(stm_tx->write_set);              \
@@ -113,7 +112,7 @@ extern "C" {
     stm_tx->retries++;
 
 #define TX_ABORT(reason)                                                \
-    PRINTD("|| aborting tx");                                           \
+    PRINT("|| aborting tx");                                           \
     handle_abort(stm_tx, reason);                                       \
     siglongjmp(stm_tx->env, reason);
 
@@ -175,6 +174,7 @@ extern "C" {
     free(stm_tx_node); }                                  
 
 #define TM_TERM                                                         \
+    PRINTD("|| FAKE: TM terminates");                                   \
     tm_term();                                                          \
     term_system();
 
