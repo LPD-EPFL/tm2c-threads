@@ -376,7 +376,7 @@ retry:
 #endif
 	}
 #else /* PGAS */
-	INLINED tm_addr_t tx_load(tm_addr_t addr) {
+	INLINED tm_addr_t nontx_load(tm_addr_t addr) {
 		// There is no non-PGAS cluster
 		return addr;
 	}
