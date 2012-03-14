@@ -60,6 +60,8 @@ void dsl_init(void) {
     sys_dsl_init();
 
     PRINT("[DSL NODE] Initialized pub-sub..");
+
+    BARRIERW
     dsl_communication();
 }
 
