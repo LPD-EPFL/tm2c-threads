@@ -379,12 +379,18 @@ dsl_communication()
             if (!kh_ret) kh_del(32, memory_hashtable[sender], kh_iterator);
             kh_value(memory_hashtable[sender], kh_iterator) = ps_remote->value;
 
+            CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
+            if (conflict == NO_CONFLICT) {
+                write_set_pgas_insert(PGAS_write_sets[sender],
+                                      ps_remote->write_value, 
+                                      ps_remote->address);
+            }
+
             sys_ps_command_reply(sender, PS_PUBLISH_RESPONSE,
                     (tm_addr_t)ps_remote->address,
                     NULL,
-                    try_publish(sender, ps_remote->address));
+                    try_publish(sender, conflict);
             break;
-#ifdef PGAS
 		case PS_WRITE_INC:
 			{
 #ifdef DEBUG_UTILIZATION
@@ -406,7 +412,6 @@ dsl_communication()
 			                     conflict);
 			}
 			break;
-#endif
         case PS_REMOVE_NODE:
             // now, see what is the action, and either persist writes or remove them all...
             if (ps_remote->response == NO_CONFLICT) {
@@ -425,13 +430,11 @@ dsl_communication()
             // clean up...
             kh_clear(32, memory_hashtable[sender]);
 
-#ifdef PGAS
 			// XXX: maybe not needed?
 			if (ps_remote->response == NO_CONFLICT) {
 				write_set_pgas_persist(PGAS_write_sets[sender]);
 			}
 			PGAS_write_sets[sender] = write_set_pgas_empty(PGAS_write_sets[sender]);
-#endif
 
 			ps_hashtable_delete_node(ps_hashtable, sender);
 			sys_ps_command_reply(sender, PS_DUMMY_REPLY,
