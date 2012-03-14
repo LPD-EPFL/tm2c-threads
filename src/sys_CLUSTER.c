@@ -389,7 +389,7 @@ dsl_communication()
             sys_ps_command_reply(sender, PS_PUBLISH_RESPONSE,
                     (tm_addr_t)ps_remote->address,
                     NULL,
-                    try_publish(sender, conflict);
+                    try_publish(sender, conflict));
             break;
 		case PS_WRITE_INC:
 			{
