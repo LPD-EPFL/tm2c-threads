@@ -142,12 +142,12 @@ sys_tm_init()
 void
 sys_ps_init_(void)
 {
-	if ((dsl_node_addrs = (void**)malloc(NUM_DSL_NODES * sizeof(void*))) == NULL) {
+	if ((dsl_node_addrs = (void**)malloc(TOTAL_NODES() * sizeof(void*))) == NULL) {
 		PRINT("malloc dsl_node_addrs");
 		EXIT(-1);
 	}
 
-	unsigned int j, dsln = 0;
+	unsigned int j;
 	for (j = 0; j < NUM_UES; j++) {
 		// initialize the sockets to all dsl nodes.
 		// read the configuration, and get the address from there
@@ -165,7 +165,9 @@ sys_ps_init_(void)
 				PRINTD("Failed to connect to %s\n", send_spec_string);
 				EXIT(1);
 			}
-			dsl_node_addrs[dsln++] = a_socket;
+			dsl_node_addrs[j] = a_socket;
+		} else {
+			dsl_node_addrs[j] = NULL;
 		}
 	}
 	MCORE_shmalloc_init(100000*sizeof(int));
@@ -220,7 +222,8 @@ sys_ps_term(void)
 int
 sys_sendcmd(void* data, size_t len, nodeid_t to)
 {
-	assert((to>=0)&&(to<NUM_DSL_NODES));
+	assert((to>=0)&&(to<TOTAL_NODES()));
+	assert(dsl_node_addrs[to]!=NULL);
 	zmq_msg_t request;
 	zmq_msg_init_size(&request, len);
 
@@ -247,7 +250,10 @@ sys_sendcmd_all(void* data, size_t len)
 	memcpy(zmq_msg_data(&request), data, len);
 
 	nodeid_t to;
-	for (to=0; to < NUM_DSL_NODES; to++) {
+	for (to=0; to < TOTAL_NODES(); to++) {
+		if (dsl_node_addrs[to] == NULL)
+			continue;
+
 		rc = rc
 			|| zmq_send(dsl_node_addrs[to], &request, 0);
 		assert(!rc);
