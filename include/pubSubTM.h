@@ -52,7 +52,7 @@ extern "C" {
 
     typedef struct {
         unsigned int type; //PS_COMMAND_TYPE
-#ifdef PLATFORM_CLUSTER
+#ifdef USING_ZMQ
 		// we need IDs on networked systems
 		nodeid_t nodeId;
 #endif

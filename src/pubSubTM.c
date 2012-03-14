@@ -65,7 +65,7 @@ static inline void
 ps_sendb(nodeid_t target, PS_COMMAND_TYPE command,
          tm_intern_addr_t address, CONFLICT_TYPE response)
 {
-#ifdef PLATFORM_CLUSTER
+#ifdef USING_ZMQ
 	psc->nodeId = ID;
 #endif
     psc->type = command;
@@ -80,7 +80,7 @@ ps_sendbv(nodeid_t target, PS_COMMAND_TYPE command,
          tm_intern_addr_t address, uint32_t value,
          CONFLICT_TYPE response)
 {
-#ifdef PLATFORM_CLUSTER
+#ifdef USING_ZMQ 
 	psc->nodeId = ID;
 #endif
     psc->type = command;
@@ -211,7 +211,7 @@ void ps_unsubscribe(tm_addr_t address) {
 
     ps_sendb(responsible_node, PS_UNSUBSCRIBE, intern_addr, NO_CONFLICT);
 
-#ifdef PLATFORM_CLUSTER
+#ifdef USING_ZMQ
 	ps_recvb(responsible_node);
 #endif
 }
@@ -224,7 +224,7 @@ void ps_publish_finish(tm_addr_t address) {
 
     ps_sendb(responsible_node, PS_PUBLISH_FINISH, intern_addr, NO_CONFLICT);
 
-#ifdef PLATFORM_CLUSTER
+#ifdef USING_ZMQ
 	ps_recvb(responsible_node);
 #endif
 }
@@ -245,7 +245,7 @@ void ps_finish_all(CONFLICT_TYPE conflict) {
 
 #ifndef FINISH_ALL_PARALLEL
             ps_sendb(i, PS_REMOVE_NODE, 0, conflict);
-#ifdef PLATFORM_CLUSTER
+#ifdef USING_ZMQ
 			// need a dummy receive, due to the way how ZMQ works
 			ps_recvb(i);
 #endif
