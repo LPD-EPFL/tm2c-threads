@@ -334,11 +334,7 @@ TASKMAIN(int argc, char **argv) {
     double duration = DEFAULT_DURATION;
     int initial = DEFAULT_INITIAL;
 
-#if defined(DSL) && defined(STM) && !defined(SEQUENTIAL)
-    int nb_app_cores = (RCCE_num_ues() / 2) + ((RCCE_num_ues() % 2) ? 1 : 0);
-#else
     int nb_app_cores = RCCE_num_ues();
-#endif
     long range = DEFAULT_RANGE;
     int update = DEFAULT_UPDATE;
     int load_factor = DEFAULT_LOAD;
@@ -575,13 +571,8 @@ TASKMAIN(int argc, char **argv) {
         id2use = ID - 36;
     }
 
-#ifdef DSL
-    shmem_init(((off * 16) * 1024 * 1024) + ((id2use / 2) * 1024 * 1024));
-    PRINT("shmem from %d MB", (off * 16) + id2use / 2);
-#else
     shmem_init(((off * 16) * 1024 * 1024) + ((id2use) * 1024 * 1024));
     PRINT("shmem from %d MB", (off * 16) + id2use);
-#endif
 #else
             shmem_init(1024 * 100 * RCCE_ue() * sizeof (node_t) + (initial + 2) * sizeof (node_t));
 #endif

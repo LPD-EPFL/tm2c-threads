@@ -329,11 +329,7 @@ TASKMAIN(int argc, char **argv) {
 
     double duration = DEFAULT_DURATION;
     int nb_accounts = DEFAULT_NB_ACCOUNTS;
-#ifdef DSL
-    int nb_app_cores = TOTAL_NODES() / 2;
-#else
     int nb_app_cores = TOTAL_NODES();
-#endif
     int read_all = DEFAULT_READ_ALL;
     int read_cores = DEFAULT_READ_THREADS;
     int write_all = DEFAULT_WRITE_ALL;
@@ -442,11 +438,7 @@ TASKMAIN(int argc, char **argv) {
     BARRIER
 
 
-#ifdef DSL
-            data->id = (NODE_ID() - 1) / 2;
-#else
-            data->id = NODE_ID();
-#endif
+    data->id = NODE_ID();
     data->read_all = read_all;
     data->read_cores = read_cores;
     data->write_all = write_all;

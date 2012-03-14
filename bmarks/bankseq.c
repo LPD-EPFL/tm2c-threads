@@ -26,12 +26,6 @@
 #include <limits.h>
 #include <signal.h>
 
-#ifdef DSL
-#undef DSL
-#undef ONCE
-#define ONCE                            if (RCCE_ue() == 0 || RCCE_num_ues() == 1)
-#endif
-
 /*
  * Useful macros to work with transactions. Note that, to use nested
  * transactions, one should check the environment returned by

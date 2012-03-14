@@ -317,11 +317,7 @@ TASKMAIN(int argc, char **argv) {
 
     double duration = DEFAULT_DURATION;
     int nb_accounts = DEFAULT_NB_ACCOUNTS;
-#ifdef DSL
-    int nb_app_cores = RCCE_num_ues() / 2;
-#else
     int nb_app_cores = RCCE_num_ues();
-#endif
     int read_all = DEFAULT_READ_ALL;
     int read_cores = DEFAULT_READ_THREADS;
     int write_all = DEFAULT_WRITE_ALL;
@@ -430,11 +426,7 @@ TASKMAIN(int argc, char **argv) {
     BARRIERW
 
 
-#ifdef DSL
-            data->id = (RCCE_ue() - 1) / 2;
-#else
-            data->id = RCCE_ue();
-#endif
+    data->id = RCCE_ue();
     data->read_all = read_all;
     data->read_cores = read_cores;
     data->write_all = write_all;
