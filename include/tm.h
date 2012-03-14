@@ -101,9 +101,8 @@ extern "C" {
 #endif
 
 #define TX_START                                                        \
-    { PRINT("|| Starting new tx");                                     \
+    { PRINTD("|| Starting new tx");                                     \
     short int reason;                                                   \
-fprintf(stderr, "TX_START: stm_tx->env is %p\n", &stm_tx->env); \
     if ((reason = sigsetjmp(stm_tx->env, 0)) != 0) {                    \
         PRINTD("|| restarting due to %d", reason);                      \
         stm_tx->write_set = WSET_EMPTY(stm_tx->write_set);              \
@@ -112,7 +111,7 @@ fprintf(stderr, "TX_START: stm_tx->env is %p\n", &stm_tx->env); \
     stm_tx->retries++;
 
 #define TX_ABORT(reason)                                                \
-    PRINT("|| aborting tx");                                           \
+    PRINTD("|| aborting tx");                                           \
     handle_abort(stm_tx, reason);                                       \
     siglongjmp(stm_tx->env, reason);
 

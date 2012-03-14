@@ -151,8 +151,6 @@ sys_ps_init_(void)
                 PRINTD("Failed to connect to %s\n", send_spec_string);
                 EXIT(1);
             }
-fprintf(stderr, "sys_ps_init_: socket dsl_node_addrs[%u] = %p\n",
-        dsln, a_socket);
             dsl_node_addrs[dsln++] = a_socket;
         }
     }
@@ -252,8 +250,6 @@ sys_sendcmd(void* data, size_t len, nodeid_t to)
 	zmq_msg_t request;
 	zmq_msg_init_size(&request, len);
 
-fprintf(stderr, "sys_sendcmd: will send to dsl_node_addrs[%u] = %p\n", to,
-		dsl_node_addrs[to]);
 	memcpy(zmq_msg_data(&request), data, len);
 	int rc = zmq_send(dsl_node_addrs[to], &request, 0);
 
@@ -344,7 +340,6 @@ dsl_communication()
     PS_COMMAND* ps_remote = (PS_COMMAND*)malloc(sizeof(PS_COMMAND));
 
     while (1) {
-fprintf(stderr, "Waiting for a mesaz...\n");
         zmq_msg_t request;
         zmq_msg_init(&request);
         zmq_recv(the_responder, &request, 0);
@@ -352,7 +347,6 @@ fprintf(stderr, "Waiting for a mesaz...\n");
         if (size < sizeof(PS_COMMAND))
             size = sizeof(PS_COMMAND);
         memcpy((char*)ps_remote, zmq_msg_data(&request), size);
-fprintf(stderr, "Got something...\n");
 #ifdef DEBUG_MSG
         {
             int i;
@@ -367,15 +361,13 @@ fprintf(stderr, "Got something...\n");
         zmq_msg_close(&request);
 
         nodeid_t sender = ps_remote->nodeId;
-        PRINT("dsl_communication: got message %d from %u\n", ps_remote->type, sender);
+        PRINTD("dsl_communication: got message %d from %u\n", ps_remote->type, sender);
 
         int kh_ret;
         khiter_t kh_iterator;
 
         switch (ps_remote->type) {
         case PS_SUBSCRIBE:
-
-fprintf(stderr, "PS_SUBSCRIBE...\n");
             sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE,
                     (tm_addr_t)ps_remote->address,
                     PGAS_read(ps_remote->address),
@@ -383,7 +375,6 @@ fprintf(stderr, "PS_SUBSCRIBE...\n");
             break;
         case PS_PUBLISH:
             // we store the value in a separate hash
-fprintf(stderr, "PS_PUBLISH...\n");
             kh_iterator = kh_put(32, memory_hashtable[sender], ps_remote->address, &kh_ret);
             if (!kh_ret) kh_del(32, memory_hashtable[sender], kh_iterator);
             kh_value(memory_hashtable[sender], kh_iterator) = ps_remote->value;
@@ -417,7 +408,6 @@ fprintf(stderr, "PS_PUBLISH...\n");
 			break;
 #endif
         case PS_REMOVE_NODE:
-fprintf(stderr, "PS_REMOVE_NODE...\n");
             // now, see what is the action, and either persist writes or remove them all...
             if (ps_remote->response == NO_CONFLICT) {
                 khash_t(32)* h = memory_hashtable[sender];
@@ -450,7 +440,6 @@ fprintf(stderr, "PS_REMOVE_NODE...\n");
 			                     NO_CONFLICT);
             break;
         case PS_UNSUBSCRIBE:
-fprintf(stderr, "PS_UNSUBSCRIBE...\n");
             ps_hashtable_delete(ps_hashtable, sender, ps_remote->address, READ);
             sys_ps_command_reply(sender, PS_DUMMY_REPLY, 
                     (tm_addr_t)ps_remote->address,
@@ -458,7 +447,6 @@ fprintf(stderr, "PS_UNSUBSCRIBE...\n");
                     NO_CONFLICT);
             break;
         case PS_PUBLISH_FINISH:
-fprintf(stderr, "PS_PUBLISH_FINISH...\n");
             ps_hashtable_delete(ps_hashtable, sender, ps_remote->address, WRITE);
             sys_ps_command_reply(sender, PS_DUMMY_REPLY, 
                     (tm_addr_t)ps_remote->address,
@@ -466,7 +454,6 @@ fprintf(stderr, "PS_PUBLISH_FINISH...\n");
                     NO_CONFLICT);
             break;
         case PS_STATS:
-fprintf(stderr, "PS_STATS...\n");
             stats_aborts += ps_remote->aborts;
             stats_aborts_raw += ps_remote->aborts_raw;
             stats_aborts_war += ps_remote->aborts_war;
