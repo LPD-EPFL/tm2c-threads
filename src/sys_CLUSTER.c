@@ -16,8 +16,6 @@
 
 #include <khash.h>
 
-static void init_barrier();
-
 void* zmq_context = NULL;              // here, we keep the context (seems necessary)
 
 /*
@@ -31,27 +29,27 @@ nodeid_t MY_NODE_ID;
 nodeid_t MY_TOTAL_NODES;
 
 void 
-init_system(int* argc, char** argv[])
+sys_init_system(int* argc, char* argv[])
 {
 	if (*argc < 3) {
 		fprintf(stderr, "Not enough parameters (%d)\n", *argc);
 		fprintf(stderr, "Call this program as:\n");
-		fprintf(stderr, "\t%s -id=ID -total=TOTAL_NODES ...\n", (*argv)[0]);
+		fprintf(stderr, "\t%s -id=ID -total=TOTAL_NODES ...\n", argv[0]);
 		EXIT(1);
 	}
 
 	int p = 1;
 	int found = 0;
 	while (p < *argc) {
-		if (strncmp("-id=", (*argv)[p], strlen("-id=")) == 0) {
-			char *cf = (*argv)[p] + strlen("-id=");
+		if (strncmp("-id=", argv[p], strlen("-id=")) == 0) {
+			char *cf = argv[p] + strlen("-id=");
 			MY_NODE_ID = atoi(cf);
-			(*argv)[p] = NULL;
+			argv[p] = NULL;
 			found = found | 0x01;
-		} else if (strncmp("-total=", (*argv)[p], strlen("-total=")) == 0) {
-			char *cf = (*argv)[p] + strlen("-total=");
+		} else if (strncmp("-total=", argv[p], strlen("-total=")) == 0) {
+			char *cf = argv[p] + strlen("-total=");
 			MY_TOTAL_NODES = atoi(cf);
-			(*argv)[p] = NULL;
+			argv[p] = NULL;
 			found = found | 0x02;
 		}
 		p++;
@@ -59,17 +57,17 @@ init_system(int* argc, char** argv[])
 	if ((found & 0x03) != 0x03) {
 		fprintf(stderr, "Did not pass all parameters\n");
 		fprintf(stderr, "Call this program as:\n");
-		fprintf(stderr, "\t%s -id=ID -total=TOTAL_NODES ...\n", (*argv)[0]);
+		fprintf(stderr, "\t%s -id=ID -total=TOTAL_NODES ...\n", argv[0]);
 		EXIT(1);
 	}
 	p = 1;
 	int cur = 1;
 	while (p < *argc) {
-		if ((*argv)[p] == NULL) {
+		if (argv[p] == NULL) {
 			p++;
 			continue;
 		}
-		(*argv)[cur] = (*argv)[p];
+		argv[cur] = argv[p];
 		cur++;
 		p++;
 	}
@@ -545,7 +543,7 @@ udelay(unsigned int micros)
 	usleep(micros);
 }
 
-static void
+void
 init_barrier()
 {
     // barrier stuff setup

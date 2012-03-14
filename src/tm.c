@@ -35,12 +35,6 @@ const char *conflict_reasons[4] = {
  */
 
 void tm_init() {
-	/* initialize globals */
-	ID            = NODE_ID();
-	NUM_UES       = TOTAL_NODES();
-	NUM_DSL_NODES = ((NUM_UES/DSLNDPERNODES)) + (NUM_UES%DSLNDPERNODES ? 1 : 0);
-	NUM_APP_NODES = NUM_UES-NUM_DSL_NODES;
-
     sys_tm_init();
 
     if (ID % DSLNDPERNODES == 0) {
@@ -62,6 +56,23 @@ void tm_init() {
     }
 }
 
+void
+init_system(int* argc, char* argv[])
+{
+	/* call platform level initializer */
+	sys_init_system(argc, argv);
+
+	/* initialize globals */
+	ID            = NODE_ID();
+	NUM_UES       = TOTAL_NODES();
+	NUM_DSL_NODES = ((NUM_UES/DSLNDPERNODES)) + (NUM_UES%DSLNDPERNODES ? 1 : 0);
+	NUM_APP_NODES = NUM_UES-NUM_DSL_NODES;
+
+	fprintf(stderr, "ID: %u\nNUM_UES: %u\nNUM_DSL_NODES: %u\nNUM_APP_NODES: %u\n",
+			ID, NUM_UES, NUM_DSL_NODES, NUM_APP_NODES);
+
+	init_barrier();
+}
 /*
  * Trampolining code for terminating everything
  */

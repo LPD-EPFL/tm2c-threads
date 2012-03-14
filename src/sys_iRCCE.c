@@ -12,9 +12,9 @@
 #endif
 
 void 
-init_system(int* argc, char** argv[])
+sys_init_system(int* argc, char* argv[])
 {
-	RCCE_init(argc, argv);
+	RCCE_init(argc, &argv);
 	iRCCE_init();
 }
 
@@ -106,8 +106,6 @@ void
 sys_ps_init_(void)
 {
     iRCCE_init_wait_list(&waitlist);
-
-    RCCE_barrier(&RCCE_COMM_WORLD);
 }
 
 void
@@ -146,8 +144,6 @@ sys_dsl_init(void)
             iRCCE_add_recv_to_wait_list(&waitlist, &recv_requests[i]);
         }
     }
-
-    RCCE_barrier(&RCCE_COMM_WORLD);
 }
 
 void
@@ -435,4 +431,8 @@ udelay(unsigned int micros)
     while (RCCE_wtime() < __ts_end);
 }
 
-
+void
+init_barrier()
+{
+    RCCE_barrier(&RCCE_COMM_WORLD);
+}
