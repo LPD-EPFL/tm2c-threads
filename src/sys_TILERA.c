@@ -363,14 +363,14 @@ void dsl_communication() {
                         conflict);
                 break;
             }
-            case PGAS_READ:
+            case PS_LOAD_NONTX:
                 address = tmc_udn0_receive();
                 PRINT("PGAS_READ for %d", address);
                 tmc_udn_send_1(udn_header[sender], UDN0_DEMUX_TAG, *(int *) PGAS_read(address));
                 break;
-            case PGAS_WRITE:
+            case PS_STORE_NONTX:
                 address = tmc_udn0_receive();
-                unsigned int write_val = tmc_udn0_receive();
+                int write_val = tmc_udn0_receive();
                 PRINT("PGAS_WRITE for %d, val: %d", address, write_val);
                 PGAS_write(address, write_val);
 #endif
