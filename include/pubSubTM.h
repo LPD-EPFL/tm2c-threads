@@ -39,12 +39,12 @@ extern "C" {
         PS_ABORTED, //6
         PS_REMOVE_NODE, //7
         PS_LOAD_NONTX, //8
-        PS_STORE_NONTX,   //9
+        PS_STORE_NONTX, //9
         PS_LOAD_NONTX_RESPONSE, //10
         PS_STORE_NONTX_RESPONSE, //11
         PS_STATS,
         PS_WRITE_INC,
-    	PS_DUMMY_REPLY // the dummy reply, no response required
+        PS_DUMMY_REPLY // the dummy reply, no response required
     } PS_COMMAND_TYPE;
 
     //TODO: make it union with address normal int..
@@ -53,8 +53,8 @@ extern "C" {
     typedef struct {
         unsigned int type; //PS_COMMAND_TYPE
 #ifdef USING_ZMQ
-		// we need IDs on networked systems
-		nodeid_t nodeId;
+        // we need IDs on networked systems
+        nodeid_t nodeId;
 #endif
 
         union {
@@ -127,12 +127,12 @@ extern "C" {
 #else
     CONFLICT_TYPE ps_publish(tm_addr_t address);
 #endif
-	
+
     /* Non-transactional read of an address */
     uint32_t ps_load(tm_addr_t address);
 
-	/* Non-transactional write to an address */
-	void ps_store(tm_addr_t address, uint32_t value);
+    /* Non-transactional write to an address */
+    void ps_store(tm_addr_t address, uint32_t value);
 
     /* Unsubscribes the TX from the address
      */
