@@ -12,7 +12,7 @@
 #include "pgas.h"
 #endif
 
-nodeid_t ID; //=RCCE_ue()
+nodeid_t ID;
 nodeid_t NUM_UES;
 nodeid_t NUM_DSL_NODES;
 nodeid_t NUM_APP_NODES;
