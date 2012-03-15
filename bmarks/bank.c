@@ -36,6 +36,7 @@
 /*use TX_LOAD_STORE*/
 #define LOAD_STORE
 
+
 #ifdef PLATFORM_iRCCE
 /*take advante all 4 MCs*/
 #define MC 
@@ -187,6 +188,8 @@ bank_t * test(void *data, double duration, int nb_accounts) {
 
     /* Initialize seed (use rand48 as rand is poor) */
     srand_core();
+    BARRIER
+
 
     /* Prepare for disjoint access */
     if (d->disjoint) {
@@ -299,6 +302,7 @@ bank_t * test(void *data, double duration, int nb_accounts) {
 
     PRINT("~~");
     PF_PRINT
+    BARRIER
 
     return bank;
 }
@@ -306,10 +310,9 @@ bank_t * test(void *data, double duration, int nb_accounts) {
 TASKMAIN(int argc, char **argv) {
     dup2(STDOUT_FILENO, STDERR_FILENO);
 
-    init_configuration(&argc, &argv);
-    init_system(&argc, argv);
+    TM_INIT
 
-    struct option long_options[] = {
+            struct option long_options[] = {
         // These options don't set a flag
         {"help", no_argument, NULL, 'h'},
         {"accounts", required_argument, NULL, 'a'},
@@ -330,7 +333,7 @@ TASKMAIN(int argc, char **argv) {
 
     double duration = DEFAULT_DURATION;
     int nb_accounts = DEFAULT_NB_ACCOUNTS;
-    int nb_app_cores = TOTAL_NODES();
+    int nb_app_cores = NUM_APP_NODES;
     int read_all = DEFAULT_READ_ALL;
     int read_cores = DEFAULT_READ_THREADS;
     int write_all = DEFAULT_WRITE_ALL;
@@ -436,7 +439,7 @@ TASKMAIN(int argc, char **argv) {
 
 
     /* Init STM */
-    BARRIERW
+    BARRIER
 
 
     data->id = NODE_ID();
@@ -451,8 +454,7 @@ TASKMAIN(int argc, char **argv) {
     data->nb_write_all = 0;
     data->max_retries = 0;
 
-    /* Create transaction */
-    TM_INITs
+    BARRIER
 
     bank = test(data, duration, nb_accounts);
 
@@ -483,7 +485,8 @@ TASKMAIN(int argc, char **argv) {
 
     free(data);
 
-    TM_TERM
+    TM_END
+      TM_TERM
 
     EXIT(0);
 }
