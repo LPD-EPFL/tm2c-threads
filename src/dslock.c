@@ -63,6 +63,10 @@ void dsl_init(void) {
 
     BARRIERW
     dsl_communication();
+
+	sys_dsl_term();
+
+	term_system();
 }
 
 void print_global_stats() {
