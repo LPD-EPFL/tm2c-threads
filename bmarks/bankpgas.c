@@ -36,7 +36,7 @@
 #define LOAD_STORE
 
 /*take advante all 4 MCs*/
-#define MC 
+#define MC_DISABLE
 
 #define DEFAULT_DURATION                10
 #define DEFAULT_NB_ACCOUNTS             1024
@@ -70,8 +70,8 @@
  * BANK ACCOUNTS
  * ################################################################### */
 
+/*for better perf with PGAS use a balance only account*/
 typedef struct account {
-    int number;
     int balance;
 } account_t;
 
@@ -80,7 +80,7 @@ typedef struct bank {
     int size;
 } bank_t;
 
-int transfer(unsigned int src, unsigned int dst, int amount) {
+int transfer(account_t * src, account_t * dst, int amount) {
     // PRINT("in transfer");
 
     int i, j;
@@ -90,16 +90,16 @@ int transfer(unsigned int src, unsigned int dst, int amount) {
 
 #ifdef LOAD_STORE
             //TODO: test and use the TX_LOAD_STORE
-            TX_LOAD_STORE(src, -, amount);
-    TX_LOAD_STORE(dst, +, amount);
+            TX_LOAD_STORE(&src->balance, -, amount, TYPE_INT);
+    TX_LOAD_STORE(&dst->balance, +, amount, TYPE_INT);
     TX_COMMIT
 #else
-            i = TX_LOAD(src);
+            i = TX_LOAD(&src->balance);
     i -= amount;
-    TX_STORE(src, i);
-    j = TX_LOAD(dst);
+    TX_STORE(&src->balance, i, TYPE_INT);
+    j = TX_LOAD(&dst->balance);
     j += amount;
-    TX_STORE(dst, j);
+    TX_STORE(&dst->balance, j, TYPE_INT);
     TX_COMMIT
 #endif
             return amount;
@@ -112,8 +112,9 @@ int total(bank_t *bank, int transactional) {
         TX_START
         total = 0;
         for (i = 0; i < bank->size; i++) {
-            //PRINTN("(l %d)", i);
-            total += TX_LOAD(i);
+            int bal = TX_LOAD(&bank->accounts[i].balance);
+            total += bal;
+            //PRINT("ld acc %03d, val: %d", i, bal);
         }
         TX_COMMIT_NO_STATS
     }
@@ -122,7 +123,7 @@ int total(bank_t *bank, int transactional) {
         total = 0;
         for (i = 0; i < bank->size; i++) {
             //PRINTN("(l %d)", i);
-            total += TX_LOAD(i);
+            total += TX_LOAD(&bank->accounts[i].balance);
         }
         TX_COMMIT
     }
@@ -135,7 +136,7 @@ void reset(bank_t *bank) {
 
     TX_START
     for (i = 0; i < bank->size; i++) {
-        TX_STORE(i, 0);
+        TX_STORE(&bank->accounts[i].balance, 0, TYPE_INT);
     }
     TX_COMMIT
 }
@@ -184,9 +185,6 @@ bank_t * test(void *data, double duration, int nb_accounts) {
         rand_min = 0;
     }
 
-    /* Create transaction */
-    TM_INITs
-
     bank = (bank_t *) malloc(sizeof (bank_t));
     if (bank == NULL) {
         PRINT("malloc bank");
@@ -195,17 +193,7 @@ bank_t * test(void *data, double duration, int nb_accounts) {
 
 
     bank->size = nb_accounts;
-    /*
-        ONCE
-        {
-            int i;
-            for (i = 0; i < bank->size; i++) {
-                //       PRINTN("(s %d)", i);
-                bank->accounts[I(i)].number = i;
-                bank->accounts[I(i)].balance = 0;
-            }
-        }
-     */
+    bank->accounts = (account_t *) sys_shmalloc(nb_accounts * sizeof (account_t));
 
     ONCE
     {
@@ -215,9 +203,6 @@ bank_t * test(void *data, double duration, int nb_accounts) {
 
     /* Wait on barrier */
     BARRIER
-
-            // PRINT("chk %d", chk++); //0
-          //  goto notrun;
 
     FOR(duration) {
         if (d->id < d->read_cores) {
@@ -246,6 +231,7 @@ bank_t * test(void *data, double duration, int nb_accounts) {
                 d->nb_write_all++;
             }
             else {
+
                 /* Choose random accounts */
                 src = (int) (rand_range(rand_max) - 1) + rand_min;
                 //assert(src < (rand_max + rand_min));
@@ -255,21 +241,21 @@ bank_t * test(void *data, double duration, int nb_accounts) {
                 //assert(dst >= 0);
                 if (dst == src)
                     dst = ((src + 1) % rand_max) + rand_min;
-                transfer(src, dst, 1);
+                transfer(&bank->accounts[src], &bank->accounts[dst], 1);
 
                 d->nb_transfer++;
             }
         }
     }
 
-/*
-notrun:
-    PRINT("test");
-    int i;
-    for (i = 0; i < bank->size; i++) {
-        transfer(i, (i + 1) % bank->size, 1);
-    }
-*/
+    /*
+    notrun:
+        PRINT("test");
+        int i;
+        for (i = 0; i < bank->size; i++) {
+            transfer(i, (i + 1) % bank->size, 1);
+        }
+     */
     //reset(bank);
 
     BARRIER
@@ -284,7 +270,6 @@ notrun:
                 total(bank, 0));
     }
 
-    TM_END
     BARRIER
 
     return bank;
@@ -293,10 +278,9 @@ notrun:
 TASKMAIN(int argc, char **argv) {
     dup2(STDOUT_FILENO, STDERR_FILENO);
 
-    init_configuration(&argc, &argv);
-    init_system(&argc, &argv);
+    TM_INIT
 
-    struct option long_options[] = {
+            struct option long_options[] = {
         // These options don't set a flag
         {"help", no_argument, NULL, 'h'},
         {"accounts", required_argument, NULL, 'a'},
@@ -317,7 +301,7 @@ TASKMAIN(int argc, char **argv) {
 
     double duration = DEFAULT_DURATION;
     int nb_accounts = DEFAULT_NB_ACCOUNTS;
-    int nb_app_cores = RCCE_num_ues();
+    int nb_app_cores = NUM_APP_NODES;
     int read_all = DEFAULT_READ_ALL;
     int read_cores = DEFAULT_READ_THREADS;
     int write_all = DEFAULT_WRITE_ALL;
@@ -421,12 +405,10 @@ TASKMAIN(int argc, char **argv) {
         exit(1);
     }
 
+    BARRIER
 
-    /* Init STM */
-    BARRIERW
+    data->id = (ID - 1) / 2;
 
-
-    data->id = RCCE_ue();
     data->read_all = read_all;
     data->read_cores = read_cores;
     data->write_all = write_all;
@@ -452,5 +434,6 @@ TASKMAIN(int argc, char **argv) {
 
     free(data);
 
+    TM_END
     EXIT(0);
 }
