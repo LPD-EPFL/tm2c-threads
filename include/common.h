@@ -8,6 +8,8 @@
 #ifndef COMMON_H
 #define	COMMON_H
 
+//#define PGAS
+
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
@@ -139,6 +141,42 @@ EXINLINED void global_barrier();
 #define BARRIER  app_barrier();
 #define BARRIERW global_barrier();
 #endif
+
+#ifdef PLATFORM_TILERA
+	/*
+	 * TILERA related includes
+	 */
+#include <tmc/alloc.h>
+#include <tmc/cpus.h>
+#include <tmc/task.h>
+#include <tmc/udn.h>
+#include <tmc/spin.h>
+#include <tmc/sync.h>
+#include <tmc/cmem.h>
+
+extern DynamicHeader *udn_header; //headers for messaging
+extern tmc_sync_barrier_t *barrier_apps, *barrier_all; //BARRIERS
+
+#define BARRIER tmc_sync_barrier_wait(barrier_apps); //app cores only
+#define BARRIERW tmc_sync_barrier_wait(barrier_all); //all cores
+
+INLINED double RCCE_wtime() {
+	struct timeval t;
+	gettimeofday(&t, NULL);
+	return (double) t.tv_sec + ((double) t.tv_usec) / 1000000.0;
+}
+
+#define RCCE_num_ues TOTAL_NODES
+#define RCCE_ue NODE_ID
+#define RCCE_acquire_lock(a) 
+#define RCCE_release_lock(a)
+#define RCCE_init(a,b)
+#define iRCCE_init(a)
+
+#define t_vcharp sys_t_vcharp
+
+#endif
+
 /*  ------- Plug platform related things here END   ------- */
 
 #define TASKMAIN MAIN
