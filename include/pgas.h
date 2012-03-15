@@ -24,8 +24,8 @@ extern const size_t PGAS_GRANULARITY; /* the length of consecutive data stored
                                          on a node */
 extern int * SHMEM;
 extern unsigned int shmem_index;
-extern unsigned int id__m1d2;
-extern unsigned int num_ues_d2;
+extern unsigned int id__m1d2; //the dslock core closest to the current core
+extern unsigned int num_ues_d2; //number of cores divided by 2
 
 extern void PGAS_init();
 extern void PGAS_finalize();
@@ -79,6 +79,7 @@ PGAS_read(tm_intern_addr_t addr)
 }
 
     /*  for application cores ---------------------------------------------------------------
+     *  XXX: this allocation scheme works only for 50% app / 50% dslock core allocation
      */
 
 
