@@ -108,7 +108,6 @@ extern RCCE_COMM RCCE_COMM_APP;
 #ifdef PLATFORM_CLUSTER
 extern void*  zmq_context;             // here, we keep the context (seems necessary)
 extern void*  the_responder;           // for dsl nodes, it will be the responder socket; for app node, it will be NULL
-extern void** the_sockets;             // for app nodes, it will be the list containing sockets; for dsl nodes, it should be NULL
 
 extern void*  zmq_barrier_subscriber; // socket for the barrier subscriber
 extern void*  zmq_barrier_client;     // socket for applying for the barrier
@@ -134,7 +133,6 @@ EXINLINED int zmq_s_send(void *socket, char *string);
 #ifdef PLATFORM_MCORE
 extern void*  zmq_context;             // here, we keep the context (seems necessary)
 extern void*  the_responder;           // for dsl nodes, it will be the responder socket; for app node, it will be NULL
-extern void** the_sockets;             // for app nodes, it will be the list containing sockets; for dsl nodes, it should be NULL
 
 EXINLINED void app_barrier();
 EXINLINED void global_barrier();
