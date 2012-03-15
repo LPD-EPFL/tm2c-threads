@@ -37,11 +37,7 @@ MAIN(int argc, char **argv) {
     int i;
     for (i = 0; i < reps; i++) {
         //PRINT("loading %2d, %p", i, j+i);
-#ifndef PGAS
         TX_LOAD(j + i);
-#else
-        TX_LOAD(i);
-#endif
     }
 
     TX_COMMIT
