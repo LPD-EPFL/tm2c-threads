@@ -16,7 +16,7 @@ unsigned int id__m1d2;
 unsigned int num_ues_d2;
 
 void PGAS_init() {
-    fprintf(stderr, "SHMEM_SIZE: %d\n", SHMEM_SIZE);
+    fprintf(stderr, "SHMEM_SIZE: %zu\n", SHMEM_SIZE);
     SHMEM = (int *) malloc(SHMEM_SIZE);
 /*
     SHMEM = (void *) malloc(SHMEM_SIZE);
@@ -28,7 +28,7 @@ void PGAS_init() {
     
     bzero(SHMEM, SHMEM_SIZE);
     
-    PRINT("allocated %u bytes for PGAS shmem, position %p", SHMEM_SIZE, SHMEM);
+    PRINT("allocated %zu bytes for PGAS shmem, position %p", SHMEM_SIZE, SHMEM);
 }
 
 void PGAS_finalize() {
