@@ -117,13 +117,13 @@ EXINLINED int zmq_s_send(void *socket, char *string);
 #define BARRIER_(type)    do {                                               \
     PRINT("BARRIER %s\n", type);                                             \
     if ((ID % DSLNDPERNODES == 0) && !strcmp(type,"app")) break;             \
-       PRINT("Waiting at the barrier\n");                                    \
-       zmq_s_send(zmq_barrier_client, type);                                 \
-       char *received = zmq_s_recv(zmq_barrier_client);                      \
-       free(received);                                                       \
-       received = zmq_s_recv(zmq_barrier_subscriber);                        \
-       free(received);                                                       \
-       PRINT("Passed through the barrier\n");                                \
+    PRINT("Waiting at the barrier\n");                                       \
+    zmq_s_send(zmq_barrier_client, type);                                    \
+    char *received = zmq_s_recv(zmq_barrier_client);                         \
+    free(received);                                                          \
+    received = zmq_s_recv(zmq_barrier_subscriber);                           \
+    free(received);                                                          \
+    PRINT("Passed through the barrier\n");                                   \
 } while (0);
 
 #define BARRIER    BARRIER_("app")
