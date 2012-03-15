@@ -19,10 +19,10 @@ PS_COMMAND *psc;
 int read_value;
 
 static inline void ps_sendb(nodeid_t target, PS_COMMAND_TYPE operation,
-                            tm_intern_addr_t address, CONFLICT_TYPE response);
+        tm_intern_addr_t address, CONFLICT_TYPE response);
 static inline void ps_sendbv(nodeid_t target, PS_COMMAND_TYPE operation,
-                            tm_intern_addr_t address, uint32_t value,
-                            CONFLICT_TYPE response);
+        tm_intern_addr_t address, uint32_t value,
+        CONFLICT_TYPE response);
 static inline CONFLICT_TYPE ps_recvb(nodeid_t from);
 
 inline void unsubscribe(nodeid_t nodeId, tm_addr_t shmem_address);
@@ -61,7 +61,7 @@ void ps_init_(void) {
 	BARRIERW
 }
 
-static inline void 
+static inline void
 ps_sendb(nodeid_t target, PS_COMMAND_TYPE command,
          tm_intern_addr_t address, CONFLICT_TYPE response)
 {
@@ -72,10 +72,10 @@ ps_sendb(nodeid_t target, PS_COMMAND_TYPE command,
     psc->address = address;
     psc->response = response;
 
-    sys_sendcmd(psc, sizeof(PS_COMMAND), target);
+    sys_sendcmd(psc, sizeof (PS_COMMAND), target);
 }
 
-static inline void 
+static inline void
 ps_sendbv(nodeid_t target, PS_COMMAND_TYPE command,
          tm_intern_addr_t address, uint32_t value,
          CONFLICT_TYPE response)
@@ -86,24 +86,23 @@ ps_sendbv(nodeid_t target, PS_COMMAND_TYPE command,
     psc->type = command;
     psc->address = address;
     psc->response = response;
-    psc->write_value = value;
+    psc->write_value = (int) value;
 
-    sys_sendcmd(psc, sizeof(PS_COMMAND), target);
+    sys_sendcmd(psc, sizeof (PS_COMMAND), target);
 }
 
 static inline CONFLICT_TYPE
-ps_recvb(nodeid_t from)
-{
+ps_recvb(nodeid_t from) {
     // XXX: this could be written much better, without globals
-    PS_COMMAND cmd; 
+    PS_COMMAND cmd;
 
-    sys_recvcmd(&cmd, sizeof(PS_COMMAND), from);
+    sys_recvcmd(&cmd, sizeof (PS_COMMAND), from);
 #ifdef PGAS
     PF_START(0)
     read_value = cmd.value;
     PF_STOP(0)
 #endif
-    return cmd.response;
+            return cmd.response;
 }
 
 /*
@@ -113,9 +112,8 @@ ps_recvb(nodeid_t from)
  */
 
 CONFLICT_TYPE
-ps_subscribe(tm_addr_t address)
-{
-	tm_intern_addr_t intern_addr = to_intern_addr(address);
+ps_subscribe(tm_addr_t address) {
+    tm_intern_addr_t intern_addr = to_intern_addr(address);
 
     nodeid_t responsible_node = get_responsible_node(intern_addr);
 
@@ -147,7 +145,7 @@ CONFLICT_TYPE ps_publish(tm_addr_t address, int value) {
 CONFLICT_TYPE ps_publish(tm_addr_t address) {
 #endif
 
-	tm_intern_addr_t intern_addr = to_intern_addr(address);
+    tm_intern_addr_t intern_addr = to_intern_addr(address);
     nodeid_t responsible_node = get_responsible_node(intern_addr);
 
     nodes_contacted[responsible_node]++;
@@ -165,14 +163,17 @@ CONFLICT_TYPE ps_publish(tm_addr_t address) {
 #ifdef PGAS
 
 CONFLICT_TYPE ps_store_inc(tm_addr_t address, int increment) {
-	tm_intern_addr_t intern_addr = to_intern_addr(address);
+    tm_intern_addr_t intern_addr = to_intern_addr(address);
     nodeid_t responsible_node = get_responsible_node(intern_addr);
 
     nodes_contacted[responsible_node]++;
 
     ps_sendbv(responsible_node, PS_WRITE_INC, intern_addr, increment, NO_CONFLICT);
+#ifdef PLATFORM_TILERA
+    CONFLICT_TYPE response = udn0_receive();
+#else 
     CONFLICT_TYPE response = ps_recvb(responsible_node);
-
+#endif
     return response;
 }
 #endif
@@ -204,7 +205,7 @@ ps_store(tm_addr_t address, uint32_t value)
 }
 
 void ps_unsubscribe(tm_addr_t address) {
-	tm_intern_addr_t intern_addr = to_intern_addr(address);
+    tm_intern_addr_t intern_addr = to_intern_addr(address);
     nodeid_t responsible_node = get_responsible_node(intern_addr);
 
     nodes_contacted[responsible_node]--;
@@ -217,7 +218,7 @@ void ps_unsubscribe(tm_addr_t address) {
 }
 
 void ps_publish_finish(tm_addr_t address) {
-	tm_intern_addr_t intern_addr = to_intern_addr(address);
+    tm_intern_addr_t intern_addr = to_intern_addr(address);
     nodeid_t responsible_node = get_responsible_node(intern_addr);
 
     nodes_contacted[responsible_node]--;
@@ -275,18 +276,13 @@ void ps_send_stats(stm_tx_node_t* stats, double duration) {
     psc->max_retries = stats->max_retries;
     psc->tx_duration = duration;
 
-    sys_sendcmd_all(psc, sizeof(PS_COMMAND));
+    sys_sendcmd_all(psc, sizeof (PS_COMMAND));
 }
 
 static inline nodeid_t
-get_responsible_node(tm_intern_addr_t addr)
-{
-#ifdef PGAS
-	nodeid_t node = (nodeid_t)(addr % NUM_DSL_NODES);
-    return dsl_nodes[node];
-#else
+get_responsible_node(tm_intern_addr_t addr) {
+
     /* shift right by DHT_ADDRESS_MASK, thus making 2^DHT_ADDRESS_MASK continuous
         address handled by the same node*/
     return dsl_nodes[((addr) >> DHT_ADDRESS_MASK) % NUM_DSL_NODES];
-#endif
 }
