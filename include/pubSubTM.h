@@ -69,7 +69,7 @@ extern "C" {
                 union {
                     tm_intern_addr_t address; /* address of the data, internal
                     							 representation */
-                    int32_t   value;
+                    int32_t value;
                 };
             };
 
@@ -116,6 +116,7 @@ extern "C" {
     CONFLICT_TYPE ps_subscribe(tm_addr_t address);
 
     /* Try to publish a write on the address
+     * XXX: try to unify the interface
      */
 #ifdef PGAS
     CONFLICT_TYPE ps_publish(tm_addr_t address, int value);
