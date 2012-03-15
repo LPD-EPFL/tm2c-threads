@@ -8,6 +8,10 @@
  * As such, they need to keep the internal representation of the addresses
  * (tm_intern_addr_t).
  * In EAGER_WRITE_ACQ PGAS, only the dslock keeps the buffer.
+ *      XXX: since only the dslock keeps the buffer, when an app node is performing
+ *              a read, the serving dslock core should test if the value exists in the
+ *              write-buffer of the requester. THIS IS NOT IMPLEMENTED FOR PERFORMANCE,
+ *              but could lead to breaking opacity
  * In non-EAGER_WRITE_ACQ PGAS, both sides keep the buffer.
  * In other configurations, both sides keep the buffer.
  */
