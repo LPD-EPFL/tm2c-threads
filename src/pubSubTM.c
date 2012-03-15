@@ -58,15 +58,14 @@ void ps_init_(void) {
 
     sys_ps_init_();
     PRINT("[APP NODE] Initialized pub-sub..");
-	BARRIERW
+    BARRIERW
 }
 
 static inline void
 ps_sendb(nodeid_t target, PS_COMMAND_TYPE command,
-         tm_intern_addr_t address, CONFLICT_TYPE response)
-{
+        tm_intern_addr_t address, CONFLICT_TYPE response) {
 #ifdef USING_ZMQ
-	psc->nodeId = ID;
+    psc->nodeId = ID;
 #endif
     psc->type = command;
     psc->address = address;
@@ -77,11 +76,10 @@ ps_sendb(nodeid_t target, PS_COMMAND_TYPE command,
 
 static inline void
 ps_sendbv(nodeid_t target, PS_COMMAND_TYPE command,
-         tm_intern_addr_t address, uint32_t value,
-         CONFLICT_TYPE response)
-{
+        tm_intern_addr_t address, uint32_t value,
+        CONFLICT_TYPE response) {
 #ifdef USING_ZMQ 
-	psc->nodeId = ID;
+    psc->nodeId = ID;
 #endif
     psc->type = command;
     psc->address = address;
@@ -179,9 +177,8 @@ CONFLICT_TYPE ps_store_inc(tm_addr_t address, int increment) {
 #endif
 
 uint32_t
-ps_load(tm_addr_t address)
-{
-	tm_intern_addr_t intern_addr = to_intern_addr(address);
+ps_load(tm_addr_t address) {
+    tm_intern_addr_t intern_addr = to_intern_addr(address);
 
     nodeid_t responsible_node = get_responsible_node(intern_addr);
 
@@ -193,15 +190,15 @@ ps_load(tm_addr_t address)
 }
 
 void
-ps_store(tm_addr_t address, uint32_t value)
-{
-	tm_intern_addr_t intern_addr = to_intern_addr(address);
+ps_store(tm_addr_t address, uint32_t value) {
+    tm_intern_addr_t intern_addr = to_intern_addr(address);
 
     nodeid_t responsible_node = get_responsible_node(intern_addr);
 
     ps_sendbv(responsible_node, PS_STORE_NONTX, intern_addr, value, NO_CONFLICT);
-
+#ifdef USING_ZMQ
     ps_recvb(responsible_node);
+#endif
 }
 
 void ps_unsubscribe(tm_addr_t address) {
@@ -213,7 +210,7 @@ void ps_unsubscribe(tm_addr_t address) {
     ps_sendb(responsible_node, PS_UNSUBSCRIBE, intern_addr, NO_CONFLICT);
 
 #ifdef USING_ZMQ
-	ps_recvb(responsible_node);
+    ps_recvb(responsible_node);
 #endif
 }
 
@@ -226,7 +223,7 @@ void ps_publish_finish(tm_addr_t address) {
     ps_sendb(responsible_node, PS_PUBLISH_FINISH, intern_addr, NO_CONFLICT);
 
 #ifdef USING_ZMQ
-	ps_recvb(responsible_node);
+    ps_recvb(responsible_node);
 #endif
 }
 
@@ -247,8 +244,8 @@ void ps_finish_all(CONFLICT_TYPE conflict) {
 #ifndef FINISH_ALL_PARALLEL
             ps_sendb(i, PS_REMOVE_NODE, 0, conflict);
 #ifdef USING_ZMQ
-			// need a dummy receive, due to the way how ZMQ works
-			ps_recvb(i);
+            // need a dummy receive, due to the way how ZMQ works
+            ps_recvb(i);
 #endif
 #else
             if (iRCCE_isend(data, PS_BUFFER_SIZE, i, &sends[i]) != iRCCE_SUCCESS) {
