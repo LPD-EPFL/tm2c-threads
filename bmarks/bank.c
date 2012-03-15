@@ -36,8 +36,10 @@
 /*use TX_LOAD_STORE*/
 #define LOAD_STORE
 
+#ifdef PLATFORM_iRCCE
 /*take advante all 4 MCs*/
 #define MC 
+#endif
 
 #define DEFAULT_DURATION                10
 #define DEFAULT_NB_ACCOUNTS             1024
@@ -224,7 +226,6 @@ bank_t * test(void *data, double duration, int nb_accounts) {
         int i;
         for (i = 0; i < bank->size; i++) {
             //       PRINTN("(s %d)", i);
-fprintf(stderr, "iteration %d\n", i);
 			NONTX_STORE(&bank->accounts[i].number, i, TYPE_INT);
 			NONTX_STORE(&bank->accounts[i].balance, 0, TYPE_INT);
         }
@@ -306,7 +307,7 @@ TASKMAIN(int argc, char **argv) {
     dup2(STDOUT_FILENO, STDERR_FILENO);
 
     init_configuration(&argc, &argv);
-    init_system(&argc, &argv);
+    init_system(&argc, argv);
 
     struct option long_options[] = {
         // These options don't set a flag
@@ -435,7 +436,7 @@ TASKMAIN(int argc, char **argv) {
 
 
     /* Init STM */
-    BARRIER
+    BARRIERW
 
 
     data->id = NODE_ID();
