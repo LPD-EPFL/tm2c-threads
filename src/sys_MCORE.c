@@ -38,33 +38,28 @@ nodeid_t MY_TOTAL_NODES;
 void
 sys_init_system(int* argc, char* argv[])
 {
-	if (*argc < 3) {
+	if (*argc < 2) {
 		fprintf(stderr, "Not enough parameters (%d)\n", *argc);
 		fprintf(stderr, "Call this program as:\n");
-		fprintf(stderr, "\t%s -id=ID -total=TOTAL_NODES ...\n", argv[0]);
+		fprintf(stderr, "\t%s -total=TOTAL_NODES ...\n", argv[0]);
 		EXIT(1);
 	}
 
 	int p = 1;
 	int found = 0;
 	while (p < *argc) {
-		if (strncmp("-id=", argv[p], strlen("-id=")) == 0) {
-			char *cf = argv[p] + strlen("-id=");
-			MY_NODE_ID = atoi(cf);
-			argv[p] = NULL;
-			found = found | 0x01;
-		} else if (strncmp("-total=", argv[p], strlen("-total=")) == 0) {
+		if (strncmp("-total=", argv[p], strlen("-total=")) == 0) {
 			char *cf = argv[p] + strlen("-total=");
 			MY_TOTAL_NODES = atoi(cf);
 			argv[p] = NULL;
-			found = found | 0x02;
+			found = 1;
 		}
 		p++;
 	}
-	if ((found & 0x03) != 0x03) {
+	if (!found) {
 		fprintf(stderr, "Did not pass all parameters\n");
 		fprintf(stderr, "Call this program as:\n");
-		fprintf(stderr, "\t%s -id=ID -total=TOTAL_NODES ...\n", argv[0]);
+		fprintf(stderr, "\t%s -total=TOTAL_NODES ...\n", argv[0]);
 		EXIT(1);
 	}
 	p = 1;
@@ -79,6 +74,24 @@ sys_init_system(int* argc, char* argv[])
 		p++;
 	}
 	*argc = *argc - (p-cur);
+
+	MY_NODE_ID = 0;
+
+	nodeid_t rank;
+	for (rank = 1; rank < MY_TOTAL_NODES; rank++) {
+		PRINTD("Forking child %u", rank);
+		pid_t child = fork();
+		if (child < 0) {
+			PRINT("Failure in fork():\n%s", strerror(errno));
+		} else if (child == 0) {
+			goto fork_done;
+		}
+	}
+	rank = 0;
+
+fork_done:
+	PRINTD("Initializing child %u", rank);
+	MY_NODE_ID = rank;
 
 	// Now, pin the process to the right core (NODE_ID == core id)
 	cpu_set_t mask;
