@@ -98,10 +98,7 @@ term_system()
 {
 	shm_unlink("/appBarrier");
 	shm_unlink("/globalBarrier");
-	if (the_responder != NULL) {
-		zmq_close(the_responder);
-		the_responder = NULL;
-	}
+
 	zmq_term(zmq_context);
 }
 
@@ -137,6 +134,10 @@ static PS_COMMAND *psc; /* buffer to hold the current command */
 void
 sys_tm_init()
 {
+	init_barrier();
+	int major, minor, patch;
+	zmq_version(&major, &minor, &patch);
+	PRINT("zmq version: %d.%d patch %d", major, minor, patch);
 }
 
 void
@@ -176,7 +177,6 @@ sys_ps_init_(void)
 void
 sys_dsl_init(void)
 {
-	fprintf(stderr, "HERE sys_dsl_init\n");
 	psc = (PS_COMMAND*)malloc(sizeof(PS_COMMAND));
 
 	char conn_spec_path[256];
@@ -189,8 +189,8 @@ sys_dsl_init(void)
 	PRINTD("Listenning on %s\n", conn_spec_string);
 	the_responder = zmq_socket(zmq_context, ZMQ_REP);
 	if (zmq_bind(the_responder, conn_spec_string) != 0) {
-		PRINTD("Could not bind to %s as REQ/REP\n", conn_spec_string);
-		perror(NULL);
+		PRINTD("Could not bind to %s as REQ/REP:\n%s", conn_spec_string,
+			   zmq_strerror(errno));
 		EXIT(2);
 	}
 }
@@ -204,17 +204,16 @@ sys_dsl_term(void)
 void
 sys_ps_term(void)
 {
-	nodeid_t j, dsln = 0;
+	nodeid_t j;
 	for (j = 0; j < NUM_UES; j++) {
 		if (j % DSLNDPERNODES == 0) {
-			if (dsl_node_addrs[dsln] != NULL) {
-				if (zmq_close(dsl_node_addrs[dsln]) != 0) {
+			if (dsl_node_addrs[j] != NULL) {
+				if (zmq_close(dsl_node_addrs[j]) != 0) {
 					PRINTD("Problem closing socket %p[%u]\n",
-						   dsl_node_addrs[dsln], dsln);
+						   dsl_node_addrs[j], j);
 				}
 			}
-			dsl_node_addrs[dsln] = NULL;
-			dsln++;
+			dsl_node_addrs[j] = NULL;
 		}
 	}
 }
@@ -232,7 +231,7 @@ sys_sendcmd(void* data, size_t len, nodeid_t to)
 	int rc = zmq_send(dsl_node_addrs[to], &request, 0);
 
 	if (rc) {
-		perror(NULL);
+		PRINTD("sys_sendcmd: problem with send:\n%s", zmq_strerror(errno));
 	}
 	assert(!rc);
 	zmq_msg_close(&request);
@@ -245,21 +244,36 @@ sys_sendcmd_all(void* data, size_t len)
 {
 	int rc = 0;
 
-	zmq_msg_t request;
-	zmq_msg_init_size(&request, len);
-	memcpy(zmq_msg_data(&request), data, len);
-
 	nodeid_t to;
 	for (to=0; to < TOTAL_NODES(); to++) {
 		if (dsl_node_addrs[to] == NULL)
 			continue;
 
-		rc = rc
-			|| zmq_send(dsl_node_addrs[to], &request, 0);
+		zmq_msg_t request;
+		zmq_msg_init_size(&request, len);
+		memcpy(zmq_msg_data(&request), data, len);
+
+		rc = zmq_send(dsl_node_addrs[to], &request, 0);
+		PRINTD("sys_sendcmd_all: to = %u, rc = %d", to, rc);
 		assert(!rc);
-		zmq_recv(dsl_node_addrs[to], &request, 0);
+		if (rc) {
+			PRINTD("sys_sendcmd_all: problem with send:\n%s", zmq_strerror(errno));
+		}
+
+		zmq_msg_close(&request);
+
+		zmq_msg_t reply;
+		zmq_msg_init(&reply);
+
+		rc = zmq_recv(dsl_node_addrs[to], &reply, 0);
+		PRINTD("sys_sendcmd_all: [from] to = %u, rc = %d", to, rc);
+		assert(!rc);
+		if (rc) {
+			PRINTD("sys_sendcmd_all: problem with recv:\n%s", zmq_strerror(errno));
+		}
+
+		zmq_msg_close(&reply);
 	}
-	zmq_msg_close(&request);
 
 	return rc;
 }
@@ -270,11 +284,12 @@ sys_recvcmd(void* data, size_t len, nodeid_t from)
 	zmq_msg_t message;
 	zmq_msg_init(&message);
 
-	PRINTD("sys_recvcmd\n");
+	PRINTD("sys_recvcmd: from = %u", from);
 	int rc = zmq_recv(dsl_node_addrs[from], &message, 0);
 	if (rc != 0) {
-		fprintf(stderr, "sys_recvcmd: there was a problem receiveing msg:\n%s\n",
-				strerror(errno));
+		PRINTD("sys_recvcmd: there was a problem receiveing msg:\n%s",
+				zmq_strerror(errno));
+		zmq_msg_close (&message);
 		return -1;
 	}
 
@@ -288,7 +303,7 @@ sys_recvcmd(void* data, size_t len, nodeid_t from)
 // If value == NULL, we just return the address.
 // Otherwise, we return the value.
 static inline void 
-sys_ps_command_reply(unsigned short int target,
+sys_ps_command_reply(nodeid_t target,
                     PS_COMMAND_TYPE command,
                     tm_addr_t address,
                     uint32_t* value,
@@ -297,6 +312,8 @@ sys_ps_command_reply(unsigned short int target,
 	psc->nodeId = ID;
 	psc->type = command;
 	psc->response = response;
+
+    PRINTD("sys_ps_command_reply: src=%u target=%u", psc->nodeId, target);
 #ifdef PGAS
 	if (value != NULL) {
 		psc->value = *value;
@@ -309,7 +326,11 @@ sys_ps_command_reply(unsigned short int target,
 	zmq_msg_t message;
 	zmq_msg_init_size(&message, sizeof(PS_COMMAND));
 	memcpy(zmq_msg_data(&message), psc, sizeof(PS_COMMAND));
-	zmq_send(the_responder, &message, 0);
+
+	if (zmq_send(the_responder, &message, 0) != 0) {
+		PRINTD("sys_ps_command_reply: problem with send:\n%s", zmq_strerror(errno));
+	}
+
 	zmq_msg_close(&message);
 }
 
@@ -322,7 +343,16 @@ dsl_communication()
 	while (1) {
 		zmq_msg_t request;
 		zmq_msg_init(&request);
-		zmq_recv(the_responder, &request, 0);
+
+		int rc = zmq_recv(the_responder, &request, 0);
+		if (rc != 0) {
+			if (errno == ETERM) {
+				PRINT("dsl_communication: zmq context is killed");
+				EXIT(13);
+			}
+			PRINTD("dsl_communication: problem sending message:\n%s",
+				   zmq_strerror(errno));
+		}
 		size_t size = zmq_msg_size(&request);
 		if (size < sizeof(PS_COMMAND))
 			size = sizeof(PS_COMMAND);
@@ -342,7 +372,7 @@ dsl_communication()
 		zmq_msg_close(&request);
 
 		nodeid_t sender = ps_remote->nodeId;
-		PRINTD("dsl_communication: got message %d from %u\n", ps_remote->type, sender);
+		PRINTD("dsl_communication: got message %d from %u", ps_remote->type, sender);
 
 		switch (ps_remote->type) {
 			case PS_SUBSCRIBE:
@@ -541,8 +571,6 @@ init_barrier()
 	num_tm_nodes = NUM_APP_NODES;
 	num_dsl_nodes = NUM_DSL_NODES;
 
-	fprintf(stderr, "init_barrier: num_tm_nodes: %u, num_dsl_nodes: %u\n",
-			num_tm_nodes, num_dsl_nodes);
 	int created;
 
 	//map the shared memory areas
@@ -578,7 +606,6 @@ init_barrier()
 		perror("In mmap");
 		EXIT(1);
 	}
-	fprintf(stderr, "init_barrier: created %d, apps = %u\n", created, *apps);
 
 	//do this just once
 	if (created) {
@@ -631,8 +658,6 @@ void
 app_barrier()
 {
 	nodeid_t i = __sync_fetch_and_add(apps,1);
-	fprintf(stderr, "in app_barrier, i=%u, num_tm_nodes = %u\n", i,
-			num_tm_nodes);
 	if (i==(num_tm_nodes-1)) {
 		//all the clients have reached the barrier
 		*apps = 0;
@@ -653,8 +678,6 @@ void
 global_barrier()
 {
 	nodeid_t i = __sync_fetch_and_add(nodes,1);
-	fprintf(stderr, "in global_barrier, i=%u, num_tm_nodes = %u, num_dsl_nodes = %u\n", i,
-			num_tm_nodes, num_dsl_nodes);
 	if (i==(num_tm_nodes+num_dsl_nodes-1)) {
 		*nodes = 0;
 		auxNodes = nodes;
