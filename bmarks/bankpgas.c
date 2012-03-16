@@ -113,7 +113,7 @@ int total(bank_t *bank, int transactional) {
         for (i = 0; i < bank->size; i++) {
             int bal = NONTX_LOAD(&bank->accounts[i].balance);
             total += bal;
-            PRINT("ld acc %03d, val: %d", i, bal);
+	    //            PRINT("ld acc %03d, val: %d", i, bal);
         }
     }
     else {

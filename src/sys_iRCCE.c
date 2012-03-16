@@ -337,16 +337,18 @@ void dsl_communication() {
                 }
 	    case PS_LOAD_NONTX:
 	      {
-		PRINT("non-tx load from %d for address %d", sender, ps_remote->address);
+		//		PRINT("non-tx load from %d for address %d", sender, ps_remote->address);
 		sys_ps_command_send(sender, PS_LOAD_NONTX_RESPONSE,
 				    ps_remote->address,
 				    PGAS_read(ps_remote->address),
 				    NO_CONFLICT);
+		break;
 	      }
 	    case PS_STORE_NONTX:
 	      {
-		PRINT("non-tx write from %d for address %d, value %d", sender, ps_remote->address, ps_remote->write_value);
+		//		PRINT("non-tx write from %d for address %d, value %d", sender, ps_remote->address, ps_remote->write_value);
 		PGAS_write(ps_remote->address, (int) ps_remote->value);
+		break;
 	      }
 #endif
                 case PS_REMOVE_NODE:
