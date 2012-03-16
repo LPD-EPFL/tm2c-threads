@@ -426,7 +426,7 @@ retry:
 
 
     void sys_init_system(int* argc, char** argv[]);
-    void init_system(int* argc, char* argv[]);
+    void init_system(int* argc, char** argv[]);
 
     void tm_init();
     void tm_term();
