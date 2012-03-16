@@ -12,9 +12,9 @@
 #endif
 
 void 
-sys_init_system(int* argc, char* argv[])
+sys_init_system(int* argc, char** argv[])
 {
-	RCCE_init(argc, &argv);
+	RCCE_init(argc, argv);
 	iRCCE_init();
 }
 
@@ -340,7 +340,7 @@ void dsl_communication() {
 		PRINT("non-tx load from %d for address %d", sender, ps_remote->address);
 		sys_ps_command_send(sender, PS_LOAD_NONTX_RESPONSE,
 				    ps_remote->address,
-				    *PGAS_read(ps_remote->address),
+				    PGAS_read(ps_remote->address),
 				    NO_CONFLICT);
 	      }
 	    case PS_STORE_NONTX:

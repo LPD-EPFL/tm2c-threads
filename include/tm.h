@@ -366,11 +366,7 @@ retry:
 #ifdef PGAS
 
     INLINED uint32_t nontx_load(tm_addr_t addr) {
-#ifdef PLATFORM_CLUSTER
         return ps_load(addr);
-#else
-        return *(uint32_t*) addr;
-#endif
     }
 #else /* PGAS */
 

@@ -1,5 +1,9 @@
-RCCEPATH=/opt/src/RCCE_src/rcce
-SYMBOLSPATH=/opt/src/RCCE_src/rcce/common/symbols
+ifneq (,$(findstring icc,$(PATH)))
+    RCCEPATH=/opt/src/RCCE_src/rcce
+else
+    RCCEPATH=/home/trigonak/Documents/phd/code/rcce
+endif
+SYMBOLSPATH=$(RCCEPATH)/common/symbols
 
 API          := nongory
 
@@ -29,9 +33,9 @@ ARCHIVE_SRCS_PURE += $(addprefix iRCCE/, $(iRCCE_SRCS))
 ARCHIVE_SRCS_PURE += sys_iRCCE.c
 
 # These are RCCE-only apps
-APPS += toall all2all \
-	  	pingpong pingping async_pingpong \
-	  	ring ring_token ring_simple
+#APPS += toall all2all \
+#	  	pingpong pingping async_pingpong \
+#	  	ring ring_token ring_simple
 
 INCLUDES += -I$(RCCEPATH)/include
 

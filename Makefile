@@ -9,7 +9,7 @@ PLATFORM = iRCCE
 HASHTABLE = USE_HASHTABLE_VT
 .PHONY: all 
 
-all:	/bin/sh /opt/compilerSetupFiles/crosscompile.sh
+all:
 
 TOP := $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST))))
 
@@ -118,7 +118,7 @@ else
 endif
 
 # dependency tracking stuff, works with gcc / does not work with tile-gcc
-ifneq ($(PLATFORM),TILERA)
+ifeq ($(PLATFORM),CLUSTER)
 EXTRA_CFLAGS = -MMD -MG
 endif
 
