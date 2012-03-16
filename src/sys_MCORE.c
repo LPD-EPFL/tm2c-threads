@@ -162,13 +162,13 @@ sys_ps_init_(void)
 	snprintf(conn_spec_path, 255, "nodes.[%d].conn_spec", ID);
 	const char* conn_spec_string = NULL;
 	if (config_lookup_string(the_config, conn_spec_path, &conn_spec_string) == CONFIG_FALSE) {
-		PRINTD("Could not read the parameter from the config file: %s\n", conn_spec_path);
+		PRINT("Could not read the parameter from the config file: %s\n", conn_spec_path);
 		EXIT(2);
 	}
 	PRINTD("Listenning on %s\n", conn_spec_string);
 	pull_socket = zmq_socket(zmq_context, ZMQ_PULL);
 	if (zmq_bind(pull_socket, conn_spec_string) != 0) {
-		PRINTD("Could not bind to %s as PULL:\n%s", conn_spec_string,
+		PRINT("Could not bind to %s as PULL:\n%s", conn_spec_string,
 			   zmq_strerror(errno));
 		EXIT(2);
 	}
@@ -188,13 +188,13 @@ sys_ps_init_(void)
 			snprintf(send_spec_path, 255, "nodes.[%d].conn_spec", j); // extra check if the node is right
 			const char* send_spec_string = NULL;
 			if (config_lookup_string(the_config, send_spec_path, &send_spec_string) == CONFIG_FALSE) {
-				PRINTD("Could not read the parameter from the config file: %s\n", send_spec_path);
+				PRINT("Could not read the parameter from the config file: %s\n", send_spec_path);
 				EXIT(2);
 			}
 			PRINTD("Connecting to %d: %s\n", j, send_spec_string);
 			void *a_socket = zmq_socket(zmq_context, ZMQ_PUSH);
 			if (zmq_connect(a_socket, send_spec_string) != 0) {
-				PRINTD("Failed to connect to %s", send_spec_string);
+				PRINT("Failed to connect to %s", send_spec_string);
 				EXIT(1);
 			}
 			dsl_node_addrs[j] = a_socket;
@@ -214,14 +214,14 @@ sys_dsl_init(void)
 	snprintf(conn_spec_path, 255, "nodes.[%d].conn_spec", ID);
 	const char* conn_spec_string = NULL;
 	if (config_lookup_string(the_config, conn_spec_path, &conn_spec_string) == CONFIG_FALSE) {
-		PRINTD("Could not read the parameter from the config file: %s\n", conn_spec_path);
+		PRINT("Could not read the parameter from the config file: %s\n", conn_spec_path);
 		EXIT(2);
 	}
 	PRINTD("Listenning on %s\n", conn_spec_string);
 	the_responder = zmq_socket(zmq_context, ZMQ_PULL);
 	if (zmq_bind(the_responder, conn_spec_string) != 0) {
-		PRINTD("Could not bind to %s as PULL:\n%s", conn_spec_string,
-			   zmq_strerror(errno));
+		PRINT("Could not bind to %s as PULL:\n%s", conn_spec_string,
+			  zmq_strerror(errno));
 		EXIT(2);
 	}
 
@@ -239,14 +239,14 @@ sys_dsl_init(void)
 		snprintf(send_spec_path, 255, "nodes.[%d].conn_spec", j); // extra check if the node is right
 		const char* send_spec_string = NULL;
 		if (config_lookup_string(the_config, send_spec_path, &send_spec_string) == CONFIG_FALSE) {
-			PRINTD("Could not read the parameter from the config file: %s\n", send_spec_path);
+			PRINT("Could not read the parameter from the config file: %s\n", send_spec_path);
 			EXIT(2);
 		}
 		PRINTD("Connecting to %d: %s\n", j, send_spec_string);
 		if (j % DSLNDPERNODES != 0) {
 			void *a_socket = zmq_socket(zmq_context, ZMQ_PUSH);
 			if (zmq_connect(a_socket, send_spec_string) != 0) {
-				PRINTD("Failed to connect to %s", send_spec_string);
+				PRINT("Failed to connect to %s", send_spec_string);
 				EXIT(1);
 			}
 			app_node_addrs[j] = a_socket;
@@ -272,7 +272,8 @@ sys_dsl_term(void)
 			}
 			app_node_addrs[j] = NULL;
 		}
-	}}
+	}
+}
 
 void
 sys_ps_term(void)
