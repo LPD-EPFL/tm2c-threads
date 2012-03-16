@@ -21,7 +21,7 @@ DynamicHeader *udn_header; //headers for messaging
 tmc_sync_barrier_t *barrier_apps, *barrier_all; //BARRIERS
 
 void
-init_system(int* argc, char** argv[]) {
+sys_init_system(int* argc, char** argv[]) {
 
     char *executable_name = (*argv)[0];
     NUM_UES = atoi(*(++(*argv)));
@@ -124,6 +124,10 @@ done:
         udn_header[r] = header;
     }
 
+}
+
+void init_barrier() {
+    //noop
 }
 
 void
