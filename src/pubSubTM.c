@@ -211,7 +211,7 @@ void ps_unsubscribe(tm_addr_t address) {
 
     ps_sendb(responsible_node, PS_UNSUBSCRIBE, intern_addr, NO_CONFLICT);
 
-#ifdef USING_ZMQ
+#ifdef PLATFORM_CLUSTER
 	ps_recvb(responsible_node);
 #endif
 }
@@ -224,7 +224,7 @@ void ps_publish_finish(tm_addr_t address) {
 
     ps_sendb(responsible_node, PS_PUBLISH_FINISH, intern_addr, NO_CONFLICT);
 
-#ifdef USING_ZMQ
+#ifdef PLATFORM_CLUSTER
 	ps_recvb(responsible_node);
 #endif
 }
@@ -245,7 +245,7 @@ void ps_finish_all(CONFLICT_TYPE conflict) {
 
 #ifndef FINISH_ALL_PARALLEL
             ps_sendb(i, PS_REMOVE_NODE, 0, conflict);
-#ifdef USING_ZMQ
+#ifdef PLATFORM_CLUSTER
 			// need a dummy receive, due to the way how ZMQ works
 			ps_recvb(i);
 #endif

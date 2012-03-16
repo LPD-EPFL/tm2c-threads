@@ -42,9 +42,8 @@ extern "C" {
         PS_STORE_NONTX,   //9
         PS_LOAD_NONTX_RESPONSE, //10
         PS_STORE_NONTX_RESPONSE, //11
-        PS_STATS,
         PS_WRITE_INC,
-    	PS_DUMMY_REPLY // the dummy reply, no response required
+        PS_STATS
     } PS_COMMAND_TYPE;
 
     //TODO: make it union with address normal int..
@@ -52,7 +51,7 @@ extern "C" {
 
     typedef struct {
         unsigned int type; //PS_COMMAND_TYPE
-#ifdef USING_ZMQ
+#if defined(PLATFORM_CLUSTER) || defined(PLATFORM_MCORE)
 		// we need IDs on networked systems
 		nodeid_t nodeId;
 #endif
