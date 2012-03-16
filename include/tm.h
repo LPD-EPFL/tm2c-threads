@@ -73,7 +73,7 @@ extern "C" {
 
 #define TM_INIT                                                         \
     init_configuration(&argc, &argv);                                   \
-    init_system(&argc, argv);                                          \
+    init_system(&argc, &argv);                                          \
     {                                                                   \
         tm_init();
 
