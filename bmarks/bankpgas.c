@@ -109,14 +109,12 @@ int total(bank_t *bank, int transactional) {
     int i, total;
 
     if (!transactional) {
-        TX_START
         total = 0;
         for (i = 0; i < bank->size; i++) {
-            int bal = TX_LOAD(&bank->accounts[i].balance);
+            int bal = NONTX_LOAD(&bank->accounts[i].balance);
             total += bal;
-            //PRINT("ld acc %03d, val: %d", i, bal);
+            PRINT("ld acc %03d, val: %d", i, bal);
         }
-        TX_COMMIT_NO_STATS
     }
     else {
         TX_START
