@@ -25,7 +25,7 @@ extern "C" {
                                 while ((duration__ =\
                                        (wtime() - starting__)) < (seconds))
 
-#define ONCE                            if (NODE_ID() == 0 || TOTAL_NODES() == 1)
+#define ONCE                            if (NODE_ID() == 1 || TOTAL_NODES() == 1)
 
 
 #ifdef BACKOFF
