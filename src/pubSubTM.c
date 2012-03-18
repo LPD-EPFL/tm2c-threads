@@ -58,14 +58,14 @@ void ps_init_(void) {
 
     sys_ps_init_();
     PRINT("[APP NODE] Initialized pub-sub..");
-    BARRIERW
 }
 
 static inline void
 ps_sendb(nodeid_t target, PS_COMMAND_TYPE command,
-        tm_intern_addr_t address, CONFLICT_TYPE response) {
-#ifdef USING_ZMQ
-    psc->nodeId = ID;
+         tm_intern_addr_t address, CONFLICT_TYPE response)
+{
+#if defined(PLATFORM_CLUSTER) || defined(PLATFORM_MCORE)
+	psc->nodeId = ID;
 #endif
     psc->type = command;
     psc->address = address;
@@ -76,10 +76,11 @@ ps_sendb(nodeid_t target, PS_COMMAND_TYPE command,
 
 static inline void
 ps_sendbv(nodeid_t target, PS_COMMAND_TYPE command,
-        tm_intern_addr_t address, uint32_t value,
-        CONFLICT_TYPE response) {
-#ifdef USING_ZMQ 
-    psc->nodeId = ID;
+         tm_intern_addr_t address, uint32_t value,
+         CONFLICT_TYPE response)
+{
+#if defined(PLATFORM_CLUSTER) || defined(PLATFORM_MCORE)
+	psc->nodeId = ID;
 #endif
     psc->type = command;
     psc->address = address;

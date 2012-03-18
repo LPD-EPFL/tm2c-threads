@@ -180,7 +180,11 @@ INLINED double RCCE_wtime() {
 /*  ------- Plug platform related things here END   ------- */
 
 #define TASKMAIN MAIN
+#ifdef LIBTASK
+#define MAIN int taskmain
+#else
 #define MAIN int main
+#endif
 #define EXIT(reason) exit(reason);
 #define EXITALL(reason) exit((reason))
 
