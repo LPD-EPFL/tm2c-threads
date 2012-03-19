@@ -80,7 +80,7 @@ BMARKS_NON_WORKING = mtest
 -include Makefile.$(PLATFORM)
 
 ifneq (,$(findstring PGAS,$(PLATFORM_DEFINES)))
-ALL_BMARKS += bankpgas #bankpgas mbllpgas mbhtpgas
+ALL_BMARKS += bankpgas mbllpgas #bankpgas mbllpgas mbhtpgas
 endif
 
 # define the compiler now, if platform makefile exported something through

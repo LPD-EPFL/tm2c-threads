@@ -30,8 +30,8 @@ node_t *new_node(val_t val, nxt_t next, int transactional) {
         EXIT(1);
     }
 
-    NONTX_STORE(node->val, val, TYPE_INT);
-    NONTX_STORE(node->next, next, TYPE_INT);
+    NONTX_STORE(&node->val, val, TYPE_INT);
+    NONTX_STORE(&node->next, next, TYPE_INT);
 
     return node;
 }
@@ -44,20 +44,22 @@ intset_t *set_new() {
         perror("malloc");
         EXIT(1);
     }
-    max = new_node(VAL_MAX, NULL, 0);
-    min = new_node(VAL_MIN, max, 0);
-    set->head = min;
+    max = new_node(VAL_MAX, 0, 0);
+    min = new_node(VAL_MIN, (nxt_t) max, 0);
+    set->head = (nxt_t) min;
     return set;
 }
 
 void set_delete(intset_t *set) {
-    node_t *node, *next;
+    node_t node, next;
 
-    node = (node_t *) NONTX_LOAD(set->head);
-    while (node != NULL) {
-        next = (node_t *) NONTX_LOAD(node->next);
-        sys_shfree((t_vcharp) node);
-        node = next;
+    LOAD_NODE_NXT(node, set->head);
+    nxt_t to_del = set->head;
+    while (node.next != 0) {
+        to_del = node.next;
+        LOAD_NODE_NXT(next, node.next);
+        sys_shfree((t_vcharp) to_del);
+        node.next = next.next;
     }
     sys_shfree((t_vcharp) set);
 }
@@ -196,7 +198,7 @@ static int set_seq_add(intset_t *set, val_t val) {
     }
     result = (next.val != val);
     if (result) {
-        NONTX_STORE(new_node(val, prev.next, 0));
+        NONTX_STORE(prev.next, new_node(val, prev.next, 0), TYPE_INT);
     }
 
 #ifdef LOCKS
@@ -264,7 +266,7 @@ done:
     if (result) {
         nxt_t nxt = OF(new_node(val, OF(next), transactional));
         PRINTD("Created node %5d. Value: %d", nxt, val);
-        TX_STORE(&prev->next, &nxt, TYPE_UINT);
+////        TX_STORE(&prev->next, &nxt, TYPE_UINT);
     }
     TX_COMMIT
 
@@ -405,7 +407,7 @@ done:
     result = (v == val);
     if (result) {
         nxt_t *nxt = (nxt_t *) TX_LOAD(&next->next);
-        TX_STORE(&prev->next, nxt, TYPE_UINT);
+////        TX_STORE(&prev->next, nxt, TYPE_UINT);
         TX_SHFREE(next);
         PRINTD("Freed node   %5d. Value: %d", OF(next), next->val);
     }
