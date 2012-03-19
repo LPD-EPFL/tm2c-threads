@@ -39,7 +39,13 @@ static int dsl_nodes_sockets[MAX_NODES]; // holds the sockets to all dsl nodes a
 
 static int parse_conn_spec_string(char* spec, struct conn_spec* out);
 void dsl_listentask(void* v);
-
+void dsl_recvtask(void* v);
+static void process_message(PS_COMMAND* ps_remote, int fd);
+static inline void sys_ps_command_reply(int fd,
+                    PS_COMMAND_TYPE command,
+                    tm_addr_t address,
+                    uint32_t* value,
+                    CONFLICT_TYPE response);
 /*
  * For cluster conf, we need a different kind of command line parameters.
  * Since there is no way for a node to know it's identity, we need to pass it,
@@ -111,7 +117,7 @@ fork_done:
 	// Now, pin the process to the right core (NODE_ID == core id)
 	cpu_set_t mask;
 	CPU_ZERO(&mask);
-	CPU_SET(NODE_ID(), &mask);
+	CPU_SET(rank, &mask);
 	if (sched_setaffinity(0, sizeof(cpu_set_t), &mask) != 0) {
 		PRINT("Problem with setting processor affinity: %s\n",
 			  strerror(errno));
@@ -196,7 +202,6 @@ redo_netdial:
 					  spec.proto, spec.address, spec.port);
 				PRINT("libtask: %s", taskgetstate());
 				PRINT("error: %s", strerror(errno));
-				close(rfd);
 				EXIT(1);
 			}
 			fdnoblock(rfd);
@@ -710,7 +715,6 @@ dsl_recvtask(void* cfd)
 #endif
 
 			process_message(ps_remote, remotefd);
-			taskyield();
 			PRINTD("dsl_recvtask(): processing message is finished fd=%d\n", remotefd);
 		} else {
 			if (ret == 0) {
@@ -739,9 +743,11 @@ dsl_listentask(void* v)
 	}
 	PRINTD("dsl_listentask: listening on tcp port %d\n", spec->port);
 
-	fdnoblock(fd);
+	BARRIERW
+
 	char remote[16];
 	int rport;
+	fdnoblock(fd);
 	while((cfd = netaccept(fd, remote, &rport)) >= 0) {
 		PRINTD("connection from %s:%d in socket %d\n", 
 			   remote, rport, cfd);
@@ -750,5 +756,4 @@ dsl_listentask(void* v)
 		taskyield();
 	}
 }
-
 
