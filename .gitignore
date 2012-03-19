@@ -27,3 +27,7 @@
 /external/tmp/libconfig-1.4.8_scc/tests/.libs/
 /external/tmp/libconfig-1.4.8_scc/tests/.deps/
 /external/tmp/libconfig-1.4.8_scc/examples/c++/.deps/
+/external/*
+*.a
+/apps/tm[0-9]
+/apps/tm10

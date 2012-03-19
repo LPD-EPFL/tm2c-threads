@@ -374,7 +374,7 @@ void dsl_communication() {
                 break;
             case PS_STORE_NONTX:
                 address = tmc_udn0_receive();
-                int write_val = tmc_udn0_receive();
+                unsigned int write_val = tmc_udn0_receive();
                 PRINT("PGAS_WRITE for %d, val: %d", address, write_val);
                 PGAS_write(address, write_val);
 #endif
