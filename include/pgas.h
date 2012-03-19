@@ -41,7 +41,8 @@ typedef uintptr_t pgas_addr_t;
 static inline tm_intern_addr_t
 SHRINK(tm_intern_addr_t addr)
 {
-	return (tm_intern_addr_t)((uintptr_t)addr/NUM_DSL_NODES);
+  //return (tm_intern_addr_t)((uintptr_t)addr/NUM_DSL_NODES);
+  return addr;
 }
 
 /*
@@ -52,6 +53,7 @@ static inline void
 PGAS_write(tm_intern_addr_t addr, uint32_t val)
 {
 	tm_intern_addr_t off = SHRINK(addr);
+	//	PRINT("%d -> %d, writing %d", addr, off, val);
 	if (off > SHMEM_SIZE) {
 		PRINT("PGAS_write: write outside of boundaries for PGAS memory: "
 			  " max %"PRIxIA", addr %"PRIxIA"\n",
