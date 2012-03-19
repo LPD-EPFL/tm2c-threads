@@ -30,8 +30,8 @@ node_t *new_node(val_t val, nxt_t next, int transactional) {
         EXIT(1);
     }
 
-    node->val = val;
-    node->next = next;
+    NONTX_STORE(node->val, val, TYPE_INT);
+    NONTX_STORE(node->next, next, TYPE_INT);
 
     return node;
 }
@@ -45,17 +45,17 @@ intset_t *set_new() {
         EXIT(1);
     }
     max = new_node(VAL_MAX, NULL, 0);
-    min = new_node(VAL_MIN, OF(max), 0);
-    set->head = OF(min);
+    min = new_node(VAL_MIN, max, 0);
+    set->head = min;
     return set;
 }
 
 void set_delete(intset_t *set) {
     node_t *node, *next;
 
-    node = ND(set->head);
+    node = (node_t *) NONTX_LOAD(set->head);
     while (node != NULL) {
-        next = ND(node->next);
+        next = (node_t *) NONTX_LOAD(node->next);
         sys_shfree((t_vcharp) node);
         node = next;
     }
@@ -64,14 +64,14 @@ void set_delete(intset_t *set) {
 
 int set_size(intset_t *set) {
     int size = 0;
-    node_t *node, *head;
+    node_t node, head;
 
     /* We have at least 2 elements */
-    head = ND(set->head);
-    node = ND(head->next);
-    while (node->nextp != NULL) {
+    LOAD_NODE_NXT(head, set->head);
+    LOAD_NODE_NXT(node, head.next);
+    while (node.nextp != NULL) {
         size++;
-        node = ND(node->next);
+        LOAD_NODE_NXT(node, node.next);
     }
 
     return size;
@@ -118,33 +118,32 @@ int set_contains(intset_t *set, val_t val, int transactional) {
 #elif defined STM
 
 #ifndef READ_VALIDATION
-    node_t *prev, *next;
+    node_t prev, next;
 #ifdef EARLY_RELEASE
     node_t *rls;
 #endif
     val_t v = 0;
 
     TX_START
-    prev = ND(set->head);
-    next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+    LOAD_NODE_NXT(prev, set->head);
+    TX_LOAD_NODE(next, prev.next);
     while (1) {
-        v = next->val;
+        v = next.val;
         if (v >= val)
             break;
 #ifdef EARLY_RELEASE
         rls = prev;
 #endif
-        prev = next;
-        next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+        prev.next = next.next;
+        TX_LOAD_NODE(next, prev.next);
 #ifdef EARLY_RELEASE
         TX_RRLS(&rls->next);
 #endif
     }
-    FLUSH
     TX_COMMIT
     result = (v == val);
 
-#else
+#else /*READ_VALIDATION*/
     node_t *prev, *next, *validate;
     nxt_t nextoffs, validateoffs;
     val_t v = 0;
@@ -175,7 +174,7 @@ int set_contains(intset_t *set, val_t val, int transactional) {
     }
     TX_COMMIT
     result = (v == val);
-#endif
+#endif /*READ_VALIDATION*/
 #endif	
 
     return result;
@@ -183,23 +182,22 @@ int set_contains(intset_t *set, val_t val, int transactional) {
 
 static int set_seq_add(intset_t *set, val_t val) {
     int result;
-    node_t *prev, *next;
+    node_t prev, next;
 
 #ifdef LOCKS
     global_lock();
 #endif
 
-    prev = ND(set->head);
-    next = ND(prev->next);
-    while (next->val < val) {
-        prev = next;
-        next = ND(prev->next);
+    LOAD_NODE_NXT(prev, set->head);
+    LOAD_NODE(next, prev.next);
+    while (next.val < val) {
+        prev.next = next.next;
+        LOAD_NODE(next, prev.next);
     }
-    result = (next->val != val);
+    result = (next.val != val);
     if (result) {
-        prev->next = OF(new_node(val, OF(next), 0));
+        NONTX_STORE(new_node(val, prev.next, 0));
     }
-
 
 #ifdef LOCKS
     global_lock_release();
