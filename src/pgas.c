@@ -17,16 +17,15 @@ unsigned int num_ues_d2;
 
 void PGAS_init() {
     fprintf(stderr, "SHMEM_SIZE: %zu\n", SHMEM_SIZE);
-    SHMEM = (int *) malloc(SHMEM_SIZE);
-/*
-    SHMEM = (void *) malloc(SHMEM_SIZE);
-*/
+    SHMEM = (int *) calloc(SHMEM_SIZE/sizeof(int), sizeof(int));
+    //SHMEM = (int *) malloc(SHMEM_SIZE);
+
     if (SHMEM == NULL) {
         PRINT("malloc @ PGAS_init");
         EXIT(-1);
     }
     
-    bzero(SHMEM, SHMEM_SIZE);
+    // bzero(SHMEM, SHMEM_SIZE);
     
     PRINT("allocated %zu bytes for PGAS shmem, position %p", SHMEM_SIZE, SHMEM);
 }

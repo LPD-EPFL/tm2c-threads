@@ -84,7 +84,7 @@ ps_sendbv(nodeid_t target, PS_COMMAND_TYPE command,
     psc->type = command;
     psc->address = address;
     psc->response = response;
-    psc->write_value = (int) value;
+    psc->write_value = value;
 
     sys_sendcmd(psc, sizeof (PS_COMMAND), target);
 }
@@ -166,7 +166,7 @@ CONFLICT_TYPE ps_store_inc(tm_addr_t address, int increment) {
 
     nodes_contacted[responsible_node]++;
 
-    ps_sendbv(responsible_node, PS_WRITE_INC, intern_addr, increment, NO_CONFLICT);
+    ps_sendbv(responsible_node, PS_WRITE_INC, intern_addr, (uint32_t) increment, NO_CONFLICT);
 #ifdef PLATFORM_TILERA
     CONFLICT_TYPE response = udn0_receive();
 #else 
