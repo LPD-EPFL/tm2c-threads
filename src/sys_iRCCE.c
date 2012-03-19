@@ -321,12 +321,13 @@ void dsl_communication() {
 #endif
                     CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
                     if (conflict == NO_CONFLICT) {
+		      //		      PRINT("wval for %d is %d", ps_remote->address, ps_remote->write_value);
                         /*
                                                 PRINT("PS_WRITE_INC from %2d for %3d, old: %3d, new: %d", sender, ps_remote->address, PGAS_read(ps_remote->address),
                                                         PGAS_read(ps_remote->address) + ps_remote->write_value);
                          */
                         write_set_pgas_insert(PGAS_write_sets[sender], 
-                        		*PGAS_read(ps_remote->address) + ps_remote->write_value,
+					      *(int *) PGAS_read(ps_remote->address) + ps_remote->write_value,
                                 ps_remote->address);
                     }
                     sys_ps_command_send(sender, PS_PUBLISH_RESPONSE,
