@@ -40,7 +40,7 @@ intset_t *set_new() {
     intset_t *set;
     node_t *min, *max;
 
-    if ((set = (intset_t *) sys_shmalloc(sizeof (intset_t))) == NULL) {
+    if ((set = (intset_t *) malloc(sizeof (intset_t))) == NULL) {
         perror("malloc");
         EXIT(1);
     }
