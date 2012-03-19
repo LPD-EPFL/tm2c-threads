@@ -12,9 +12,9 @@
 #endif
 
 void 
-sys_init_system(int* argc, char* argv[])
+sys_init_system(int* argc, char** argv[])
 {
-	RCCE_init(argc, &argv);
+	RCCE_init(argc, argv);
 	iRCCE_init();
 }
 
@@ -321,12 +321,13 @@ void dsl_communication() {
 #endif
                     CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
                     if (conflict == NO_CONFLICT) {
+		      //		      PRINT("wval for %d is %d", ps_remote->address, ps_remote->write_value);
                         /*
                                                 PRINT("PS_WRITE_INC from %2d for %3d, old: %3d, new: %d", sender, ps_remote->address, PGAS_read(ps_remote->address),
                                                         PGAS_read(ps_remote->address) + ps_remote->write_value);
                          */
                         write_set_pgas_insert(PGAS_write_sets[sender], 
-                        		*PGAS_read(ps_remote->address) + ps_remote->write_value,
+					      *(int *) PGAS_read(ps_remote->address) + ps_remote->write_value,
                                 ps_remote->address);
                     }
                     sys_ps_command_send(sender, PS_PUBLISH_RESPONSE,
@@ -335,6 +336,21 @@ void dsl_communication() {
                     		conflict);
                     break;
                 }
+	    case PS_LOAD_NONTX:
+	      {
+		//		PRINT("non-tx load from %d for address %d", sender, ps_remote->address);
+		sys_ps_command_send(sender, PS_LOAD_NONTX_RESPONSE,
+				    ps_remote->address,
+				    PGAS_read(ps_remote->address),
+				    NO_CONFLICT);
+		break;
+	      }
+	    case PS_STORE_NONTX:
+	      {
+		//		PRINT("non-tx write from %d for address %d, value %d", sender, ps_remote->address, ps_remote->write_value);
+		PGAS_write(ps_remote->address, (int) ps_remote->value);
+		break;
+	      }
 #endif
                 case PS_REMOVE_NODE:
 #ifdef PGAS

@@ -39,7 +39,7 @@ extern "C" {
         PS_ABORTED, //6
         PS_REMOVE_NODE, //7
         PS_LOAD_NONTX, //8
-        PS_STORE_NONTX,   //9
+        PS_STORE_NONTX, //9
         PS_LOAD_NONTX_RESPONSE, //10
         PS_STORE_NONTX_RESPONSE, //11
         PS_WRITE_INC,
@@ -52,8 +52,8 @@ extern "C" {
     typedef struct {
         unsigned int type; //PS_COMMAND_TYPE
 #if defined(PLATFORM_CLUSTER) || defined(PLATFORM_MCORE)
-		// we need IDs on networked systems
-		nodeid_t nodeId;
+        // we need IDs on networked systems
+        nodeid_t nodeId;
 #endif
 
         union {
@@ -68,7 +68,7 @@ extern "C" {
                 union {
                     tm_intern_addr_t address; /* address of the data, internal
                     							 representation */
-                    int32_t   value;
+                    int32_t value;
                 };
             };
 
@@ -115,6 +115,7 @@ extern "C" {
     CONFLICT_TYPE ps_subscribe(tm_addr_t address);
 
     /* Try to publish a write on the address
+     * XXX: try to unify the interface
      */
 #ifdef PGAS
     CONFLICT_TYPE ps_publish(tm_addr_t address, int value);
@@ -125,12 +126,12 @@ extern "C" {
 #else
     CONFLICT_TYPE ps_publish(tm_addr_t address);
 #endif
-	
+
     /* Non-transactional read of an address */
     uint32_t ps_load(tm_addr_t address);
 
-	/* Non-transactional write to an address */
-	void ps_store(tm_addr_t address, uint32_t value);
+    /* Non-transactional write to an address */
+    void ps_store(tm_addr_t address, uint32_t value);
 
     /* Unsubscribes the TX from the address
      */

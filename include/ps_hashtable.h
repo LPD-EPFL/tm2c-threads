@@ -31,7 +31,7 @@ extern "C" {
  * USE_HASHTABLE_SDD:    Sunrise Data Dictionary <>
  * USE_HASHTABLE_VT:     hashtable by Vasilis
  */
-
+    
 #ifdef USE_HASHTABLE_KHASH
 #include "khash.h"
 

@@ -159,9 +159,14 @@ void *test(void *data, double duration) {
 
 TASKMAIN(int argc, char **argv) {
     dup2(STDOUT_FILENO, STDERR_FILENO);
+#ifndef SEQUENTIAL
     TM_INIT
+#else
+    RCCE_init(&argc, &argv);
+    iRCCE_init();
+#endif
 
-            struct option long_options[] = {
+    struct option long_options[] = {
         // These options don't set a flag
         {"help", no_argument, NULL, 'h'},
         {"duration", required_argument, NULL, 'd'},
@@ -180,7 +185,7 @@ TASKMAIN(int argc, char **argv) {
     thread_data_t *data;
     double duration = DEFAULT_DURATION;
     int initial = DEFAULT_INITIAL;
-    int nb_app_cores = RCCE_num_ues();
+    int nb_app_cores = NUM_APP_NODES;
     long range = DEFAULT_RANGE;
     int update = DEFAULT_UPDATE;
     int unit_tx = DEFAULT_ELASTICITY;
@@ -287,6 +292,16 @@ TASKMAIN(int argc, char **argv) {
     ONCE
     {
         printf("Bench type   : linked list PGAS\n");
+#ifdef SEQUENTIAL
+        printf("                sequential\n");
+#elif defined(EARLY_RELEASE )
+        printf("                using early-release\n");
+#elif defined(READ_VALIDATION)
+        printf("                using read-validation\n");
+#endif
+#ifdef LOCKS
+        printf("                  with locks\n");
+#endif
         printf("Duration     : %f\n", duration);
         printf("Initial size : %d\n", initial);
         printf("Nb cores     : %d\n", nb_app_cores);
@@ -303,53 +318,77 @@ TASKMAIN(int argc, char **argv) {
         exit(1);
     }
 
-    ONCE
-    {
-        PGAS_alloc_init(1);
-        set = set_new();
-    }
-    OTHERS
-    {
-        if ((set = (intset_t *) malloc(sizeof (intset_t))) == NULL) {
-            perror("malloc");
-            EXIT(1);
-        }
-        set->head = 2;
-    }
+    set = set_new();
 
     BARRIER;
 
     ONCE
     {
         /* Populate set */
-        PRINT("Adding %d entries to set", initial);
-
-        char *buf = (char *) calloc(range, sizeof (char));
-
+        printf("Adding %d entries to set\n", initial);
         i = 0;
         while (i < initial) {
-            do {
-                val = rand_range(range);
-            } while (buf[val]);
-            buf[val] = 1;
+            val = rand_range(range);
             if (set_add(set, val, 0)) {
                 last = val;
                 i++;
             }
         }
-        
-        free(buf);
-        
         size = set_size(set);
         printf("Set size     : %d\n", size);
-        //set_print(set);
+
+/*
+        set_print(set);
+*/
+
         assert(size == initial);
         FLUSH
-
     }
-    PGAS_alloc_init(0);
-    PGAS_alloc_offs(initial + 3);
-    BARRIER
+    
+    return;
+
+#ifdef STM
+    int off, id2use;
+    if (ID < 6) {
+        off = 0;
+        id2use = ID;
+    }
+    else if (ID < 12) {
+        off = 1;
+        id2use = ID - 6;
+    }
+    else if (ID < 18) {
+        off = 0;
+        id2use = ID - 6;
+    }
+    else if (ID < 24) {
+        off = 1;
+        id2use = ID - 12;
+    }
+    else if (ID < 30) {
+        off = 2;
+        id2use = ID - 24;
+    }
+    else if (ID < 36) {
+        off = 3;
+        id2use = ID - 30;
+    }
+    else if (ID < 42) {
+        off = 2;
+        id2use = ID - 30;
+    }
+    else if (ID < 48) {
+        off = 3;
+        id2use = ID - 36;
+    }
+
+    shmem_init(((off * 16) * 1024 * 1024) + ((id2use / 2) * 1024 * 1024));
+    PRINT("shmem from %d MB", (off * 16) + id2use / 2);
+
+#else
+    shmem_init(1024 * 100 * RCCE_ue() * sizeof (node_t) + ((initial + 2) * sizeof (node_t)));
+
+#endif
 
     /* Access set from all threads */
     data->first = last;
@@ -385,8 +424,46 @@ TASKMAIN(int argc, char **argv) {
 
     BARRIER
 
+            int *changes;
+    changes = (int *) set;
+    int *sequencer;
+    sequencer = changes + sizeof (int);
+    int mychanges = data->nb_added - data->nb_removed;
+
+    int size_after;
+    ONCE
+    {
+        size_after = set_size(set);
+        //set_print(set);
+        *changes = 0;
+        *sequencer = 1;
+    }
+
+    BARRIER
+
+#if defined(STM) && defined(DEBUG)
+            TX_START
+    if ((*(int *) sequencer) != ID) {
+        udelay(100);
+        TX_ABORT(WRITE_AFTER_WRITE);
+    }
+    int id1 = ID + 2;
+    TX_STORE(sequencer, &id1, TYPE_INT);
+    int cc = *(int *) TX_LOAD(changes);
+    int newc = cc + mychanges;
+    TX_STORE(changes, &newc, TYPE_INT);
+    TX_COMMIT
+
+    BARRIER
+    ONCE
+    {
+        PRINT(":: ~~ :: Set size: %d, expected: %d", size_after, initial + set->head);
+    }
+#endif
+
+
 #ifdef SEQUENTIAL
-            int total_ops = data->nb_add + data->nb_contains + data->nb_remove;
+    int total_ops = data->nb_add + data->nb_contains + data->nb_remove;
     printf("#Ops          : %d\n", total_ops);
     printf("#Ops/s        : %d\n", (int) (total_ops / duration__));
     printf("#Latency      : %f\n", duration__ / total_ops);
@@ -398,11 +475,12 @@ TASKMAIN(int argc, char **argv) {
     /* Cleanup STM */
 
     free(data);
-    free(set);
 
     BARRIER
 
+#ifdef STM
     TM_END
+#endif
 
     EXIT(0);
 }

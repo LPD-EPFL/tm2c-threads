@@ -10,69 +10,70 @@
 
 #include "linkedlist.h"
 
+nxt_t offs__;
+
 void *shmem_init(size_t offset) {
     return (void *) (sys_shmalloc(offset) + offset);
 }
 
-new_node_t new_node(val_t val, nxt_t next, int transactional) {
-    new_node_t nn;
+node_t *new_node(val_t val, nxt_t next, int transactional) {
+    node_t *node;
 
     if (transactional) {
-        nn.addr = PGAS_alloc();
+        node = (node_t *) TX_SHMALLOC(sizeof (node_t));
     }
     else {
-        nn.addr = PGAS_alloc_seq();
+        node = (node_t *) sys_shmalloc(sizeof (node_t));
+    }
+    if (node == NULL) {
+        perror("malloc");
+        EXIT(1);
     }
 
-    nn.node.val = val;
-    nn.node.next = next;
+    NONTX_STORE(node->val, val, TYPE_INT);
+    NONTX_STORE(node->next, next, TYPE_INT);
 
-    return nn;
+    return node;
 }
 
 intset_t *set_new() {
     intset_t *set;
-    pgas_addr_t min, max;
+    node_t *min, *max;
 
     if ((set = (intset_t *) malloc(sizeof (intset_t))) == NULL) {
         perror("malloc");
         EXIT(1);
     }
-    TX_START
-/*
-    PRINT("creating the leftmost/rightmost nodes for new set");
-*/
-    new_node_t max_nn = new_node(VAL_MAX, 0, 0);
-/*
-    PRINT("max is : %d, value: %d, nxt: %d", max_nn.addr, max_nn.node.val, max_nn.node.next);
-*/
-    new_node_t min_nn = new_node(VAL_MIN, max_nn.addr, 0);
-/*
-    PRINT("min is : %d, value: %d, nxt: %d", min_nn.addr, min_nn.node.val, min_nn.node.next);
-*/
-    TX_STORE(max_nn.addr, max_nn.node.toint);
-    TX_STORE(min_nn.addr, min_nn.node.toint);
-    set->head = min_nn.addr;
-    TX_COMMIT_NO_STATS
+    max = new_node(VAL_MAX, NULL, 0);
+    min = new_node(VAL_MIN, max, 0);
+    set->head = min;
     return set;
 }
 
 void set_delete(intset_t *set) {
-    free(set);
+    node_t *node, *next;
+
+    node = (node_t *) NONTX_LOAD(set->head);
+    while (node != NULL) {
+        next = (node_t *) NONTX_LOAD(node->next);
+        sys_shfree((t_vcharp) node);
+        node = next;
+    }
+    sys_shfree((t_vcharp) set);
 }
 
 int set_size(intset_t *set) {
-    int size;
-    node_t node;
+    int size = 0;
+    node_t node, head;
+
     /* We have at least 2 elements */
-    TX_START
-    size = -1;
-    node = (node_t) TX_LOAD(set->head);
-    while (node.next != 0) {
+    LOAD_NODE_NXT(head, set->head);
+    LOAD_NODE_NXT(node, head.next);
+    while (node.nextp != NULL) {
         size++;
-        node = (node_t) TX_LOAD(node.next);
+        LOAD_NODE_NXT(node, node.next);
     }
-    TX_COMMIT_NO_STATS
+
     return size;
 }
 
@@ -95,58 +96,113 @@ int set_contains(intset_t *set, val_t val, int transactional) {
     FLUSH;
 #endif
 
-    val_t v = 0;
+#ifdef SEQUENTIAL
+    node_t *prev, *next;
+
+#ifdef LOCKS
+    global_lock();
+#endif
+
+    prev = ND(set->head);
+    next = ND(prev->next);
+    while (next->val < val) {
+        prev = next;
+        next = ND(prev->next);
+    }
+    result = (next->val == val);
+
+#ifdef LOCKS
+    global_lock_release();
+#endif
+
+#elif defined STM
+
+#ifndef READ_VALIDATION
     node_t prev, next;
+#ifdef EARLY_RELEASE
+    node_t *rls;
+#endif
+    val_t v = 0;
 
     TX_START
-    prev.next = set->head;
-    next = (node_t) TX_LOAD(prev.next);
+    LOAD_NODE_NXT(prev, set->head);
+    TX_LOAD_NODE(next, prev.next);
     while (1) {
         v = next.val;
         if (v >= val)
             break;
-        prev = next;
-        next = (node_t) TX_LOAD(prev.next);
+#ifdef EARLY_RELEASE
+        rls = prev;
+#endif
+        prev.next = next.next;
+        TX_LOAD_NODE(next, prev.next);
+#ifdef EARLY_RELEASE
+        TX_RRLS(&rls->next);
+#endif
     }
     TX_COMMIT
     result = (v == val);
 
-/*
-    PRINT("contains %d (%d)", val, result);
-*/
+#else /*READ_VALIDATION*/
+    node_t *prev, *next, *validate;
+    nxt_t nextoffs, validateoffs;
+    val_t v = 0;
+
+    TX_START
+    prev = ND(set->head);
+    nextoffs = prev->next;
+    next = ND(nextoffs);
+    validate = prev;
+    validateoffs = nextoffs;
+    while (1) {
+        v = next->val;
+        if (v >= val)
+            break;
+        validate = prev;
+        validateoffs = nextoffs;
+        prev = next;
+        nextoffs = prev->next;
+        next = ND(nextoffs);
+        if (validate->next != validateoffs) {
+            PRINTD("[C1] Validate failed: expected nxt: %d, got %d", validateoffs, validate->next);
+            TX_ABORT(READ_AFTER_WRITE);
+        }
+    }
+    if (validate->next != validateoffs) {
+        PRINTD("[C2] Validate failed: expected nxt: %d, got %d", validateoffs, validate->next);
+        TX_ABORT(READ_AFTER_WRITE);
+    }
+    TX_COMMIT
+    result = (v == val);
+#endif /*READ_VALIDATION*/
+#endif	
+
     return result;
 }
 
 static int set_seq_add(intset_t *set, val_t val) {
     int result;
     node_t prev, next;
-    pgas_addr_t prev_addr;
 
-    TX_START
-    prev = (node_t) TX_LOAD(set->head);
-    prev_addr = set->head;
-    next = (node_t) TX_LOAD(prev.next);
+#ifdef LOCKS
+    global_lock();
+#endif
+
+    LOAD_NODE_NXT(prev, set->head);
+    LOAD_NODE(next, prev.next);
     while (next.val < val) {
-        prev_addr = prev.next;
-        prev = next;
-        next = (node_t) TX_LOAD(prev.next);
-/*
-        PRINT("%d:%d", prev.next, next.val);
-*/
+        prev.next = next.next;
+        LOAD_NODE(next, prev.next);
     }
     result = (next.val != val);
     if (result) {
-        new_node_t nn = new_node(val, prev.next, 0);
-/*
-        PRINT("adding value %d addr %d, after %d, before %d", nn.node.val, nn.addr, prev.val, next.val);
-*/
-        node_t prevnew = prev;
-        prevnew.next = nn.addr;
-        prevnew.val = prev.val;
-        TX_STORE(prev_addr, prevnew.toint);
-        TX_STORE(nn.addr, nn.node.toint);
+        NONTX_STORE(new_node(val, prev.next, 0));
     }
-    TX_COMMIT_NO_STATS
+
+#ifdef LOCKS
+    global_lock_release();
+#endif
+
     return result;
 }
 
@@ -162,36 +218,116 @@ int set_add(intset_t *set, val_t val, int transactional) {
         return set_seq_add(set, val);
     }
 
-    node_t prev, next;
-    pgas_addr_t prev_addr;
+#ifdef SEQUENTIAL /* Unprotected */
 
+    result = set_seq_add(set, val);
+
+#elif defined STM
+#ifndef READ_VALIDATION
+    node_t *prev, *next;
+
+#ifdef EARLY_RELEASE
+    node_t *prls, *pprls;
+#endif
+    val_t v;
     TX_START
-    prev = (node_t) TX_LOAD(set->head);
-    prev_addr = set->head;
-    next = (node_t) TX_LOAD(prev.next);
-    while (next.val < val) {
-        prev_addr = prev.next;
+    prev = ND(set->head);
+    next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+
+    v = next->val;
+    if (v >= val)
+        goto done;
+
+#ifdef EARLY_RELEASE
+    pprls = prev;
+#endif
+    prev = next;
+    next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+
+#ifdef EARLY_RELEASE
+    prls = prev;
+#endif
+    while (1) {
+        v = next->val;
+        if (v >= val)
+            break;
         prev = next;
-        next = (node_t) TX_LOAD(prev.next);
-/*
-        PRINT("%d:%d", prev.next, next.val);
-*/
+        next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+#ifdef EARLY_RELEASE
+        TX_RRLS(&pprls->next);
+        pprls = prls;
+        prls = prev;
+#endif
     }
-    result = (next.val != val);
+done:
+    result = (v != val);
     if (result) {
-        new_node_t nn = new_node(val, prev.next, 1);
-/*
-        PRINT("adding value %d addr %d, after %d, before %d", nn.node.val, nn.addr, prev.val, next.val);
-*/
-        node_t prevnew = prev;
-        prevnew.next = nn.addr;
-        prevnew.val = prev.val;
-        TX_STORE(prev_addr, prevnew.toint);
-        TX_STORE(nn.addr, nn.node.toint);
+        nxt_t nxt = OF(new_node(val, OF(next), transactional));
+        PRINTD("Created node %5d. Value: %d", nxt, val);
+        TX_STORE(&prev->next, &nxt, TYPE_UINT);
     }
     TX_COMMIT
 
-    return result;
+#else
+    node_t *prev, *next, *validate, *pvalidate;
+    nxt_t nextoffs, validateoffs, pvalidateoffs;
+
+    val_t v;
+    TX_START
+    prev = ND(set->head);
+    nextoffs = prev->next;
+    next = ND(nextoffs);
+
+    pvalidate = prev;
+    pvalidateoffs = validateoffs = nextoffs;
+
+    v = next->val;
+    if (v >= val)
+        goto done;
+
+    prev = next;
+    nextoffs = prev->next;
+    next = ND(nextoffs);
+
+    validate = prev;
+    validateoffs = nextoffs;
+
+    while (1) {
+        v = next->val;
+        if (v >= val)
+            break;
+        prev = next;
+        nextoffs = prev->next;
+        next = ND(nextoffs);
+        if (pvalidate->next != pvalidateoffs) {
+            PRINTD("[A1] Validate failed: expected nxt: %d, got %d", pvalidateoffs, pvalidate->next);
+            TX_ABORT(READ_AFTER_WRITE);
+        }
+        pvalidate = validate;
+        pvalidateoffs = validateoffs;
+        validate = prev;
+        validateoffs = nextoffs;
+    }
+done:
+    result = (v != val);
+    if (result) {
+        TX_LOAD(&pvalidate->next);
+        if ((*(nxt_t *) TX_LOAD(&prev->next)) != validateoffs) {
+            PRINTD("[A2] Validate failed: expected nxt: %d, got %d", validateoffs, prev->next);
+            TX_ABORT(READ_AFTER_WRITE);
+        }
+        nxt_t nxt = OF(new_node(val, OF(next), transactional));
+        PRINTD("Created node %5d. Value: %d", nxt, val);
+        TX_STORE(&prev->next, &nxt, TYPE_UINT);
+        if (pvalidate->next != pvalidateoffs) {
+            PRINTD("[A3] Validate failed: expected nxt: %d, got %d", pvalidateoffs, pvalidate->next);
+            TX_ABORT(READ_AFTER_WRITE);
+        }
+    }
+    TX_COMMIT
+#endif
+#endif
+            return result;
 }
 
 int set_remove(intset_t *set, val_t val, int transactional) {
@@ -201,62 +337,155 @@ int set_remove(intset_t *set, val_t val, int transactional) {
     printf("++> set_remove(%d)\n", (int) val);
     FLUSH;
 #endif
-    
+
+#ifdef SEQUENTIAL /* Unprotected */
+
+    node_t *prev, *next;
+
+#ifdef LOCKS
+    global_lock();
+#endif
+
+    prev = ND(set->head);
+    next = ND(prev->next);
+    while (next->val < val) {
+        prev = next;
+        next = ND(prev->next);
+    }
+    result = (next->val == val);
+    if (result) {
+        prev->next = next->next;
+        sys_shfree((t_vcharp) next);
+    }
+
+#ifdef LOCKS
+    global_lock_release();
+#endif
+
+#elif defined STM
+#ifndef READ_VALIDATION
+    node_t *prev, *next;
+#ifdef EARLY_RELEASE
+    node_t *prls, *pprls;
+#endif
     val_t v;
-    node_t prev, next;
-    pgas_addr_t prev_addr;
 
     TX_START
-    prev = (node_t) TX_LOAD(set->head);
-    prev_addr = set->head;
-    next = (node_t) TX_LOAD(prev.next);
+    prev = ND(set->head);
+    next = ND(*(nxt_t *) TX_LOAD(&prev->next));
 
-    v = next.val;
+    //v = *(val_t *) TX_LOAD(&next->val);
+    v = next->val;
     if (v >= val)
         goto done;
 
-    prev_addr = prev.next;
+#ifdef EARLY_RELEASE
+    pprls = prev;
+#endif
+
     prev = next;
-    next = (node_t) TX_LOAD(prev.next);
+    next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+#ifdef EARLY_RELEASE
+    prls = prev;
+#endif
+
     while (1) {
-        v = next.val;
+        v = next->val;
         if (v >= val)
             break;
-        prev_addr = prev.next;
         prev = next;
-        next = (node_t) TX_LOAD(prev.next);
+        next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+#ifdef EARLY_RELEASE
+        TX_RRLS(&pprls->next);
+        pprls = prls;
+        prls = prev;
+#endif
     }
 done:
     result = (v == val);
     if (result) {
-/*
-        PRINT("removing value %d addr %d, before %d", val, prev.next, next.next);
-*/
-        node_t prevnew = prev;
-        prevnew.next = next.next;
-        prevnew.val = prev.val;
-        TX_STORE(prev_addr, prevnew.toint);
-        PRINTD("Freed node   %5d. Value: %d", prev.next, next.val);
+        nxt_t *nxt = (nxt_t *) TX_LOAD(&next->next);
+        TX_STORE(&prev->next, nxt, TYPE_UINT);
+        TX_SHFREE(next);
+        PRINTD("Freed node   %5d. Value: %d", OF(next), next->val);
     }
     TX_COMMIT
+#else
+    node_t *prev, *next, *validate, *pvalidate;
+    nxt_t nextoffs, validateoffs, pvalidateoffs;
+    val_t v;
 
-    return result;
+    TX_START
+    prev = ND(set->head);
+    nextoffs = prev->next;
+    next = ND(nextoffs);
+
+    pvalidate = prev;
+    pvalidateoffs = validateoffs = nextoffs;
+
+    v = next->val;
+    if (v >= val)
+        goto done;
+
+    prev = next;
+    nextoffs = prev->next;
+    next = ND(nextoffs);
+
+    validate = prev;
+    validateoffs = nextoffs;
+
+    while (1) {
+        v = next->val;
+        if (v >= val)
+            break;
+        prev = next;
+        nextoffs = prev->next;
+        next = ND(nextoffs);
+        if (pvalidate->next != pvalidateoffs) {
+            PRINTD("[R1] Validate failed: expected nxt: %d, got %d", pvalidateoffs, pvalidate->next);
+            TX_ABORT(READ_AFTER_WRITE);
+        }
+        pvalidate = validate;
+        pvalidateoffs = validateoffs;
+        validate = prev;
+        validateoffs = nextoffs;
+    }
+done:
+    result = (v == val);
+    if (result) {
+        TX_LOAD(&pvalidate->next);
+        if ((*(nxt_t *) TX_LOAD(&prev->next)) != validateoffs) {
+            PRINTD("[R2] Validate failed: expected nxt: %d, got %d", validateoffs, prev->next);
+            TX_ABORT(READ_AFTER_WRITE);
+        }
+        nxt_t *nxt = (nxt_t *) TX_LOAD(&next->next);
+        TX_STORE(&prev->next, nxt, TYPE_UINT);
+        TX_SHFREE(next);
+        if (pvalidate->next != pvalidateoffs) {
+            PRINTD("[R3] Validate failed: expected nxt: %d, got %d", pvalidateoffs, pvalidate->next);
+            TX_ABORT(READ_AFTER_WRITE);
+        }
+    }
+    TX_COMMIT
+#endif
+#endif
+            return result;
 }
 
 void set_print(intset_t* set) {
 
-    TX_START
-    node_t node = (node_t) TX_LOAD(set->head);
+    node_t *node = ND(set->head);
+    node = ND(node->next);
 
-    if (node.next == NULL) {
+    if (node == NULL) {
         goto null;
     }
-    while (node.next != NULL) {
-        printf("{%d} -%d-> ", node.val, node.next);
-        node = (node_t) TX_LOAD(node.next);
+    while (node->nextp != NULL) {
+        printf("%d -> ", node->val);
+        node = ND(node->next);
     }
-    TX_COMMIT
-    null :
-            PRINTSF("NULL\n");
+
+null:
+    PRINTSF("NULL\n");
 
 }

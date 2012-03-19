@@ -44,7 +44,7 @@
 
 // size of the minimal allocation block
 // also, the granularity of the allocation
-#define FAKEMEM_ALLOC_BLOCK 128
+#define FAKEMEM_ALLOC_BLOCK 4
 
 
 struct _fakemem_block_ {

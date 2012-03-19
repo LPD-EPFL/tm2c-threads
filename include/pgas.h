@@ -24,8 +24,8 @@ extern const size_t PGAS_GRANULARITY; /* the length of consecutive data stored
                                          on a node */
 extern int * SHMEM;
 extern unsigned int shmem_index;
-extern unsigned int id__m1d2;
-extern unsigned int num_ues_d2;
+extern unsigned int id__m1d2; //the dslock core closest to the current core
+extern unsigned int num_ues_d2; //number of cores divided by 2
 
 extern void PGAS_init();
 extern void PGAS_finalize();
@@ -41,7 +41,8 @@ typedef uintptr_t pgas_addr_t;
 static inline tm_intern_addr_t
 SHRINK(tm_intern_addr_t addr)
 {
-	return (tm_intern_addr_t)((uintptr_t)addr/NUM_DSL_NODES);
+  //return (tm_intern_addr_t)((uintptr_t)addr/NUM_DSL_NODES);
+  return addr;
 }
 
 /*
@@ -52,6 +53,7 @@ static inline void
 PGAS_write(tm_intern_addr_t addr, uint32_t val)
 {
 	tm_intern_addr_t off = SHRINK(addr);
+	//	PRINT("%d -> %d, writing %d", addr, off, val);
 	if (off > SHMEM_SIZE) {
 		PRINT("PGAS_write: write outside of boundaries for PGAS memory: "
 			  " max %"PRIxIA", addr %"PRIxIA"\n",
@@ -79,6 +81,7 @@ PGAS_read(tm_intern_addr_t addr)
 }
 
     /*  for application cores ---------------------------------------------------------------
+     *  XXX: this allocation scheme works only for 50% app / 50% dslock core allocation
      */
 
 

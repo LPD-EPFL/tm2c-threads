@@ -19,10 +19,10 @@ PS_COMMAND *psc;
 int read_value;
 
 static inline void ps_sendb(nodeid_t target, PS_COMMAND_TYPE operation,
-                            tm_intern_addr_t address, CONFLICT_TYPE response);
+        tm_intern_addr_t address, CONFLICT_TYPE response);
 static inline void ps_sendbv(nodeid_t target, PS_COMMAND_TYPE operation,
-                            tm_intern_addr_t address, uint32_t value,
-                            CONFLICT_TYPE response);
+        tm_intern_addr_t address, uint32_t value,
+        CONFLICT_TYPE response);
 static inline CONFLICT_TYPE ps_recvb(nodeid_t from);
 
 inline void unsubscribe(nodeid_t nodeId, tm_addr_t shmem_address);
@@ -58,52 +58,49 @@ void ps_init_(void) {
 
     sys_ps_init_();
     PRINT("[APP NODE] Initialized pub-sub..");
-	BARRIERW
+    BARRIERW
 }
 
-static inline void 
+static inline void
 ps_sendb(nodeid_t target, PS_COMMAND_TYPE command,
-         tm_intern_addr_t address, CONFLICT_TYPE response)
-{
+        tm_intern_addr_t address, CONFLICT_TYPE response) {
 #ifdef USING_ZMQ
-	psc->nodeId = ID;
+    psc->nodeId = ID;
 #endif
     psc->type = command;
     psc->address = address;
     psc->response = response;
 
-    sys_sendcmd(psc, sizeof(PS_COMMAND), target);
+    sys_sendcmd(psc, sizeof (PS_COMMAND), target);
 }
 
-static inline void 
+static inline void
 ps_sendbv(nodeid_t target, PS_COMMAND_TYPE command,
-         tm_intern_addr_t address, uint32_t value,
-         CONFLICT_TYPE response)
-{
+        tm_intern_addr_t address, uint32_t value,
+        CONFLICT_TYPE response) {
 #ifdef USING_ZMQ 
-	psc->nodeId = ID;
+    psc->nodeId = ID;
 #endif
     psc->type = command;
     psc->address = address;
     psc->response = response;
     psc->write_value = value;
 
-    sys_sendcmd(psc, sizeof(PS_COMMAND), target);
+    sys_sendcmd(psc, sizeof (PS_COMMAND), target);
 }
 
 static inline CONFLICT_TYPE
-ps_recvb(nodeid_t from)
-{
+ps_recvb(nodeid_t from) {
     // XXX: this could be written much better, without globals
-    PS_COMMAND cmd; 
+    PS_COMMAND cmd;
 
-    sys_recvcmd(&cmd, sizeof(PS_COMMAND), from);
+    sys_recvcmd(&cmd, sizeof (PS_COMMAND), from);
 #ifdef PGAS
     PF_START(0)
     read_value = cmd.value;
     PF_STOP(0)
 #endif
-    return cmd.response;
+            return cmd.response;
 }
 
 /*
@@ -113,9 +110,8 @@ ps_recvb(nodeid_t from)
  */
 
 CONFLICT_TYPE
-ps_subscribe(tm_addr_t address)
-{
-	tm_intern_addr_t intern_addr = to_intern_addr(address);
+ps_subscribe(tm_addr_t address) {
+    tm_intern_addr_t intern_addr = to_intern_addr(address);
 
     nodeid_t responsible_node = get_responsible_node(intern_addr);
 
@@ -147,7 +143,7 @@ CONFLICT_TYPE ps_publish(tm_addr_t address, int value) {
 CONFLICT_TYPE ps_publish(tm_addr_t address) {
 #endif
 
-	tm_intern_addr_t intern_addr = to_intern_addr(address);
+    tm_intern_addr_t intern_addr = to_intern_addr(address);
     nodeid_t responsible_node = get_responsible_node(intern_addr);
 
     nodes_contacted[responsible_node]++;
@@ -165,22 +161,24 @@ CONFLICT_TYPE ps_publish(tm_addr_t address) {
 #ifdef PGAS
 
 CONFLICT_TYPE ps_store_inc(tm_addr_t address, int increment) {
-	tm_intern_addr_t intern_addr = to_intern_addr(address);
+    tm_intern_addr_t intern_addr = to_intern_addr(address);
     nodeid_t responsible_node = get_responsible_node(intern_addr);
 
     nodes_contacted[responsible_node]++;
 
-    ps_sendbv(responsible_node, PS_WRITE_INC, intern_addr, increment, NO_CONFLICT);
+    ps_sendbv(responsible_node, PS_WRITE_INC, intern_addr, (uint32_t) increment, NO_CONFLICT);
+#ifdef PLATFORM_TILERA
+    CONFLICT_TYPE response = udn0_receive();
+#else 
     CONFLICT_TYPE response = ps_recvb(responsible_node);
-
+#endif
     return response;
 }
 #endif
 
 uint32_t
-ps_load(tm_addr_t address)
-{
-	tm_intern_addr_t intern_addr = to_intern_addr(address);
+ps_load(tm_addr_t address) {
+    tm_intern_addr_t intern_addr = to_intern_addr(address);
 
     nodeid_t responsible_node = get_responsible_node(intern_addr);
 
@@ -192,19 +190,19 @@ ps_load(tm_addr_t address)
 }
 
 void
-ps_store(tm_addr_t address, uint32_t value)
-{
-	tm_intern_addr_t intern_addr = to_intern_addr(address);
+ps_store(tm_addr_t address, uint32_t value) {
+    tm_intern_addr_t intern_addr = to_intern_addr(address);
 
     nodeid_t responsible_node = get_responsible_node(intern_addr);
 
     ps_sendbv(responsible_node, PS_STORE_NONTX, intern_addr, value, NO_CONFLICT);
-
+#ifdef USING_ZMQ
     ps_recvb(responsible_node);
+#endif
 }
 
 void ps_unsubscribe(tm_addr_t address) {
-	tm_intern_addr_t intern_addr = to_intern_addr(address);
+    tm_intern_addr_t intern_addr = to_intern_addr(address);
     nodeid_t responsible_node = get_responsible_node(intern_addr);
 
     nodes_contacted[responsible_node]--;
@@ -217,7 +215,7 @@ void ps_unsubscribe(tm_addr_t address) {
 }
 
 void ps_publish_finish(tm_addr_t address) {
-	tm_intern_addr_t intern_addr = to_intern_addr(address);
+    tm_intern_addr_t intern_addr = to_intern_addr(address);
     nodeid_t responsible_node = get_responsible_node(intern_addr);
 
     nodes_contacted[responsible_node]--;
@@ -246,8 +244,8 @@ void ps_finish_all(CONFLICT_TYPE conflict) {
 #ifndef FINISH_ALL_PARALLEL
             ps_sendb(i, PS_REMOVE_NODE, 0, conflict);
 #ifdef PLATFORM_CLUSTER
-			// need a dummy receive, due to the way how ZMQ works
-			ps_recvb(i);
+            // need a dummy receive, due to the way how ZMQ works
+            ps_recvb(i);
 #endif
 #else
             if (iRCCE_isend(data, PS_BUFFER_SIZE, i, &sends[i]) != iRCCE_SUCCESS) {
@@ -275,18 +273,13 @@ void ps_send_stats(stm_tx_node_t* stats, double duration) {
     psc->max_retries = stats->max_retries;
     psc->tx_duration = duration;
 
-    sys_sendcmd_all(psc, sizeof(PS_COMMAND));
+    sys_sendcmd_all(psc, sizeof (PS_COMMAND));
 }
 
 static inline nodeid_t
-get_responsible_node(tm_intern_addr_t addr)
-{
-#ifdef PGAS
-	nodeid_t node = (nodeid_t)(addr % NUM_DSL_NODES);
-    return dsl_nodes[node];
-#else
+get_responsible_node(tm_intern_addr_t addr) {
+
     /* shift right by DHT_ADDRESS_MASK, thus making 2^DHT_ADDRESS_MASK continuous
         address handled by the same node*/
     return dsl_nodes[((addr) >> DHT_ADDRESS_MASK) % NUM_DSL_NODES];
-#endif
 }

@@ -25,7 +25,7 @@ extern "C" {
                                 while ((duration__ =\
                                        (wtime() - starting__)) < (seconds))
 
-#define ONCE                            if (NODE_ID() == 0 || TOTAL_NODES() == 1)
+#define ONCE                            if (NODE_ID() == 1 || TOTAL_NODES() == 1)
 
 
 #ifdef BACKOFF
@@ -73,7 +73,7 @@ extern "C" {
 
 #define TM_INIT                                                         \
     init_configuration(&argc, &argv);                                   \
-    init_system(&argc, argv);                                          \
+    init_system(&argc, &argv);                                          \
     {                                                                   \
         tm_init();
 
@@ -172,19 +172,19 @@ extern "C" {
     tm_term();                                                          \
     term_system();
 
-/*
- * addr is the local address
- */
+    /*
+     * addr is the local address
+     */
 #define TX_LOAD(addr)                                                   \
 	tx_load(stm_tx->write_set, stm_tx->read_set, (addr))
 
 #define TX_LOAD_T(addr,type) (type)TX_LOAD(addr)
 
-/*
- * addr is the local address
- * NONTX acts as a regular load on iRCCE w/o PGAS
- * and fetches data from remote on all other systems
- */
+    /*
+     * addr is the local address
+     * NONTX acts as a regular load on iRCCE w/o PGAS
+     * and fetches data from remote on all other systems
+     */
 #define NONTX_LOAD(addr)                                                \
 	nontx_load(addr)
 
@@ -266,17 +266,19 @@ extern "C" {
 
     void handle_abort(stm_tx_t *stm_tx, CONFLICT_TYPE reason);
 
-/*
- * API function
- * accepts the machine-local address, which must be translated to the appropriate
- * internal address
- */
+    /*
+     * API function
+     * accepts the machine-local address, which must be translated to the appropriate
+     * internal address
+     */
 #ifdef PGAS
+
     INLINED int tx_load(write_set_pgas_t *ws, read_set_t *rs, tm_addr_t addr) {
 #else
+
     INLINED tm_addr_t tx_load(write_set_t *ws, read_set_t *rs, tm_addr_t addr) {
 #endif
-		tm_intern_addr_t intern_addr = to_intern_addr(addr);
+        tm_intern_addr_t intern_addr = to_intern_addr(addr);
 #ifdef PGAS
         //PRINT("(loading: %d)", addr);
         write_entry_pgas_t *we;
@@ -362,26 +364,24 @@ retry:
      * The non transactional load
      */
 #ifdef PGAS
-	INLINED uint32_t nontx_load(tm_addr_t addr) {
-#ifdef PLATFORM_CLUSTER
-		return ps_load(addr);
-#else
-		return *(uint32_t*)addr;
-#endif
-	}
+
+    INLINED uint32_t nontx_load(tm_addr_t addr) {
+        return ps_load(addr);
+    }
 #else /* PGAS */
-	INLINED tm_addr_t nontx_load(tm_addr_t addr) {
-		// There is no non-PGAS cluster
-		return addr;
-	}
+
+    INLINED tm_addr_t nontx_load(tm_addr_t addr) {
+        // There is no non-PGAS cluster
+        return addr;
+    }
 #endif /* PGAS */
 
     /*
      * The non transactional store, only in PGAS version
      */
-	INLINED void nontx_store(tm_addr_t addr, uint32_t value) {
-		return ps_store(addr, value);
-	}
+    INLINED void nontx_store(tm_addr_t addr, uint32_t value) {
+        return ps_store(addr, value);
+    }
 
 #ifdef PGAS
 
@@ -420,9 +420,9 @@ retry:
 
     int color(int id, void *aux);
 
-    
-	void sys_init_system(int* argc, char* argv[]);
-    void init_system(int* argc, char* argv[]);
+
+    void sys_init_system(int* argc, char** argv[]);
+    void init_system(int* argc, char** argv[]);
 
     void tm_init();
     void tm_term();

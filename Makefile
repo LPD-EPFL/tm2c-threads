@@ -1,8 +1,12 @@
 # Main Makefile for DSTM
 
-# For platform, choose one out of: iRCCE,MCORE,CLUSTER
+# For platform, choose one out of: iRCCE,MCORE,CLUSTER,TILERA
 PLATFORM = iRCCE
-
+# USE_HASHTABLE_KHASH:  khash.h from <http://www.freewebs.com/attractivechaos/khash.h>
+# USE_HASHTABLE_UTHASH: uthash.h from <http://uthash.sourceforge.net/>
+# USE_HASHTABLE_SDD:    Sunrise Data Dictionary <>
+# USE_HASHTABLE_VT:     hashtable by Vasilis
+HASHTABLE = USE_HASHTABLE_VT
 .PHONY: all 
 
 all:
@@ -29,7 +33,7 @@ ARCHIVE_SRCS_PURE:= pubSubTM.c tm.c log.c dslock.c \
 
 ## Apps ##
 APPS_DIR := apps
-APPS = tm1 tm2 tm3 tm4 tm5 tm6 tm7 tm8 tm9 tm10
+APPS = #tm1 tm2 tm3 tm4 tm5 tm6 tm7 tm8 tm9 tm10
 
 # apps that need tasklib in order to compile
 APPS_TASKLIB = ps_hashtable \
@@ -60,15 +64,14 @@ MR := mapreduce
 LLFILES = linkedlist test #harris
 HTFILES = hashtable intset test
 
-BMARKS = bank bankseq \
-		 mtest \
+#BMARKS = bank bankseq \
 		 readonly
 
 # this is a list of programs that do not work, for whatever reason
-BMARKS_NON_WORKING = 
+BMARKS_NON_WORKING = mtest
 
 # all bmarks that need to be built
-ALL_BMARKS = $(BMARKS) mbll mbht mr
+#ALL_BMARKS = $(BMARKS) mbll mbht mr
 
 ## The rest of the Makefile ##
 
@@ -76,9 +79,9 @@ ALL_BMARKS = $(BMARKS) mbll mbht mr
 # This file has the modifications related to the current platform
 -include Makefile.$(PLATFORM)
 
-#ifneq (,$(findstring PGAS,$(PLATFORM_DEFINES)))
-#ALL_BMARKS += bankpgas mbllpgas mbhtpgas
-#endif
+ifneq (,$(findstring PGAS,$(PLATFORM_DEFINES)))
+ALL_BMARKS += bankpgas #bankpgas mbllpgas mbhtpgas
+endif
 
 # define the compiler now, if platform makefile exported something through
 # CCOMPILE
@@ -114,10 +117,13 @@ else
  override AR   = @echo "    ARCHIVE         $@ ($^)"; $(_AR)
 endif
 
-# dependency tracking stuff, works with gcc
+# dependency tracking stuff, works with gcc / does not work with tile-gcc
+ifeq ($(PLATFORM),CLUSTER)
 EXTRA_CFLAGS = -MMD -MG
+endif
 
-EXTRA_CFLAGS += -DUSE_HASHTABLE_VT
+
+EXTRA_CFLAGS += -D$(HASHTABLE)
 
 LDFLAGS := $(LDFLAGS) $(PLATFORM_LDFLAGS)
 LIBS    := $(LIBS) $(PLATFORM_LIBS)

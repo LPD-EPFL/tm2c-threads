@@ -4,13 +4,9 @@
  */
 
 #include "tm.h"
-#include "measurements.h"
-
 
 #define SIS_SIZE 480
 
-stm_tx_t *stm_tx;
-stm_tx_node_t *stm_tx_node;
 
 MAIN(int argc, char **argv) {
 
