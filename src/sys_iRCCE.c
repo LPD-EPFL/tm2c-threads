@@ -309,7 +309,7 @@ void dsl_communication() {
                     sys_ps_command_send(sender, PS_PUBLISH_RESPONSE, 
 							ps_remote->address,
 							NULL,
-							conflict);
+						conflict);
                     break;
                 }
 #ifdef PGAS
@@ -338,7 +338,7 @@ void dsl_communication() {
                 }
 	    case PS_LOAD_NONTX:
 	      {
-		//		PRINT("non-tx load from %d for address %d", sender, ps_remote->address);
+		//		PRINT("((non-tx ld: from %d, addr %d (val: %d)))", sender, ps_remote->address, (*PGAS_read(ps_remote->address)));
 		sys_ps_command_send(sender, PS_LOAD_NONTX_RESPONSE,
 				    ps_remote->address,
 				    PGAS_read(ps_remote->address),
@@ -347,8 +347,8 @@ void dsl_communication() {
 	      }
 	    case PS_STORE_NONTX:
 	      {
-		//		PRINT("non-tx write from %d for address %d, value %d", sender, ps_remote->address, ps_remote->write_value);
-		PGAS_write(ps_remote->address, (int) ps_remote->value);
+		//		PRINT("((non-tx st: from %d, addr %d (val: %d)))", sender, ps_remote->address, (ps_remote->write_value));
+		PGAS_write(ps_remote->address, (int) ps_remote->write_value);
 		break;
 	      }
 #endif
