@@ -326,7 +326,7 @@ sys_ps_command_reply(nodeid_t sender,
 	reply.address = (uintptr_t)address;
 #endif
 
-	fd = nodes_sockets[sender];
+	int fd = nodes_sockets[sender];
 	size_t error = 0;
 	while (error < sizeof(PS_COMMAND)) {
 		error = fdwrite(fd, (char*)&reply, sizeof(PS_COMMAND));
