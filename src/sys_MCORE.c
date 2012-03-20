@@ -35,13 +35,27 @@ struct conn_spec {
 	char address[MAX_FILENAME_LENGTH];
 };
 
-static int dsl_nodes_sockets[MAX_NODES]; // holds the sockets to all dsl nodes at app node
+static int nodes_sockets[MAX_NODES]; // holds the sockets (both app and dsl
+                                     // nodes use them
 
-static int parse_conn_spec_string(char* spec, struct conn_spec* out);
-void dsl_listentask(void* v);
+static struct conn_spec* my_conn_spec; // holds connetion spec for current node
+
+static Rendez* got_message; // tasks sync on this var, when there is a new msg
+static PS_COMMAND* ps_remote_msg; // holds the received msg
+
+static int my_fd; // the fd on which the nodes listens
+
 void dsl_recvtask(void* v);
+void app_recvtask(void* v);
+
+static void dsl_listentask(void* v);
+static void app_listentask(void* v);
+static int parse_conn_spec_string(char* spec, struct conn_spec* out);
+static void init_my_conn_spec(void);
+static int dial_node(nodeid_t);
+static int init_connection();
 static void process_message(PS_COMMAND* ps_remote, int fd);
-static inline void sys_ps_command_reply(int fd,
+static inline void sys_ps_command_reply(nodeid_t sender,
                     PS_COMMAND_TYPE command,
                     tm_addr_t address,
                     uint32_t* value,
@@ -123,6 +137,17 @@ fork_done:
 			  strerror(errno));
 		EXIT(3);
 	}
+
+	got_message = (Rendez*)calloc(1, sizeof(Rendez));
+	if (got_message == NULL) {
+		PRINT("Problem allocating memory for got_message Rendez");
+		EXIT(3);
+	}
+
+	// initialize the connection data
+	init_my_conn_spec();
+
+	my_fd = init_connection();
 }
 
 void
@@ -130,6 +155,7 @@ term_system()
 {
 	shm_unlink("/appBarrier");
 	shm_unlink("/globalBarrier");
+	taskexitall(0);
 }
 
 sys_t_vcharp
@@ -159,85 +185,50 @@ TOTAL_NODES(void)
 void
 sys_tm_init()
 {
-	init_barrier();
 }
 
 void
 sys_ps_init_(void)
 {
-	// Setup connection to the dsl nodes
-	// first, sleep a bit to give dsl nodes time to start
 	BARRIERW
-	unsigned int j;
+	taskcreate(app_listentask, (void*)my_conn_spec, STACK);
+
+	// Setup connection to the dsl nodes
+	nodeid_t j;
 	for (j = 0; j < NUM_UES; j++) {
 		// initialize the sockets to all dsl nodes.
-		// read the configuration, and get the address from there
 		if (j % DSLNDPERNODES == 0) {
-			char send_spec_path[256];
-			snprintf(send_spec_path, 255, "nodes.[%d].conn_spec", j); // extra check if the node is right
-			const char* send_spec_string = NULL;
-			if (config_lookup_string(the_config, send_spec_path, &send_spec_string) == CONFIG_FALSE) {
-				PRINT("Could not read the parameter from the config file: %s\n", send_spec_path);
-				EXIT(2);
-			}
-			PRINTD("Connecting to %d: %s\n", j, send_spec_string);
-
-			struct conn_spec spec;
-
-			if (parse_conn_spec_string(send_spec_string, &spec) != 0) {
-				PRINT("Problem parsing specification string <%s>", send_spec_string);
-				EXIT(1);
-			}
-
-			int rfd = -1;
-redo_netdial:
-			if ((rfd = netdial(spec.proto, spec.address, spec.port)) < 0) {
-				if (errno == ECONNREFUSED) {
-					sleep(1);
-					PRINT("ps_init: need to redial");
-					goto redo_netdial;
-				}
-
-				PRINT("ps_init: problem with netdial on %d %s:%d",
-					  spec.proto, spec.address, spec.port);
-				PRINT("libtask: %s", taskgetstate());
-				PRINT("error: %s", strerror(errno));
-				EXIT(1);
-			}
+			int rfd = dial_node(j);
 			fdnoblock(rfd);
-			dsl_nodes_sockets[j] = rfd;
+			nodes_sockets[j] = rfd;
 		} else {
-			dsl_nodes_sockets[j] = -1;
+			nodes_sockets[j] = -1;
 		}
 	}
 	MCORE_shmalloc_init(100000*sizeof(int));
+
+	ps_remote_msg = NULL;
 	PRINTD("sys_ps_init: done");
 }
-
-struct conn_spec* dsl_spec;
 
 void
 sys_dsl_init(void)
 {
-	char conn_spec_path[256];
-	snprintf(conn_spec_path, 255, "nodes.[%d].conn_spec", ID);
-	const char* conn_spec_string = NULL;
-	if (config_lookup_string(the_config, conn_spec_path, &conn_spec_string) == CONFIG_FALSE) {
-		PRINT("Could not read the parameter from the config file: %s\n", conn_spec_path);
-		EXIT(2);
+	BARRIERW
+
+	// Setup connection to the app nodes
+	nodeid_t j;
+	for (j = 0; j < NUM_UES; j++) {
+		// initialize the sockets to all app nodes.
+		if (j % DSLNDPERNODES != 0) {
+			int rfd = dial_node(j);
+			fdnoblock(rfd);
+			nodes_sockets[j] = rfd;
+		} else {
+			nodes_sockets[j] = -1;
+		}
 	}
 
-	// Now, allocate and setup a socket, to reply to clients
-	dsl_spec = (struct conn_spec*)malloc(sizeof(struct conn_spec));
-	if (dsl_spec == NULL) {
-		PRINT("sys_dsl_init: problem allocating memory");
-		EXIT(1);
-	}
-
-	if (parse_conn_spec_string(conn_spec_string, dsl_spec) != 0) {
-		PRINT("Problem parsing specification string <%s>", conn_spec_string);
-		EXIT(1);
-	}
 }
 
 void
@@ -246,8 +237,11 @@ sys_dsl_term(void)
 	nodeid_t j;
 	for (j = 0; j < NUM_UES; j++) {
 		if (j % DSLNDPERNODES != 0) {
+			if (nodes_sockets[j] != -1)
+				close(nodes_sockets[j]);
 		}
 	}
+	taskexit(0);
 }
 
 void
@@ -256,21 +250,24 @@ sys_ps_term(void)
 	nodeid_t j;
 	for (j = 0; j < NUM_UES; j++) {
 		if (j % DSLNDPERNODES == 0) {
+			if (nodes_sockets[j] != -1)
+				close(nodes_sockets[j]);
 		}
 	}
+	taskexit(0);
 }
 
 int
 sys_sendcmd(void* data, size_t len, nodeid_t to)
 {
 	assert((to>=0)&&(to<TOTAL_NODES()));
-	assert(dsl_nodes_sockets[to]!=-1);
+	assert(nodes_sockets[to]!=-1);
 
 	PRINTD("sys_sendcmd: to: %u\n", to);
 
 	size_t error = 0;
 	while (error < len) {
-		error = fdwrite(dsl_nodes_sockets[to], data, len);
+		error = fdwrite(nodes_sockets[to], data, len);
 	}
 
 	PRINTD("sys_sendcmd: sent %d", error);
@@ -298,20 +295,15 @@ sys_recvcmd(void* data, size_t len, nodeid_t from)
 {
 	PRINTD("sys_recvcmd: from = %u", from);
 
-	int ret = fdread(dsl_nodes_sockets[from], data, len);
-	if (ret >= sizeof(PS_COMMAND)) {
-		return 0;
-	} else {
-		PRINT("sys_recvcmd: problem receiving command: (%d, %u) %s",
-			  ret, sizeof(PS_COMMAND), strerror(errno));
-		return -1;
-	}
+	tasksleep(got_message);
+	memcpy(data, (void*)ps_remote_msg, len);
+	ps_remote_msg = NULL;
 }
 
 // If value == NULL, we just return the address.
 // Otherwise, we return the value.
 static inline void 
-sys_ps_command_reply(int fd,
+sys_ps_command_reply(nodeid_t sender,
                     PS_COMMAND_TYPE command,
                     tm_addr_t address,
                     uint32_t* value,
@@ -322,7 +314,7 @@ sys_ps_command_reply(int fd,
 	reply.type = command;
 	reply.response = response;
 
-    PRINTD("sys_ps_command_reply: src=%u target=%d", reply.nodeId, fd);
+	PRINTD("sys_ps_command_reply: src=%u target=%d", reply.nodeId, sender);
 #ifdef PGAS
 	if (value != NULL) {
 		reply.value = *value;
@@ -334,6 +326,7 @@ sys_ps_command_reply(int fd,
 	reply.address = (uintptr_t)address;
 #endif
 
+	fd = nodes_sockets[sender];
 	size_t error = 0;
 	while (error < sizeof(PS_COMMAND)) {
 		error = fdwrite(fd, (char*)&reply, sizeof(PS_COMMAND));
@@ -345,8 +338,7 @@ void
 dsl_communication()
 {
 	/* Here, it does nothing */
-	/*tasksystem();*/
-	dsl_listentask((void*)dsl_spec);
+	dsl_listentask((void*)my_conn_spec);
 }
 
 
@@ -364,12 +356,12 @@ process_message(PS_COMMAND* ps_remote, int fd)
 #endif
 
 #ifdef PGAS
-			sys_ps_command_reply(fd, PS_SUBSCRIBE_RESPONSE,
+			sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE,
 								 (tm_addr_t)ps_remote->address, 
 								 PGAS_read(ps_remote->address),
 								 try_subscribe(sender, ps_remote->address));
 #else
-			sys_ps_command_reply(fd, PS_SUBSCRIBE_RESPONSE, 
+			sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE, 
 								 (tm_addr_t)ps_remote->address, 
 								 NULL,
 								 try_subscribe(sender, ps_remote->address));
@@ -398,7 +390,7 @@ process_message(PS_COMMAND* ps_remote, int fd)
 										  ps_remote->address);
 				}
 #endif
-				sys_ps_command_reply(fd, PS_PUBLISH_RESPONSE, 
+				sys_ps_command_reply(sender, PS_PUBLISH_RESPONSE, 
 									 (tm_addr_t)ps_remote->address,
 									 NULL,
 									 conflict);
@@ -421,7 +413,7 @@ process_message(PS_COMMAND* ps_remote, int fd)
 										  *PGAS_read(ps_remote->address) + ps_remote->write_value,
 										  ps_remote->address);
 				}
-				sys_ps_command_reply(fd, PS_PUBLISH_RESPONSE,
+				sys_ps_command_reply(sender, PS_PUBLISH_RESPONSE,
 									 ps_remote->address,
 									 NULL,
 									 conflict);
@@ -465,7 +457,7 @@ process_message(PS_COMMAND* ps_remote, int fd)
 				PRINT("*** Completed requests: %d", read_reqs_num + write_reqs_num);
 #endif
 
-				EXIT(0);
+				taskexitall(0);
 			}
 		default:
 			PRINTD("REMOTE MSG: ??");
@@ -689,6 +681,68 @@ parse_conn_spec_string(char* spec, struct conn_spec* out)
 	return 0;
 }
 
+static int
+dial_node(nodeid_t id)
+{
+	char send_spec_path[256];
+	snprintf(send_spec_path, 255, "nodes.[%u].conn_spec", id); // extra check if the node is right
+	const char* send_spec_string = NULL;
+	if (config_lookup_string(the_config, send_spec_path, &send_spec_string) == CONFIG_FALSE) {
+		PRINT("Could not read the parameter from the config file: %s\n", send_spec_path);
+		EXIT(2);
+	}
+	PRINTD("Connecting to %u: %s\n", id, send_spec_string);
+
+	struct conn_spec spec;
+
+	if (parse_conn_spec_string(send_spec_string, &spec) != 0) {
+		PRINT("Problem parsing specification string <%s>", send_spec_string);
+		EXIT(1);
+	}
+
+	int rfd = -1;
+redo_netdial:
+	if ((rfd = netdial(spec.proto, spec.address, spec.port)) < 0) {
+		if (errno == ECONNREFUSED) {
+			sleep(1);
+			PRINT("ps_init: need to redial");
+			goto redo_netdial;
+		}
+
+		PRINT("ps_init: problem with netdial on %d %s:%d",
+			  spec.proto, spec.address, spec.port);
+		PRINT("libtask: %s", taskgetstate());
+		PRINT("error: %s", strerror(errno));
+		EXIT(1);
+	}
+	return rfd;
+}
+
+static void
+init_my_conn_spec(void)
+{
+	char conn_spec_path[256];
+	snprintf(conn_spec_path, 255, "nodes.[%d].conn_spec", NODE_ID());
+	const char* conn_spec_string = NULL;
+	if (config_lookup_string(the_config, conn_spec_path, &conn_spec_string) == CONFIG_FALSE) {
+		PRINT("Could not read the parameter from the config file: %s\n", conn_spec_path);
+		EXIT(2);
+	}
+
+	// Now, allocate and setup a socket, to reply to clients
+	my_conn_spec = (struct conn_spec*)malloc(sizeof(struct conn_spec));
+	if (my_conn_spec == NULL) {
+		PRINT("init_my_conn_spec: problem allocating memory");
+		EXIT(1);
+	}
+
+	if (parse_conn_spec_string(conn_spec_string, my_conn_spec) != 0) {
+		PRINT("init_my_conn_spec: Problem parsing specification string <%s>",
+			  conn_spec_string);
+		EXIT(1);
+	}
+}
+
 void
 dsl_recvtask(void* cfd)
 {
@@ -718,41 +772,112 @@ dsl_recvtask(void* cfd)
 			PRINTD("dsl_recvtask(): processing message is finished fd=%d\n", remotefd);
 		} else {
 			if (ret == 0) {
-				PRINT("dsl_recvtask(): returning\n");
-				return;
+				PRINTD("dsl_recvtask(): exiting\n");
+				taskexit(0);
 			}
 			PRINT("dsl_recvtask(): [ERROR] fdread ret=%d\n", ret);
 		}
 	}
 }
 
+static int 
+init_connection()
+{
+	int fd;
+	if((fd = netannounce(my_conn_spec->proto,
+						 my_conn_spec->address,
+						 my_conn_spec->port)) < 0) {
+		PRINT("cannot announce on port %d: %s\n",
+			  my_conn_spec->port, strerror(errno));
+		EXIT(1);
+	}
+	PRINTD("start_listening: %s port %d\n",
+		   my_conn_spec->proto==TCP?"TCP":"UDP",
+		   my_conn_spec->port);
+
+	return fd;
+}
+
 void
 dsl_listentask(void* v)
 {
-	int cfd, fd;
-	struct conn_spec* spec = (struct conn_spec*)v;
+	taskname("dsl_listentask(%s:%d)",
+			 my_conn_spec->address,
+			 my_conn_spec->port);
 
-	taskname("dsl_listentask(%s:%d)",spec->address, spec->port);
-
-	if((fd = netannounce(spec->proto,
-						 spec->address,
-						 spec->port)) < 0) {
-		PRINT("cannot announce on tcp port %d: %s\n",
-			  spec->port, strerror(errno));
-		taskexitall(1);
-	}
-	PRINTD("dsl_listentask: listening on tcp port %d\n", spec->port);
-
-	BARRIERW
+	int cfd;
 
 	char remote[16];
 	int rport;
-	fdnoblock(fd);
-	while((cfd = netaccept(fd, remote, &rport)) >= 0) {
+	fdnoblock(my_fd);
+	while((cfd = netaccept(my_fd, remote, &rport)) >= 0) {
 		PRINTD("connection from %s:%d in socket %d\n", 
 			   remote, rport, cfd);
 		fdnoblock(cfd);
 		taskcreate(dsl_recvtask, (void*)cfd, STACK);
+		taskyield();
+	}
+}
+
+void
+app_recvtask(void* cfd)
+{
+	long tmp = (long)cfd;
+	int remotefd = tmp;
+	PS_COMMAND* ps_remote = (PS_COMMAND*)malloc(sizeof(PS_COMMAND));
+
+	taskname("app_recvtask(%d)", remotefd);
+
+	fdnoblock(remotefd);
+	while (1) {
+		size_t ret = fdread(remotefd, ps_remote, sizeof(PS_COMMAND));
+		if (ret >= sizeof(PS_COMMAND)) {
+			PRINTD("app_recvtask(): one message (size %d) received on the socket fd=%d\n",
+				   ret, remotefd);
+			//DS_ITimer::handle_timeouts();
+#ifdef DEBUG_MSG
+			{
+				int i;
+				char* p=(char*)ps_remote;
+				fprintf(stderr, "psc -> [");
+				for (i=0; i<sizeof(PS_COMMAND); i++) {
+					fprintf(stderr, "%02hhx ", p[i]);
+				}
+				fprintf(stderr, "]\n");
+			};
+#endif
+
+			ps_remote_msg = ps_remote;
+			taskwakeup(got_message);
+			PRINTD("app_recvtask(): processing message is finished fd=%d\n", remotefd);
+		} else {
+			if (ret == 0) {
+				PRINTD("app_recvtask(): exit\n");
+				taskexit(0);
+			}
+			PRINT("app_recvtask(): [ERROR] fdread ret=%d\n", ret);
+		}
+	}
+}
+
+void
+app_listentask(void* v)
+{
+	taskname("app_listentask(%s:%d)",
+			 my_conn_spec->address,
+			 my_conn_spec->port);
+
+	int cfd;
+
+	char remote[16];
+	int rport;
+	fdnoblock(my_fd);
+	tasksystem();
+	while((cfd = netaccept(my_fd, remote, &rport)) >= 0) {
+		PRINTD("connection from %s:%d in socket %d\n", 
+			   remote, rport, cfd);
+		fdnoblock(cfd);
+		taskcreate(app_recvtask, (void*)cfd, STACK);
 		taskyield();
 	}
 }
