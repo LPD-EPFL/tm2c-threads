@@ -318,6 +318,7 @@ TASKMAIN(int argc, char **argv) {
         exit(1);
     }
 
+    shmem_init(8);
     set = set_new();
 
     BARRIER;

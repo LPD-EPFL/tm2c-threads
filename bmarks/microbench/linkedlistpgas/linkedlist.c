@@ -10,6 +10,7 @@
 
 #include "linkedlist.h"
 
+#define I(a) to_intern_addr(a)
 nxt_t offs__;
 
 void *shmem_init(size_t offset) {
@@ -29,6 +30,9 @@ node_t *new_node(val_t val, nxt_t next, int transactional) {
         perror("malloc");
         EXIT(1);
     }
+
+    //    PRINT("shalloc for val: %d, next: %d is %d", val, I(next), I(node));
+    //    PRINT("\t&node->val = %d, &node->next = %d", I(&node->val), I(&node->next));
 
     NONTX_STORE(&node->val, val, TYPE_INT);
     NONTX_STORE(&node->next, next, TYPE_INT);
@@ -186,19 +190,31 @@ static int set_seq_add(intset_t *set, val_t val) {
     int result;
     node_t prev, next;
 
+    //    PRINT(":-----------------------> set_seq_add val %d", val);
+
 #ifdef LOCKS
     global_lock();
 #endif
-
+    //    set_print(set);
+    nxt_t to_store = set->head + sizeof(int);
+    //    PRINT("  to_store = %d", I(to_store));
     LOAD_NODE_NXT(prev, set->head);
+    //    PRINT("set-head = %d, set->head->nxt = %d", I(set->head), I(prev.next));
     LOAD_NODE(next, prev.next);
+    int iii = 0;
+    //    PRINT("%d: loaded next.val = %d, next.next = %d", iii++, next.val, next.next);
     while (next.val < val) {
+      to_store = prev.next + sizeof(int);
+      //      PRINT("  to_store = %d", I(to_store));
         prev.next = next.next;
         LOAD_NODE(next, prev.next);
+	//	PRINT("%d: loaded next.val = %d, next.next = %d", iii++, next.val, next.next);
     }
     result = (next.val != val);
     if (result) {
-        NONTX_STORE(prev.next, new_node(val, prev.next, 0), TYPE_INT);
+      node_t *nn = new_node(val, prev.next, 0);
+      //      PRINT("adding %d, on %d, before %d (val: %d), at %d", val, I(to_store), I(prev.next), next.val, I(nn));
+      NONTX_STORE(to_store, nn, TYPE_INT);
     }
 
 #ifdef LOCKS
@@ -476,18 +492,20 @@ done:
 
 void set_print(intset_t* set) {
 
-    node_t *node = ND(set->head);
-    node = ND(node->next);
+  printf("min -> ");
 
-    if (node == NULL) {
+  node_t node;
+  LOAD_NODE_NXT(node, set->head);
+  LOAD_NODE(node, node.next);
+    if (node.nextp == NULL) {
         goto null;
     }
-    while (node->nextp != NULL) {
-        printf("%d -> ", node->val);
-        node = ND(node->next);
+    while (node.nextp != NULL) {
+        printf("%d -> ", node.val);
+	LOAD_NODE(node, node.next);
     }
 
 null:
-    PRINTSF("NULL\n");
+    PRINTSF("max -> NULL\n");
 
 }
