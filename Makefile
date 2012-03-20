@@ -79,7 +79,7 @@ BMARKS_NON_WORKING = mtest
 # This file has the modifications related to the current platform
 -include Makefile.$(PLATFORM)
 
-ifneq (,$(findstring PGAS,$(PLATFORM_DEFINES)))
+ifneq (,$(findstring DPGAS,$(PLATFORM_DEFINES)))
 ALL_BMARKS += bankpgas #bankpgas mbllpgas mbhtpgas
 endif
 
@@ -196,7 +196,7 @@ ALL_BMARK_FILES = $(BMARKS) \
 				  $(addprefix $(MB_HT)/,$(HTFILES))
 
 # if there is no PGAS
-ifneq (,$(findstring PGAS,$(CFLAGS)))
+ifneq (,$(findstring DPGAS,$(CFLAGS)))
 ALL_BMARK_FILES += \
 					$(addprefix $(MB_LLPGAS)/,$(LLFILES)) \
 					$(addprefix $(MB_HTPGAS)/,$(HTFILES))
