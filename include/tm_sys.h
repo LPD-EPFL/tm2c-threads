@@ -7,7 +7,7 @@
  * This method is called to initialize all necessary things
  * immediately upon startup
  */
-void sys_init_system(int* argc, char** argv[]);
+void sys_init_system(int* argc, char* argv[]);
 
 /*
  * This method is called by init_system to initialize the barrier

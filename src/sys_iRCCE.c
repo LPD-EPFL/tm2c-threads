@@ -12,9 +12,9 @@
 #endif
 
 void 
-sys_init_system(int* argc, char** argv[])
+sys_init_system(int* argc, char* argv[])
 {
-	RCCE_init(argc, argv);
+	RCCE_init(argc, &argv);
 	iRCCE_init();
 }
 
