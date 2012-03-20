@@ -217,7 +217,7 @@ extern "C" {
 #endif
 
 
-#ifdef PLATFORM_CLUSTER
+#if defined(PLATFORM_CLUSTER) || defined(PGAS)
 #define NONTX_STORE(addr, val, datatype)                                \
 		nontx_store(addr, val)
 #else 
