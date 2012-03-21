@@ -318,7 +318,7 @@ TASKMAIN(int argc, char **argv) {
         exit(1);
     }
 
-    shmem_init(8);
+    shmem_init(8);      //allow NULL to be 0
     set = set_new();
 
     BARRIER;
@@ -346,9 +346,8 @@ TASKMAIN(int argc, char **argv) {
         FLUSH
     }
     
-    return;
-
-#ifdef STM
+    
+#if defined(PLATFORM_iRCCE)
     int off, id2use;
     if (ID < 6) {
         off = 0;
@@ -387,7 +386,7 @@ TASKMAIN(int argc, char **argv) {
     PRINT("shmem from %d MB", (off * 16) + id2use / 2);
 
 #else
-    shmem_init(1024 * 100 * RCCE_ue() * sizeof (node_t) + ((initial + 2) * sizeof (node_t)));
+    shmem_init(1024 * 100 * ID * sizeof (node_t) + ((initial + 2) * sizeof (node_t)));
 
 #endif
 
@@ -409,6 +408,10 @@ TASKMAIN(int argc, char **argv) {
 
     BARRIER
     /* Start */
+            
+    TM_END
+    return;
+            
     test(data, duration);
 
     printf("-- Core %d\n", RCCE_ue());
