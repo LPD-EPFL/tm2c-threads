@@ -50,6 +50,7 @@ extern "C" {
 
 #define MED printf("[%02d] ", NODE_ID());
 #define PRINT(args...) printf("[%02d] ", NODE_ID()); printf(args); printf("\n"); fflush(stdout)
+#define PRINTNF(args...) printf("[%02d] ", NODE_ID()); printf(args); printf("\n"); fflush(stdout)
 #define PRINTN(args...) printf("[%02d] ", NODE_ID()); printf(args); fflush(stdout)
 #define PRINTS(args...)  printf(args);
 #define PRINTSF(args...)  printf(args); fflush(stdout)

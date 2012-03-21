@@ -409,9 +409,6 @@ TASKMAIN(int argc, char **argv) {
     BARRIER
     /* Start */
             
-    TM_END
-    return;
-            
     test(data, duration);
 
     printf("-- Core %d\n", RCCE_ue());
@@ -427,44 +424,6 @@ TASKMAIN(int argc, char **argv) {
 
 
     BARRIER
-
-            int *changes;
-    changes = (int *) set;
-    int *sequencer;
-    sequencer = changes + sizeof (int);
-    int mychanges = data->nb_added - data->nb_removed;
-
-    int size_after;
-    ONCE
-    {
-        size_after = set_size(set);
-        //set_print(set);
-        *changes = 0;
-        *sequencer = 1;
-    }
-
-    BARRIER
-
-#if defined(STM) && defined(DEBUG)
-            TX_START
-    if ((*(int *) sequencer) != ID) {
-        udelay(100);
-        TX_ABORT(WRITE_AFTER_WRITE);
-    }
-    int id1 = ID + 2;
-    TX_STORE(sequencer, &id1, TYPE_INT);
-    int cc = *(int *) TX_LOAD(changes);
-    int newc = cc + mychanges;
-    TX_STORE(changes, &newc, TYPE_INT);
-    TX_COMMIT
-
-    BARRIER
-    ONCE
-    {
-        PRINT(":: ~~ :: Set size: %d, expected: %d", size_after, initial + set->head);
-    }
-#endif
-
 
 #ifdef SEQUENTIAL
     int total_ops = data->nb_add + data->nb_contains + data->nb_remove;
@@ -483,7 +442,7 @@ TASKMAIN(int argc, char **argv) {
     BARRIER
 
 #ifdef STM
-    TM_END
+      TM_END
 #endif
 
     EXIT(0);
