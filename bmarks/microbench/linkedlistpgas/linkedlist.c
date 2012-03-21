@@ -91,7 +91,10 @@ int set_size(intset_t *set) {
  *
  */
 
+/*
+  set contains --------------------------------------------------
 
+ */
 static int set_seq_contains(intset_t *set, int val);
 static int set_early_contains(intset_t *set, int val);
 static int set_readval_contains(intset_t *set, int val);
@@ -228,43 +231,15 @@ static int set_readval_contains(intset_t *set, val_t val) {
 }
 
 
-static int set_seq_add(intset_t *set, val_t val) {
-    int result;
-    node_t prev, next;
 
-    //    PRINT(":-----------------------> set_seq_add val %d", val);
+/*
+  set add ----------------------------------------------------------------------                                                                                 
 
-#ifdef LOCKS
-    global_lock();
-#endif
-    //    set_print(set);
-    nxt_t to_store = set->head + sizeof(int);
-    //    PRINT("  to_store = %d", I(to_store));
-    LOAD_NODE_NXT(prev, set->head);
-    //    PRINT("set-head = %d, set->head->nxt = %d", I(set->head), I(prev.next));
-    LOAD_NODE(next, prev.next);
-    int iii = 0;
-    //    PRINT("%d: loaded next.val = %d, next.next = %d", iii++, next.val, next.next);
-    while (next.val < val) {
-      to_store = prev.next + sizeof(int);
-      //      PRINT("  to_store = %d", I(to_store));
-        prev.next = next.next;
-        LOAD_NODE(next, prev.next);
-	//	PRINT("%d: loaded next.val = %d, next.next = %d", iii++, next.val, next.next);
-    }
-    result = (next.val != val);
-    if (result) {
-      node_t *nn = new_node(val, prev.next, 0);
-      //      PRINT("adding %d, on %d, before %d (val: %d), at %d", val, I(to_store), I(prev.next), next.val, I(nn));
-      NONTX_STORE(to_store, nn, TYPE_INT);
-    }
+ */
 
-#ifdef LOCKS
-    global_lock_release();
-#endif
-
-    return result;
-}
+static int set_seq_add(intset_t *set, val_t val);
+static int set_early_add(intset_t *set, val_t val);
+static int set_readval_add(intset_t *set, val_t val);
 
 int set_add(intset_t *set, val_t val, int transactional) {
     int result = 0;
@@ -279,11 +254,90 @@ int set_add(intset_t *set, val_t val, int transactional) {
     }
 
 #ifdef SEQUENTIAL /* Unprotected */
+    return set_seq_add(set, val);
+#endif
+#ifdef EARLY_RELEASE
+    return set_early_add(set, val);
+#endif
 
-    result = set_seq_add(set, val);
+#ifdef READ_VALIDATION
+    return set_readval_add(set, val);
+#endif
+    node_t prev, next;
 
-#elif defined STM
-#ifndef READ_VALIDATION
+    val_t v;
+    TX_START
+      nxt_t to_store = set->head + sizeof(int);
+    LOAD_NODE_NXT(prev, set->head);
+    LOAD_NODE(next, prev.next);
+
+    v = next.val;
+    if (v >= val) {
+      goto done;
+    }
+
+
+    to_store = prev.next + sizeof(int);
+    prev.next = next.next;
+    TX_LOAD_NODE(next, prev.next);
+
+    while (1) {
+      v = next.val;
+      if (v >= val) {
+	break;
+      }
+
+      to_store = prev.next + sizeof(int);
+      prev.next = next.next;
+      LOAD_NODE(next, prev.next);
+    }
+
+ done:
+    result = (v != val);
+    if (result) {
+      
+      node_t *nn = new_node(val, prev.next, 1);
+      //      PRINT("Created node %5d. Value: %d", I(nn), val);
+      TX_STORE(to_store, nn, TYPE_INT);
+    }
+    TX_COMMIT
+
+      return result;
+}
+
+static int set_seq_add(intset_t *set, val_t val) {
+    int result;
+    node_t prev, next;
+
+#ifdef LOCKS
+    global_lock();
+#endif
+    nxt_t to_store = set->head + sizeof(int);
+    LOAD_NODE_NXT(prev, set->head);
+    LOAD_NODE(next, prev.next);
+    int iii = 0;
+    while (next.val < val) {
+      to_store = prev.next + sizeof(int);
+        prev.next = next.next;
+        LOAD_NODE(next, prev.next);
+	
+    }
+    result = (next.val != val);
+    if (result) {
+      node_t *nn = new_node(val, prev.next, 0);
+      NONTX_STORE(to_store, nn, TYPE_INT);
+    }
+
+#ifdef LOCKS
+    global_lock_release();
+#endif
+
+    return result;
+}
+
+int set_early_add(intset_t *set, int val) {
+  int result;
+
     node_t prev, next;
 
 #ifdef EARLY_RELEASE
@@ -336,9 +390,14 @@ done:
       TX_STORE(to_store, nn, TYPE_INT);
     }
     TX_COMMIT
+      
+      return result;
+}
 
-#else
-    node_t *prev, *next, *validate, *pvalidate;
+int set_readval_add(intset_t *set, int val) {
+  int result;
+
+  node_t *prev, *next, *validate, *pvalidate;
     nxt_t nextoffs, validateoffs, pvalidateoffs;
 
     val_t v;
@@ -385,20 +444,25 @@ done:
             PRINTD("[A2] Validate failed: expected nxt: %d, got %d", validateoffs, prev->next);
             TX_ABORT(READ_AFTER_WRITE);
         }
-        nxt_t nxt = OF(new_node(val, OF(next), transactional));
+        //fixnxt_t nxt = OF(new_node(val, OF(next), transactional));
         PRINTD("Created node %5d. Value: %d", nxt, val);
-        TX_STORE(&prev->next, &nxt, TYPE_UINT);
+        //TX_STORE(&prev->next, &nxt, TYPE_UINT);
         if (pvalidate->next != pvalidateoffs) {
             PRINTD("[A3] Validate failed: expected nxt: %d, got %d", pvalidateoffs, pvalidate->next);
             TX_ABORT(READ_AFTER_WRITE);
         }
     }
     TX_COMMIT
-#endif
-#endif
-            return result;
+
+
+  return result;
 }
 
+
+/*
+  set remove --------------------------------------------------------------
+
+ */
 int set_remove(intset_t *set, val_t val, int transactional) {
     int result = 0;
 
