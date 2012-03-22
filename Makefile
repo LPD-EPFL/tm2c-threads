@@ -33,7 +33,7 @@ ARCHIVE_SRCS_PURE:= pubSubTM.c tm.c log.c dslock.c \
 
 ## Apps ##
 APPS_DIR := apps
-APPS = #tm1 tm2 tm3 tm4 tm5 tm6 tm7 tm8 tm9 tm10
+APPS = tm1 tm2 tm3 tm4 tm5 tm6 tm7 tm8 tm9 tm10
 
 # apps that need tasklib in order to compile
 APPS_TASKLIB = ps_hashtable \
@@ -44,7 +44,6 @@ APPS_NON_WORKING = \
 				   RCCE_locks \
 				   ps_hashtable_ex \
 				   simple \
-				   recv_all \
 				   tasklib tasklib_test \
 				   recv_all recv_all_p recv_all_i \
 				   pthread \
@@ -64,14 +63,14 @@ MR := mapreduce
 LLFILES = linkedlist test #harris
 HTFILES = hashtable intset test
 
-#BMARKS = bank bankseq \
+BMARKS = bank bankseq \
 		 readonly
 
 # this is a list of programs that do not work, for whatever reason
 BMARKS_NON_WORKING = mtest
 
 # all bmarks that need to be built
-#ALL_BMARKS = $(BMARKS) mbll mbht mr
+ALL_BMARKS = $(BMARKS) mbll mbht mr
 
 ## The rest of the Makefile ##
 
