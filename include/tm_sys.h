@@ -31,8 +31,8 @@ void sys_shfree(sys_t_vcharp);
 /*
  * Functions to deal with the number of nodes.
  */
-nodeid_t NODE_ID(void);
-nodeid_t TOTAL_NODES(void);
+INLINED nodeid_t NODE_ID(void);
+INLINED nodeid_t TOTAL_NODES(void);
 
 /*
  * Various helper initialization/termination functions
@@ -48,10 +48,10 @@ void sys_ps_term(void);
 /*
  * Networking functions
  */
-int sys_sendcmd(void* data, size_t len, nodeid_t target);
-int sys_recvcmd(void* data, size_t len, nodeid_t target);
+INLINED int sys_sendcmd(void* data, size_t len, nodeid_t to);
+INLINED int sys_recvcmd(void* data, size_t len, nodeid_t from);
 
-int sys_sendcmd_all(void* data, size_t len);
+INLINED int sys_sendcmd_all(void* data, size_t len);
 
 /*
  * to_intern_addr takes the address as used by the client, and transforms it to
@@ -59,8 +59,8 @@ int sys_sendcmd_all(void* data, size_t len);
  * to_addr does the opposite, takes the internal address, and transforms it to
  * the machine address.
  */
-tm_intern_addr_t to_intern_addr(tm_addr_t addr);
-tm_addr_t to_addr(tm_intern_addr_t i_addr);
+INLINED tm_intern_addr_t to_intern_addr(tm_addr_t addr);
+INLINED tm_addr_t to_addr(tm_intern_addr_t i_addr);
 
 /*
  * Random numbers related functions
