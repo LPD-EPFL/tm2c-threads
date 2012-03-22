@@ -44,7 +44,7 @@ MAIN(int argc, char **argv) {
 
     int *sis = (int *) sys_shmalloc(SIS_SIZE * sizeof (int));
     if (sis == NULL) {
-        PRINT("sys_shmalloc");
+        PRINT("Error: sys_shmalloc failed");
         EXIT(-1);
     }
 
