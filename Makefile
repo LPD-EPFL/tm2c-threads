@@ -79,7 +79,7 @@ ALL_BMARKS = $(BMARKS) mbll mbht mr
 -include Makefile.$(PLATFORM)
 
 ifneq (,$(findstring DPGAS,$(PLATFORM_DEFINES)))
-ALL_BMARKS += bankpgas #bankpgas mbllpgas mbhtpgas
+ALL_BMARKS += bankpgas mbllpgas mbhtpgas
 endif
 
 # define the compiler now, if platform makefile exported something through

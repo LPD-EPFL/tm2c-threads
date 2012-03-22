@@ -280,20 +280,22 @@ void *test2(void *data, double duration) {
 
 void print_set(intset_t* set) {
 
-    TX_START
-    node_t node = (node_t) TX_LOAD(set->head);
+  printf("min -> ");
 
-    if (node.next == NULL) {
+  node_t node;
+  LOAD_NODE_NXT(node, set->head);
+  LOAD_NODE(node, node.next);
+    if (node.nextp == NULL) {
         goto null;
     }
-    while (node.next != NULL) {
-        //printf("{%d} -%d-> ", node.val, node.next);
-        printf("%5d =(%3d)=> ", node.val, node.next);
-        node = (node_t) TX_LOAD(node.next);
+    while (node.nextp != NULL) {
+        printf("%d -> ", node.val);
+	LOAD_NODE(node, node.next);
     }
-    TX_COMMIT
-    null :
-            PRINTSF("NULL\n");
+
+null:
+    PRINTSF("max -> NULL\n");
+
 }
 
 void print_ht(ht_intset_t *set) {
@@ -485,14 +487,14 @@ TASKMAIN(int argc, char **argv) {
 
     BARRIER
 
+      shmem_init(8);      //allow NULL to be 0
+    set = ht_new();
+
     ONCE
     {
         srand_core();
         udelay(rand_range(123));
         srand_core();
-
-        PGAS_alloc_init(1);
-        set = ht_new();
 
         char *buf = (char *) calloc(range, sizeof (char));
 
@@ -518,34 +520,49 @@ TASKMAIN(int argc, char **argv) {
         FLUSH
 
     }
-    OTHERS
-    {
-        if ((set = (ht_intset_t *) malloc(sizeof (ht_intset_t))) == NULL) {
-            perror("malloc");
-            exit(1);
-        }
-        if ((set->buckets = (void *) malloc((maxhtlength + 1) * sizeof (intset_t *))) == NULL) {
-            perror("malloc");
-            exit(1);
-        }
-
-        int i;
-        for (i = 1; i <= maxhtlength; i++) {
-            intset_t *temp;
-            if ((temp = (intset_t *) malloc(sizeof (intset_t))) == NULL) {
-                perror("malloc");
-                EXIT(1);
-            }
-            set->buckets[i - 1] = temp;
-            set->buckets[i - 1]->head = 2 * i;
-        }
+    
+#if defined(STM) && !defined(SEQUENTIAL)
+    int off, id2use;
+    if (ID < 6) {
+      off = 0;
+      id2use = ID;
+    }
+    else if (ID < 12) {
+      off = 1;
+      id2use = ID - 6;
+    }
+    else if (ID < 18) {
+      off = 0;
+      id2use = ID - 6;
+    }
+    else if (ID < 24) {
+      off = 1;
+      id2use = ID - 12;
+    }
+    else if (ID < 30) {
+      off = 2;
+      id2use = ID - 24;
+    }
+    else if (ID < 36) {
+      off = 3;
+      id2use = ID - 30;
+    }
+    else if (ID < 42) {
+      off = 2;
+      id2use = ID - 30;
+    }
+    else if (ID < 48) {
+      off = 3;
+      id2use = ID - 36;
     }
 
-    BARRIER
+    shmem_init(((off * 16) * 1024 * 1024) + ((id2use) * 1024 * 1024));
+    PRINT("shmem from %d MB", (off * 16) + id2use);
+#else
+    shmem_init(1024 * 100 * RCCE_ue() * sizeof (node_t) + (initial + 2) * sizeof (node_t));
+#endif
 
-    PGAS_alloc_init(0);
-    PGAS_alloc_offs(initial + (2 * maxhtlength) + 1);
-
+      
     data->first = last;
     data->range = range;
     data->update = update;
@@ -581,10 +598,10 @@ TASKMAIN(int argc, char **argv) {
     printf("    #removed  : %lu\n", data->nb_removed);
     printf("  #contains   : %lu\n", data->nb_contains);
     printf("    #found    : %lu\n", data->nb_found);
-    printf("  #move       : %lu\n", data->nb_move);
-    printf("  #moved      : %lu\n", data->nb_moved);
-    printf("  #snapshot   : %lu\n", data->nb_snapshot);
-    printf("  #snapshoted : %lu\n", data->nb_snapshoted);
+    //    printf("  #move       : %lu\n", data->nb_move);
+    //    printf("  #moved      : %lu\n", data->nb_moved);
+    //    printf("  #snapshot   : %lu\n", data->nb_snapshot);
+    //    printf("  #snapshoted : %lu\n", data->nb_snapshoted);
 #ifdef SEQUENTIAL
     int total_ops = data->nb_add + data->nb_contains + data->nb_remove + data->nb_move + data->nb_snapshot;
     printf("#Ops          : %d\n", total_ops);

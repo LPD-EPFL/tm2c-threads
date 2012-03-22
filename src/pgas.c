@@ -16,7 +16,7 @@ unsigned int id__m1d2;
 unsigned int num_ues_d2;
 
 void PGAS_init() {
-    fprintf(stderr, "SHMEM_SIZE: %zu\n", SHMEM_SIZE);
+  //    fprintf(stderr, "SHMEM_SIZE: %zu\n", SHMEM_SIZE);
     SHMEM = (int *) calloc(SHMEM_SIZE/sizeof(int), sizeof(int));
     //SHMEM = (int *) malloc(SHMEM_SIZE);
 

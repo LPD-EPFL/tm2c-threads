@@ -68,8 +68,8 @@ init_system(int* argc, char* argv[])
 	NUM_DSL_NODES = ((NUM_UES/DSLNDPERNODES)) + (NUM_UES%DSLNDPERNODES ? 1 : 0);
 	NUM_APP_NODES = NUM_UES-NUM_DSL_NODES;
 
-	fprintf(stderr, "ID: %u\nNUM_UES: %u\nNUM_DSL_NODES: %u\nNUM_APP_NODES: %u\n",
-			ID, NUM_UES, NUM_DSL_NODES, NUM_APP_NODES);
+	//	fprintf(stderr, "ID: %u\nNUM_UES: %u\nNUM_DSL_NODES: %u\nNUM_APP_NODES: %u\n",
+	//		ID, NUM_UES, NUM_DSL_NODES, NUM_APP_NODES);
 
 	init_barrier();
 }

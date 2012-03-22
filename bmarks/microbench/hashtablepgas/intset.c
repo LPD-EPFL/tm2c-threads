@@ -72,8 +72,10 @@ int ht_remove(ht_intset_t *set, int val, int transactional) {
  * true.) As a result, data structure size may decrease as moves execute.
  */
 int ht_move_naive(ht_intset_t *set, int val1, int val2, int transactional) {
-    int result = 0;
 
+  int result = 0;
+
+#ifdef IMPLEMENTED /*-- not implemented*/
 #ifdef SEQUENTIAL
 
     int addr1, addr2;
@@ -142,7 +144,10 @@ int ht_move_naive(ht_intset_t *set, int val1, int val2, int transactional) {
 
 #endif
 
+#endif /*implemented*/
     return result;
+
+
 }
 
 /*
@@ -152,6 +157,7 @@ int ht_move_naive(ht_intset_t *set, int val1, int val2, int transactional) {
 int ht_move(ht_intset_t *set, int val1, int val2, int transactional) {
     int result = 0;
 
+#ifdef IMPLEMENTED /*-- not implemented*/
 #ifdef SEQUENTIAL
 
     int addr1, addr2;
@@ -229,7 +235,7 @@ int ht_move(ht_intset_t *set, int val1, int val2, int transactional) {
     TX_COMMIT
 
 #endif
-
+#endif /*implemented*/
     return result;
 }
 
@@ -330,6 +336,7 @@ int ht_move_orrollback(ht_intset_t *set, int val1, int val2, int transactional) 
 int ht_snapshot(ht_intset_t *set, int transactional) {
     int result = 0;
 
+#ifdef IMPLEMENTED /*-- not implemented*/
     int i, sum;
     node_t next;
 
@@ -345,6 +352,6 @@ int ht_snapshot(ht_intset_t *set, int transactional) {
     }
     TX_COMMIT
     result = 1;
-
+#endif /*implemented*/
     return result;
 }
