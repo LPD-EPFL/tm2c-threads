@@ -280,20 +280,22 @@ void *test2(void *data, double duration) {
 
 void print_set(intset_t* set) {
 
-    TX_START
-    node_t node = (node_t) TX_LOAD(set->head);
+  printf("min -> ");
 
-    if (node.next == NULL) {
+  node_t node;
+  LOAD_NODE_NXT(node, set->head);
+  LOAD_NODE(node, node.next);
+    if (node.nextp == NULL) {
         goto null;
     }
-    while (node.next != NULL) {
-        //printf("{%d} -%d-> ", node.val, node.next);
-        printf("%5d =(%3d)=> ", node.val, node.next);
-        node = (node_t) TX_LOAD(node.next);
+    while (node.nextp != NULL) {
+        printf("%d -> ", node.val);
+	LOAD_NODE(node, node.next);
     }
-    TX_COMMIT
-    null :
-            PRINTSF("NULL\n");
+
+null:
+    PRINTSF("max -> NULL\n");
+
 }
 
 void print_ht(ht_intset_t *set) {
