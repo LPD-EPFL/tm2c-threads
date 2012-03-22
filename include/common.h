@@ -181,7 +181,7 @@ INLINED double RCCE_wtime() {
 
 #define TASKMAIN MAIN
 #ifdef LIBTASK
-#define MAIN int taskmain
+#define MAIN void taskmain
 #else
 #define MAIN int main
 #endif
