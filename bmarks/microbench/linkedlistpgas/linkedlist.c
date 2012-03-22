@@ -1,5 +1,5 @@
 /*
- *  linkedlist.c
+ *  Linkedlist.C
  *  
  *  Linked list data structure
  *
@@ -298,7 +298,7 @@ int set_add(intset_t *set, val_t val, int transactional) {
       
       node_t *nn = new_node(val, prev.next, 1);
       //      PRINT("Created node %5d. Value: %d", I(nn), val);
-      TX_STORE(to_store, nn, TYPE_INT);
+      TX_STORE((tm_addr_t)to_store, (int) nn, TYPE_INT);
     }
     TX_COMMIT
 
@@ -325,7 +325,7 @@ static int set_seq_add(intset_t *set, val_t val) {
     result = (next.val != val);
     if (result) {
       node_t *nn = new_node(val, prev.next, 0);
-      NONTX_STORE(to_store, nn, TYPE_INT);
+      NONTX_STORE((tm_addr_t)to_store, (int) nn, TYPE_INT);
     }
 
 #ifdef LOCKS
@@ -387,7 +387,7 @@ done:
       
       node_t *nn = new_node(val, prev.next, 1);
       //      PRINT("Created node %5d. Value: %d", I(nn), val);
-      TX_STORE(to_store, nn, TYPE_INT);
+      TX_STORE((tm_addr_t)to_store, (int) nn, TYPE_INT);
     }
     TX_COMMIT
       
@@ -517,7 +517,7 @@ int set_remove(intset_t *set, val_t val, int transactional) {
  done:
     result = (v == val);
     if (result) {
-      TX_STORE(to_store, next.next, TYPE_INT);
+      TX_STORE((tm_addr_t)to_store, next.next, TYPE_INT);
       TX_SHFREE((t_vcharp) prev.next);
       //      PRINT("Freed node   %5d. Value: %d", I(prev.next), next.val);
     }
@@ -544,7 +544,7 @@ static int set_seq_remove(intset_t *set, val_t val) {
   }
   result = (next.val == val);
   if (result) {
-    NONTX_STORE(to_store, prev.next, TYPE_INT);
+    NONTX_STORE((tm_addr_t) to_store, prev.next, TYPE_INT);
     sys_shfree((t_vcharp) prev.next);
   }
 
@@ -604,7 +604,7 @@ static int set_early_remove(intset_t *set, val_t val) {
  done:
   result = (v == val);
   if (result) {
-    TX_STORE(to_store, next.next, TYPE_INT);
+    TX_STORE((tm_addr_t) to_store, next.next, TYPE_INT);
     TX_SHFREE((t_vcharp) prev.next);
     //      PRINT("Freed node   %5d. Value: %d", I(prev.next), next.val);
   }
@@ -665,7 +665,7 @@ static int set_readval_remove(intset_t *set, val_t val) {
       TX_ABORT(READ_AFTER_WRITE);
     }
     nxt_t *nxt = (nxt_t *) TX_LOAD(&next->next);
-    TX_STORE(&prev->next, nxt, TYPE_UINT);
+    TX_STORE(&prev->next, (int) nxt, TYPE_UINT);
     TX_SHFREE(next);
     if (pvalidate->next != pvalidateoffs) {
       PRINTD("[R3] Validate failed: expected nxt: %d, got %d", pvalidateoffs, pvalidate->next);

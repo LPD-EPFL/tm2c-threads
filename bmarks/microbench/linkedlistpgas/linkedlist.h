@@ -83,15 +83,15 @@ extern nxt_t offs__;
 #define OF(node)                        N2O(SET, (node))
 #define LOAD_NODE(nd, addr)                     \
   nd.val = (val_t) NONTX_LOAD((tm_addr_t)addr);		\
-  nd.next = (nxt_t) NONTX_LOAD((tm_addr_t)addr + sizeof(int))
+  nd.next = (nxt_t) NONTX_LOAD((tm_addr_t)((int *)addr + 1))
 #define LOAD_NODE_NXT(nd, addr)                 \
-  nd.next = (nxt_t) NONTX_LOAD((tm_addr_t)addr + sizeof(int))
+  nd.next = (nxt_t) NONTX_LOAD((tm_addr_t)((int *)addr + 1))
 
 #define TX_LOAD_NODE(nd, addr)                  \
   nd.val = (val_t) TX_LOAD((tm_addr_t)addr);		\
-  nd.next = (nxt_t) TX_LOAD((tm_addr_t)addr + sizeof(int))
+  nd.next = (nxt_t) TX_LOAD((tm_addr_t)((int *)addr + 1))
 #define TX_LOAD_NODE_NXT(nd, addr)              \
-  nd.next = (nxt_t) TX_LOAD((tm_addr_t)addr + sizeof(int))
+  nd.next = (nxt_t) TX_LOAD((tm_addr_t)((int *)addr + 1))
 
 void *shmem_init(size_t offset);
 
