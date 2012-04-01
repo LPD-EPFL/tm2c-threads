@@ -302,7 +302,7 @@ sys_recvcmd(void* data, size_t len, nodeid_t from)
 
 // If value == NULL, we just return the address.
 // Otherwise, we return the value.
-static inline void 
+INLINED void 
 sys_ps_command_reply(nodeid_t sender,
                     PS_COMMAND_TYPE command,
                     tm_addr_t address,
@@ -342,7 +342,7 @@ dsl_communication()
 }
 
 
-static void
+INLINED void
 process_message(PS_COMMAND* ps_remote, int fd)
 {
 	nodeid_t sender = ps_remote->nodeId;
@@ -446,7 +446,7 @@ process_message(PS_COMMAND* ps_remote, int fd)
 			stats_total += ps_remote->commits + ps_remote->aborts;
 
 			if (++stats_received >= NUM_APP_NODES) {
-				if (NODE_ID() == 0) {
+				if (MY_NODE_ID == 0) {
 					print_global_stats();
 
 					print_hashtable_usage();
@@ -815,7 +815,6 @@ dsl_listentask(void* v)
 			   remote, rport, cfd);
 		fdnoblock(cfd);
 		taskcreate(dsl_recvtask, (void*)cfd, STACK);
-		taskyield();
 	}
 }
 
