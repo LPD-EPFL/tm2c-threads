@@ -134,13 +134,8 @@ EXINLINED int zmq_s_send(void *socket, char *string);
 #endif
 
 #ifdef PLATFORM_MCORE
-extern void*  zmq_context;             // here, we keep the context (seems necessary)
-extern void*  the_responder;           // for dsl nodes, it will be the responder socket; for app node, it will be NULL
 
-EXINLINED void app_barrier();
-EXINLINED void global_barrier();
-#define BARRIER  app_barrier();
-#define BARRIERW global_barrier();
+#include "sys_MCORE.h"
 #endif
 
 #ifdef PLATFORM_TILERA

@@ -36,13 +36,13 @@ struct conn_spec {
 	char address[MAX_FILENAME_LENGTH];
 };
 
-static int nodes_sockets[MAX_NODES]; // holds the sockets (both app and dsl
-                                     // nodes use them
+int nodes_sockets[MAX_NODES]; // holds the sockets (both app and dsl
+                              // nodes use them
 
 static struct conn_spec* my_conn_spec; // holds connetion spec for current node
 
-static Rendez* got_message; // tasks sync on this var, when there is a new msg
-static PS_COMMAND* ps_remote_msg; // holds the received msg
+Rendez* got_message; // tasks sync on this var, when there is a new msg
+PS_REPLY* ps_remote_msg; // holds the received msg
 
 static int my_fd; // the fd on which the nodes listens
 
@@ -57,7 +57,7 @@ static int dial_node(nodeid_t);
 static int init_connection();
 static void process_message(PS_COMMAND* ps_remote, int fd);
 static inline void sys_ps_command_reply(nodeid_t sender,
-                    PS_COMMAND_TYPE command,
+                    PS_REPLY_TYPE command,
                     tm_addr_t address,
                     uint32_t* value,
                     CONFLICT_TYPE response);
@@ -171,18 +171,6 @@ sys_shfree(sys_t_vcharp ptr)
 	MCORE_shfree(ptr);
 }
 
-nodeid_t
-NODE_ID(void)
-{
-	return MY_NODE_ID;
-}
-
-nodeid_t
-TOTAL_NODES(void)
-{
-	return MY_TOTAL_NODES;
-}
-
 void
 sys_tm_init()
 {
@@ -258,59 +246,16 @@ sys_ps_term(void)
 	taskexit(0);
 }
 
-int
-sys_sendcmd(void* data, size_t len, nodeid_t to)
-{
-	assert((to>=0)&&(to<TOTAL_NODES()));
-	assert(nodes_sockets[to]!=-1);
-
-	PRINTD("sys_sendcmd: to: %u\n", to);
-
-	size_t error = 0;
-	while (error < len) {
-		error = fdwrite(nodes_sockets[to], data, len);
-	}
-
-	PRINTD("sys_sendcmd: sent %d", error);
-	return (error==len)?0:-1;
-}
-
-int
-sys_sendcmd_all(void* data, size_t len)
-{
-	int rc = 0;
-
-	nodeid_t to;
-	for (to=0; to < TOTAL_NODES(); to++) {
-		if (to % DSLNDPERNODES == 0) {
-			PRINTD("sys_sendcmd_all: to = %u, rc = %d", to, rc);
-			sys_sendcmd(data, len, to);
-		}
-	}
-
-	return rc;
-}
-
-int
-sys_recvcmd(void* data, size_t len, nodeid_t from)
-{
-	PRINTD("sys_recvcmd: from = %u", from);
-
-	tasksleep(got_message);
-	memcpy(data, (void*)ps_remote_msg, len);
-	ps_remote_msg = NULL;
-}
-
 // If value == NULL, we just return the address.
 // Otherwise, we return the value.
 INLINED void 
 sys_ps_command_reply(nodeid_t sender,
-                    PS_COMMAND_TYPE command,
+                    PS_REPLY_TYPE command,
                     tm_addr_t address,
                     uint32_t* value,
                     CONFLICT_TYPE response)
 {
-	PS_COMMAND reply;
+	PS_REPLY reply;
 	reply.nodeId = ID;
 	reply.type = command;
 	reply.response = response;
@@ -329,8 +274,8 @@ sys_ps_command_reply(nodeid_t sender,
 
 	int fd = nodes_sockets[sender];
 	size_t error = 0;
-	while (error < sizeof(PS_COMMAND)) {
-		error = fdwrite(fd, (char*)&reply, sizeof(PS_COMMAND));
+	while (error < sizeof(PS_REPLY)) {
+		error = fdwrite(fd, (char*)&reply, sizeof(PS_REPLY));
 	}
 }
 
@@ -463,24 +408,6 @@ process_message(PS_COMMAND* ps_remote, int fd)
 		default:
 			PRINTD("REMOTE MSG: ??");
 	}
-}
-
-tm_intern_addr_t
-to_intern_addr(tm_addr_t addr)
-{
-#ifdef PGAS
-#else
-	return (tm_intern_addr_t)addr;
-#endif
-}
-
-tm_addr_t
-to_addr(tm_intern_addr_t i_addr)
-{
-#ifdef PGAS
-#else
-	return (tm_addr_t)i_addr;
-#endif
 }
 
 /*
@@ -827,14 +754,14 @@ app_recvtask(void* cfd)
 {
 	long tmp = (long)cfd;
 	int remotefd = tmp;
-	PS_COMMAND* ps_remote = (PS_COMMAND*)malloc(sizeof(PS_COMMAND));
+	PS_REPLY* ps_remote = (PS_REPLY*)malloc(sizeof(PS_REPLY));
 
 	taskname("app_recvtask(%d)", remotefd);
 
 	fdnoblock(remotefd);
 	while (1) {
-		size_t ret = fdread(remotefd, ps_remote, sizeof(PS_COMMAND));
-		if (ret >= sizeof(PS_COMMAND)) {
+		size_t ret = fdread(remotefd, ps_remote, sizeof(PS_REPLY));
+		if (ret >= sizeof(PS_REPLY)) {
 			PRINTD("app_recvtask(): one message (size %d) received on the socket fd=%d\n",
 				   ret, remotefd);
 			//DS_ITimer::handle_timeouts();
@@ -843,7 +770,7 @@ app_recvtask(void* cfd)
 				int i;
 				char* p=(char*)ps_remote;
 				fprintf(stderr, "psc -> [");
-				for (i=0; i<sizeof(PS_COMMAND); i++) {
+				for (i=0; i<sizeof(PS_REPLY); i++) {
 					fprintf(stderr, "%02hhx ", p[i]);
 				}
 				fprintf(stderr, "]\n");

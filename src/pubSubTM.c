@@ -92,16 +92,19 @@ ps_sendbv(nodeid_t target, PS_COMMAND_TYPE command,
 
 static inline CONFLICT_TYPE
 ps_recvb(nodeid_t from) {
-    // XXX: this could be written much better, without globals
+#ifdef PLATFORM_MCORE
+    PS_REPLY cmd;
+    sys_recvcmd(&cmd, sizeof (PS_REPLY), from);
+#else
     PS_COMMAND cmd;
-
     sys_recvcmd(&cmd, sizeof (PS_COMMAND), from);
+#endif
 #ifdef PGAS
     PF_START(0)
     read_value = cmd.value;
     PF_STOP(0)
 #endif
-            return cmd.response;
+	return cmd.response;
 }
 
 /*
