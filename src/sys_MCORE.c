@@ -16,6 +16,7 @@
 #include <sched.h>
 #include <assert.h>
 #include <task.h>
+#include <shrimp/shrimp.h>
 
 #include "common.h"
 #include "pubSubTM.h"
@@ -238,7 +239,7 @@ sys_dsl_term(void)
 	for (j = 0; j < NUM_UES; j++) {
 		if (j % DSLNDPERNODES != 0) {
 			if (nodes_sockets[j] != -1)
-				close(nodes_sockets[j]);
+				netclose(nodes_sockets[j]);
 		}
 	}
 	taskexit(0);
@@ -251,7 +252,7 @@ sys_ps_term(void)
 	for (j = 0; j < NUM_UES; j++) {
 		if (j % DSLNDPERNODES == 0) {
 			if (nodes_sockets[j] != -1)
-				close(nodes_sockets[j]);
+				netclose(nodes_sockets[j]);
 		}
 	}
 	taskexit(0);
@@ -659,6 +660,9 @@ parse_conn_spec_string(char* spec, struct conn_spec* out)
 		out->proto = TCP;
 	} else if (strncmp(pos, "udp://", 6) == 0) {
 		out->proto = UDP;
+	} else if (strncmp(pos, "shrimp://", 9) == 0) {
+		out->proto = SHRIMP_PROTO;
+		pos += 3;
 	} else {
 		PRINT("Unknown protocol: %s", spec);
 		return -1;
@@ -791,8 +795,8 @@ init_connection()
 			  my_conn_spec->port, strerror(errno));
 		EXIT(1);
 	}
-	PRINTD("start_listening: %s port %d\n",
-		   my_conn_spec->proto==TCP?"TCP":"UDP",
+	PRINTD("start_listening: %d port %d\n",
+		   my_conn_spec->proto,
 		   my_conn_spec->port);
 
 	return fd;
