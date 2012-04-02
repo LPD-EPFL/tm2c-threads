@@ -72,6 +72,6 @@ void srand_core();
  */
 void udelay(unsigned int micros);
 
-double wtime(void);
+INLINED double wtime(void);
 
 #endif

@@ -55,8 +55,8 @@ static int parse_conn_spec_string(char* spec, struct conn_spec* out);
 static void init_my_conn_spec(void);
 static int dial_node(nodeid_t);
 static int init_connection();
-static void process_message(PS_COMMAND* ps_remote, int fd);
-static inline void sys_ps_command_reply(nodeid_t sender,
+INLINED void process_message(PS_COMMAND* ps_remote, int fd);
+INLINED void sys_ps_command_reply(nodeid_t sender,
                     PS_REPLY_TYPE command,
                     tm_addr_t address,
                     uint32_t* value,
@@ -420,14 +420,6 @@ srand_core()
 	unsigned int timeprfx_ = (unsigned int) timed_;
 	unsigned int time_ = (unsigned int) ((timed_ - timeprfx_) * 1000000);
 	srand(time_ + (13 * (ID + 1)));
-}
-
-double
-wtime(void)
-{
-	struct timeval t;
-	gettimeofday(&t,NULL);
-	return (double)t.tv_sec + ((double)t.tv_usec)/1000000.0;
 }
 
 void 
