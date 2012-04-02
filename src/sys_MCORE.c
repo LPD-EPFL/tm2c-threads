@@ -130,9 +130,15 @@ fork_done:
 	MY_NODE_ID = rank;
 
 	// Now, pin the process to the right core (NODE_ID == core id)
+	int place;
+	if (rank%2 != 0) {
+		place = MY_TOTAL_NODES/2+rank/2;
+	} else {
+		place = rank/2;
+	}
 	cpu_set_t mask;
 	CPU_ZERO(&mask);
-	CPU_SET(rank, &mask);
+	CPU_SET(place, &mask);
 	if (sched_setaffinity(0, sizeof(cpu_set_t), &mask) != 0) {
 		PRINT("Problem with setting processor affinity: %s\n",
 			  strerror(errno));
