@@ -283,6 +283,7 @@ sys_ps_command_reply(nodeid_t sender,
 	while (error < sizeof(PS_REPLY)) {
 		error = fdwrite(fd, (char*)&reply, sizeof(PS_REPLY));
 	}
+   struct timeval s;
 }
 
 
@@ -316,12 +317,15 @@ process_message(PS_COMMAND* ps_remote, int fd)
 			sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE, 
 								 (tm_addr_t)ps_remote->address, 
 								 NULL,
-								 try_subscribe(sender, ps_remote->address));
+								 //try_subscribe(sender, ps_remote->address));
+                         NO_CONFLICT
+                         );
 #endif
 			break;
 		case PS_PUBLISH:
 			{
 
+         //fprintf(stderr,"publish at address %u\n",ps_remote->address);
 #ifdef DEBUG_UTILIZATION
 				write_reqs_num++;
 #endif
@@ -388,22 +392,25 @@ process_message(PS_COMMAND* ps_remote, int fd)
 			ps_hashtable_delete(ps_hashtable, sender, ps_remote->address, WRITE);
 			break;
 		case PS_STATS:
-			stats_aborts += ps_remote->aborts;
-			stats_aborts_raw += ps_remote->aborts_raw;
-			stats_aborts_war += ps_remote->aborts_war;
-			stats_aborts_waw += ps_remote->aborts_waw;
-			stats_commits += ps_remote->commits;
-			stats_duration += ps_remote->tx_duration;
-			stats_max_retries = stats_max_retries < ps_remote->max_retries ? ps_remote->max_retries : stats_max_retries;
-			stats_total += ps_remote->commits + ps_remote->aborts;
+			if (ps_remote->tx_duration) {
+			    stats_aborts += ps_remote->aborts;
+			    stats_commits += ps_remote->commits;
+			    stats_duration += ps_remote->tx_duration;
+			    stats_max_retries = stats_max_retries < ps_remote->max_retries ? ps_remote->max_retries : stats_max_retries;
+			    stats_total += ps_remote->commits + ps_remote->aborts;
+			  }
+			  else {
+			    stats_aborts_raw += ps_remote->aborts_raw;
+			    stats_aborts_war += ps_remote->aborts_war;
+			    stats_aborts_waw += ps_remote->aborts_waw;
+			  }
+			  if (++stats_received >= 2*NUM_APP_NODES) {
+			    if (NODE_ID() == 0) {
+			      print_global_stats();
 
-			if (++stats_received >= NUM_APP_NODES) {
-				if (MY_NODE_ID == 0) {
-					print_global_stats();
+			      print_hashtable_usage();
 
-					print_hashtable_usage();
-
-				}
+			    }
 
 #ifdef DEBUG_UTILIZATION
 				PRINT("*** Completed requests: %d", read_reqs_num + write_reqs_num);
@@ -431,7 +438,9 @@ srand_core()
 void 
 udelay(unsigned int micros)
 {
-	usleep(micros);
+   double __ts_end = theTime() + ((double) micros / 1000000);
+   while (theTime() < __ts_end);
+   //usleep(micros);
 }
 
 static nodeid_t num_tm_nodes;

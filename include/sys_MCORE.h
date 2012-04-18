@@ -21,11 +21,20 @@ extern nodeid_t MY_TOTAL_NODES;
 extern Rendez* got_message; // tasks sync on this var, when there is a new msg
 extern PS_REPLY* ps_remote_msg; // holds the received msg
 
+
 /* --- inlined methods --- */
 INLINED nodeid_t
 NODE_ID(void)
 {
 	return MY_NODE_ID;
+}
+
+
+INLINED double
+theTime(){
+   struct timeval t;
+   gettimeofday(&t,NULL);
+   return (double)t.tv_sec + ((double)t.tv_usec)/1000000.0;
 }
 
 INLINED nodeid_t

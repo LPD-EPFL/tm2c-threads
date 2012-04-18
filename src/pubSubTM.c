@@ -8,6 +8,13 @@
 
 #include "common.h"
 #include "pubSubTM.h"
+#include <sys/time.h>
+
+//#define LOG_LATENCIES
+#ifdef LOG_LATENCIES
+   struct timeval before;
+   struct timeval after;
+#endif
 
 nodeid_t *dsl_nodes; // holds the ids of the nodes. ids are in range 0..48 (possibly more)
 // To get the address of the node, one must call id_to_addr
@@ -70,8 +77,13 @@ ps_sendb(nodeid_t target, PS_COMMAND_TYPE command,
     psc->type = command;
     psc->address = address;
     psc->response = response;
-
     sys_sendcmd(psc, sizeof (PS_COMMAND), target);
+#ifdef LOG_LATENCIES
+   gettimeofday(&after,NULL);
+   double t2 = (double) after.tv_sec + after.tv_usec / 1e6f;
+   fprintf(stderr, "%d sent at %f\n",getpid(),t2);
+#endif
+
 }
 
 static inline void
@@ -88,6 +100,12 @@ ps_sendbv(nodeid_t target, PS_COMMAND_TYPE command,
     psc->write_value = value;
 
     sys_sendcmd(psc, sizeof (PS_COMMAND), target);
+#ifdef LOG_LATENCIES
+   gettimeofday(&after,NULL);
+   double t2 = (double) after.tv_sec + after.tv_usec / 1e6f;
+   fprintf(stderr, "%d sent at %f\n",getpid(),t2);
+#endif
+
 }
 
 static inline CONFLICT_TYPE
@@ -270,13 +288,17 @@ void ps_send_stats(stm_tx_node_t* stats, double duration) {
     psc->type = PS_STATS;
 
     psc->aborts = stats->tx_aborted;
-    psc->aborts_raw = stats->aborts_raw;
-    psc->aborts_war = stats->aborts_war;
-    psc->aborts_waw = stats->aborts_waw;
     psc->commits = stats->tx_commited;
     psc->max_retries = stats->max_retries;
     psc->tx_duration = duration;
 
+    sys_sendcmd_all(psc, sizeof (PS_COMMAND));
+
+    psc->aborts_raw = stats->aborts_raw;
+    psc->aborts_war = stats->aborts_war;
+    psc->aborts_waw = stats->aborts_waw;
+    psc->tx_duration = 0;
+    
     sys_sendcmd_all(psc, sizeof (PS_COMMAND));
 }
 

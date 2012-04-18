@@ -368,16 +368,19 @@ void dsl_communication() {
                     ps_hashtable_delete(ps_hashtable, sender, ps_remote->address, WRITE);
                     break;
                 case PS_STATS:
-                    stats_aborts += ps_remote->aborts;
-                    stats_aborts_raw += ps_remote->aborts_raw;
-                    stats_aborts_war += ps_remote->aborts_war;
-                    stats_aborts_waw += ps_remote->aborts_waw;
+                     if (ps_remote->tx_duration) {
+		    stats_aborts += ps_remote->aborts;
                     stats_commits += ps_remote->commits;
                     stats_duration += ps_remote->tx_duration;
                     stats_max_retries = stats_max_retries < ps_remote->max_retries ? ps_remote->max_retries : stats_max_retries;
                     stats_total += ps_remote->commits + ps_remote->aborts;
-
-                    if (++stats_received >= NUM_APP_NODES) {
+		  }
+		  else {
+		    stats_aborts_raw += ps_remote->aborts_raw;
+                    stats_aborts_war += ps_remote->aborts_war;
+                    stats_aborts_waw += ps_remote->aborts_waw;
+		  }
+                    if (++stats_received >= 2*NUM_APP_NODES) {
                         if (RCCE_ue() == 0) {
                             print_global_stats();
 

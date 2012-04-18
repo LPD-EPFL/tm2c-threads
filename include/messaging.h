@@ -57,15 +57,19 @@ extern "C" {
 			};
 
 			//stats collecting
-
+         union {
 			struct {
-				unsigned short commits;
-				unsigned short aborts;
-				unsigned short max_retries;
-				unsigned short aborts_war;
-				unsigned short aborts_raw;
-				unsigned short aborts_waw;
+				unsigned int commits;
+				unsigned int aborts;
+				unsigned int max_retries;
 			};
+         struct {
+           	unsigned int aborts_war;
+				unsigned int aborts_raw;
+				unsigned int aborts_waw;
+
+         };
+         };
 		};
 
 		union {
@@ -77,6 +81,7 @@ extern "C" {
 			};
 
 			int write_value;
+         double stats_msg_seq; //not 0 in the first status msg, 0 in the second status msg
 		};
 	} PS_COMMAND;
 
