@@ -102,6 +102,7 @@ extern "C" {
 /*  ------- Plug platform related things here BEGIN ------- */
 #ifdef PLATFORM_iRCCE
 #include "iRCCE.h"
+#include "sys_iRCCE.h"
 extern RCCE_COMM RCCE_COMM_APP;
 #define BARRIER RCCE_barrier(&RCCE_COMM_APP);
 #define BARRIERW RCCE_barrier(&RCCE_COMM_WORLD);
