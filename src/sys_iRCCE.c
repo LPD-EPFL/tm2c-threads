@@ -44,17 +44,6 @@ sys_shfree(sys_t_vcharp ptr)
 #endif
 }
 
-nodeid_t
-NODE_ID(void)
-{
-	return (nodeid_t)RCCE_ue();
-}
-
-nodeid_t
-TOTAL_NODES(void)
-{
-	return (nodeid_t)RCCE_num_ues();
-}
 
 static int color(int id, void *aux) {
     return !(id % DSLNDPERNODES);
@@ -82,7 +71,7 @@ static PS_COMMAND *ps_command, *ps_remote, *psc;
  * Used for offsets, set in tm_init
  * Not used with PGAS, as there we rely on fakemem_malloc
  */
-static tm_addr_t shmem_start_address;
+tm_addr_t shmem_start_address;
 #endif
 
 void
@@ -156,38 +145,6 @@ void
 sys_ps_term(void)
 {
 	// noop
-}
-
-int
-sys_sendcmd(void* data, size_t len, nodeid_t to)
-{
-	if (len > PS_BUFFER_SIZE) {
-		return 0;
-	}
-	char buf[PS_BUFFER_SIZE];
-	memcpy(buf, data, len);
-	return (iRCCE_isend(buf, PS_BUFFER_SIZE, to, NULL) == iRCCE_SUCCESS);
-}
-
-int
-sys_sendcmd_all(void* data, size_t len)
-{
-	char buf[PS_BUFFER_SIZE];
-	memcpy(buf, data, len);
-	int res = 1;
-	nodeid_t to;
-	for (to=0; to < NUM_DSL_NODES; to++) {
-		res = res 
-			&& (iRCCE_isend(buf, PS_BUFFER_SIZE, dsl_nodes[to], NULL) == iRCCE_SUCCESS);
-	}
-	return res;
-}
-
-int
-sys_recvcmd(void* data, size_t len, nodeid_t from)
-{
-	int res = iRCCE_irecv(data, len, from, NULL);
-	return (res == RCCE_SUCCESS);
 }
 
 // If value == NULL, we just return the address.
@@ -406,25 +363,7 @@ void dsl_communication() {
     }
 }
 
-tm_intern_addr_t
-to_intern_addr(tm_addr_t addr)
-{
-#ifdef PGAS
-	return fakemem_offset((void*)addr);
-#else
-	return ((tm_intern_addr_t)((uintptr_t)addr - (uintptr_t)shmem_start_address));
-#endif
-}
 
-tm_addr_t
-to_addr(tm_intern_addr_t i_addr)
-{
-#ifdef PGAS
-	return fakemem_addr_from_offset(i_addr);
-#else
-	return (tm_addr_t)((uintptr_t)shmem_start_address + i_addr);
-#endif
-}
 /*
  * Seeding the rand()
  */
@@ -437,11 +376,6 @@ srand_core()
     srand(time_ + (13 * (RCCE_ue() + 1)));
 }
 
-double
-wtime(void)
-{
-	return RCCE_wtime();
-}
 
 void 
 udelay(unsigned int micros)
