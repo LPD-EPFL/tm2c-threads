@@ -476,8 +476,6 @@ TASKMAIN(int argc, char **argv) {
                 total(bank, 0));
     }
 
-	TM_END
-
     /* Delete bank and accounts */
 
     sys_shfree((volatile unsigned char *) bank->accounts);

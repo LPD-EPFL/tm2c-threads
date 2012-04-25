@@ -21,13 +21,13 @@ DynamicHeader *udn_header; //headers for messaging
 tmc_sync_barrier_t *barrier_apps, *barrier_all; //BARRIERS
 
 void
-sys_init_system(int* argc, char** argv[]) {
+sys_init_system(int* argc, char* argv[]) {
 
-    char *executable_name = (*argv)[0];
-    NUM_UES = atoi(*(++(*argv)));
+    char *executable_name = argv[0];
+    NUM_UES = atoi(*(++argv));
     printf("num ues: %d --\n", NUM_UES);
 
-    (*argv)[0] = executable_name;
+    argv[0] = executable_name;
     (*argc)--;
 
 

@@ -8,6 +8,13 @@
 
 #include "common.h"
 #include "pubSubTM.h"
+#include <sys/time.h>
+
+//#define LOG_LATENCIES
+#ifdef LOG_LATENCIES
+   struct timeval before;
+   struct timeval after;
+#endif
 
 nodeid_t *dsl_nodes; // holds the ids of the nodes. ids are in range 0..48 (possibly more)
 // To get the address of the node, one must call id_to_addr
@@ -58,28 +65,34 @@ void ps_init_(void) {
 
     sys_ps_init_();
     PRINT("[APP NODE] Initialized pub-sub..");
-    BARRIERW
 }
 
 static inline void
 ps_sendb(nodeid_t target, PS_COMMAND_TYPE command,
-        tm_intern_addr_t address, CONFLICT_TYPE response) {
-#ifdef USING_ZMQ
-    psc->nodeId = ID;
+         tm_intern_addr_t address, CONFLICT_TYPE response)
+{
+#if defined(PLATFORM_CLUSTER) || defined(PLATFORM_MCORE)
+	psc->nodeId = ID;
 #endif
     psc->type = command;
     psc->address = address;
     psc->response = response;
-
     sys_sendcmd(psc, sizeof (PS_COMMAND), target);
+#ifdef LOG_LATENCIES
+   gettimeofday(&after,NULL);
+   double t2 = (double) after.tv_sec + after.tv_usec / 1e6f;
+   fprintf(stderr, "%d sent at %f\n",getpid(),t2);
+#endif
+
 }
 
 static inline void
 ps_sendbv(nodeid_t target, PS_COMMAND_TYPE command,
-        tm_intern_addr_t address, uint32_t value,
-        CONFLICT_TYPE response) {
-#ifdef USING_ZMQ 
-    psc->nodeId = ID;
+         tm_intern_addr_t address, uint32_t value,
+         CONFLICT_TYPE response)
+{
+#if defined(PLATFORM_CLUSTER) || defined(PLATFORM_MCORE)
+	psc->nodeId = ID;
 #endif
     psc->type = command;
     psc->address = address;
@@ -87,20 +100,29 @@ ps_sendbv(nodeid_t target, PS_COMMAND_TYPE command,
     psc->write_value = value;
 
     sys_sendcmd(psc, sizeof (PS_COMMAND), target);
+#ifdef LOG_LATENCIES
+   gettimeofday(&after,NULL);
+   double t2 = (double) after.tv_sec + after.tv_usec / 1e6f;
+   fprintf(stderr, "%d sent at %f\n",getpid(),t2);
+#endif
+
 }
 
 static inline CONFLICT_TYPE
 ps_recvb(nodeid_t from) {
-    // XXX: this could be written much better, without globals
+#ifdef PLATFORM_MCORE
+    PS_REPLY cmd;
+    sys_recvcmd(&cmd, sizeof (PS_REPLY), from);
+#else
     PS_COMMAND cmd;
-
     sys_recvcmd(&cmd, sizeof (PS_COMMAND), from);
+#endif
 #ifdef PGAS
     PF_START(0)
     read_value = cmd.value;
     PF_STOP(0)
 #endif
-            return cmd.response;
+	return cmd.response;
 }
 
 /*
@@ -209,8 +231,8 @@ void ps_unsubscribe(tm_addr_t address) {
 
     ps_sendb(responsible_node, PS_UNSUBSCRIBE, intern_addr, NO_CONFLICT);
 
-#ifdef USING_ZMQ
-    ps_recvb(responsible_node);
+#ifdef PLATFORM_CLUSTER
+	ps_recvb(responsible_node);
 #endif
 }
 
@@ -222,8 +244,8 @@ void ps_publish_finish(tm_addr_t address) {
 
     ps_sendb(responsible_node, PS_PUBLISH_FINISH, intern_addr, NO_CONFLICT);
 
-#ifdef USING_ZMQ
-    ps_recvb(responsible_node);
+#ifdef PLATFORM_CLUSTER
+	ps_recvb(responsible_node);
 #endif
 }
 
@@ -243,7 +265,7 @@ void ps_finish_all(CONFLICT_TYPE conflict) {
 
 #ifndef FINISH_ALL_PARALLEL
             ps_sendb(i, PS_REMOVE_NODE, 0, conflict);
-#ifdef USING_ZMQ
+#ifdef PLATFORM_CLUSTER
             // need a dummy receive, due to the way how ZMQ works
             ps_recvb(i);
 #endif
@@ -266,13 +288,17 @@ void ps_send_stats(stm_tx_node_t* stats, double duration) {
     psc->type = PS_STATS;
 
     psc->aborts = stats->tx_aborted;
-    psc->aborts_raw = stats->aborts_raw;
-    psc->aborts_war = stats->aborts_war;
-    psc->aborts_waw = stats->aborts_waw;
     psc->commits = stats->tx_commited;
     psc->max_retries = stats->max_retries;
     psc->tx_duration = duration;
 
+    sys_sendcmd_all(psc, sizeof (PS_COMMAND));
+
+    psc->aborts_raw = stats->aborts_raw;
+    psc->aborts_war = stats->aborts_war;
+    psc->aborts_waw = stats->aborts_waw;
+    psc->tx_duration = 0;
+    
     sys_sendcmd_all(psc, sizeof (PS_COMMAND));
 }
 

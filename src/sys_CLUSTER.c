@@ -1,8 +1,3 @@
-#include "common.h"
-#include "pubSubTM.h"
-#include "dslock.h"
-#include "pgas.h"
-
 #include <stddef.h>
 #include <stdint.h>
 #include <unistd.h>
@@ -14,9 +9,21 @@
 #include <assert.h>
 #include <zmq.h>
 
-#include <khash.h>
+#include "common.h"
+#include "pubSubTM.h"
+#include "dslock.h"
+#include "pgas.h"
 
 void* zmq_context = NULL;              // here, we keep the context (seems necessary)
+
+void* the_responder;   // for dsl nodes, it will be the responder socket; for app node, it will be NULL
+void** dsl_node_addrs; // for app nodes, it will be an array containing sockets; for dsl nodes, it should be NULL
+
+// barrier stuff
+void* zmq_barrier_subscriber; /* socket of the barrier subscriber (to barrier_syncer) */
+void* zmq_barrier_client;     /* socket of the barrier subscriber (from barrier_syncer) */
+
+static PS_COMMAND *psc; /* buffer to hold the current command */
 
 /*
  * For cluster conf, we need a different kind of command line parameters.
@@ -74,16 +81,11 @@ sys_init_system(int* argc, char* argv[])
 	*argc = *argc - (p-cur);
 
 	zmq_context = zmq_init(1);
-	init_barrier();
 }
 
 void
 term_system()
 {
-    if (the_responder != NULL) {
-    	zmq_close(the_responder);
-    	the_responder = NULL;
-    }
     zmq_term(zmq_context);
 }
 
@@ -110,15 +112,6 @@ TOTAL_NODES(void)
 {
 	return MY_TOTAL_NODES;
 }
-
-void* the_responder;   // for dsl nodes, it will be the responder socket; for app node, it will be NULL
-void** dsl_node_addrs; // for app nodes, it will be an array containing sockets; for dsl nodes, it should be NULL
-
-// barrier stuff
-void* zmq_barrier_subscriber; /* socket of the barrier subscriber (to barrier_syncer) */
-void* zmq_barrier_client;     /* socket of the barrier subscriber (from barrier_syncer) */
-
-static PS_COMMAND *psc; /* buffer to hold the current command */
 
 void
 sys_tm_init()
@@ -152,27 +145,17 @@ sys_ps_init_(void)
                 EXIT(1);
             }
             dsl_node_addrs[j] = a_socket;
+            int zero = 100;
+            zmq_setsockopt(a_socket, ZMQ_LINGER, &zero, sizeof (zero));
         } else {
             dsl_node_addrs[j] = NULL;
         }
     }
 }
 
-// in this hash table we keep all values for all addresses
-// memory_hashtable is indexed by the nodeId
-// and the field content is a hash of addr->value
-KHASH_MAP_INIT_INT(32, uint32_t);
-khash_t(32)* memory_hashtable[MAX_NODES];
-
 void
 sys_dsl_init(void)
 {
-    nodeid_t i = 0;
-    for (i=0; i<NUM_UES; i++) {
-        memory_hashtable[i] = kh_init(32);
-    }
-    PRINT("[DSL NODE] Initialized the memory mapping hashtable...");
-
     psc = (PS_COMMAND*)malloc(sizeof(PS_COMMAND));
 
     char conn_spec_path[256];
@@ -182,38 +165,57 @@ sys_dsl_init(void)
         PRINTD("Could not read the parameter from the config file: %s\n", conn_spec_path);
         EXIT(2);
     }
-    PRINTD("Listenning on %s\n", conn_spec_string);
+    PRINTD("Listening on %s\n", conn_spec_string);
     the_responder = zmq_socket(zmq_context, ZMQ_REP);
     if (zmq_bind(the_responder, conn_spec_string) != 0) {
         PRINTD("Could not bind to %s as REQ/REP\n", conn_spec_string);
         EXIT(2);
     }
+    int zero = 100;
+    zmq_setsockopt(the_responder, ZMQ_LINGER, &zero, sizeof (zero));
 }
 
 void
 sys_dsl_term(void)
 {
-	zmq_close(the_responder);
+	PRINTD("sys_dsl_term: called");
+	if (ID % DSLNDPERNODES == 0) {
+		// DSL node
+		zmq_setsockopt(zmq_barrier_subscriber, ZMQ_UNSUBSCRIBE, "all", 0);
+	} else {
+		zmq_setsockopt(zmq_barrier_subscriber, ZMQ_UNSUBSCRIBE, "a", 0);
+    }
+    zmq_close(zmq_barrier_subscriber);
+    zmq_close(zmq_barrier_client);
+    
+    zmq_close(the_responder);
+	PRINTD("sys_dsl_term: ended");
 }
 
 void
 sys_ps_term(void)
 {
+	PRINTD("sys_ps_term: called");
+	if (ID % DSLNDPERNODES == 0) {
+		// DSL node
+		zmq_setsockopt(zmq_barrier_subscriber, ZMQ_UNSUBSCRIBE, "all", 0);
+	} else {
+		zmq_setsockopt(zmq_barrier_subscriber, ZMQ_UNSUBSCRIBE, "a", 0);
+    }
     zmq_close(zmq_barrier_client);
     zmq_close(zmq_barrier_subscriber);
-    nodeid_t j, dsln = 0;
+
+    nodeid_t j;
     for (j = 0; j < NUM_UES; j++) {
-        if (j % DSLNDPERNODES == 0) {
-            if (dsl_node_addrs[dsln] != NULL) {
-                if (zmq_close(dsl_node_addrs[dsln]) != 0) {
-                    PRINTD("Problem closing socket %p[%u]\n",
-                           dsl_node_addrs[dsln], dsln);
-                }
-            }
-            dsl_node_addrs[dsln] = NULL;
-            dsln++;
-        }
-    }
+	    if (dsl_node_addrs[j] != NULL) {
+			if (zmq_close(dsl_node_addrs[j]) != 0) {
+				PRINT("Problem closing socket %p[%u]\n",
+					  dsl_node_addrs[j], j);
+			}
+		}
+		dsl_node_addrs[j] = NULL;
+	}
+	PRINTD("sys_ps_term: ended");
 }
 
 //  Receive 0MQ string from socket and convert into C string
@@ -250,6 +252,9 @@ sys_sendcmd(void* data, size_t len, nodeid_t to)
 {
 	assert((to>=0)&&(to<TOTAL_NODES()));
 	assert(dsl_node_addrs[to]!=NULL);
+
+	PRINTD("sys_sendcmd: to = %u", to);
+
 	zmq_msg_t request;
 	zmq_msg_init_size(&request, len);
 
@@ -270,21 +275,37 @@ sys_sendcmd_all(void* data, size_t len)
 {
 	int rc = 0;
 
-	zmq_msg_t request;
-	zmq_msg_init_size(&request, len);
-	memcpy(zmq_msg_data(&request), data, len);
-
 	nodeid_t to;
-	for (to=0; to < TOTAL_NODES(); to++) {
+	for (to=TOTAL_NODES()-1; to-- > 0;) {
+	/*for (to=0; to < TOTAL_NODES(); to++) {*/
 		if (dsl_node_addrs[to] == NULL)
 			continue;
 
-		rc = rc
-			|| zmq_send(dsl_node_addrs[to], &request, 0);
+		zmq_msg_t request;
+		zmq_msg_init_size(&request, len);
+		memcpy(zmq_msg_data(&request), data, len);
+
+		rc = zmq_send(dsl_node_addrs[to], &request, 0);
+		PRINTD("sys_sendcmd_all: to = %u, rc = %d", to, rc);
 		assert(!rc);
-		zmq_recv(dsl_node_addrs[to], &request, 0);
+		if (rc) {
+			perror(NULL);
+		}
+
+		zmq_msg_close(&request);
+
+		zmq_msg_t reply;
+		zmq_msg_init(&reply);
+
+		rc = zmq_recv(dsl_node_addrs[to], &reply, 0);
+		PRINTD("sys_sendcmd_all: [from] to = %u, rc = %d", to, rc);
+		assert(!rc);
+		if (rc) {
+			perror(NULL);
+		}
+
+		zmq_msg_close(&reply);
 	}
-	zmq_msg_close(&request);
 
 	return rc;
 }
@@ -295,11 +316,13 @@ sys_recvcmd(void* data, size_t len, nodeid_t from)
     zmq_msg_t message;
     zmq_msg_init(&message);
 
+    PRINTD("sys_recvcmd: from = %u", from);
     int rc = zmq_recv(dsl_node_addrs[from], &message, 0);
     if (rc != 0) {
 		fprintf(stderr, "sys_recvcmd: there was a problem receiveing msg:\n%s\n",
 				strerror(errno));
-    	return -1;
+		zmq_msg_close (&message);
+		return -1;
     }
 
     int size = zmq_msg_size (&message);
@@ -312,7 +335,7 @@ sys_recvcmd(void* data, size_t len, nodeid_t from)
 // If value == NULL, we just return the address.
 // Otherwise, we return the value.
 static inline void 
-sys_ps_command_reply(unsigned short int target,
+sys_ps_command_reply(nodeid_t target,
                     PS_COMMAND_TYPE command,
                     tm_addr_t address,
                     uint32_t* value,
@@ -321,6 +344,8 @@ sys_ps_command_reply(unsigned short int target,
     psc->nodeId = ID;
     psc->type = command;
     psc->response = response;
+
+    PRINTD("sys_ps_command_reply: src=%u target=%u", psc->nodeId, target);
 #ifdef PGAS
     if (value != NULL) {
         psc->value = *value;
@@ -335,7 +360,12 @@ sys_ps_command_reply(unsigned short int target,
     zmq_msg_t message;
     zmq_msg_init_size(&message, sizeof(PS_COMMAND));
     memcpy(zmq_msg_data(&message), psc, sizeof(PS_COMMAND));
-    zmq_send(the_responder, &message, 0);
+
+    if (zmq_send(the_responder, &message, 0) != 0) {
+	    PRINT("sys_ps_command_reply: problem sending message");
+	    perror(NULL);
+    }
+    
     zmq_msg_close(&message);
 }
 
@@ -345,10 +375,20 @@ dsl_communication()
 {
     PS_COMMAND* ps_remote = (PS_COMMAND*)malloc(sizeof(PS_COMMAND));
 
+    PRINTD("dsl_communication loop starting");
+loop:
     while (1) {
-        zmq_msg_t request;
-        zmq_msg_init(&request);
-        zmq_recv(the_responder, &request, 0);
+	    zmq_msg_t request;
+	    zmq_msg_init(&request);
+
+        int rc = zmq_recv(the_responder, &request, 0);
+        if (rc != 0) {
+	        if (errno == ETERM) {
+		        PRINT("dsl_communication: zmq context is killed");
+		        EXIT(13);
+	        }
+	        perror(NULL);
+        }
         size_t size = zmq_msg_size(&request);
         if (size < sizeof(PS_COMMAND))
             size = sizeof(PS_COMMAND);
@@ -365,12 +405,8 @@ dsl_communication()
         };
 #endif
         zmq_msg_close(&request);
-
         nodeid_t sender = ps_remote->nodeId;
-        PRINTD("dsl_communication: got message %d from %u\n", ps_remote->type, sender);
-
-        int kh_ret;
-        khiter_t kh_iterator;
+        PRINTD("dsl_communication: got message %d from %u", ps_remote->type, sender);
 
         switch (ps_remote->type) {
         case PS_SUBSCRIBE:
@@ -380,11 +416,7 @@ dsl_communication()
                     try_subscribe(sender, ps_remote->address));
             break;
         case PS_PUBLISH:
-            // we store the value in a separate hash
-            kh_iterator = kh_put(32, memory_hashtable[sender], ps_remote->address, &kh_ret);
-            if (!kh_ret) kh_del(32, memory_hashtable[sender], kh_iterator);
-            kh_value(memory_hashtable[sender], kh_iterator) = ps_remote->value;
-
+			{ // need curlies because of the declaration below
             CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
             if (conflict == NO_CONFLICT) {
                 write_set_pgas_insert(PGAS_write_sets[sender],
@@ -395,7 +427,8 @@ dsl_communication()
             sys_ps_command_reply(sender, PS_PUBLISH_RESPONSE,
                     (tm_addr_t)ps_remote->address,
                     NULL,
-                    try_publish(sender, conflict));
+                    conflict);
+			}
             break;
 		case PS_WRITE_INC:
 			{
@@ -409,34 +442,16 @@ dsl_communication()
 					PGAS_read(ps_remote->address) + ps_remote->write_value);
 					*/
 				write_set_pgas_insert(PGAS_write_sets[sender],
-				                      PGAS_read(ps_remote->address) + ps_remote->write_value,
-				                      ps_remote->address);
+				                      *PGAS_read(ps_remote->address) + ps_remote->write_value,
+				                      (tm_intern_addr_t)ps_remote->address);
 			}
 			sys_ps_command_reply(sender, PS_PUBLISH_RESPONSE,
-			                     ps_remote->address,
+			                     (tm_addr_t)ps_remote->address,
 			                     NULL,
 			                     conflict);
 			}
 			break;
         case PS_REMOVE_NODE:
-            // now, see what is the action, and either persist writes or remove them all...
-            if (ps_remote->response == NO_CONFLICT) {
-                khash_t(32)* h = memory_hashtable[sender];
-                for (kh_iterator = kh_begin(h); kh_iterator != kh_end(h); ++kh_iterator) {
-                    if (kh_exist(h, kh_iterator)) {
-                        /* fetch the key, which is tm_intern_addr_t, and 
-                         * val, which is uint32_t */
-                        uint32_t  val = kh_value(h, kh_iterator);
-                        tm_intern_addr_t key = (tm_intern_addr_t)kh_key(h, kh_iterator);
-                        PGAS_write(key, val);
-                        PRINTD("Set %"PRIxPTR" to %u\n", key, val);
-                    }
-                }
-            }
-            // clean up...
-            kh_clear(32, memory_hashtable[sender]);
-
-			// XXX: maybe not needed?
 			if (ps_remote->response == NO_CONFLICT) {
 				write_set_pgas_persist(PGAS_write_sets[sender]);
 			}
@@ -472,16 +487,22 @@ dsl_communication()
             stats_max_retries = stats_max_retries < ps_remote->max_retries ? ps_remote->max_retries : stats_max_retries;
             stats_total += ps_remote->commits + ps_remote->aborts;
 
-            if (++stats_received >= NUM_APP_NODES) {
-                print_global_stats();
-            }
+            PRINTD("Stats received so far: %u/%u", stats_received+1,
+            	   NUM_APP_NODES);
             // zmq thingy, needs a reply
             sys_ps_command_reply(sender, PS_DUMMY_REPLY, 
                     (tm_addr_t)ps_remote->address,
                     0,
                     NO_CONFLICT);
 
-            EXIT(0);
+            if (++stats_received >= NUM_APP_NODES) {
+                if (NODE_ID() == 0) {
+                    print_global_stats();
+                    print_hashtable_usage();
+                }
+				sleep(1);
+				return;
+            }
             break;
         case PS_LOAD_NONTX:
             sys_ps_command_reply(sender, PS_LOAD_NONTX_RESPONSE, 
@@ -576,4 +597,7 @@ init_barrier()
         EXIT(1);
     }
     PRINTD("Connected to %s as REQ/REP for barrier subscriptions\n", syncer_request_spec);
+    int zero = 100;
+    zmq_setsockopt(zmq_barrier_subscriber, ZMQ_LINGER, &zero, sizeof (zero));
+    zmq_setsockopt(zmq_barrier_client, ZMQ_LINGER, &zero, sizeof (zero));
 }

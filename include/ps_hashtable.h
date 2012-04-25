@@ -413,7 +413,7 @@ ps_hashtable_print(ps_hashtable_t ps_hashtable)
         vthash_bucket_entry_t *curbe = bucket->head;
         while (curbe != NULL) {
             rw_entry_t *rwe = curbe->rw_entry;
-            PRINTS(" [%-3d]: Write: %-3d\n   ", curbe->address, rwe->shorts[3]);
+            PRINTS(" [%"PRIxIA"]: Write: %-3d\n   ", curbe->address, rwe->shorts[3]);
             rw_entry_print_readers(rwe);
 
 

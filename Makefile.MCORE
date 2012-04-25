@@ -1,9 +1,12 @@
 PLATFORM_CFLAGS =
 PLATFORM_LDFLAGS = 
-PLATFORM_LIBS = -ltask -lrt -lzmq
+PLATFORM_LIBS = -ltaskplus -lshrimp -lrt
 PLATFORM_DEFINES = -DPLATFORM_MCORE \
-		   -DUSING_ZMQ \
-                   -UPGAS
+                   -UPGAS \
+                   -DREAD_BUF_OFF \
+                   -DLIBTASK \
+                   -DBACKOFF \
+                   -UFINISH_ALL_PARALLEL
 
 HAS_TASKLIB = no
 
