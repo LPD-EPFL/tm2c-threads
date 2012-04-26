@@ -72,22 +72,23 @@ nodeid_t MY_NODE_ID;
 nodeid_t MY_TOTAL_NODES;
 
 void
-sys_init_system(int* argc, char* argv[])
+sys_init_system(int* argc, char** argv[])
 {
 	if (*argc < 2) {
 		fprintf(stderr, "Not enough parameters (%d)\n", *argc);
 		fprintf(stderr, "Call this program as:\n");
-		fprintf(stderr, "\t%s -total=TOTAL_NODES ...\n", argv[0]);
+		fprintf(stderr, "\t%s -total=TOTAL_NODES ...\n", (*argv)[0]);
 		EXIT(1);
 	}
 
 	int p = 1;
 	int found = 0;
 	while (p < *argc) {
-		if (strncmp("-total=", argv[p], strlen("-total=")) == 0) {
-			char *cf = argv[p] + strlen("-total=");
+		if (strncmp("-total=", (*argv)[p], strlen("-total=")) == 0) {
+
+			char *cf = (*argv)[p] + strlen("-total=");
 			MY_TOTAL_NODES = atoi(cf);
-			argv[p] = NULL;
+			(*argv)[p] = NULL;
 			found = 1;
 		}
 		p++;
@@ -95,17 +96,17 @@ sys_init_system(int* argc, char* argv[])
 	if (!found) {
 		fprintf(stderr, "Did not pass all parameters\n");
 		fprintf(stderr, "Call this program as:\n");
-		fprintf(stderr, "\t%s -total=TOTAL_NODES ...\n", argv[0]);
+		fprintf(stderr, "\t%s -total=TOTAL_NODES ...\n", (*argv)[0]);
 		EXIT(1);
 	}
 	p = 1;
 	int cur = 1;
 	while (p < *argc) {
-		if (argv[p] == NULL) {
+		if ((*argv)[p] == NULL) {
 			p++;
 			continue;
 		}
-		argv[cur] = argv[p];
+		(*argv)[cur] = (*argv)[p];
 		cur++;
 		p++;
 	}
