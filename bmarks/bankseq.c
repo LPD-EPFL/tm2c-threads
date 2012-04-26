@@ -85,7 +85,7 @@ typedef struct bank {
 } bank_t;
 
 inline int getlocknum(int account_num) {
-    return (account_num % RCCE_num_ues());
+    return (account_num % TOTAL_NODES());
 }
 
 void lock_bank() {
@@ -190,13 +190,13 @@ bank_t * test(void *data, double duration, int nb_accounts) {
     bank_t * bank;
 
 
-    /* Initialize seed (use randRCCE_num_ues(); as rand is poor) */
+    /* Initialize seed (use randTOTAL_NODES(); as rand is poor) */
     srand_core();
 
     rand_max = nb_accounts;
     rand_min = 0;
 
-    bank_t *btmp = (bank_t *) sys_shmalloc(RCCE_num_ues() * sizeof (bank_t));
+    bank_t *btmp = (bank_t *) sys_shmalloc(TOTAL_NODES() * sizeof (bank_t));
     //bank = (bank_t *) sys_shmalloc(sizeof (bank_t));
     bank = &btmp[NODE_ID()];
     //bank = (bank_t *) malloc(sizeof (bank_t));
@@ -333,7 +333,7 @@ TASKMAIN(int argc, char **argv) {
 
     double duration = DEFAULT_DURATION;
     int nb_accounts = DEFAULT_NB_ACCOUNTS;
-    int nb_app_cores = RCCE_num_ues();
+    int nb_app_cores = TOTAL_NODES();
     int read_all = DEFAULT_READ_ALL;
     int read_cores = DEFAULT_READ_THREADS;
     int write_all = DEFAULT_WRITE_ALL;

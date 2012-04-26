@@ -185,7 +185,7 @@ TASKMAIN(int argc, char **argv) {
     thread_data_t *data;
     double duration = DEFAULT_DURATION;
     int initial = DEFAULT_INITIAL;
-    int nb_app_cores = RCCE_num_ues();
+    int nb_app_cores = TOTAL_NODES();
     long range = DEFAULT_RANGE;
     int update = DEFAULT_UPDATE;
     int unit_tx = DEFAULT_ELASTICITY;
