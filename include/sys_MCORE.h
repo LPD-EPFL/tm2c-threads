@@ -9,6 +9,7 @@
 
 #include "common.h"
 #include "messaging.h"
+#include "mcore_malloc.h"
 
 EXINLINED void app_barrier();
 EXINLINED void global_barrier();
