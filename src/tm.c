@@ -57,7 +57,7 @@ void tm_init() {
 }
 
 void
-init_system(int* argc, char* argv[])
+init_system(int* argc, char** argv[])
 {
 	/* call platform level initializer */
 	sys_init_system(argc, argv);

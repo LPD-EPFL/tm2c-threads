@@ -73,7 +73,7 @@ extern "C" {
 
 #define TM_INIT                                                         \
     init_configuration(&argc, &argv);                                   \
-    init_system(&argc, argv);                                          \
+    init_system(&argc, &argv);                                          \
     {                                                                   \
         tm_init();
 
@@ -421,7 +421,7 @@ retry:
     int color(int id, void *aux);
 
 
-    void init_system(int* argc, char* argv[]);
+    void init_system(int* argc, char** argv[]);
 
     void tm_init();
     void tm_term();

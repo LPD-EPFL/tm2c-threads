@@ -8,10 +8,11 @@
 
 #include "common.h"
 #include "pubSubTM.h"
-#include <sys/time.h>
+
 
 //#define LOG_LATENCIES
 #ifdef LOG_LATENCIES
+#include <sys/time.h>
    struct timeval before;
    struct timeval after;
 #endif
