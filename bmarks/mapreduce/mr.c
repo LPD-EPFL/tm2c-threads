@@ -187,7 +187,7 @@ void map_reduce(FILE *fp, int *chunk_index, int *stats) {
 
     udelay((50000 * (ID + 1)));
 
-    duration__ = RCCE_wtime();
+    duration__ = wtime();
 
     TX_START
     //ci = *(int *) TX_LOAD(chunk_index);
@@ -219,7 +219,7 @@ void map_reduce(FILE *fp, int *chunk_index, int *stats) {
 
     }
 
-    duration__ = RCCE_wtime() - duration__;
+    duration__ = wtime() - duration__;
 
     PRINTD("Updating the statistics");
     int new_local[27];
@@ -251,7 +251,7 @@ void map_reduce_seq(FILE *fp, int *chunk_index, int *stats) {
 
         int ci;
 
-        duration__ = RCCE_wtime();
+        duration__ = wtime();
 
         rewind(fp);
         char c;
@@ -260,7 +260,7 @@ void map_reduce_seq(FILE *fp, int *chunk_index, int *stats) {
             stats_local[char_offset(c)]++;
         }
 
-        duration__ = RCCE_wtime() - duration__;
+        duration__ = wtime() - duration__;
 
         PRINTD("Updating the statistics");
 
@@ -274,7 +274,7 @@ void map_reduce_seq(FILE *fp, int *chunk_index, int *stats) {
 /*
     int ci;
 
-    duration__ = RCCE_wtime();
+    duration__ = wtime();
 
     ci = (*chunk_index)++;
 
@@ -290,7 +290,7 @@ void map_reduce_seq(FILE *fp, int *chunk_index, int *stats) {
         ci = (*chunk_index)++;
     }
 
-    duration__ = RCCE_wtime() - duration__;
+    duration__ = wtime() - duration__;
 
     PRINTD("Updating the statistics");
 

@@ -171,7 +171,7 @@ void run_seq(int* memory) {
         TX_START
 
 #ifdef READ_DURATION
-                double read_ts_start = RCCE_wtime();
+                double read_ts_start = wtime();
 #endif
 
         for (i = 0; i < reads; i++) {
@@ -179,7 +179,7 @@ void run_seq(int* memory) {
         }
 
 #ifdef READ_DURATION
-        duration_reads += RCCE_wtime() - read_ts_start;
+        duration_reads += wtime() - read_ts_start;
 #endif
 
         TX_COMMIT
@@ -197,7 +197,7 @@ void run_rand(int* memory) {
         TX_START
 
 #ifdef READ_DURATION
-                double read_ts_start = RCCE_wtime();
+                double read_ts_start = wtime();
 #endif
 
         for (i = 0; i < reads; i++) {
@@ -205,7 +205,7 @@ void run_rand(int* memory) {
         }
 
 #ifdef READ_DURATION
-        duration_reads += RCCE_wtime() - read_ts_start;
+        duration_reads += wtime() - read_ts_start;
 #endif
 
         TX_COMMIT
@@ -223,7 +223,7 @@ void run_uniq(int* memory) {
         TX_START
 
 #ifdef READ_DURATION
-                double read_ts_start = RCCE_wtime();
+                double read_ts_start = wtime();
 #endif
 
         int read = ID;
@@ -234,7 +234,7 @@ void run_uniq(int* memory) {
         }
 
 #ifdef READ_DURATION
-        duration_reads += RCCE_wtime() - read_ts_start;
+        duration_reads += wtime() - read_ts_start;
 #endif
 
         TX_COMMIT
