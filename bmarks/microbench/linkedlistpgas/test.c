@@ -411,7 +411,7 @@ TASKMAIN(int argc, char **argv) {
             
     test(data, duration);
 
-    printf("-- Core %d\n", RCCE_ue());
+    printf("-- Core %d\n", NODE_ID());
     printf("  #add        : %lu\n", data->nb_add);
     printf("    #added    : %lu\n", data->nb_added);
     printf("  #remove     : %lu\n", data->nb_remove);

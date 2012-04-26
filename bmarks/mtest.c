@@ -2,10 +2,10 @@
 #include "stddef.h"
 #include "../include/iRCCE.h"
 
-#define ME              printf("[%02d] ", RCCE_ue());
+#define ME              printf("[%02d] ", NODE_ID());
 #define PRINTD(args...) ME; printf(args); printf("\n"); fflush(stdout)
 #define BARRIER         RCCE_barrier(&RCCE_COMM_WORLD);
-#define ONCE            if (RCCE_ue() == 1)
+#define ONCE            if (NODE_ID() == 1)
 #define AO(addr)        shmem_address_offset((void*) addr)
 
 #define NBACC 10
@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
     RCCE_init(&argc, &argv);
     iRCCE_init();
 
-    if (RCCE_ue() % 2 == 1) {
+    if (NODE_ID() % 2 == 1) {
 
         if (!shmem_start_address) {
             char *start = (char *) sys_shmalloc(sizeof (char));
@@ -114,7 +114,7 @@ int main(int argc, char **argv) {
                 while (l--) {
                     PRINTD("round %2d", l);
                     int i;
-                    if (RCCE_ue() == 1) {
+                    if (NODE_ID() == 1) {
                         for (i = 0; i < bank->size; i++) {
                             bank->accounts[i].balance = i;
                         }

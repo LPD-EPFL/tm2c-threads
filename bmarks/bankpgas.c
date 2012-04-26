@@ -420,7 +420,7 @@ TASKMAIN(int argc, char **argv) {
 
     bank = test(data, duration, nb_accounts);
 
-    printf("---Core %d\n", RCCE_ue());
+    printf("---Core %d\n", NODE_ID());
     printf("  #transfer   : %lu\n", data->nb_transfer);
     printf("  #read-all   : %lu\n", data->nb_read_all);
     printf("  #write-all  : %lu\n", data->nb_write_all);

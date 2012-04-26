@@ -198,7 +198,7 @@ bank_t * test(void *data, double duration, int nb_accounts) {
 
     bank_t *btmp = (bank_t *) sys_shmalloc(RCCE_num_ues() * sizeof (bank_t));
     //bank = (bank_t *) sys_shmalloc(sizeof (bank_t));
-    bank = &btmp[RCCE_ue()];
+    bank = &btmp[NODE_ID()];
     //bank = (bank_t *) malloc(sizeof (bank_t));
     if (bank == NULL) {
         PRINT("malloc bank");
@@ -449,7 +449,7 @@ TASKMAIN(int argc, char **argv) {
 
 
 
-    data->id = RCCE_ue();
+    data->id = NODE_ID();
     data->read_all = read_all;
     data->read_cores = read_cores;
     data->write_all = write_all;
@@ -467,7 +467,7 @@ TASKMAIN(int argc, char **argv) {
 
     BARRIERW
 
-    printf("---Core %d\n", RCCE_ue());
+    printf("---Core %d\n", NODE_ID());
     printf("  #transfer   : %lu\n", data->nb_transfer);
     printf("  #read-all   : %lu\n", data->nb_read_all);
     printf("  #write-all  : %lu\n", data->nb_write_all);

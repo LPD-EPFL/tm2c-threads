@@ -247,12 +247,12 @@ void run_check_granularity() {
     int i = 10;
     while (i--) {
         TX_START
-        if (RCCE_ue() == 1) {
+        if (NODE_ID() == 1) {
             *cp = 'c';
             TX_LOAD(cp);
             TX_STORE(cp, cp, TYPE_CHAR);
         }
-        else if (RCCE_ue() == 3) {
+        else if (NODE_ID() == 3) {
             cp[1] = 'd';
             TX_LOAD(cp + 1);
             TX_STORE(cp + 1, cp + 1, TYPE_CHAR);
