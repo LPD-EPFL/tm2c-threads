@@ -201,7 +201,8 @@ sys_ps_init_(void)
 			nodes_sockets[j] = -1;
 		}
 	}
-	MCORE_shmalloc_init(100000*sizeof(int));
+	
+	MCORE_shmalloc_init(1024*1024*1024); //1GB
 
 	ps_remote_msg = NULL;
 	PRINTD("sys_ps_init: done");
@@ -311,16 +312,15 @@ process_message(PS_COMMAND* ps_remote, int fd)
 
 #ifdef PGAS
 			sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE,
-								 (tm_addr_t)ps_remote->address, 
-								 PGAS_read(ps_remote->address),
-								 try_subscribe(sender, ps_remote->address));
+					     (tm_addr_t)ps_remote->address, 
+					     PGAS_read(ps_remote->address),
+					     try_subscribe(sender, ps_remote->address));
 #else
 			sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE, 
-								 (tm_addr_t)ps_remote->address, 
-								 NULL,
-								 //try_subscribe(sender, ps_remote->address));
-                         NO_CONFLICT
-                         );
+					     (tm_addr_t)ps_remote->address, 
+					     NULL,
+					     try_subscribe(sender, ps_remote->address));
+
 #endif
 			break;
 		case PS_PUBLISH:
@@ -439,8 +439,8 @@ srand_core()
 void 
 udelay(unsigned int micros)
 {
-   double __ts_end = theTime() + ((double) micros / 1000000);
-   while (theTime() < __ts_end);
+   double __ts_end = wtime() + ((double) micros / 1000000);
+   while (wtime() < __ts_end);
    //usleep(micros);
 }
 

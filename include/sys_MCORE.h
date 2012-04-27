@@ -31,13 +31,6 @@ NODE_ID(void)
 }
 
 
-INLINED double
-theTime(){
-   struct timeval t;
-   gettimeofday(&t,NULL);
-   return (double)t.tv_sec + ((double)t.tv_usec)/1000000.0;
-}
-
 INLINED nodeid_t
 TOTAL_NODES(void)
 {
