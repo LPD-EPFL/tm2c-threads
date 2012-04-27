@@ -10,6 +10,7 @@
 #include "common.h"
 #include "messaging.h"
 #include "mcore_malloc.h"
+#include "fakemem.h"
 
 EXINLINED void app_barrier();
 EXINLINED void global_barrier();
@@ -87,8 +88,9 @@ INLINED tm_intern_addr_t
 to_intern_addr(tm_addr_t addr)
 {
 #ifdef PGAS
+  return fakemem_offset((void*) addr);
 #else
-	return (tm_intern_addr_t)addr;
+  return (tm_intern_addr_t)addr;
 #endif
 }
 
