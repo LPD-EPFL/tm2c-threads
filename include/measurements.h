@@ -7,6 +7,8 @@
 extern "C" {
 #endif
 
+#define DO_TIMINGS_TICKS
+
 #ifndef DO_TIMINGS
 #undef DO_TIMINGS_TICKS
 #undef DO_TIMINGS_STD
@@ -39,8 +41,13 @@ extern "C" {
 #include <stdio.h>
 #include <math.h>
 
+#ifdef PLATFORM_MCORE
+#define REF_SPEED_GHZ           2.1
+#elif defined(PLATFORM_iRCCE)
 #define REF_SPEED_GHZ           0.8
-
+#else
+#error "Need to set REF_SPEED_GHZ for the platform"
+#endif
     // =============================== GETTIMEOFDAY ================================ {{{
 #ifdef DO_TIMINGS_STD
 #define ENTRY_TIMES_SIZE 8
@@ -98,12 +105,21 @@ do {\
 #include <stdint.h>
     typedef uint64_t ticks;
 
-    EXINLINED ticks getticks(void) {
-        ticks ret;
+#if defined(__i386__)
+  EXINLINED ticks getticks(void) {
+    ticks ret;
 
-        __asm__ __volatile__("rdtsc" : "=A" (ret));
-        return ret;
-    }
+    __asm__ __volatile__("rdtsc" : "=A" (ret));
+    return ret;
+  }
+#elif defined(__x86_64__)
+  EXINLINED ticks getticks(void)
+  {
+    unsigned hi, lo;
+    __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
+    return ( (unsigned long long)lo)|( ((unsigned long long)hi)<<32 );
+  }
+#endif
 
 #define ENTRY_TIMES_SIZE 16
 
@@ -135,7 +151,7 @@ do {									\
   do {									\
     if (entry_time_valid[position]) {					\
       entry_time_valid[position] = M_FALSE;				\
-      ticks exit_time = getticks() - 16;				\
+      ticks exit_time = getticks();					\
       total_sum_ticks[position] += (exit_time - entry_time[position]);	\
       total_samples[position]++;					\
 }} while (0);
