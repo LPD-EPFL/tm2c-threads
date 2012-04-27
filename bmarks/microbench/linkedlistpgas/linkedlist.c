@@ -95,9 +95,9 @@ int set_size(intset_t *set) {
   set contains --------------------------------------------------
 
  */
-static int set_seq_contains(intset_t *set, int val);
-static int set_early_contains(intset_t *set, int val);
-static int set_readval_contains(intset_t *set, int val);
+//static int set_seq_contains(intset_t *set, int val);
+//static int set_early_contains(intset_t *set, int val);
+//static int set_readval_contains(intset_t *set, int val);
 
 int set_contains(intset_t *set, val_t val, int transactional) {
     int result;
@@ -238,8 +238,9 @@ static int set_readval_contains(intset_t *set, val_t val) {
  */
 
 static int set_seq_add(intset_t *set, val_t val);
-static int set_early_add(intset_t *set, val_t val);
+/*static int set_early_add(intset_t *set, val_t val);
 static int set_readval_add(intset_t *set, val_t val);
+*/
 
 int set_add(intset_t *set, val_t val, int transactional) {
     int result = 0;

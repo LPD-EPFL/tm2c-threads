@@ -50,9 +50,10 @@
 
 #define TRANSACTIONAL                   d->unit_tx
 
-//typedef intptr_t val_t;
-typedef unsigned long long int val_t;
-typedef unsigned long long int nxt_t;
+//typedef unsigned long long int val_t;
+typedef intptr_t val_t;
+//typedef unsigned long long int nxt_t;
+typedef size_t nxt_t;
 
 #define VAL_MIN                         INT_MIN
 #define VAL_MAX                         INT_MAX
