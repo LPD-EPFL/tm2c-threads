@@ -345,7 +345,7 @@ TASKMAIN(int argc, char **argv) {
         FLUSH
     }
 
-#ifdef STM
+#if defined(STM) && defined(PLATFORM_iRCCE)
     int off, id2use;
     if (ID < 6) {
         off = 0;
@@ -384,8 +384,7 @@ TASKMAIN(int argc, char **argv) {
     PRINT("shmem from %d MB", (off * 16) + id2use / 2);
 
 #else
-    shmem_init(1024 * 100 * NODE_ID() * sizeof (node_t) + ((initial + 2) * sizeof (node_t)));
-
+    shmem_init(1024 * 100 * (NODE_ID()-1) * sizeof (node_t) + ((initial + 2) * sizeof (node_t)));
 #endif
 
     /* Access set from all threads */
