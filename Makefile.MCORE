@@ -5,7 +5,7 @@ PLATFORM_DEFINES = -DPLATFORM_MCORE \
                    -UPGAS \
                    -DREAD_BUF_OFF \
                    -DLIBTASK \
-                   -DBACKOFF \
+                   -UBACKOFF \
                    -UFINISH_ALL_PARALLEL
 
 HAS_TASKLIB = no
