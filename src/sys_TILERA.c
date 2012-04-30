@@ -217,14 +217,15 @@ sys_sendcmd(void* data, size_t len, nodeid_t to) {
 
     if (cmd->type != PS_REMOVE_NODE) {
 #ifdef PGAS
-        if (cmd->type == PS_WRITE_INC || cmd->type == PS_PUBLISH) {
+        if (cmd->type == PS_WRITE_INC || cmd->type == PS_PUBLISH || cmd->type == PS_STORE_NONTX) {
             tmc_udn_send_4(udn_header[to], UDN0_DEMUX_TAG, ID, cmd->type, cmd->address, cmd->write_value);
             return 1;
         }
 #endif
+	// not pgas or not a WRITE cmd
         tmc_udn_send_3(udn_header[to], UDN0_DEMUX_TAG, ID, cmd->type, cmd->address);
     }
-    else {
+    else { /* PS_REMOVE_NODE */
 #ifndef PGAS
         tmc_udn_send_2(udn_header[to], UDN0_DEMUX_TAG, ID, cmd->type);
 #else   //PGAS
@@ -330,7 +331,7 @@ void dsl_communication() {
                 //XXX: fix for pgas
                 int write_val = tmc_udn0_receive();
                 if (conflict == NO_CONFLICT) {
-                    PRINT("WL from %d for %d val %d", sender, address, write_val);
+		  //                    PRINT("WL from %d for %d val %d", sender, address, write_val);
                     write_set_pgas_insert(PGAS_write_sets[sender],
                             write_val,
                             address);
@@ -369,14 +370,15 @@ void dsl_communication() {
             }
             case PS_LOAD_NONTX:
                 address = tmc_udn0_receive();
-                PRINT("PGAS_READ for %d", address);
-                tmc_udn_send_1(udn_header[sender], UDN0_DEMUX_TAG, *(int *) PGAS_read(address));
+		//                PRINT("PGAS_READ for %d", address);
+                tmc_udn_send_2(udn_header[sender], UDN0_DEMUX_TAG, NO_CONFLICT, *(int *) PGAS_read(address));
                 break;
             case PS_STORE_NONTX:
                 address = tmc_udn0_receive();
                 unsigned int write_val = tmc_udn0_receive();
-                PRINT("PGAS_WRITE for %d, val: %d", address, write_val);
+		//                PRINT("PGAS_WRITE for %d, val: %d", address, write_val);
                 PGAS_write(address, write_val);
+		break;
 #endif
             case PS_REMOVE_NODE:
             {
