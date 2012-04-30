@@ -64,40 +64,40 @@ extern "C" {
 
     if (cmd->type != PS_REMOVE_NODE) {
 #ifdef PGAS
-      if (cmd->type == PS_WRITE_INC || cmd->type == PS_PUBLISH) {
-	tmc_udn_send_4(udn_header[to], UDN0_DEMUX_TAG, ID, cmd->type, cmd->address, cmd->write_value);
-	return 1;
-      }
+        if (cmd->type == PS_WRITE_INC || cmd->type == PS_PUBLISH || cmd->type == PS_STORE_NONTX) {
+            tmc_udn_send_4(udn_header[to], UDN0_DEMUX_TAG, ID, cmd->type, cmd->address, cmd->write_value);
+            return 1;
+        }
 #endif
-      tmc_udn_send_3(udn_header[to], UDN0_DEMUX_TAG, ID, cmd->type, cmd->address);
+	// not pgas or not a WRITE cmd
+        tmc_udn_send_3(udn_header[to], UDN0_DEMUX_TAG, ID, cmd->type, cmd->address);
     }
-    else {
+    else { /* PS_REMOVE_NODE */
 #ifndef PGAS
-      tmc_udn_send_2(udn_header[to], UDN0_DEMUX_TAG, ID, cmd->type);
+        tmc_udn_send_2(udn_header[to], UDN0_DEMUX_TAG, ID, cmd->type);
 #else   //PGAS
-      tmc_udn_send_3(udn_header[to], UDN0_DEMUX_TAG, ID, cmd->type, cmd->response);
+        tmc_udn_send_3(udn_header[to], UDN0_DEMUX_TAG, ID, cmd->type, cmd->response);
 #endif
     }
-	
   }
 
   INLINED int
   sys_sendcmd_all(void* data, size_t len)
   {
-    PS_COMMAND *cmd = (PS_COMMAND *) data;
+      PS_COMMAND *cmd = (PS_COMMAND *) data;
 
     union {
-      int from[2];
-      double to;
+        int from[2];
+        double to;
     } convert;
     convert.to = cmd->tx_duration;
 
     int target;
     for (target = 0; target < NUM_DSL_NODES; target++) {
-      tmc_udn_send_10(udn_header[dsl_nodes[target]], UDN0_DEMUX_TAG, ID, PS_STATS,
-		      cmd->aborts, cmd->aborts_raw, cmd->aborts_war,
-		      cmd->aborts_waw, cmd->commits, convert.from[0],
-		      convert.from[1], cmd->max_retries);
+        tmc_udn_send_10(udn_header[dsl_nodes[target]], UDN0_DEMUX_TAG, ID, PS_STATS,
+                cmd->aborts, cmd->aborts_raw, cmd->aborts_war,
+                cmd->aborts_waw, cmd->commits, convert.from[0],
+                convert.from[1], cmd->max_retries);
     }
     return 1;
   }
