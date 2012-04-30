@@ -61,7 +61,6 @@ void dsl_init(void) {
 
     PRINT("[DSL NODE] Initialized pub-sub..");
 
-    BARRIERW
     dsl_communication();
 
 	sys_dsl_term();

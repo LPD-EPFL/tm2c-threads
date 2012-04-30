@@ -27,7 +27,7 @@ MCORE_shmalloc_init(size_t size)
    //create the shared space which will be managed by the allocator
 
    char keyF[MAX_FILENAME_LENGTH];
-   sprintf(keyF,"/mcore_mem");
+   sprintf(keyF,"/mcore_mem2");
 
    int shmfd = shm_open(keyF, O_CREAT | O_EXCL | O_RDWR, S_IRWXU | S_IRWXG);
    if (shmfd<0)

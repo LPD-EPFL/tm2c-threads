@@ -43,7 +43,7 @@ intset_t *set_new() {
 
     if ((set = (intset_t *) malloc(sizeof (intset_t))) == NULL) {
         perror("malloc");
-        EXIT(1);
+       EXIT(1);
     }
     max = new_node(VAL_MAX, 0, 0);
     min = new_node(VAL_MIN, (nxt_t) max, 0);
@@ -95,9 +95,9 @@ int set_size(intset_t *set) {
   set contains --------------------------------------------------
 
  */
-static int set_seq_contains(intset_t *set, int val);
-static int set_early_contains(intset_t *set, int val);
-static int set_readval_contains(intset_t *set, int val);
+//static int set_seq_contains(intset_t *set, int val);
+//static int set_early_contains(intset_t *set, int val);
+//static int set_readval_contains(intset_t *set, int val);
 
 int set_contains(intset_t *set, val_t val, int transactional) {
     int result;
@@ -238,8 +238,9 @@ static int set_readval_contains(intset_t *set, val_t val) {
  */
 
 static int set_seq_add(intset_t *set, val_t val);
-static int set_early_add(intset_t *set, val_t val);
+/*static int set_early_add(intset_t *set, val_t val);
 static int set_readval_add(intset_t *set, val_t val);
+*/
 
 int set_add(intset_t *set, val_t val, int transactional) {
     int result = 0;
@@ -267,7 +268,7 @@ int set_add(intset_t *set, val_t val, int transactional) {
 
     val_t v;
     TX_START
-      nxt_t to_store = set->head + sizeof(int);
+      nxt_t to_store = set->head + sizeof(sys_t_vcharp);
     LOAD_NODE_NXT(prev, set->head);
     LOAD_NODE(next, prev.next);
 
@@ -277,7 +278,7 @@ int set_add(intset_t *set, val_t val, int transactional) {
     }
 
 
-    to_store = prev.next + sizeof(int);
+    to_store = prev.next + sizeof(sys_t_vcharp);
     prev.next = next.next;
     TX_LOAD_NODE(next, prev.next);
 
@@ -287,7 +288,7 @@ int set_add(intset_t *set, val_t val, int transactional) {
 	break;
       }
 
-      to_store = prev.next + sizeof(int);
+      to_store = prev.next + sizeof(sys_t_vcharp);
       prev.next = next.next;
       LOAD_NODE(next, prev.next);
     }
@@ -312,12 +313,12 @@ static int set_seq_add(intset_t *set, val_t val) {
 #ifdef LOCKS
     global_lock();
 #endif
-    nxt_t to_store = set->head + sizeof(int);
+    nxt_t to_store = set->head + sizeof(sys_t_vcharp);
     LOAD_NODE_NXT(prev, set->head);
     LOAD_NODE(next, prev.next);
     int iii = 0;
     while (next.val < val) {
-      to_store = prev.next + sizeof(int);
+      to_store = prev.next + sizeof(sys_t_vcharp);
         prev.next = next.next;
         LOAD_NODE(next, prev.next);
 	
@@ -345,7 +346,7 @@ int set_early_add(intset_t *set, int val) {
 #endif
     val_t v;
     TX_START
-    nxt_t to_store = set->head + sizeof(int);
+    nxt_t to_store = set->head + sizeof(sys_t_vcharp);
     LOAD_NODE_NXT(prev, set->head);
     LOAD_NODE(next, prev.next);
 
@@ -358,7 +359,7 @@ int set_early_add(intset_t *set, int val) {
     pprls = prev;
 #endif
 
-    to_store = prev.next + sizeof(int);
+    to_store = prev.next + sizeof(sys_t_vcharp);
     prev.next = next.next;
     TX_LOAD_NODE(next, prev.next);
 
@@ -371,7 +372,7 @@ int set_early_add(intset_t *set, int val) {
 	break;
       }
 
-      to_store = prev.next + sizeof(int);
+      to_store = prev.next + sizeof(sys_t_vcharp);
       prev.next = next.next;
       LOAD_NODE(next, prev.next);
 #ifdef EARLY_RELEASE
@@ -490,7 +491,7 @@ int set_remove(intset_t *set, val_t val, int transactional) {
     val_t v;
 
     TX_START
-      nxt_t to_store = set->head + sizeof(int);
+      nxt_t to_store = set->head + sizeof(sys_t_vcharp);
     TX_LOAD_NODE_NXT(prev, set->head);
     TX_LOAD_NODE(next, prev.next);
 
@@ -499,7 +500,7 @@ int set_remove(intset_t *set, val_t val, int transactional) {
       goto done;
     }
 
-    to_store = prev.next + sizeof(int);
+    to_store = prev.next + sizeof(sys_t_vcharp);
     prev.next = next.next;
     TX_LOAD_NODE(next, prev.next);
 
@@ -509,7 +510,7 @@ int set_remove(intset_t *set, val_t val, int transactional) {
 	break;
       }
 
-      to_store = prev.next + sizeof(int);
+      to_store = prev.next + sizeof(sys_t_vcharp);
       prev.next = next.next;
       LOAD_NODE(next, prev.next);
     }
@@ -534,11 +535,11 @@ static int set_seq_remove(intset_t *set, val_t val) {
 #ifdef LOCKS
   global_lock();
 #endif
-  nxt_t to_store = set->head + sizeof(int);
+  nxt_t to_store = set->head + sizeof(sys_t_vcharp);
   LOAD_NODE_NXT(prev, set->head);
   LOAD_NODE(next, prev.next);
   while (next.val < val) {
-    to_store = prev.next + sizeof(int);
+    to_store = prev.next + sizeof(sys_t_vcharp);
     prev.next = next.next;
     LOAD_NODE(next, prev.next);
   }
@@ -565,7 +566,7 @@ static int set_early_remove(intset_t *set, val_t val) {
   val_t v;
 
   TX_START
-    nxt_t to_store = set->head + sizeof(int);
+    nxt_t to_store = set->head + sizeof(sys_t_vcharp);
   TX_LOAD_NODE_NXT(prev, set->head);
   TX_LOAD_NODE(next, prev.next);
 
@@ -577,7 +578,7 @@ static int set_early_remove(intset_t *set, val_t val) {
 #ifdef EARLY_RELEASE
   pprls = prev;
 #endif
-  to_store = prev.next + sizeof(int);
+  to_store = prev.next + sizeof(sys_t_vcharp);
   prev.next = next.next;
   TX_LOAD_NODE(next, prev.next);
 
@@ -591,7 +592,7 @@ static int set_early_remove(intset_t *set, val_t val) {
       break;
     }
 
-    to_store = prev.next + sizeof(int);
+    to_store = prev.next + sizeof(sys_t_vcharp);
     prev.next = next.next;
     LOAD_NODE(next, prev.next);
 #ifdef EARLY_RELEASE

@@ -85,7 +85,7 @@ typedef struct bank {
 } bank_t;
 
 inline int getlocknum(int account_num) {
-    return (account_num % RCCE_num_ues());
+    return (account_num % TOTAL_NODES());
 }
 
 void lock_bank() {
@@ -190,15 +190,15 @@ bank_t * test(void *data, double duration, int nb_accounts) {
     bank_t * bank;
 
 
-    /* Initialize seed (use randRCCE_num_ues(); as rand is poor) */
+    /* Initialize seed (use randTOTAL_NODES(); as rand is poor) */
     srand_core();
 
     rand_max = nb_accounts;
     rand_min = 0;
 
-    bank_t *btmp = (bank_t *) sys_shmalloc(RCCE_num_ues() * sizeof (bank_t));
+    bank_t *btmp = (bank_t *) sys_shmalloc(TOTAL_NODES() * sizeof (bank_t));
     //bank = (bank_t *) sys_shmalloc(sizeof (bank_t));
-    bank = &btmp[RCCE_ue()];
+    bank = &btmp[NODE_ID()];
     //bank = (bank_t *) malloc(sizeof (bank_t));
     if (bank == NULL) {
         PRINT("malloc bank");
@@ -333,7 +333,7 @@ TASKMAIN(int argc, char **argv) {
 
     double duration = DEFAULT_DURATION;
     int nb_accounts = DEFAULT_NB_ACCOUNTS;
-    int nb_app_cores = RCCE_num_ues();
+    int nb_app_cores = TOTAL_NODES();
     int read_all = DEFAULT_READ_ALL;
     int read_cores = DEFAULT_READ_THREADS;
     int write_all = DEFAULT_WRITE_ALL;
@@ -449,7 +449,7 @@ TASKMAIN(int argc, char **argv) {
 
 
 
-    data->id = RCCE_ue();
+    data->id = NODE_ID();
     data->read_all = read_all;
     data->read_cores = read_cores;
     data->write_all = write_all;
@@ -467,7 +467,7 @@ TASKMAIN(int argc, char **argv) {
 
     BARRIERW
 
-    printf("---Core %d\n", RCCE_ue());
+    printf("---Core %d\n", NODE_ID());
     printf("  #transfer   : %lu\n", data->nb_transfer);
     printf("  #read-all   : %lu\n", data->nb_read_all);
     printf("  #write-all  : %lu\n", data->nb_write_all);

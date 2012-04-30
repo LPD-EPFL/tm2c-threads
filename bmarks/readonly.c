@@ -171,7 +171,7 @@ void run_seq(int* memory) {
         TX_START
 
 #ifdef READ_DURATION
-                double read_ts_start = RCCE_wtime();
+                double read_ts_start = wtime();
 #endif
 
         for (i = 0; i < reads; i++) {
@@ -179,7 +179,7 @@ void run_seq(int* memory) {
         }
 
 #ifdef READ_DURATION
-        duration_reads += RCCE_wtime() - read_ts_start;
+        duration_reads += wtime() - read_ts_start;
 #endif
 
         TX_COMMIT
@@ -197,7 +197,7 @@ void run_rand(int* memory) {
         TX_START
 
 #ifdef READ_DURATION
-                double read_ts_start = RCCE_wtime();
+                double read_ts_start = wtime();
 #endif
 
         for (i = 0; i < reads; i++) {
@@ -205,7 +205,7 @@ void run_rand(int* memory) {
         }
 
 #ifdef READ_DURATION
-        duration_reads += RCCE_wtime() - read_ts_start;
+        duration_reads += wtime() - read_ts_start;
 #endif
 
         TX_COMMIT
@@ -223,7 +223,7 @@ void run_uniq(int* memory) {
         TX_START
 
 #ifdef READ_DURATION
-                double read_ts_start = RCCE_wtime();
+                double read_ts_start = wtime();
 #endif
 
         int read = ID;
@@ -234,7 +234,7 @@ void run_uniq(int* memory) {
         }
 
 #ifdef READ_DURATION
-        duration_reads += RCCE_wtime() - read_ts_start;
+        duration_reads += wtime() - read_ts_start;
 #endif
 
         TX_COMMIT
@@ -247,12 +247,12 @@ void run_check_granularity() {
     int i = 10;
     while (i--) {
         TX_START
-        if (RCCE_ue() == 1) {
+        if (NODE_ID() == 1) {
             *cp = 'c';
             TX_LOAD(cp);
             TX_STORE(cp, cp, TYPE_CHAR);
         }
-        else if (RCCE_ue() == 3) {
+        else if (NODE_ID() == 3) {
             cp[1] = 'd';
             TX_LOAD(cp + 1);
             TX_STORE(cp + 1, cp + 1, TYPE_CHAR);

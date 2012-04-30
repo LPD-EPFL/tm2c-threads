@@ -111,9 +111,9 @@ int total(bank_t *bank, int transactional) {
     if (!transactional) {
         total = 0;
         for (i = 0; i < bank->size; i++) {
-            int bal = NONTX_LOAD(&bank->accounts[i].balance);
-            total += bal;
-	    //            PRINT("ld acc %03d, val: %d", i, bal);
+	  int bal = NONTX_LOAD(&bank->accounts[i].balance);
+	  total += bal;
+	  //            PRINT("ld acc %03d, val: %d", i, bal);
         }
     }
     else {
@@ -192,6 +192,7 @@ bank_t * test(void *data, double duration, int nb_accounts) {
 
     bank->size = nb_accounts;
     bank->accounts = (account_t *) sys_shmalloc(nb_accounts * sizeof (account_t));
+    PRINT("allocated %p for bank->accounts", bank->accounts); 
 
     ONCE
     {
@@ -405,7 +406,7 @@ TASKMAIN(int argc, char **argv) {
 
     BARRIER
 
-    data->id = (ID - 1) / 2;
+      data->id = (NODE_ID() - 1) / 2;
 
     data->read_all = read_all;
     data->read_cores = read_cores;
@@ -420,7 +421,7 @@ TASKMAIN(int argc, char **argv) {
 
     bank = test(data, duration, nb_accounts);
 
-    printf("---Core %d\n", RCCE_ue());
+    printf("---Core %d\n", NODE_ID());
     printf("  #transfer   : %lu\n", data->nb_transfer);
     printf("  #read-all   : %lu\n", data->nb_read_all);
     printf("  #write-all  : %lu\n", data->nb_write_all);

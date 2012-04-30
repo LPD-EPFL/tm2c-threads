@@ -51,7 +51,7 @@
 #define TRANSACTIONAL                   d->unit_tx
 
 typedef intptr_t val_t;
-typedef unsigned int nxt_t;
+typedef size_t nxt_t;
 
 #define VAL_MIN                         INT_MIN
 #define VAL_MAX                         INT_MAX
@@ -83,15 +83,15 @@ extern nxt_t offs__;
 #define OF(node)                        N2O(SET, (node))
 #define LOAD_NODE(nd, addr)                     \
   nd.val = (val_t) NONTX_LOAD((tm_addr_t)addr);		\
-  nd.next = (nxt_t) NONTX_LOAD((tm_addr_t)((int *)addr + 1))
+  nd.next = (nxt_t) NONTX_LOAD((tm_addr_t)((size_t)addr + sizeof(sys_t_vcharp)))
 #define LOAD_NODE_NXT(nd, addr)                 \
-  nd.next = (nxt_t) NONTX_LOAD((tm_addr_t)((int *)addr + 1))
+  nd.next = (nxt_t) NONTX_LOAD((tm_addr_t)((size_t)addr + sizeof(sys_t_vcharp)))
 
 #define TX_LOAD_NODE(nd, addr)                  \
   nd.val = (val_t) TX_LOAD((tm_addr_t)addr);		\
-  nd.next = (nxt_t) TX_LOAD((tm_addr_t)((int *)addr + 1))
+  nd.next = (nxt_t) TX_LOAD((tm_addr_t)((size_t)addr + sizeof(sys_t_vcharp)))
 #define TX_LOAD_NODE_NXT(nd, addr)              \
-  nd.next = (nxt_t) TX_LOAD((tm_addr_t)((int *)addr + 1))
+  nd.next = (nxt_t) TX_LOAD((tm_addr_t)((size_t)addr + sizeof(sys_t_vcharp)))
 
 void *shmem_init(size_t offset);
 

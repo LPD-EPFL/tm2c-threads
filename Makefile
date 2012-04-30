@@ -1,10 +1,10 @@
 # Main Makefile for DSTM
 
 # For platform, choose one out of: iRCCE,MCORE,CLUSTER,TILERA
-PLATFORM = iRCCE
+PLATFORM = MCORE
 # USE_HASHTABLE_KHASH:  khash.h from <http://www.freewebs.com/attractivechaos/khash.h>
 # USE_HASHTABLE_UTHASH: uthash.h from <http://uthash.sourceforge.net/>
-# USE_HASHTABLE_SDD:    Sunrise Data Dictionary <>
+# USE_HASHTABLE_SDD:   Sunrise Data Dictionary <>
 # USE_HASHTABLE_VT:     hashtable by Vasilis
 HASHTABLE = USE_HASHTABLE_VT
 .PHONY: all 
@@ -31,9 +31,16 @@ DEBUG_FLAGS := #-O0 -g -ggdb #-DDEBUG
 ARCHIVE_SRCS_PURE:= pubSubTM.c tm.c log.c dslock.c \
 			measurements.c pgas.c config.c fakemem.c
 
+# Include the platform specific Makefile
+# This file has the modifications related to the current platform
+-include Makefile.$(PLATFORM)
+
 ## Apps ##
 APPS_DIR := apps
-APPS = #tm1 tm2 tm3 tm4 tm5 tm6 tm7 tm8 tm9 tm10
+# add the non PGAS applications only if PGAS is not defined
+ifeq (,$(findstring UPGAS,$(PLATFORM_DEFINES)))
+APPS = tm1 tm2 tm3 tm4 tm5 tm6 tm7 tm8 tm9 tm10
+endif
 
 # apps that need tasklib in order to compile
 APPS_TASKLIB = ps_hashtable \
@@ -44,7 +51,6 @@ APPS_NON_WORKING = \
 				   RCCE_locks \
 				   ps_hashtable_ex \
 				   simple \
-				   recv_all \
 				   tasklib tasklib_test \
 				   recv_all recv_all_p recv_all_i \
 				   pthread \
@@ -64,22 +70,22 @@ MR := mapreduce
 LLFILES = linkedlist test #harris
 HTFILES = hashtable intset test
 
-#BMARKS = bank bankseq \
-		 readonly
+# add the non PGAS applications only if PGAS is not defined
+ifneq (,$(findstring UPGAS,$(PLATFORM_DEFINES)))
+BMARKS = bank #bankseq \
+	#	 readonly
 
 # this is a list of programs that do not work, for whatever reason
 BMARKS_NON_WORKING = mtest
 
 # all bmarks that need to be built
-#ALL_BMARKS = $(BMARKS) mbll mbht mr
+ALL_BMARKS = $(BMARKS) mbll mbht mr
+endif 
 
 ## The rest of the Makefile ##
 
-# Include the platform specific Makefile
-# This file has the modifications related to the current platform
--include Makefile.$(PLATFORM)
 
-ifneq (,$(findstring PGAS,$(PLATFORM_DEFINES)))
+ifneq (,$(findstring DPGAS,$(PLATFORM_DEFINES)))
 ALL_BMARKS += bankpgas mbllpgas mbhtpgas
 endif
 
@@ -196,7 +202,7 @@ ALL_BMARK_FILES = $(BMARKS) \
 				  $(addprefix $(MB_HT)/,$(HTFILES))
 
 # if there is no PGAS
-ifneq (,$(findstring PGAS,$(CFLAGS)))
+ifneq (,$(findstring DPGAS,$(CFLAGS)))
 ALL_BMARK_FILES += \
 					$(addprefix $(MB_LLPGAS)/,$(LLFILES)) \
 					$(addprefix $(MB_HTPGAS)/,$(HTFILES))

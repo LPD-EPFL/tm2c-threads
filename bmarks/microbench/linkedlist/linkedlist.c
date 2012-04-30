@@ -13,7 +13,7 @@
 nxt_t offs__;
 
 void *shmem_init(size_t offset) {
-    return (void *) (sys_shmalloc(offset) + offset);
+  return (void *) (sys_shmalloc(offset) + offset);
 }
 
 node_t *new_node(val_t val, nxt_t next, int transactional) {
@@ -92,7 +92,8 @@ int set_contains(intset_t *set, val_t val, int transactional) {
     int result;
 
 #ifdef DEBUG
-    printf("++> set_contains(%d)\n", (int) val);
+    printf("[%02d]++> set_contains(%d)\n", NODE_ID(), (int) val);
+    printf("before: "); set_print(set);
     FLUSH;
 #endif
 
@@ -212,7 +213,8 @@ int set_add(intset_t *set, val_t val, int transactional) {
     int result = 0;
 
 #ifdef DEBUG
-    printf("++> set_add(%d)\n", (int) val);
+    printf("[%02d]++> set_add(%d)\n", NODE_ID(), (int) val);
+    printf("before: "); set_print(set);
     FLUSH;
 #endif
 
@@ -269,6 +271,13 @@ done:
         TX_STORE(&prev->next, &nxt, TYPE_UINT);
     }
     TX_COMMIT
+
+#ifdef DEBUG
+    printf("[%02d]--> set_add(%d)\n", NODE_ID(), (int) val);
+    printf("after: "); set_print(set);
+    FLUSH;
+#endif
+
 
 #else
     node_t *prev, *next, *validate, *pvalidate;
@@ -336,7 +345,8 @@ int set_remove(intset_t *set, val_t val, int transactional) {
     int result = 0;
 
 #ifdef DEBUG
-    printf("++> set_remove(%d)\n", (int) val);
+    printf("[%02d]++> set_remove(%d)\n", NODE_ID(), (int) val);
+    printf("before: "); set_print(set);
     FLUSH;
 #endif
 
@@ -408,10 +418,17 @@ done:
     if (result) {
         nxt_t *nxt = (nxt_t *) TX_LOAD(&next->next);
         TX_STORE(&prev->next, nxt, TYPE_UINT);
-        TX_SHFREE(next);
+	TX_SHFREE(next);
         PRINTD("Freed node   %5d. Value: %d", OF(next), next->val);
     }
     TX_COMMIT
+
+#ifdef DEBUG
+    printf("[%02d]--> set_remove(%d)\n", NODE_ID(), (int) val);
+    printf("after: "); set_print(set);
+    FLUSH;
+#endif
+
 #else
     node_t *prev, *next, *validate, *pvalidate;
     nxt_t nextoffs, validateoffs, pvalidateoffs;

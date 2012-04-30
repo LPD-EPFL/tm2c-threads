@@ -22,13 +22,12 @@ tmc_sync_barrier_t *barrier_apps, *barrier_all; //BARRIERS
 
 void
 sys_init_system(int* argc, char** argv[]) {
+  char *executable_name = (*argv)[0];
+  NUM_UES = atoi(*(++(*argv)));
+  printf("num ues: %d --\n", NUM_UES);
 
-    char *executable_name = (*argv)[0];
-    NUM_UES = atoi(*(++(*argv)));
-    printf("num ues: %d --\n", NUM_UES);
-
-    (*argv)[0] = executable_name;
-    (*argc)--;
+  (*argv)[0] = executable_name;
+  (*argc)--;
 
 
 #ifndef PGAS    /*DO NOT allocate the shared memory if you have PGAS mem model*/
@@ -153,16 +152,6 @@ sys_shfree(sys_t_vcharp ptr) {
 #endif
 }
 
-nodeid_t
-NODE_ID(void) {
-    return (nodeid_t) ID;
-}
-
-nodeid_t
-TOTAL_NODES(void) {
-    return (nodeid_t) NUM_UES;
-}
-
 static CONFLICT_TYPE ps_response;
 static PS_COMMAND *psc;
 
@@ -172,7 +161,7 @@ static PS_COMMAND *psc;
  * Used for offsets, set in tm_init
  * Not used with PGAS, as there we rely on fakemem_malloc
  */
-static tm_addr_t shmem_start_address;
+tm_addr_t shmem_start_address;
 #endif
 
 void
@@ -209,58 +198,6 @@ sys_dsl_term(void) {
 void
 sys_ps_term(void) {
     // noop
-}
-
-int
-sys_sendcmd(void* data, size_t len, nodeid_t to) {
-    PS_COMMAND *cmd = (PS_COMMAND *) data;
-
-    if (cmd->type != PS_REMOVE_NODE) {
-#ifdef PGAS
-        if (cmd->type == PS_WRITE_INC || cmd->type == PS_PUBLISH || cmd->type == PS_STORE_NONTX) {
-            tmc_udn_send_4(udn_header[to], UDN0_DEMUX_TAG, ID, cmd->type, cmd->address, cmd->write_value);
-            return 1;
-        }
-#endif
-	// not pgas or not a WRITE cmd
-        tmc_udn_send_3(udn_header[to], UDN0_DEMUX_TAG, ID, cmd->type, cmd->address);
-    }
-    else { /* PS_REMOVE_NODE */
-#ifndef PGAS
-        tmc_udn_send_2(udn_header[to], UDN0_DEMUX_TAG, ID, cmd->type);
-#else   //PGAS
-        tmc_udn_send_3(udn_header[to], UDN0_DEMUX_TAG, ID, cmd->type, cmd->response);
-#endif
-    }
-}
-
-int
-sys_sendcmd_all(void* data, size_t len) {
-    PS_COMMAND *cmd = (PS_COMMAND *) data;
-
-    union {
-        int from[2];
-        double to;
-    } convert;
-    convert.to = cmd->tx_duration;
-
-    int target;
-    for (target = 0; target < NUM_DSL_NODES; target++) {
-        tmc_udn_send_10(udn_header[dsl_nodes[target]], UDN0_DEMUX_TAG, ID, PS_STATS,
-                cmd->aborts, cmd->aborts_raw, cmd->aborts_war,
-                cmd->aborts_waw, cmd->commits, convert.from[0],
-                convert.from[1], cmd->max_retries);
-    }
-    return 1;
-}
-
-int
-sys_recvcmd(void* data, size_t len, nodeid_t from) {
-    PS_COMMAND *cmd = (PS_COMMAND *) data;
-    cmd->response = tmc_udn0_receive();
-#ifdef PGAS
-    cmd->value = tmc_udn0_receive();
-#endif
 }
 
 // If value == NULL, we just return the address.
@@ -444,44 +381,24 @@ void dsl_communication() {
     }
 }
 
-tm_intern_addr_t
-to_intern_addr(tm_addr_t addr) {
-#ifdef PGAS
-    return fakemem_offset((void*) addr);
-#else
-    return ((tm_intern_addr_t) ((uintptr_t) addr - (uintptr_t) shmem_start_address));
-#endif
-}
 
-tm_addr_t
-to_addr(tm_intern_addr_t i_addr) {
-#ifdef PGAS
-    return fakemem_addr_from_offset(i_addr);
-#else
-    return (tm_addr_t) ((uintptr_t) shmem_start_address + i_addr);
-#endif
-}
 
 /*
  * Seeding the rand()
  */
 void
 srand_core() {
-    double timed_ = RCCE_wtime();
+    double timed_ = wtime();
     unsigned int timeprfx_ = (unsigned int) timed_;
     unsigned int time_ = (unsigned int) ((timed_ - timeprfx_) * 1000000);
     srand(time_ + (13 * (ID + 1)));
 }
 
-double
-wtime(void) {
-    return RCCE_wtime();
-}
 
 void
 udelay(unsigned int micros) {
-    double __ts_end = RCCE_wtime() + ((double) micros / 1000000);
-    while (RCCE_wtime() < __ts_end);
+    double __ts_end = wtime() + ((double) micros / 1000000);
+    while (wtime() < __ts_end);
 }
 
 /*

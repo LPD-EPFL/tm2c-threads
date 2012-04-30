@@ -334,7 +334,7 @@ TASKMAIN(int argc, char **argv) {
     double duration = DEFAULT_DURATION;
     int initial = DEFAULT_INITIAL;
 
-    int nb_app_cores = RCCE_num_ues();
+    int nb_app_cores = TOTAL_NODES();
     long range = DEFAULT_RANGE;
     int update = DEFAULT_UPDATE;
     int load_factor = DEFAULT_LOAD;
@@ -448,7 +448,7 @@ TASKMAIN(int argc, char **argv) {
 
     if (seed == 0) {
         srand_core();
-        seed = rand_range((RCCE_ue() + 17) * 123);
+        seed = rand_range((NODE_ID() + 17) * 123);
         srand(seed);
     }
     else
@@ -574,7 +574,7 @@ TASKMAIN(int argc, char **argv) {
     shmem_init(((off * 16) * 1024 * 1024) + ((id2use) * 1024 * 1024));
     PRINT("shmem from %d MB", (off * 16) + id2use);
 #else
-            shmem_init(1024 * 100 * RCCE_ue() * sizeof (node_t) + (initial + 2) * sizeof (node_t));
+            shmem_init(1024 * 100 * NODE_ID() * sizeof (node_t) + (initial + 2) * sizeof (node_t));
 #endif
 
 
@@ -608,7 +608,7 @@ TASKMAIN(int argc, char **argv) {
 
     BARRIER
 
-    printf("---------------------------Thread %d\n", RCCE_ue());
+    printf("---------------------------Thread %d\n", NODE_ID());
     printf("  #add        : %lu\n", data->nb_add);
     printf("    #added    : %lu\n", data->nb_added);
     printf("  #remove     : %lu\n", data->nb_remove);

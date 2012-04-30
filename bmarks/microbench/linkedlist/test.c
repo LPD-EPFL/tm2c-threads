@@ -185,7 +185,7 @@ TASKMAIN(int argc, char **argv) {
     thread_data_t *data;
     double duration = DEFAULT_DURATION;
     int initial = DEFAULT_INITIAL;
-    int nb_app_cores = RCCE_num_ues();
+    int nb_app_cores = TOTAL_NODES();
     long range = DEFAULT_RANGE;
     int update = DEFAULT_UPDATE;
     int unit_tx = DEFAULT_ELASTICITY;
@@ -345,7 +345,7 @@ TASKMAIN(int argc, char **argv) {
         FLUSH
     }
 
-#ifdef STM
+#if defined(STM) && defined(PLATFORM_iRCCE)
     int off, id2use;
     if (ID < 6) {
         off = 0;
@@ -384,8 +384,7 @@ TASKMAIN(int argc, char **argv) {
     PRINT("shmem from %d MB", (off * 16) + id2use / 2);
 
 #else
-    shmem_init(1024 * 100 * RCCE_ue() * sizeof (node_t) + ((initial + 2) * sizeof (node_t)));
-
+    shmem_init(1024 * 100 * (NODE_ID()-1) * sizeof (node_t) + ((initial + 2) * sizeof (node_t)));
 #endif
 
     /* Access set from all threads */
@@ -408,7 +407,7 @@ TASKMAIN(int argc, char **argv) {
     /* Start */
     test(data, duration);
 
-    printf("-- Core %d\n", RCCE_ue());
+    printf("-- Core %d\n", NODE_ID());
     printf("  #add        : %lu\n", data->nb_add);
     printf("    #added    : %lu\n", data->nb_added);
     printf("  #remove     : %lu\n", data->nb_remove);

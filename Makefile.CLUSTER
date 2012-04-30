@@ -7,7 +7,6 @@ PLATFORM_DEFINES = -DPLATFORM_CLUSTER \
                    -UDEBUG_UTILIZATION \
                    -UDO_TIMINGS \
                    -DBACKOFF \
-                   -DUSING_ZMQ \
                    -UFINISH_ALL_PARALLEL \
 
 HELPER_APPS += barrier_syncer
