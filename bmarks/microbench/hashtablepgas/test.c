@@ -521,7 +521,7 @@ TASKMAIN(int argc, char **argv) {
 
     }
     
-#if defined(STM) && !defined(SEQUENTIAL)
+#if defined(STM) && !defined(SEQUENTIAL) && defined(PLATFORM_iRCCE)
     int off, id2use;
     if (ID < 6) {
       off = 0;
@@ -559,7 +559,7 @@ TASKMAIN(int argc, char **argv) {
     shmem_init(((off * 16) * 1024 * 1024) + ((id2use) * 1024 * 1024));
     PRINT("shmem from %d MB", (off * 16) + id2use);
 #else
-    shmem_init(1024 * 100 * NODE_ID() * sizeof (node_t) + (initial + 2) * sizeof (node_t));
+    shmem_init(1024 * 100 * (NODE_ID()-1) * sizeof (node_t) + ((initial + 2) * sizeof (node_t)));
 #endif
 
       
