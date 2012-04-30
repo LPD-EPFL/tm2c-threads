@@ -91,13 +91,25 @@ extern "C" {
         double to;
     } convert;
     convert.to = cmd->tx_duration;
+    /*
+    PRINT("tmc_udn_send_10(%d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d)", 
+	  0, UDN0_DEMUX_TAG, ID, PS_STATS,cmd->aborts, cmd->aborts_raw, cmd->aborts_war,
+	  cmd->aborts_waw, cmd->commits, convert.from[0],
+	  convert.from[1], cmd->max_retries);
+    */
 
     int target;
     for (target = 0; target < NUM_DSL_NODES; target++) {
-        tmc_udn_send_10(udn_header[dsl_nodes[target]], UDN0_DEMUX_TAG, ID, PS_STATS,
-                cmd->aborts, cmd->aborts_raw, cmd->aborts_war,
-                cmd->aborts_waw, cmd->commits, convert.from[0],
-                convert.from[1], cmd->max_retries);
+      if (convert.to) {
+        tmc_udn_send_7(udn_header[dsl_nodes[target]], UDN0_DEMUX_TAG, ID, PS_STATS,
+			convert.from[0], convert.from[1], cmd->aborts, cmd->commits,
+			cmd->max_retries);
+      }
+      else {
+	tmc_udn_send_7(udn_header[dsl_nodes[target]], UDN0_DEMUX_TAG, ID, PS_STATS,
+			convert.from[0], convert.from[1], 
+			cmd->aborts_raw, cmd->aborts_war, cmd->aborts_waw);
+      }
     }
     return 1;
   }

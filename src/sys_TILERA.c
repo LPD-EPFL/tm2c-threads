@@ -337,29 +337,35 @@ void dsl_communication() {
                 address = tmc_udn0_receive();
                 ps_hashtable_delete(ps_hashtable, sender, address, WRITE);
                 break;
-            case PS_STATS:
+	case PS_STATS:
             {
-                unsigned int aborts = tmc_udn0_receive();
-                stats_aborts += aborts;
-                stats_aborts_raw += tmc_udn0_receive();
-                stats_aborts_war += tmc_udn0_receive();
-                stats_aborts_waw += tmc_udn0_receive();
-                unsigned int commits = tmc_udn0_receive();
-                stats_commits += commits;
-
-                union {
+	        union {
                     int from[2];
                     double to;
                 } convert;
                 convert.from[0] = tmc_udn0_receive();
                 convert.from[1] = tmc_udn0_receive();
-                stats_duration += convert.to;
-                unsigned int max_retries = tmc_udn0_receive();
-                stats_max_retries = stats_max_retries < max_retries ? max_retries
-                        : stats_max_retries;
-                stats_total += commits + aborts;
+		double duration = convert.to;
 
-                if (++stats_received >= NUM_APP_NODES) {
+		if (duration) {
+		  if (!ID) { PRINT("stats 1 from %d", sender); }
+		  unsigned int aborts = tmc_udn0_receive();
+		  stats_aborts += aborts;
+		  unsigned int commits = tmc_udn0_receive();		  
+		  stats_commits += commits;
+		  stats_duration += duration;
+		  unsigned int max_retries = tmc_udn0_receive();
+		  stats_max_retries = stats_max_retries < max_retries ? max_retries
+		    : stats_max_retries;
+		  stats_total += commits + aborts;
+		}
+		else {
+		  stats_aborts_raw += tmc_udn0_receive();
+		  stats_aborts_war += tmc_udn0_receive();
+		  stats_aborts_waw += tmc_udn0_receive();
+		}
+
+		if (++stats_received >= 2*NUM_APP_NODES) {
                     if (ID == 0) {
                         print_global_stats();
 
