@@ -151,17 +151,16 @@ EXINLINED int zmq_s_send(void *socket, char *string);
 #include <tmc/sync.h>
 #include <tmc/cmem.h>
 
+#include "sys_TILERA.h"
+
+
 extern DynamicHeader *udn_header; //headers for messaging
 extern tmc_sync_barrier_t *barrier_apps, *barrier_all; //BARRIERS
 
 #define BARRIER tmc_sync_barrier_wait(barrier_apps); //app cores only
 #define BARRIERW tmc_sync_barrier_wait(barrier_all); //all cores
 
-INLINED double RCCE_wtime() {
-	struct timeval t;
-	gettimeofday(&t, NULL);
-	return (double) t.tv_sec + ((double) t.tv_usec) / 1000000.0;
-}
+
 
 #define RCCE_num_ues TOTAL_NODES
 #define RCCE_ue NODE_ID

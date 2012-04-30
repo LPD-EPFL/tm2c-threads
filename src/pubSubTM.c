@@ -213,7 +213,6 @@ ps_load(tm_addr_t address) {
 void
 ps_store(tm_addr_t address, uint32_t value) {
     tm_intern_addr_t intern_addr = to_intern_addr(address);
-
     nodeid_t responsible_node = get_responsible_node(intern_addr);
 
     ps_sendbv(responsible_node, PS_STORE_NONTX, intern_addr, value, NO_CONFLICT);
@@ -227,7 +226,6 @@ void ps_unsubscribe(tm_addr_t address) {
     nodeid_t responsible_node = get_responsible_node(intern_addr);
 
     nodes_contacted[responsible_node]--;
-
     ps_sendb(responsible_node, PS_UNSUBSCRIBE, intern_addr, NO_CONFLICT);
 
 #ifdef PLATFORM_CLUSTER

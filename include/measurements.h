@@ -45,6 +45,8 @@ extern "C" {
 #define REF_SPEED_GHZ           2.1
 #elif defined(PLATFORM_iRCCE)
 #define REF_SPEED_GHZ           0.8
+#elif defined(PLATFORM_TILERA)
+#define REF_SPEED_GHZ           0.7
 #else
 #error "Need to set REF_SPEED_GHZ for the platform"
 #endif
