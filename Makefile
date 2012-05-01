@@ -155,6 +155,12 @@ $(ARCHIVE):
 	@(cd $(RCCEPATH) ; make)
 endif
 
+ifeq ($(PLATFORM),TILERA)
+$(ARCHIVE):
+	@(cp ./external/tmp/libconfig-1.4.8_tilera/lib/.libs/libconfig.* ./external/lib/)
+endif
+
+
 $(DSTM_ARCHIVE): $(ARCHIVE) $(ARCHIVE_OBJS)
 	@echo Archive name = $(DSTM_ARCHIVE) 
 ifeq ($(PLATFORM),iRCCE)
