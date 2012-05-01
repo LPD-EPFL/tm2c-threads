@@ -387,7 +387,6 @@ TASKMAIN(int argc, char **argv) {
 
 #else
     shmem_init(1024 * 100 * (NODE_ID()-1) * sizeof (node_t) + ((initial + 2) * sizeof (node_t)));
-
 #endif
 
     /* Access set from all threads */

@@ -14,6 +14,7 @@ PLATFORM_DEFINES = -DPLATFORM_MCORE \
                    -ULIBTASK \
                    -UBACKOFF \
                    -UFINISH_ALL_PARALLEL \
+		   -UDO_TIMINGS \
 		   -DSSMP
 
 HAS_TASKLIB = no

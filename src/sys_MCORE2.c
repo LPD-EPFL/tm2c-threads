@@ -341,8 +341,6 @@ dsl_communication()
 	convert.from[1] = msg.w2;
 	double duration = convert.to;
 
-	PRINT("duration %f", duration);
-
 	if (duration) {
 	  if (!ID) { PRINT("stats 1 from %d", sender); }
 	  unsigned int aborts = msg.w3;
