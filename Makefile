@@ -34,6 +34,12 @@ one2one: ssmp$(V).a one2one.o common.h
 one2one.o:	one2one.c ssmp$(V).c
 		gcc $(VER_FLAGS) -D_GNU_SOURCE -c one2one.c $(DEBUG_CFLAGS) $(PERF_CLFAGS)
 
+barrier: ssmp$(V).a barrier.o common.h
+	gcc $(VER_FLAGS) -o barrier barrier.o ssmp$(V).a -lrt $(DEBUG_CFLAGS) $(PERF_CLFAGS)	
+
+barrier.o:	barrier.c ssmp$(V).c
+		gcc $(VER_FLAGS) -D_GNU_SOURCE -c barrier.c $(DEBUG_CFLAGS) $(PERF_CLFAGS)
+
 
 
 clean:

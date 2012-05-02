@@ -31,12 +31,13 @@ int *ues_initialized;
 void ssmp_init(int num_procs)
 {
   //create the shared space which will be managed by the allocator
-  int sizem, sizeb, sizeui, size;
+  int sizem, sizeb, sizeckp, sizeui, size;
 
   sizem = (num_procs * num_procs) * sizeof(ssmp_msg_t);
   sizeb = SSMP_NUM_BARRIERS * sizeof(ssmp_barrier_t);
+  sizeckp = num_procs * sizeof(ssmp_chk_t);
   sizeui = num_procs * sizeof(int);
-  size = sizem + sizeb + sizeui;
+  size = sizem + sizeb + sizeckp + sizeui;
 
   char keyF[100];
   sprintf(keyF,"/ssmp_mem");
@@ -74,11 +75,21 @@ void ssmp_init(int num_procs)
 
   long long unsigned int mem_just_int = (long long unsigned int) ssmp_mem;
   ssmp_barrier = (ssmp_barrier_t *) (mem_just_int + sizem);
-  ues_initialized = (int *) (mem_just_int + sizem + sizeb);
+  ssmp_chk_t *chks = (ssmp_chk_t *) (mem_just_int + sizem + sizeb);
+  ues_initialized = (int *) (mem_just_int + sizem + sizeb + sizeckp);
   int ue;
   for (ue = 0; ue < num_procs; ue++) {
     ues_initialized[ue] = 0;
   }
+  
+  int bar;
+  for (bar = 0; bar < SSMP_NUM_BARRIERS; bar++) {
+    ssmp_barrier[bar].checkpoints = (chks + bar);
+    ssmp_barrier_init(bar, 0xFFFFFFFFFFFFFFFF, NULL);
+  }
+  ssmp_barrier_init(1, 0xFFFFFFFFFFFFFFFF, color_app);
+
+
 }
 
 void ssmp_mem_init(int id, int num_ues) {
@@ -96,12 +107,6 @@ void ssmp_mem_init(int id, int num_ues) {
 
     ssmp_send_buf[core] = ssmp_mem + (core * num_ues) + id;
   }
-
-  int b;
-  for (b = 0; b < SSMP_NUM_BARRIERS; b++) {
-    ssmp_barrier_init(b, 0xFFFFFFFFFFFFFFFF, NULL);
-  }
-    ssmp_barrier_init(1, 0xFFFFFFFFFFFFFFFF, color_app);
 
   ssmp_id_ = id;
   ssmp_num_ues_ = num_ues;
@@ -608,7 +613,7 @@ inline int ssmp_recv_try6(ssmp_msg_t *msg) {
 /* ------------------------------------------------------------------------------- */
 
 int color_app(int id) {
-  return ((id % 2) ? 0 : 1);
+  return ((id % 2) ? 1 : 0);
 }
 
 inline ssmp_barrier_t * ssmp_get_barrier(int barrier_num) {
@@ -630,8 +635,12 @@ inline void ssmp_barrier_init(int barrier_num, long long int participants, int (
   }
 
   ssmp_barrier[barrier_num].participants = 0xFFFFFFFFFFFFFFFF;
-  ssmp_barrier[barrier_num].id = (unsigned int) &ssmp_barrier[barrier_num];
   ssmp_barrier[barrier_num].color = color;
+  int ue;
+  for (ue = 0; ue < ssmp_num_ues_; ue++) {
+    ssmp_barrier[barrier_num].checkpoints[ue] = 0;
+  }
+  ssmp_barrier[barrier_num].version = 0;
 }
 
 inline void ssmp_barrier_wait(int barrier_num) {
@@ -640,7 +649,9 @@ inline void ssmp_barrier_wait(int barrier_num) {
   }
 
   ssmp_barrier_t *b = &ssmp_barrier[barrier_num];
-  SP("~~waiting on barrier %d", barrier_num); fflush(stdout);
+  unsigned int version_start = b->version;
+
+  SP(">>Waiting barrier %d\t(v: %d)", barrier_num, version_start);
 
   int (*col)(int);
   col= b->color;
@@ -651,7 +662,7 @@ inline void ssmp_barrier_wait(int barrier_num) {
     exit(-1);
   }
   long long unsigned int bpar = b->participants;
-  int from, num_part = 0;
+  int from;
   for (from = 0; from < ssmp_num_ues_; from++) {
     /* if there is a color function it has priority */
     if (col != NULL) {
@@ -661,40 +672,62 @@ inline void ssmp_barrier_wait(int barrier_num) {
       participants[from] = (unsigned int) (bpar & 0x0000000000000001);
       bpar >>= 1;
     }
-
-    if (participants[from]) {
-      num_part++;
-    }
-
   }
   
   if (participants[ssmp_id_] == 0) {
+    SP("<<Cleared barrier %d\t(v: %d)\t[not participant!]", barrier_num, version_start);
     free(participants);
     return;
   }
 
-  for (from = 0; from < ssmp_num_ues_; from++) {
-    if (num_part == 0) {
-      free(participants);
-      return;
+  //round 1;
+  b->checkpoints[ssmp_id_] = 1;
+  
+  int done = 0;
+  while(!done) {
+    done = 1;
+    int ue;
+    for (ue = 0; ue < ssmp_num_ues_; ue++) {
+      if (participants[ue] == 0) {
+	continue;
+      }
+      
+      if (!b->checkpoints[ue]) {
+	done = 0;
+	break;
+      }
     }
-    if (participants[from] == 0) {
-      continue;
-    }
-
-    if (from == ssmp_id_) {
-      PD("~~ MY TURN: broadcasting");
-      ssmp_broadcast(b->id, 0, 0, 0);
-    }
-    else {
-      PD(".. not my turn, waitin from %d", from);
-      ssmp_msg_t msg;
-      ssmp_recv_from(from, &msg);
-      PD("  .. recved from %d", from);
-    }
-    num_part--;
   }
+
+  //round 2;
+  b->checkpoints[ssmp_id_] = 2;
+
+  done = 0;
+  while(!done) {
+    done = 1;
+    int ue;
+    for (ue = 0; ue < ssmp_num_ues_; ue++) {
+      if (participants[ue] == 0) {
+	continue;
+      }
+      
+      if (b->version > version_start) {
+	SP("<<Cleared barrier %d\t(v: %d)\t[someone was faster]", barrier_num, version_start);
+	break;
+      }
+
+      if (b->checkpoints[ue] == 1) {
+	done = 0;
+	break;
+      }
+    }
+  }
+
+  b->checkpoints[ssmp_id_] = 0;
+  b->version = version_start + 1;
+
   free(participants);
+  SP("<<Cleared barrier %d (v: %d)", barrier_num, version_start);
 }
 
 
