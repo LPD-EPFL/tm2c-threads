@@ -14,7 +14,7 @@
 /* library variables */
 /* ------------------------------------------------------------------------------- */
 
-ssmp_msg_t *ssmp_mem, *m;
+ssmp_msg_t *ssmp_mem;
 ssmp_msg_t **ssmp_recv_buf;
 ssmp_msg_t **ssmp_send_buf;
 int ssmp_num_ues_;
