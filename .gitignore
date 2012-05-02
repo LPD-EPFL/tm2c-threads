@@ -1,0 +1,10 @@
+*~
+*.a
+*.o
+perf*
+oprof*
+cscope*
+*#*
+one2one
+main
+gmon*
