@@ -57,14 +57,24 @@ int main(int argc, char **argv) {
   ssmp_mem_init(ID, num_procs);
   P("Initialized child %u", rank);
 
-  ssmp_barrier_wait(0);
-  ssmp_barrier_wait(1);
+  int num = 0;
+  while (num++ < 100) {
+    ssmp_barrier_wait(0);
+    ssmp_barrier_wait(2);
+    ssmp_barrier_wait(0);
+    ssmp_barrier_wait(0);
+    ssmp_barrier_wait(2);
+    ssmp_barrier_wait(2);
+    ssmp_barrier_wait(1);
+    ssmp_barrier_wait(12);
+  }
+  /*  ssmp_barrier_wait(1);
   ssmp_barrier_wait(1);
   ssmp_barrier_wait(0);
   ssmp_barrier_wait(2);
   ssmp_barrier_wait(1);
   ssmp_barrier_wait(0);
-
+  */
   P("\t\t\tdone with barriers ;)");
   fflush(stdout);
   ssmp_barrier_wait(10);

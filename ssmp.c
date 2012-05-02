@@ -35,7 +35,7 @@ void ssmp_init(int num_procs)
 
   sizem = (num_procs * num_procs) * sizeof(ssmp_msg_t);
   sizeb = SSMP_NUM_BARRIERS * sizeof(ssmp_barrier_t);
-  sizeckp = num_procs * sizeof(ssmp_chk_t);
+  sizeckp = SSMP_NUM_BARRIERS * num_procs * sizeof(ssmp_chk_t);
   sizeui = num_procs * sizeof(int);
   size = sizem + sizeb + sizeckp + sizeui;
 
@@ -82,9 +82,13 @@ void ssmp_init(int num_procs)
     ues_initialized[ue] = 0;
   }
   
+  for (ue = 0; ue < SSMP_NUM_BARRIERS * num_procs; ue++) {
+    chks[ue] = 0;
+  }
+
   int bar;
   for (bar = 0; bar < SSMP_NUM_BARRIERS; bar++) {
-    ssmp_barrier[bar].checkpoints = (chks + bar);
+    ssmp_barrier[bar].checkpoints = (chks + (bar * num_procs));
     ssmp_barrier_init(bar, 0xFFFFFFFFFFFFFFFF, NULL);
   }
   ssmp_barrier_init(1, 0xFFFFFFFFFFFFFFFF, color_app);
@@ -649,9 +653,9 @@ inline void ssmp_barrier_wait(int barrier_num) {
   }
 
   ssmp_barrier_t *b = &ssmp_barrier[barrier_num];
-  unsigned int version_start = b->version;
+  unsigned int version = b->version;
 
-  SP(">>Waiting barrier %d\t(v: %d)", barrier_num, version_start);
+  SP(">>Waiting barrier %d\t(v: %d)", barrier_num, version);
 
   int (*col)(int);
   col= b->color;
@@ -675,13 +679,13 @@ inline void ssmp_barrier_wait(int barrier_num) {
   }
   
   if (participants[ssmp_id_] == 0) {
-    SP("<<Cleared barrier %d\t(v: %d)\t[not participant!]", barrier_num, version_start);
+    SP("<<Cleared barrier %d\t(v: %d)\t[not participant!]", barrier_num, version);
     free(participants);
     return;
   }
 
   //round 1;
-  b->checkpoints[ssmp_id_] = 1;
+  b->checkpoints[ssmp_id_] = version + 1;
   
   int done = 0;
   while(!done) {
@@ -692,7 +696,7 @@ inline void ssmp_barrier_wait(int barrier_num) {
 	continue;
       }
       
-      if (!b->checkpoints[ue]) {
+      if ((b->checkpoints[ue] != (version + 1)) && (b->checkpoints[ue] != (version + 2))) {
 	done = 0;
 	break;
       }
@@ -700,7 +704,7 @@ inline void ssmp_barrier_wait(int barrier_num) {
   }
 
   //round 2;
-  b->checkpoints[ssmp_id_] = 2;
+  b->checkpoints[ssmp_id_] = version + 2;
 
   done = 0;
   while(!done) {
@@ -711,12 +715,13 @@ inline void ssmp_barrier_wait(int barrier_num) {
 	continue;
       }
       
-      if (b->version > version_start) {
-	SP("<<Cleared barrier %d\t(v: %d)\t[someone was faster]", barrier_num, version_start);
-	break;
+      if (b->version > version) {
+	SP("<<Cleared barrier %d\t(v: %d)\t[someone was faster]", barrier_num, version);
+	b->checkpoints[ssmp_id_] = 0;
+	return;
       }
 
-      if (b->checkpoints[ue] == 1) {
+      if (b->checkpoints[ue] == (version + 1)) {
 	done = 0;
 	break;
       }
@@ -724,10 +729,12 @@ inline void ssmp_barrier_wait(int barrier_num) {
   }
 
   b->checkpoints[ssmp_id_] = 0;
-  b->version = version_start + 1;
+  if (b->version <= version) {
+    b->version = version + 3;
+  }
 
   free(participants);
-  SP("<<Cleared barrier %d (v: %d)", barrier_num, version_start);
+  SP("<<Cleared barrier %d (v: %d)", barrier_num, version);
 }
 
 
