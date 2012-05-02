@@ -8,6 +8,8 @@ sudo opcontrol --no-vmlinux --start
 sudo opcontrol --stop
 sudo opcontrol --shutdown
 
+killall $1
+
 if [ ! -d $OUTPUT ]; then
     mkdir $OUTPUT;
 fi
