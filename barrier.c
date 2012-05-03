@@ -20,7 +20,7 @@
 #include "ssmp.h"
 
 int num_procs = 2;
-long long int nm = 100000000;
+long long int nm = 10000;
 int ID;
 
 int main(int argc, char **argv) {
@@ -56,25 +56,28 @@ int main(int argc, char **argv) {
   set_cpu(ID);
   ssmp_mem_init(ID, num_procs);
   P("Initialized child %u", rank);
+  double time = (17 * wtime()) * 1000000;
+  unsigned int time_int = (unsigned int) time;
+  srand(time_int);
 
   int num = 0;
-  while (num++ < 100) {
-    ssmp_barrier_wait(0);
-    ssmp_barrier_wait(2);
-    ssmp_barrier_wait(0);
-    ssmp_barrier_wait(0);
-    ssmp_barrier_wait(2);
-    ssmp_barrier_wait(2);
-    ssmp_barrier_wait(1);
-    ssmp_barrier_wait(12);
+  while (num++ < nm) {
+
+    int barr;
+    if (ID == 0) {
+      barr = rand() % SSMP_NUM_BARRIERS;
+      ssmp_broadcast1(barr);
+      ssmp_barrier_wait(barr);
+    }
+    else {
+      ssmp_msg_t msg;
+      ssmp_recv_from(0, &msg);
+      barr = msg.w0;
+      ssmp_barrier_wait(barr);
+    }
   }
-  /*  ssmp_barrier_wait(1);
-  ssmp_barrier_wait(1);
-  ssmp_barrier_wait(0);
-  ssmp_barrier_wait(2);
-  ssmp_barrier_wait(1);
-  ssmp_barrier_wait(0);
-  */
+
+
   P("\t\t\tdone with barriers ;)");
   fflush(stdout);
   ssmp_barrier_wait(10);
