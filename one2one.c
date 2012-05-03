@@ -54,6 +54,7 @@ int main(int argc, char **argv) {
   ID = rank;
   P("Initializing child %u", rank);
   set_cpu(ID);
+
   ssmp_mem_init(ID, num_procs);
   P("Initialized child %u", rank);
 
@@ -78,7 +79,7 @@ int main(int argc, char **argv) {
 	for (co = 0; co < ssmp_num_ues(); co++) {
 	  //P("from[%d] = %d", co, from[co]);
 	}
-	//	exit(0);
+	exit(0);
       }
       
     }
