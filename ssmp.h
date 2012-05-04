@@ -25,10 +25,6 @@
 typedef int ssmp_chk_t;
 
 typedef struct {
-  union {
-    int state;
-    int sender;
-  };
   int w0;
   int w1;
   int w2;
@@ -36,7 +32,11 @@ typedef struct {
   int w4;
   int w5;
   int w6;
-  //  int f[8];
+  int f[8];
+union {
+    int state;
+    int sender;
+  };
 } ssmp_msg_t;
 
 typedef struct {
