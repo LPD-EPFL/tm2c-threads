@@ -471,14 +471,14 @@ inline void ssmp_recv_from6(int from, ssmp_msg_t *msg) {
   PD("recv from %d\n", from);
   while(!m->state);
 
-  msg->sender = from;
+
   msg->w0 = m->w0;
   msg->w1 = m->w1;
   msg->w2 = m->w2;
   msg->w3 = m->w3;
   msg->w4 = m->w4;
   msg->w5 = m->w5;
-
+  msg->sender = from;
 
   m->state = 0;
   PD("recved from %d\n", from);
@@ -669,18 +669,19 @@ inline void ssmp_color_buf_free(ssmp_color_buf_t *cbuf) {
 
 inline void ssmp_recv_color(ssmp_color_buf_t *cbuf, ssmp_msg_t *msg) {
   int from;
-  
+  ssmp_msg_t *m;
   while(1) {
     //XXX: maybe have a last_recv_from field
     for (from = 0; from < cbuf->num_ues; from++) {
-      ssmp_msg_t *m = cbuf->buf[from];
+      m = cbuf->buf[from];
       if (m->state) {
 
-	msg->sender = cbuf->from[from];
 	msg->w0 = m->w0;
 	msg->w1 = m->w1;
 	msg->w2 = m->w2;
 	msg->w3 = m->w3;
+
+	msg->sender = cbuf->from[from];
 
 	m->state = 0;
 	return;
