@@ -611,6 +611,83 @@ inline int ssmp_recv_try6(ssmp_msg_t *msg) {
   return 0;
 }
 
+/* ------------------------------------------------------------------------------- */
+/* color-based recv fucntions */
+/* ------------------------------------------------------------------------------- */
+
+inline void ssmp_color_buf_init(ssmp_color_buf_t *cbuf, int (*color)(int)) {
+  if (cbuf == NULL) {
+    cbuf = (ssmp_color_buf_t *) malloc(sizeof(ssmp_color_buf_t));
+    if (cbuf == NULL) {
+      perror("malloc @ ssmp_color_buf_init");
+      exit(-1);
+    }
+  }
+  unsigned int *participants = (unsigned int *) malloc(ssmp_num_ues_ * sizeof(unsigned int));
+  if (participants == NULL) {
+    perror("malloc @ ssmp_color_buf_init");
+    exit(-1);
+  }
+
+  int ue, num_ues = 0;
+  for (ue = 0; ue < ssmp_num_ues_; ue++) {
+      participants[ue] = color(ue);
+      if (participants[ue]) {
+	num_ues++;
+      }
+  }
+
+  cbuf->num_ues = num_ues;
+
+  cbuf->buf = (ssmp_msg_t **) malloc(num_ues * sizeof(ssmp_msg_t *));
+  if (cbuf->buf == NULL) {
+    perror("malloc @ ssmp_color_buf_init");
+    exit(-1);
+  }
+
+  cbuf->from = (int *) malloc(num_ues * sizeof(int));
+  if (cbuf->from == NULL) {
+    perror("malloc @ ssmp_color_buf_init");
+    exit(-1);
+  }
+    
+  int buf_num = 0;
+  for (ue = 0; ue < ssmp_num_ues_; ue++) {
+      if (participants[ue]) {
+	cbuf->buf[buf_num] = ssmp_recv_buf[ue];
+	cbuf->from[buf_num] = ue;
+	buf_num++;
+      }
+  }
+
+  free(participants);
+}
+
+inline void ssmp_color_buf_free(ssmp_color_buf_t *cbuf) {
+  free(cbuf->buf);
+}
+
+inline void ssmp_recv_color(ssmp_color_buf_t *cbuf, ssmp_msg_t *msg) {
+  int from;
+  
+  while(1) {
+    //XXX: maybe have a last_recv_from field
+    for (from = 0; from < cbuf->num_ues; from++) {
+      ssmp_msg_t *m = cbuf->buf[from];
+      if (m->state) {
+
+	msg->sender = cbuf->from[from];
+	msg->w0 = m->w0;
+	msg->w1 = m->w1;
+	msg->w2 = m->w2;
+	msg->w3 = m->w3;
+
+	m->state = 0;
+	return;
+      }
+    }
+  }
+}
 
 /* ------------------------------------------------------------------------------- */
 /* barrier functions */

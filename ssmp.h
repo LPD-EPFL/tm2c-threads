@@ -39,6 +39,12 @@ typedef struct {
   //  int f[8];
 } ssmp_msg_t;
 
+typedef struct {
+  int num_ues;
+  ssmp_msg_t **buf;
+  int *from;
+} ssmp_color_buf_t;
+
 
 typedef struct {
   long long unsigned int participants;
@@ -120,6 +126,14 @@ extern inline int ssmp_recv_try6(ssmp_msg_t *msg);
 
 
 /* ------------------------------------------------------------------------------- */
+/* color-based recv fucntions */
+/* ------------------------------------------------------------------------------- */
+
+extern inline void ssmp_color_buf_init(ssmp_color_buf_t *cbuf, int (*color)(int));
+extern inline void ssmp_color_buf_free(ssmp_color_buf_t *cbuf);
+extern inline void ssmp_recv_color(ssmp_color_buf_t *cbuf, ssmp_msg_t *msg);
+
+/* ------------------------------------------------------------------------------- */
 /* barrier functions */
 /* ------------------------------------------------------------------------------- */
 extern int color_app(int id);
@@ -128,6 +142,7 @@ extern inline ssmp_barrier_t * ssmp_get_barrier(int barrier_num);
 extern inline void ssmp_barrier_init(int barrier_num, long long int participants, int (*color)(int));
 
 extern inline void ssmp_barrier_wait(int barrier_num);
+
 
 /* ------------------------------------------------------------------------------- */
 /* help funcitons */
