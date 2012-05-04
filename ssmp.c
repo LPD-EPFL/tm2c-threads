@@ -669,26 +669,41 @@ inline void ssmp_color_buf_free(ssmp_color_buf_t *cbuf) {
 
 inline void ssmp_recv_color(ssmp_color_buf_t *cbuf, ssmp_msg_t *msg) {
   int from;
-  ssmp_msg_t *m;
   while(1) {
     //XXX: maybe have a last_recv_from field
     for (from = 0; from < cbuf->num_ues; from++) {
-      m = cbuf->buf[from];
-      if (m->state) {
 
-	msg->w0 = m->w0;
-	msg->w1 = m->w1;
-	msg->w2 = m->w2;
-	msg->w3 = m->w3;
+      if (cbuf->buf[from]->state) {
+	msg->w0 = cbuf->buf[from]->w0;
+	msg->w1 = cbuf->buf[from]->w1;
+	msg->w2 = cbuf->buf[from]->w2;
+	msg->w3 = cbuf->buf[from]->w3;
 
 	msg->sender = cbuf->from[from];
-
-	m->state = 0;
+	cbuf->buf[from]->state = 0;
 	return;
       }
     }
   }
 }
+
+inline void ssmp_recv_color_cp(ssmp_color_buf_t *cbuf, ssmp_msg_t *msg, int length) {
+  int from;
+  while(1) {
+    //XXX: maybe have a last_recv_from field
+    for (from = 0; from < cbuf->num_ues; from++) {
+
+      if (cbuf->buf[from]->state) {
+	memcpy(msg, cbuf->buf[from], length);
+
+	msg->sender = cbuf->from[from];
+	cbuf->buf[from]->state = 0;
+	return;
+      }
+    }
+  }
+}
+
 
 /* ------------------------------------------------------------------------------- */
 /* barrier functions */

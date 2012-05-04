@@ -132,6 +132,7 @@ extern inline int ssmp_recv_try6(ssmp_msg_t *msg);
 extern inline void ssmp_color_buf_init(ssmp_color_buf_t *cbuf, int (*color)(int));
 extern inline void ssmp_color_buf_free(ssmp_color_buf_t *cbuf);
 extern inline void ssmp_recv_color(ssmp_color_buf_t *cbuf, ssmp_msg_t *msg);
+inline void ssmp_recv_color_cp(ssmp_color_buf_t *cbuf, ssmp_msg_t *msg, int length);
 
 /* ------------------------------------------------------------------------------- */
 /* barrier functions */
