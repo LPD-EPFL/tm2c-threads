@@ -53,8 +53,17 @@ int main(int argc, char **argv) {
  fork_done:
   ID = rank;
   P("Initializing child %u", rank);
-  set_cpu(ID);
-
+  if (argc > 2 && num_procs == 2) {
+    if (ID) {
+      set_cpu(2);
+    }
+    else {
+      set_cpu(0);
+    }
+  }
+  else {
+    set_cpu(ID);
+  }
   ssmp_mem_init(ID, num_procs);
   P("Initialized child %u", rank);
 
