@@ -14,36 +14,42 @@ endif
 
 default: main
 
-main:	ssmp$(V).a main.o common.h
-	gcc $(VER_FLAGS) -o main main.o ssmp$(V).a -lrt $(DEBUG_CFLAGS) $(PERF_CLFAGS) 
+main:	ssmp.a main.o common.h
+	gcc $(VER_FLAGS) -o main main.o ssmp.a -lrt $(DEBUG_CFLAGS) $(PERF_CLFAGS) 
 
 main.o:	main.c
 	gcc $(VER_FLAGS) -D_GNU_SOURCE -c main.c $(DEBUG_CFLAGS) $(PERF_CLFAGS)
 
-ssmp$(V).o: ssmp$(V).c
-	gcc $(VER_FLAGS) -D_GNU_SOURCE -c ssmp$(V).c $(DEBUG_CFLAGS) $(PERF_CLFAGS)
+ssmp.o: ssmp.c
+	gcc $(VER_FLAGS) -D_GNU_SOURCE -c ssmp.c $(DEBUG_CFLAGS) $(PERF_CLFAGS)
 
-ssmp$(V).a: ssmp$(V).o ssmp$(V).h
-	@echo Archive name = ssmp$(V).a
-	ar -r ssmp$(V).a ssmp$(V).o
+ssmp_send.o: ssmp_send.c
+	gcc $(VER_FLAGS) -D_GNU_SOURCE -c ssmp_send.c $(DEBUG_CFLAGS) $(PERF_CLFAGS)
+
+ssmp_recv.o: ssmp_send.c
+	gcc $(VER_FLAGS) -D_GNU_SOURCE -c ssmp_recv.c $(DEBUG_CFLAGS) $(PERF_CLFAGS)
+
+ssmp.a: ssmp.o ssmp_send.o ssmp_recv.o ssmp.h
+	@echo Archive name = ssmp.a
+	ar -r ssmp.a ssmp.o ssmp_send.o ssmp_recv.o
 	rm -f *.o	
 
-one2one: ssmp$(V).a one2one.o common.h
-	gcc $(VER_FLAGS) -o one2one one2one.o ssmp$(V).a -lrt $(DEBUG_CFLAGS) $(PERF_CLFAGS)	
+one2one: ssmp.a one2one.o common.h
+	gcc $(VER_FLAGS) -o one2one one2one.o ssmp.a -lrt $(DEBUG_CFLAGS) $(PERF_CLFAGS)	
 
-one2one.o:	one2one.c ssmp$(V).c
+one2one.o:	one2one.c ssmp.c
 		gcc $(VER_FLAGS) -D_GNU_SOURCE -c one2one.c $(DEBUG_CFLAGS) $(PERF_CLFAGS)
 
-barrier: ssmp$(V).a barrier.o common.h
-	gcc $(VER_FLAGS) -o barrier barrier.o ssmp$(V).a -lrt $(DEBUG_CFLAGS) $(PERF_CLFAGS)	
+barrier: ssmp.a barrier.o common.h
+	gcc $(VER_FLAGS) -o barrier barrier.o ssmp.a -lrt $(DEBUG_CFLAGS) $(PERF_CLFAGS)	
 
-barrier.o:	barrier.c ssmp$(V).c
+barrier.o:	barrier.c ssmp.c
 		gcc $(VER_FLAGS) -D_GNU_SOURCE -c barrier.c $(DEBUG_CFLAGS) $(PERF_CLFAGS)
 
-color_buf: ssmp$(V).a color_buf.o common.h
-	gcc $(VER_FLAGS) -o color_buf color_buf.o ssmp$(V).a -lrt $(DEBUG_CFLAGS) $(PERF_CLFAGS)	
+color_buf: ssmp.a color_buf.o common.h
+	gcc $(VER_FLAGS) -o color_buf color_buf.o ssmp.a -lrt $(DEBUG_CFLAGS) $(PERF_CLFAGS)	
 
-color_buf.o:	color_buf.c ssmp$(V).c
+color_buf.o:	color_buf.c ssmp.c
 		gcc $(VER_FLAGS) -D_GNU_SOURCE -c color_buf.c $(DEBUG_CFLAGS) $(PERF_CLFAGS)
 
 

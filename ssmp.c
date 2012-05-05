@@ -2,13 +2,6 @@
 
 //#define SSMP_DEBUG
 
-#define SP(args...) printf("[%d] ", ssmp_id_); printf(args); printf("\n"); fflush(stdout)
-#ifdef SSMP_DEBUG
-#define PD(args...) printf("[%d] ", ssmp_id_); printf(args); printf("\n"); fflush(stdout)
-#else
-#define PD(args...) 
-#endif
-
 
 /* ------------------------------------------------------------------------------- */
 /* library variables */
@@ -133,215 +126,6 @@ void ssmp_term() {
 
 
 
-/* ------------------------------------------------------------------------------- */
-/* sending functions : default is blocking */
-/* ------------------------------------------------------------------------------- */
-inline void ssmp_send(int to, int w0, int w1, int w2, int w3) {
-  ssmp_msg_t *m = ssmp_send_buf[to];
-  
-  while(m->state);      
-
-  m->w0 = w0;
-  m->w1 = w1;
-  m->w2 = w2;
-  m->w3 = w3;
-
-  m->state = 1;
-
-  PD("sent to %d", to);
-}
-
-inline void ssmp_send1(int to, int w0) {
-  ssmp_msg_t *m = ssmp_send_buf[to];
-  
-  while(m->state);      
-
-  m->w0 = w0;
-
-  m->state = 1;
-
-  PD("sent to %d", to);
-}
-
-inline void ssmp_send2(int to, int w0, int w1) {
-  ssmp_msg_t *m = ssmp_send_buf[to];
-  
-  while(m->state);      
-
-  m->w0 = w0;
-  m->w1 = w1;
-
-  m->state = 1;
-
-  PD("sent to %d", to);
-}
-
-inline void ssmp_send3(int to, int w0, int w1, int w2) {
-  ssmp_msg_t *m = ssmp_send_buf[to];
-  
-  while(m->state);      
-
-  m->w0 = w0;
-  m->w1 = w1;
-  m->w2 = w2;
-
-  m->state = 1;
-
-  PD("sent to %d", to);
-}
-
-inline void ssmp_send5(int to, int w0, int w1, int w2, int w3, int w4) {
-  ssmp_msg_t *m = ssmp_send_buf[to];
-  
-  while(m->state);      
-
-  m->w0 = w0;
-  m->w1 = w1;
-  m->w2 = w2;
-  m->w3 = w3;
-  m->w4 = w4;
-
-  m->state = 1;
-
-  PD("sent to %d", to);
-}
-
-inline void ssmp_send6(int to, int w0, int w1, int w2, int w3, int w4, int w5) {
-  ssmp_msg_t *m = ssmp_send_buf[to];
-  
-  while(m->state);      
-
-  m->w0 = w0;
-  m->w1 = w1;
-  m->w2 = w2;
-  m->w3 = w3;
-  m->w4 = w4;
-  m->w5 = w5;
-
-  m->state = 1;
-
-  PD("sent to %d", to);
-}
-
-inline void ssmp_send7(int to, int w0, int w1, int w2, int w3, int w4, int w5, int w6) {
-  ssmp_msg_t *m = ssmp_send_buf[to];
-  
-  while(m->state);      
-
-  m->w0 = w0;
-  m->w1 = w1;
-  m->w2 = w2;
-  m->w3 = w3;
-  m->w4 = w4;
-  m->w5 = w5;
-  m->w6 = w6;
-
-  m->state = 1;
-
-  PD("sent to %d", to);
-}
-
-inline int ssmp_send_try(int to, int w0, int w1, int w2, int w3) {
-  ssmp_msg_t *m = ssmp_send_buf[to];
-  
-  if (!m->state) {
-    m->w0 = w0;
-    m->w1 = w1;
-    m->w2 = w2;
-    m->w3 = w3;
-
-    m->state = 1;
-    return 1;
-  }
-  return 0;
-}
-
-inline int ssmp_send_try1(int to, int w0) { 
-  ssmp_msg_t *m = ssmp_send_buf[to];
-  
-  if (!m->state) {
-    m->w0 = w0;
-
-    m->state = 1;
-    return 1;
-  }
-  return 0;
-}
-
-inline int ssmp_send_try2(int to, int w0, int w1) {
-  ssmp_msg_t *m = ssmp_send_buf[to];
-  
-  if (!m->state) {
-    m->w0 = w0;
-    m->w1 = w1;
-
-    m->state = 1;
-    return 1;
-  }
-  return 0;
-} 
-
-inline int ssmp_send_try3(int to, int w0, int w1, int w2) {
-  ssmp_msg_t *m = ssmp_send_buf[to];
-  
-  if (!m->state) {
-    m->w0 = w0;
-    m->w1 = w1;
-    m->w2 = w2;
-
-    m->state = 1;
-    return 1;
-  }
-  return 0;
-}
-inline int ssmp_send_try5(int to, int w0, int w1, int w2, int w3, int w4) { 
-  ssmp_msg_t *m = ssmp_send_buf[to];
-  
-  if (!m->state) {
-    m->w0 = w0;
-    m->w1 = w1;
-    m->w2 = w2;
-    m->w3 = w3;
-    m->w4 = w4;
-
-    m->state = 1;
-    return 1;
-  }
-  return 0;
-}
-inline int ssmp_send_try6(int to, int w0, int w1, int w2, int w3, int w4, int w5) { 
-  ssmp_msg_t *m = ssmp_send_buf[to];
-  
-  if (!m->state) {
-    m->w0 = w0;
-    m->w1 = w1;
-    m->w2 = w2;
-    m->w3 = w3;
-    m->w4 = w4;
-    m->w5 = w5;
-
-    m->state = 1;
-    return 1;
-  }
-  return 0;
-}
-inline int ssmp_send_try7(int to, int w0, int w1, int w2, int w3, int w4, int w5, int w6) { 
-  ssmp_msg_t *m = ssmp_send_buf[to];
-  
-  if (!m->state) {
-    m->w0 = w0;
-    m->w1 = w1;
-    m->w2 = w2;
-    m->w3 = w3;
-    m->w4 = w4;
-    m->w5 = w5;
-    m->w6 = w6;
-
-    m->state = 1;
-    return 1;
-  }
-  return 0;
-}
 
 
 /* ------------------------------------------------------------------------------- */
@@ -355,7 +139,7 @@ inline void ssmp_broadcast(int w0, int w1, int w2, int w3) {
       continue;
     }
     
-    ssmp_send(core, w0, w1, w2, w3);
+    ssmp_send4(core, w0, w1, w2, w3);
   }
 }
 
@@ -414,19 +198,6 @@ inline void ssmp_broadcast6(int w0, int w1, int w2, int w3, int w4, int w5) {
   }
 }
 
-inline void ssmp_broadcast7(int w0, int w1, int w2, int w3, int w4, int w5, int w6) { 
-  int core;
-  for (core = 0; core < ssmp_num_ues_; core++) {
-    if (core == ssmp_id_) {
-      continue;
-    }
-    
-    ssmp_send7(core, w0, w1, w2, w3, w4, w5, w6);
-  }
-}
-
-
-
 inline void ssmp_broadcast_par(int w0, int w1, int w2, int w3) {
   int *sent = (int *) calloc(ssmp_num_ues_, sizeof(int));
   int num_to_send = ssmp_num_ues_ - 1;
@@ -437,7 +208,7 @@ inline void ssmp_broadcast_par(int w0, int w1, int w2, int w3) {
       continue;
     }
     
-    if (ssmp_send_try(try_to, w0, w1, w2, w3)) {
+    if (ssmp_send_try4(try_to, w0, w1, w2, w3)) {
       num_to_send--;
       sent[try_to] = 1;
     }
@@ -447,169 +218,6 @@ inline void ssmp_broadcast_par(int w0, int w1, int w2, int w3) {
 }
 
 
-/* ------------------------------------------------------------------------------- */
-/* receiving functions : default is blocking */
-/* ------------------------------------------------------------------------------- */
-
-inline void ssmp_recv_from(int from, ssmp_msg_t *msg) {
-  ssmp_msg_t *m = ssmp_recv_buf[from];
-  PD("recv from %d\n", from);
-  while(!m->state);
-
-  msg->sender = from;
-  msg->w0 = m->w0;
-  msg->w1 = m->w1;
-  msg->w2 = m->w2;
-  msg->w3 = m->w3;
-
-  m->state = 0;
-  PD("recved from %d\n", from);
-}
-
-inline void ssmp_recv_from6(int from, ssmp_msg_t *msg) {
-  ssmp_msg_t *m = ssmp_recv_buf[from];
-  PD("recv from %d\n", from);
-  while(!m->state);
-
-
-  msg->w0 = m->w0;
-  msg->w1 = m->w1;
-  msg->w2 = m->w2;
-  msg->w3 = m->w3;
-  msg->w4 = m->w4;
-  msg->w5 = m->w5;
-  msg->sender = from;
-
-  m->state = 0;
-  PD("recved from %d\n", from);
-}
-
-
-inline int ssmp_recv_from_try(int from, ssmp_msg_t *msg) {
-  ssmp_msg_t *m = ssmp_recv_buf[from];
-  PD("recv from %d\n", from);
-  if (m->state) {
-
-    msg->sender = from;
-    msg->w0 = m->w0;
-    msg->w1 = m->w1;
-    msg->w2 = m->w2;
-    msg->w3 = m->w3;
-
-    m->state = 0;
-    PD("recved from %d\n", from);
-    return 1;
-  }
-  return 0;
-}
-
-inline int ssmp_recv_from_try1(int from, ssmp_msg_t *msg) {
-  ssmp_msg_t *m = ssmp_recv_buf[from];
-  PD("recv from %d\n", from);
-  if (m->state) {
-
-    msg->sender = from;
-    msg->w0 = m->w0;
-
-    m->state = 0;
-    PD("recved from %d\n", from);
-    return 1;
-  }
-  return 0;
-}
-
-inline int ssmp_recv_from_try6(int from, ssmp_msg_t *msg) {
-  ssmp_msg_t *m = ssmp_recv_buf[from];
-  PD("recv from %d\n", from);
-  if (m->state) {
-
-    msg->sender = from;
-    msg->w0 = m->w0;
-    msg->w1 = m->w1;
-    msg->w2 = m->w2;
-    msg->w3 = m->w3;
-    msg->w4 = m->w4;
-    msg->w5 = m->w5;
-
-    m->state = 0;
-    PD("recved from %d\n", from);
-    return 1;
-  }
-  return 0;
-}
-
-
-inline void ssmp_recv(ssmp_msg_t *msg) {
-  while(1) {
-    last_recv_from = (last_recv_from + 1) % ssmp_num_ues_;
-    if (last_recv_from == ssmp_id_) {
-      continue;
-    } 
-
-    if (ssmp_recv_from_try(last_recv_from, msg)) {
-      return;
-    }
-  }
-}
-
-inline void ssmp_recv1(ssmp_msg_t *msg) {
-  while(1) {
-    last_recv_from = (last_recv_from + 1) % ssmp_num_ues_;
-    if (last_recv_from == ssmp_id_) {
-      continue;
-    } 
-
-    if (ssmp_recv_from_try1(last_recv_from, msg)) {
-      return;
-    }
-  }
-}
-
-inline void ssmp_recv6(ssmp_msg_t *msg) {
-  while(1) {
-    last_recv_from = (last_recv_from + 1) % ssmp_num_ues_;
-    if (last_recv_from == ssmp_id_) {
-      continue;
-    } 
-
-    if (ssmp_recv_from_try6(last_recv_from, msg)) {
-      return;
-    }
-  }
-}
-
-
-inline int ssmp_recv_try(ssmp_msg_t *msg) {
-  int i;
-  for (i = 0; i < ssmp_num_ues_; i++) {
-    last_recv_from = (last_recv_from + 1) % ssmp_num_ues_;
-    if (last_recv_from == ssmp_id_) {
-      continue;
-    } 
-
-    if (ssmp_recv_from_try(last_recv_from, msg)) {
-      return 1;
-    }
-  }
-
-  return 0;
-}
-
-inline int ssmp_recv_try6(ssmp_msg_t *msg) {
-  int i;
-  for (i = 0; i < ssmp_num_ues_; i++) {
-    last_recv_from = (last_recv_from + 1) % ssmp_num_ues_;
-    if (last_recv_from == ssmp_id_) {
-      continue;
-    } 
-
-    if (ssmp_recv_from_try6(last_recv_from, msg)) {
-      return 1;
-    }
-  }
-
-  return 0;
-}
 
 /* ------------------------------------------------------------------------------- */
 /* color-based recv fucntions */
@@ -667,42 +275,6 @@ inline void ssmp_color_buf_free(ssmp_color_buf_t *cbuf) {
   free(cbuf->buf);
 }
 
-inline void ssmp_recv_color(ssmp_color_buf_t *cbuf, ssmp_msg_t *msg) {
-  int from;
-  while(1) {
-    //XXX: maybe have a last_recv_from field
-    for (from = 0; from < cbuf->num_ues; from++) {
-
-      if (cbuf->buf[from]->state) {
-	msg->w0 = cbuf->buf[from]->w0;
-	msg->w1 = cbuf->buf[from]->w1;
-	msg->w2 = cbuf->buf[from]->w2;
-	msg->w3 = cbuf->buf[from]->w3;
-
-	msg->sender = cbuf->from[from];
-	cbuf->buf[from]->state = 0;
-	return;
-      }
-    }
-  }
-}
-
-inline void ssmp_recv_color_cp(ssmp_color_buf_t *cbuf, ssmp_msg_t *msg, int length) {
-  int from;
-  while(1) {
-    //XXX: maybe have a last_recv_from field
-    for (from = 0; from < cbuf->num_ues; from++) {
-
-      if (cbuf->buf[from]->state) {
-	memcpy(msg, cbuf->buf[from], length);
-
-	msg->sender = cbuf->from[from];
-	cbuf->buf[from]->state = 0;
-	return;
-      }
-    }
-  }
-}
 
 
 /* ------------------------------------------------------------------------------- */

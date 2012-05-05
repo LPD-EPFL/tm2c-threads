@@ -18,6 +18,13 @@
 /* ------------------------------------------------------------------------------- */
 #define SSMP_NUM_BARRIERS 16
 
+#define SP(args...) printf("[%d] ", ssmp_id_); printf(args); printf("\n"); fflush(stdout)
+#ifdef SSMP_DEBUG
+#define PD(args...) printf("[%d] ", ssmp_id_); printf(args); printf("\n"); fflush(stdout)
+#else
+#define PD(args...) 
+#endif
+
 
 /* ------------------------------------------------------------------------------- */
 /* types */
@@ -66,24 +73,26 @@ extern void ssmp_term(void);
 /* sending functions : default is blocking */
 /* ------------------------------------------------------------------------------- */
 
-/* blocking send from 1 to 7 words */
-extern inline void ssmp_send(int to, int w0, int w1, int w2, int w3);
+/* blocking send length words */
+extern inline void ssmp_send(int to, ssmp_msg_t *msg, int length);
+/* blocking send from 1 to 6 words */
 extern inline void ssmp_send1(int to, int w0);
 extern inline void ssmp_send2(int to, int w0, int w1);
 extern inline void ssmp_send3(int to, int w0, int w1, int w2);
-#define ssmp_send4 ssmp_send
+extern inline void ssmp_send4(int to, int w0, int w1, int w2, int w3);
 extern inline void ssmp_send5(int to, int w0, int w1, int w2, int w3, int w4);
 extern inline void ssmp_send6(int to, int w0, int w1, int w2, int w3, int w4, int w5);
-extern inline void ssmp_send7(int to, int w0, int w1, int w2, int w3, int w4, int w5, int w6);
-/* non-blocking send from 1 to 7 words */
-extern inline int ssmp_send_try(int to, int w0, int w1, int w2, int w3);
+
+/* non-blocking send lengthwords */
+extern inline int ssmp_send_try(int to, ssmp_msg_t *msg, int length);
+/* non-blocking send from 1 to 6 words */
 extern inline int ssmp_send_try1(int to, int w0);
 extern inline int ssmp_send_try2(int to, int w0, int w1);
 extern inline int ssmp_send_try3(int to, int w0, int w1, int w2);
-#define ssmp_send_try4  ssmp_send_try
+extern inline int ssmp_send_try4(int to, int w0, int w1, int w2, int w3);
 extern inline int ssmp_send_try5(int to, int w0, int w1, int w2, int w3, int w4);
 extern inline int ssmp_send_try6(int to, int w0, int w1, int w2, int w3, int w4, int w5);
-extern inline int ssmp_send_try7(int to, int w0, int w1, int w2, int w3, int w4, int w5, int w6);
+
 
 /* ------------------------------------------------------------------------------- */
 /* broadcasting functions */
@@ -106,22 +115,22 @@ extern inline void ssmp_broadcast_par(int w0, int w1, int w2, int w3); //XXX: fi
 /* ------------------------------------------------------------------------------- */
 
 /* blocking receive from process from */
-extern inline void ssmp_recv_from(int from, ssmp_msg_t *msg);
+extern inline void ssmp_recv_from(int from, ssmp_msg_t *msg, int length);
 extern inline void ssmp_recv_from6(int from, ssmp_msg_t *msg);
 /* non-blocking receive from process from
    returns 1 if recved msg, else 0 */
-extern inline int ssmp_recv_from_try(int from, ssmp_msg_t *msg);
+extern inline int ssmp_recv_from_try(int from, ssmp_msg_t *msg, int length);
 extern inline int ssmp_recv_from_try1(int from, ssmp_msg_t *msg);
 extern inline int ssmp_recv_from_try6(int from, ssmp_msg_t *msg);
 /* blocking receive from any proc. 
    Sender at msg->sender */
-extern inline void ssmp_recv(ssmp_msg_t *msg);
+extern inline void ssmp_recv(ssmp_msg_t *msg, int length);
 extern inline void ssmp_recv1(ssmp_msg_t *msg);
 extern inline void ssmp_recv6(ssmp_msg_t *msg);
 /* blocking receive from any proc. 
    returns 1 if recved msg, else 0
    Sender at msg->sender */
-extern inline int ssmp_recv_try(ssmp_msg_t *msg);
+extern inline int ssmp_recv_try(ssmp_msg_t *msg, int length);
 extern inline int ssmp_recv_try6(ssmp_msg_t *msg);
 
 
@@ -131,8 +140,8 @@ extern inline int ssmp_recv_try6(ssmp_msg_t *msg);
 
 extern inline void ssmp_color_buf_init(ssmp_color_buf_t *cbuf, int (*color)(int));
 extern inline void ssmp_color_buf_free(ssmp_color_buf_t *cbuf);
-extern inline void ssmp_recv_color(ssmp_color_buf_t *cbuf, ssmp_msg_t *msg);
-inline void ssmp_recv_color_cp(ssmp_color_buf_t *cbuf, ssmp_msg_t *msg, int length);
+extern inline void ssmp_recv_color(ssmp_color_buf_t *cbuf, ssmp_msg_t *msg, int length);
+extern inline void ssmp_recv_color4(ssmp_color_buf_t *cbuf, ssmp_msg_t *msg);
 
 /* ------------------------------------------------------------------------------- */
 /* barrier functions */

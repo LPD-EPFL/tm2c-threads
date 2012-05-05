@@ -81,7 +81,8 @@ int main(int argc, char **argv) {
 	exit(0);
       }
       from[msg.sender]++;
-      ssmp_send2(msg.sender, msg.w1, msg.w3);
+      //      ssmp_send2(msg.sender, msg.w1, msg.w3);
+      ssmp_send(msg.sender, &msg, 8);
     }
   }
   else {
@@ -91,8 +92,10 @@ int main(int argc, char **argv) {
     
     while (nm1--) {
       to = (to + 2) % num_procs;
-      ssmp_send6(to, nm1, nm1, nm1, nm1, nm1, to);
-      ssmp_recv_from(to, &msg);
+      msg.w0 = nm1;
+      //      ssmp_send6(to, nm1, nm1, nm1, nm1, nm1, to);
+      ssmp_send(to, &msg, 24);
+      ssmp_recv_from(to, &msg, 16);
     }
   }
 
