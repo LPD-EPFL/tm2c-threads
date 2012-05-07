@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
     int from = ID+1;
     
     while(1) {
-      ssmp_recv_from6(from, &msg);
+      ssmp_recv_from(from, &msg, 24);
       if (msg.w0 < 0) {
 	P("exiting ..");
 	int co;
@@ -99,7 +99,8 @@ int main(int argc, char **argv) {
     long long int nm1 = nm;
     
     while (nm1--) {
-      ssmp_send6(to, nm1, nm1, nm1, nm1, nm1, to);
+      msg.w0 = nm1;
+      ssmp_send(to, &msg, 24);
       //      ssmp_recv_from(to, &msg);
     }
   }

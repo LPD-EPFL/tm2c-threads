@@ -57,8 +57,6 @@ int main(int argc, char **argv) {
   ssmp_mem_init(ID, num_procs);
   P("Initialized child %u", rank);
 
-  size_t datas = 6*sizeof(int);
-
   ssmp_barrier_wait(0);
   P("CLEARED barrier %d", 0);
 
@@ -78,13 +76,13 @@ int main(int argc, char **argv) {
     while(1) {
       //      ssmp_recv6(&msg);
       //      ssmp_recv_color(&cbuf, &msg);
-      ssmp_recv_color_cp(&cbuf, &msg, datas);
+      ssmp_recv_color(&cbuf, &msg, 60);
       //      P("reved from %d", msg.sender);
       if (msg.w0 < 0) {
 	P("exiting ..");
 	int co;
 	for (co = 0; co < ssmp_num_ues(); co++) {
-	  P("from[%d] = %d", co, from[co]);
+	  //	  P("from[%d] = %d", co, from[co]);
 	}
 	exit(0);
       }
@@ -99,8 +97,10 @@ int main(int argc, char **argv) {
     
     while (nm1--) {
       to = (to + 2) % num_procs;
-      ssmp_send6(to, nm1, nm1, nm1, nm1, nm1, to);
-      ssmp_recv_from(to, &msg);
+      msg.w0 = nm1;
+      ssmp_send(to, &msg, 24);
+      //  ssmp_send6(to, nm1, nm1, nm1, nm1, nm1, to);
+      ssmp_recv_from(to, &msg, 24);
     }
   }
 
