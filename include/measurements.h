@@ -2,6 +2,9 @@
 #define _MEASUREMENTS_H_
 
 #include "common.h"
+#ifdef SSMP
+#include <ssmp.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -103,9 +106,10 @@ do {\
     // }}} 
     // ================================== TICKS ================================== {{{
 #elif defined DO_TIMINGS_TICKS
-
+  
 #include <stdint.h>
-    typedef uint64_t ticks;
+#ifndef SSMP
+  typedef uint64_t ticks;
 
 #if defined(__i386__)
   EXINLINED ticks getticks(void) {
@@ -121,6 +125,7 @@ do {\
     __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
     return ( (unsigned long long)lo)|( ((unsigned long long)hi)<<32 );
   }
+#endif
 #endif
 
 #define ENTRY_TIMES_SIZE 16
