@@ -25,6 +25,7 @@
 #include "mcore_malloc.h"
 
 PS_REPLY* ps_remote_msg; // holds the received msg
+static PS_COMMAND *ps_remote;
 
 INLINED void sys_ps_command_reply(nodeid_t sender,
                     PS_REPLY_TYPE command,
@@ -163,6 +164,7 @@ sys_ps_init_(void)
 void
 sys_dsl_init(void)
 {
+  ps_remote = (PS_COMMAND *) malloc(sizeof (PS_COMMAND)); //TODO: free at finalize + check for null
 	BARRIERW
 
 }
@@ -183,22 +185,30 @@ sys_ps_term(void)
 // Otherwise, we return the value.
 INLINED void 
 sys_ps_command_reply(nodeid_t sender,
-                    PS_REPLY_TYPE command,
-                    tm_addr_t address,
-                    uint32_t* value,
-                    CONFLICT_TYPE response)
+		     PS_REPLY_TYPE command,
+		     tm_addr_t address,
+		     uint32_t* value,
+		     CONFLICT_TYPE response)
 {
-#ifndef PGAS
-  ssmp_send1(sender, response);
-#else //PGAS
-  if (command == PS_SUBSCRIBE_RESPONSE) {
-    ssmp_send2(sender, response, *(int *) value);
+  PS_REPLY reply;
+  reply.type = command;
+  reply.response = response;
+
+  PRINTD("sys_ps_command_reply: src=%u target=%d", reply.nodeId, sender);
+#ifdef PGAS
+  if (value != NULL) {
+    reply.value = *value;
+    PRINTD("sys_ps_command_reply: read value %u\n", reply.value);
+  } else {
+    reply.address = (uintptr_t) address;
   }
-  else {
-    ssmp_send1(sender, response);
-  }
+#else
+  reply.address = (uintptr_t) address;
 #endif
+
+  ssmp_send(sender, (ssmp_msg_t *) &reply, sizeof(reply));
 }
+
 
 
 void
@@ -207,22 +217,19 @@ dsl_communication()
   int sender;
   ssmp_msg_t msg;
   PS_COMMAND_TYPE command;
-  unsigned int address;
 
   ssmp_color_buf_t cbuf;
   ssmp_color_buf_init(&cbuf, color_app);
 
   while (1) {
 
-    ssmp_recv_color(&cbuf, &msg, 24);
+    ssmp_recv_color(&cbuf, &msg, sizeof(*ps_remote));
     sender = msg.sender;
-    //    PRINT("recved msg from %d", sender);
+    
+    ps_remote = (PS_COMMAND *) &msg;
 
-    command = msg.w0;
-
-    switch (command) {
+    switch (ps_remote->type) {
     case PS_SUBSCRIBE:
-      address = msg.w1;
 #ifdef DEBUG_UTILIZATION
       read_reqs_num++;
 #endif
@@ -232,28 +239,26 @@ dsl_communication()
 	PRINT("RL addr: %3d, val: %d", address, PGAS_read(address));
       */
       sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE,
-			  address, 
-			  PGAS_read(address),
-			  try_subscribe(sender, address));
+			   ps_remote->address, 
+			   PGAS_read(ps_remote->address),
+			   try_subscribe(sender, ps_remote->address));
 #else
       sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE, 
-			  address, 
-			  NULL,
-			  try_subscribe(sender, address));
+			   ps_remote->address, 
+			   NULL,
+			   try_subscribe(sender, ps_remote->address));
       //sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE, address, NO_CONFLICT);
 #endif
       break;
     case PS_PUBLISH:
       {
-	address = msg.w1;
 
 #ifdef DEBUG_UTILIZATION
 	write_reqs_num++;
 #endif
 
-	CONFLICT_TYPE conflict = try_publish(sender, address);
+	CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
 #ifdef PGAS
-	int write_value = msg.w2;
 	if (conflict == NO_CONFLICT) {
 	  /*
 	    union {
@@ -262,28 +267,26 @@ dsl_communication()
 	    } convert;
 	    convert.i = write_value;
 	    PRINT("\t\t\tWriting (val:%d|nxt:%d) to address %d", convert.s[0], convert.s[1], address);
-	  */
+	  */  
 	  write_set_pgas_insert(PGAS_write_sets[sender],
-				write_value, 
-				address);
+				ps_remote->write_value, 
+				ps_remote->address);
 	}
 #endif
 	sys_ps_command_reply(sender, PS_PUBLISH_RESPONSE, 
-			    address,
-			    NULL,
-			    conflict);
+			     ps_remote->address,
+			     NULL,
+			     conflict);
 	break;
       }
 #ifdef PGAS
     case PS_WRITE_INC:
       {
-	address = msg.w1;
-	int write_value = msg.w2;
 
 #ifdef DEBUG_UTILIZATION
 	write_reqs_num++;
 #endif
-	CONFLICT_TYPE conflict = try_publish(sender, address);
+	CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
 	if (conflict == NO_CONFLICT) {
 	  //		      PRINT("wval for %d is %d", address, write_value);
 	  /*
@@ -291,35 +294,35 @@ dsl_communication()
 	    PGAS_read(address) + write_value);
 	  */
 	  write_set_pgas_insert(PGAS_write_sets[sender], 
-				*(int *) PGAS_read(address) + write_value,
-                                address);
+				*(int *) PGAS_read(ps_remote->address) + ps_remote->write_value,
+                                ps_remote->address);
 	}
 	sys_ps_command_reply(sender, PS_PUBLISH_RESPONSE,
-			    address,
-			    NULL,
-			    conflict);
+			     ps_remote->address,
+			     NULL,
+			     conflict);
 	break;
       }
     case PS_LOAD_NONTX:
       {
-	address = msg.w1;
 	//		PRINT("((non-tx ld: from %d, addr %d (val: %d)))", sender, address, (*PGAS_read(address)));
-	ssmp_send2(sender, NO_CONFLICT, *(int *) PGAS_read(address));
+	sys_ps_command_reply(sender, PS_LOAD_NONTX_RESPONSE,
+			     ps_remote->address,
+			     PGAS_read(ps_remote->address),
+			     NO_CONFLICT);
+		
 	break;
       }
     case PS_STORE_NONTX:
       {
-	address = msg.w1;
-	int write_value = msg.w2;
 	//		PRINT("((non-tx st: from %d, addr %d (val: %d)))", sender, address, (write_value));
-	PGAS_write(address, (int) write_value);
+	PGAS_write(ps_remote->address, (int) ps_remote->write_value);
 	break;
       }
 #endif
     case PS_REMOVE_NODE:
-#ifdef PGAS	
-      int response = msg.w1;
-      if (response == NO_CONFLICT) {
+#ifdef PGAS
+      if (ps_remote->response == NO_CONFLICT) {
 	write_set_pgas_persist(PGAS_write_sets[sender]);
       }
       PGAS_write_sets[sender] = write_set_pgas_empty(PGAS_write_sets[sender]);
@@ -327,43 +330,27 @@ dsl_communication()
       ps_hashtable_delete_node(ps_hashtable, sender);
       break;
     case PS_UNSUBSCRIBE:
-      address = msg.w1;
-      ps_hashtable_delete(ps_hashtable, sender, address, READ);
+      ps_hashtable_delete(ps_hashtable, sender, ps_remote->address, READ);
       break;
     case PS_PUBLISH_FINISH:
-      address = msg.w1;
-      ps_hashtable_delete(ps_hashtable, sender, address, WRITE);
+      ps_hashtable_delete(ps_hashtable, sender, ps_remote->address, WRITE);
       break;
     case PS_STATS:
       {
-	union {
-	  int from[2];
-	  double to;
-	} convert;
-	convert.from[0] = msg.w1;
-	convert.from[1] = msg.w2;
-	double duration = convert.to;
-
-	if (duration) {
-	  if (!ID) { PRINT("stats 1 from %d", sender); }
-	  unsigned int aborts = msg.w3;
-	  stats_aborts += aborts;
-	  unsigned int commits = msg.w4;
-	  stats_commits += commits;
-	  stats_duration += duration;
-	  unsigned int max_retries = msg.w5;
-	  stats_max_retries = stats_max_retries < max_retries ? max_retries
-	    : stats_max_retries;
-	  stats_total += commits + aborts;
+	if (ps_remote->tx_duration) {
+	  stats_aborts += ps_remote->aborts;
+	  stats_commits += ps_remote->commits;
+	  stats_duration += ps_remote->tx_duration;
+	  stats_max_retries = stats_max_retries < ps_remote->max_retries ? ps_remote->max_retries : stats_max_retries;
+	  stats_total += ps_remote->commits + ps_remote->aborts;
 	}
 	else {
-	  stats_aborts_raw += msg.w3;
-	  stats_aborts_war += msg.w4;
-	  stats_aborts_waw += msg.w5;
+	  stats_aborts_raw += ps_remote->aborts_raw;
+	  stats_aborts_war += ps_remote->aborts_war;
+	  stats_aborts_waw += ps_remote->aborts_waw;
 	}
-
 	if (++stats_received >= 2*NUM_APP_NODES) {
-	  if (ID == 0) {
+	  if (NODE_ID() == 0) {
 	    print_global_stats();
 
 	    print_hashtable_usage();
@@ -376,14 +363,12 @@ dsl_communication()
 
 	  EXIT(0);
 	}
+      default:
+	PRINTD("REMOTE MSG: ??");
       }
-    default:
-      PRINTD("REMOTE MSG: ??");
     }
   }
 }
-
-
 
 /*
  * Seeding the rand()
@@ -404,16 +389,6 @@ udelay(unsigned int micros)
    while (wtime() < __ts_end);
    //usleep(micros);
 }
-
-static nodeid_t num_tm_nodes;
-static nodeid_t num_dsl_nodes;
-
-volatile nodeid_t* aux;
-volatile nodeid_t* apps;
-volatile nodeid_t* apps2;
-volatile nodeid_t* nodes;
-volatile nodeid_t* nodes2;
-volatile nodeid_t* auxNodes;
 
 void
 init_barrier()

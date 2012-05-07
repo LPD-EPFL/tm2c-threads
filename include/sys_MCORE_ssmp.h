@@ -38,25 +38,9 @@ TOTAL_NODES(void)
 INLINED int
 sys_sendcmd(void* data, size_t len, nodeid_t to)
 {
-  PS_COMMAND *cmd = (PS_COMMAND *) data;
+  //  PS_COMMAND *cmd = (PS_COMMAND *) data;
 
-  if (cmd->type != PS_REMOVE_NODE) {
-#ifdef PGAS
-    if (cmd->type == PS_WRITE_INC || cmd->type == PS_PUBLISH || cmd->type == PS_STORE_NONTX) {
-      ssmp_send3(to, cmd->type, cmd->address, cmd->write_value);
-      return 1;
-    }
-#endif
-    // not pgas or not a WRITE cmd
-    ssmp_send2(to, cmd->type, cmd->address);
-  }
-  else { /* PS_REMOVE_NODE */
-#ifndef PGAS
-    ssmp_send1(to, cmd->type);
-#else   //PGAS
-    ssmp_send2(to, cmd->type, cmd->response);
-#endif
-  }
+  ssmp_send(to, (ssmp_msg_t *) data, sizeof(PS_COMMAND));
 }
 
 INLINED int
@@ -64,24 +48,9 @@ sys_sendcmd_all(void* data, size_t len)
 {
   PS_COMMAND *cmd = (PS_COMMAND *) data;
 
-  union {
-    int from[2];
-    double to;
-  } convert;
-  convert.to = cmd->tx_duration;
-
-  int target;
+   int target;
   for (target = 0; target < NUM_DSL_NODES; target++) {
-    if (convert.to) {
-      ssmp_send6(dsl_nodes[target], PS_STATS,
-		     convert.from[0], convert.from[1], cmd->aborts, cmd->commits,
-		     cmd->max_retries);
-    }
-    else {
-      ssmp_send6(dsl_nodes[target], PS_STATS,
-		     convert.from[0], convert.from[1], 
-		     cmd->aborts_raw, cmd->aborts_war, cmd->aborts_waw);
-    }
+    ssmp_send(dsl_nodes[target], (ssmp_msg_t *) data, sizeof(PS_COMMAND));
   }
   return 1;
 }
@@ -90,13 +59,7 @@ INLINED int
 sys_recvcmd(void* data, size_t len, nodeid_t from)
 {
   PS_COMMAND *cmd = (PS_COMMAND *) data;
-  //XXX: make recv_from2
-  ssmp_msg_t msg;
-  ssmp_recv_from(from, &msg, 2);
-  cmd->response = msg.w0;
-#ifdef PGAS
-  cmd->value = msg.w1;
-#endif
+  ssmp_recv_from(from, (ssmp_msg_t *) data, sizeof(PS_COMMAND));
 
 }
 
