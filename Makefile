@@ -29,9 +29,12 @@ ssmp_send.o: ssmp_send.c
 ssmp_recv.o: ssmp_send.c
 	gcc $(VER_FLAGS) -D_GNU_SOURCE -c ssmp_recv.c $(DEBUG_CFLAGS) $(PERF_CLFAGS)
 
-ssmp.a: ssmp.o ssmp_send.o ssmp_recv.o ssmp.h
+ssmp_broadcast.o: ssmp_broadcast.c
+	gcc $(VER_FLAGS) -D_GNU_SOURCE -c ssmp_broadcast.c $(DEBUG_CFLAGS) $(PERF_CLFAGS)
+
+ssmp.a: ssmp.o ssmp_send.o ssmp_recv.o ssmp_broadcast.o ssmp.h
 	@echo Archive name = ssmp.a
-	ar -r ssmp.a ssmp.o ssmp_send.o ssmp_recv.o
+	ar -r ssmp.a ssmp.o ssmp_send.o ssmp_recv.o ssmp_broadcast.o
 	rm -f *.o	
 
 one2one: ssmp.a one2one.o common.h
