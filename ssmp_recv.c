@@ -270,3 +270,25 @@ inline void ssmp_recv_color4(ssmp_color_buf_t *cbuf, ssmp_msg_t *msg) {
   }
 }
 
+inline void ssmp_recv_color6(ssmp_color_buf_t *cbuf, ssmp_msg_t *msg) {
+  int from;
+  while(1) {
+    //XXX: maybe have a last_recv_from field
+    for (from = 0; from < cbuf->num_ues; from++) {
+
+      if (cbuf->buf[from]->state) {
+	msg->w0 = cbuf->buf[from]->w0;
+	msg->w1 = cbuf->buf[from]->w1;
+	msg->w2 = cbuf->buf[from]->w2;
+	msg->w3 = cbuf->buf[from]->w3;
+	msg->w4 = cbuf->buf[from]->w4;
+	msg->w5 = cbuf->buf[from]->w5;
+
+	msg->sender = cbuf->from[from];
+	cbuf->buf[from]->state = 0;
+	return;
+      }
+    }
+  }
+}
+

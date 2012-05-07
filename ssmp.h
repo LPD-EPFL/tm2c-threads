@@ -154,6 +154,7 @@ extern inline void ssmp_color_buf_free(ssmp_color_buf_t *cbuf);
 /* blocking receive from any of the participants according to the color function */
 extern inline void ssmp_recv_color(ssmp_color_buf_t *cbuf, ssmp_msg_t *msg, int length);
 extern inline void ssmp_recv_color4(ssmp_color_buf_t *cbuf, ssmp_msg_t *msg);
+extern inline void ssmp_recv_color6(ssmp_color_buf_t *cbuf, ssmp_msg_t *msg);
 
 /* ------------------------------------------------------------------------------- */
 /* barrier functions */
