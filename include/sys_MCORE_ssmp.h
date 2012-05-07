@@ -92,7 +92,7 @@ sys_recvcmd(void* data, size_t len, nodeid_t from)
   PS_COMMAND *cmd = (PS_COMMAND *) data;
   //XXX: make recv_from2
   ssmp_msg_t msg;
-  ssmp_recv_from(from, &msg);
+  ssmp_recv_from(from, &msg, 2);
   cmd->response = msg.w0;
 #ifdef PGAS
   cmd->value = msg.w1;

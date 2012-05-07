@@ -209,9 +209,12 @@ dsl_communication()
   PS_COMMAND_TYPE command;
   unsigned int address;
 
+  ssmp_color_buf_t cbuf;
+  ssmp_color_buf_init(&cbuf, color_app);
+
   while (1) {
 
-    ssmp_recv6(&msg);
+    ssmp_recv_color(&cbuf, &msg, 24);
     sender = msg.sender;
     //    PRINT("recved msg from %d", sender);
 

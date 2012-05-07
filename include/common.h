@@ -139,7 +139,7 @@ EXINLINED int zmq_s_send(void *socket, char *string);
 #ifndef SSMP
 #include "sys_MCORE.h"
 #else
-#include "sys_MCORE2.h"
+#include "sys_MCORE_ssmp.h"
 #endif
 #endif
 

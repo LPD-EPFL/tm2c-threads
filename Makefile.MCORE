@@ -20,7 +20,7 @@ PLATFORM_DEFINES = -DPLATFORM_MCORE \
 HAS_TASKLIB = no
 
 ARCHIVE_SRCS_PURE += mcore_malloc.c
-ARCHIVE_SRCS_PURE += sys_MCORE2.c
+ARCHIVE_SRCS_PURE += sys_MCORE_ssmp.c
 
 # same as cluster, non-pgas experiments will not work
 ALL_BMARKS = bank
