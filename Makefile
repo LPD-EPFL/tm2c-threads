@@ -1,6 +1,6 @@
 # Main Makefile for DSTM
 
-# For platform, choose one out of: iRCCE,MCORE,CLUSTER,TILERA
+# For platform, choose one out of: iRCCE,MCORE, MCORE.SSMP,CLUSTER,TILERA
 PLATFORM = MCORE.SSMP
 # USE_HASHTABLE_KHASH:  khash.h from <http://www.freewebs.com/attractivechaos/khash.h>
 # USE_HASHTABLE_UTHASH: uthash.h from <http://uthash.sourceforge.net/>
@@ -38,7 +38,7 @@ ARCHIVE_SRCS_PURE:= pubSubTM.c tm.c log.c dslock.c \
 ## Apps ##
 APPS_DIR := apps
 # add the non PGAS applications only if PGAS is not defined
-ifeq (,$(findstring UPGAS,$(PLATFORM_DEFINES)))
+ifeq (,$(findstring DPGAS,$(PLATFORM_DEFINES)))
 APPS = tm1 tm2 tm3 tm4 tm5 tm6 tm7 tm8 tm9 tm10
 endif
 
@@ -154,6 +154,12 @@ ifeq ($(PLATFORM),iRCCE)
 $(ARCHIVE):
 	@(cd $(RCCEPATH) ; make)
 endif
+
+ifeq ($(PLATFORM),TILERA)
+$(ARCHIVE):
+	@(cp ./external/tmp/libconfig-1.4.8_tilera/lib/.libs/libconfig.* ./external/lib/)
+endif
+
 
 $(DSTM_ARCHIVE): $(ARCHIVE) $(ARCHIVE_OBJS)
 	@echo Archive name = $(DSTM_ARCHIVE) 
