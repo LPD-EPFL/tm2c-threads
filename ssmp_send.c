@@ -7,21 +7,33 @@ extern int ssmp_num_ues_;
 extern int ssmp_id_;
 extern int last_recv_from;
 extern ssmp_barrier_t *ssmp_barrier;
+static ssmp_msg_t *m;
 
 /* ------------------------------------------------------------------------------- */
 /* sending functions : default is blocking */
 /* ------------------------------------------------------------------------------- */
 
 inline void ssmp_send(int to, ssmp_msg_t *msg, int length) {
+  m = ssmp_send_buf[to];
+  while(m->state);      
+
+  memcpy(m, msg, length);
+  m->state = 1;
+
+  PD("sent to %d", to);
+}
+
+inline void ssmp_sendb(int to, ssmp_msg_t *msg, int length) {
   
   while(ssmp_send_buf[to]->state);      
 
   memcpy(ssmp_send_buf[to], msg, length);
 
   ssmp_send_buf[to]->state = 1;
-
+  while(ssmp_send_buf[to]->state);
   PD("sent to %d", to);
 }
+
 
 inline int ssmp_send_try(int to, ssmp_msg_t *msg, int length) {
   

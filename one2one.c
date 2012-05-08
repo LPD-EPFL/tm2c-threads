@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
  fork_done:
   ID = rank;
   P("Initializing child %u", rank);
-  if (argc > 2 && num_procs == 2) {
+  if (argc > 3 && num_procs == 2) {
     if (ID) {
       set_cpu(2);
     }

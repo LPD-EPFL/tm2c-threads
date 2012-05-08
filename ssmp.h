@@ -80,7 +80,10 @@ extern void ssmp_term(void);
 /* ------------------------------------------------------------------------------- */
 
 /* blocking send length words to to */
+/* blocking in the sense that the data are copied to the receiver's buffer */
 extern inline void ssmp_send(int to, ssmp_msg_t *msg, int length);
+/* blocking until the receivers reads the data */
+extern inline void ssmp_sendb(int to, ssmp_msg_t *msg, int length);
 /* blocking send from 1 to 6 words to to */
 extern inline void ssmp_send1(int to, int w0);
 extern inline void ssmp_send2(int to, int w0, int w1);

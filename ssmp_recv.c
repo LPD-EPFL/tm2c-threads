@@ -7,19 +7,22 @@ extern int ssmp_num_ues_;
 extern int ssmp_id_;
 extern int last_recv_from;
 extern ssmp_barrier_t *ssmp_barrier;
+static ssmp_msg_t *m;
 
 /* ------------------------------------------------------------------------------- */
 /* receiving functions : default is blocking */
 /* ------------------------------------------------------------------------------- */
 
 inline void ssmp_recv_from(int from, ssmp_msg_t *msg, int length) {
+  m = ssmp_recv_buf[from];
   PD("recv from %d\n", from);
-  while(!ssmp_recv_buf[from]->state);
+  while(!m->state);
 
-  memcpy(msg, ssmp_recv_buf[from], length);
+  memcpy(msg, m, length);
+  m->state = 0;
 
   msg->sender = from;
-  ssmp_recv_buf[from]->state = 0;
+
   PD("recved from %d\n", from);
 }
 
