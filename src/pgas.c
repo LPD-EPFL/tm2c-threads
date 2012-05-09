@@ -9,7 +9,7 @@
 
 int * SHMEM;
 
-const size_t SHMEM_SIZE = 64 * 1024 * 1024 * sizeof(int); /* 64 M ints */
+const size_t SHMEM_SIZE = 1024 * 1024 * 1024; /* 1GiB */
 
 unsigned int shmem_index = 0;
 unsigned int id__m1d2;

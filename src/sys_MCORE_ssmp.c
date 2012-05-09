@@ -24,7 +24,7 @@
 #include "pgas.h"
 #include "mcore_malloc.h"
 
-#define DEBUG_UTILIZATION
+//#define DEBUG_UTILIZATION
 #ifdef  DEBUG_UTILIZATION
 unsigned int read_reqs_num = 0, write_reqs_num = 0;
 #endif
@@ -211,7 +211,7 @@ sys_ps_command_reply(nodeid_t sender,
   reply.address = (uintptr_t) address;
 #endif
 
-  ssmp_send(sender, (ssmp_msg_t *) &reply, sizeof(reply));
+  ssmp_send(sender, (ssmp_msg_t *) &reply, sizeof(PS_REPLY));
 }
 
 
