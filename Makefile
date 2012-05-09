@@ -1,6 +1,6 @@
 # Main Makefile for DSTM
 
-# For platform, choose one out of: iRCCE,MCORE, MCORE.SSMP,CLUSTER,TILERA
+# For platform, choose one out of: iRCCE,MCORE,MCORE.SSMP,CLUSTER,TILERA
 PLATFORM = MCORE.SSMP
 # USE_HASHTABLE_KHASH:  khash.h from <http://www.freewebs.com/attractivechaos/khash.h>
 # USE_HASHTABLE_UTHASH: uthash.h from <http://uthash.sourceforge.net/>
@@ -25,7 +25,7 @@ LIBS := -L$(TOP)/external/lib \
 # EXTRA_DEFINES are passed through the command line
 DEFINES := $(PLATFORM_DEFINES) $(EXTRA_DEFINES)
 
-DEBUG_FLAGS := #-O0 -g -ggdb #-DDEBUG 
+DEBUG_FLAGS := -g -ggdb -fno-inline#-DDEBUG 
 
 ## Archive ##
 ARCHIVE_SRCS_PURE:= pubSubTM.c tm.c log.c dslock.c \
@@ -86,7 +86,7 @@ endif
 
 
 ifneq (,$(findstring DPGAS,$(PLATFORM_DEFINES)))
-ALL_BMARKS += bankpgas mbllpgas mbhtpgas
+ALL_BMARKS += bankpgas mbllpgas mbhtpgas mp
 endif
 
 # define the compiler now, if platform makefile exported something through
