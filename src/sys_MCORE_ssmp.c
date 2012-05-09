@@ -24,6 +24,11 @@
 #include "pgas.h"
 #include "mcore_malloc.h"
 
+#define DEBUG_UTILIZATION
+#ifdef  DEBUG_UTILIZATION
+unsigned int read_reqs_num = 0, write_reqs_num = 0;
+#endif
+
 PS_REPLY* ps_remote_msg; // holds the received msg
 static PS_COMMAND *ps_remote;
 
