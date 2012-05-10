@@ -1,4 +1,3 @@
-
 PLATFORM_CFLAGS =
 PLATFORM_LDFLAGS = 
 PLATFORM_LIBS = -lssmp -lrt
@@ -8,7 +7,7 @@ PLATFORM_DEFINES = -DPLATFORM_MCORE \
                    -UPGAS \
                    -DREAD_BUF_OFF \
                    -ULIBTASK \
-                   -UBACKOFF \
+                   -UBACKOFF_RETRY \
                    -UFINISH_ALL_PARALLEL \
 		   -UDO_TIMINGS \
 		   -DSSMP
