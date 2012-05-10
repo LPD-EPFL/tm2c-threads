@@ -24,6 +24,11 @@
 #include "pgas.h"
 #include "mcore_malloc.h"
 
+//#define DEBUG_UTILIZATION
+#ifdef  DEBUG_UTILIZATION
+unsigned int read_reqs_num = 0, write_reqs_num = 0;
+#endif
+
 PS_REPLY* ps_remote_msg; // holds the received msg
 static PS_COMMAND *ps_remote;
 
@@ -206,7 +211,7 @@ sys_ps_command_reply(nodeid_t sender,
   reply.address = (uintptr_t) address;
 #endif
 
-  ssmp_send(sender, (ssmp_msg_t *) &reply, sizeof(reply));
+  ssmp_send(sender, (ssmp_msg_t *) &reply, sizeof(PS_REPLY));
 }
 
 
@@ -260,14 +265,6 @@ dsl_communication()
 	CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
 #ifdef PGAS
 	if (conflict == NO_CONFLICT) {
-	  /*
-	    union {
-	    int i;
-	    unsigned short s[2];
-	    } convert;
-	    convert.i = write_value;
-	    PRINT("\t\t\tWriting (val:%d|nxt:%d) to address %d", convert.s[0], convert.s[1], address);
-	  */  
 	  write_set_pgas_insert(PGAS_write_sets[sender],
 				ps_remote->write_value, 
 				ps_remote->address);

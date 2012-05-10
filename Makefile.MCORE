@@ -8,7 +8,7 @@ PLATFORM_DEFINES = -DPLATFORM_MCORE \
                    -UPGAS \
                    -DREAD_BUF_OFF \
                    -DLIBTASK \
-                   -UBACKOFF \
+                   -UBACKOFF_RETRY \
                    -UFINISH_ALL_PARALLEL \
 		   -UDO_TIMINGS
 

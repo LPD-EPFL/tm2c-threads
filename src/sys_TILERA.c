@@ -244,7 +244,7 @@ void dsl_communication() {
   int sender;
   PS_COMMAND_TYPE command;
   unsigned int address;
-  PRINT("ps rep words = %d", sizeof(PS_REPLY)/sizeof(int_reg_t));
+
   while (1) {
 
     tmc_udn0_receive_buffer(ps_remote, PS_COMMAND_WORDS);

@@ -19,6 +19,7 @@
 /run_sim.sh
 /bmarks/readonly
 /bmarks/mr
+/bmarks/mp
 *~
 /external/tmp/libconfig-1.4.8_scc/tinytest/.deps/
 /external/tmp/libconfig-1.4.8_scc/lib/.deps/
