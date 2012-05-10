@@ -160,7 +160,7 @@ void ps_publish_all() {
         CONFLICT_TYPE conflict;
         tm_addr_t addr = to_addr(write_entries[locked].address);
 #ifndef BACKOFF_RETRY
-        unsigned int num_delays = 1;
+        unsigned int num_delays = 0;
         unsigned int delay = BACKOFF_DELAY; //micro
 retry:
 #endif
@@ -172,9 +172,9 @@ retry:
             //ps_publish_finish_all(locked);
 #ifndef BACKOFF_RETRY
             if (num_delays++ < BACKOFF_MAX) {
-                udelay(delay);
-                delay = (2^num_delays) * BACKOFF_DELAY;
-                goto retry;
+	      udelay(rand_range(delay));
+	      delay *= 2;
+	      goto retry;
             }
 #endif
             TX_ABORT(conflict);

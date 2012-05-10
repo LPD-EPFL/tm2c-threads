@@ -28,18 +28,18 @@ extern "C" {
 #define ONCE                            if (NODE_ID() == 1 || TOTAL_NODES() == 1)
 
 
-#ifndef BACKOFF_RETRY
+#ifdef BACKOFF_RETRY
   /*
     if BACKOFF_RETRY is set, the BACKOFF-RETRY contention management scheme is used. This is similar to the TCP-IP exponentional increasing backoff and retry. When BACKOFF_MAX = infinitiy -> then every tx is expected to terminate whp.
    */
-#define BACKOFF_MAX                     10
-#define BACKOFF_DELAY                   631
+#define BACKOFF_MAX                     5
+#define BACKOFF_DELAY                   7
 #else
   /*
   else, in case of a conflict the transaction is not aborted, but backsoff and retries to acquire the same address BACKOFF_MAX time beforee aborting
   */
 #define BACKOFF_MAX                     3
-#define BACKOFF_DELAY                   172
+#define BACKOFF_DELAY                   7
 #endif
 
 
@@ -306,7 +306,7 @@ extern "C" {
                 //the node is NOT already subscribed for the address
                 CONFLICT_TYPE conflict;
 #ifndef BACKOFF_RETRY
-                unsigned int num_delays = 1;
+                unsigned int num_delays = 0;
                 unsigned int delay = BACKOFF_DELAY;
 
 retry:
@@ -315,9 +315,9 @@ retry:
                 if ((conflict = ps_subscribe(addr)) != NO_CONFLICT) {
 #ifndef BACKOFF_RETRY
                     if (num_delays++ < BACKOFF_MAX) {
-                        udelay(delay);
-                        delay = (2^num_delays) * BACKOFF_DELAY;
-                        goto retry;
+		      udelay(rand_range(delay));
+		      delay *= 2;
+		      goto retry;
                     }
 #endif
                     TX_ABORT(conflict);
@@ -357,9 +357,9 @@ retry:
 #endif
 #ifndef BACKOFF_RETRY
             if (num_delays++ < BACKOFF_MAX) {
-                udelay(delay);
-                delay *= 2;
-                goto retry;
+	      udelay(rand_range(delay));
+	      delay *= 2;
+	      goto retry;
             }
 #endif
             TX_ABORT(conflict);
