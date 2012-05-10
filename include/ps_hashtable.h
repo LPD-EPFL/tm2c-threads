@@ -55,6 +55,10 @@ struct uthash_elem_struct {
  */
 typedef struct uthash_elem_struct** ps_hashtable_t;
 
+#elif USE_ARRAY
+#define NUM_OF_ELEMENTS 128 * 1024 * 1024
+typedef rw_entry_t* ps_hashtable_t;
+
 #elif  USE_HASHTABLE_SDD
 
 #elif  USE_HASHTABLE_VT
@@ -308,6 +312,74 @@ ps_hashtable_print(ps_hashtable_t ps_hashtable)
 
 		rw_entry_print_readers(entry);
 	}
+}
+
+#elif USE_ARRAY
+
+INLINED ps_hashtable_t
+ps_hashtable_new() {
+   ps_hashtable_t ps_hashtable;
+   if ((ps_hashtable = (ps_hashtable_t) calloc(NUM_OF_ELEMENTS, sizeof(rw_entry_t)))==NULL) {
+      PRINTDNN("calloc ps_hashtable @ os_hashtable_init\n");
+      return NULL;
+   }
+
+   uintptr_t i;
+   for (i = 0; i < NUM_OF_ELEMENTS; i++) {
+      ps_hashtable[i].shorts[3] = NO_WRITER;
+   }
+
+   return ps_hashtable;
+}
+
+INLINED CONFLICT_TYPE
+ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
+                                tm_intern_addr_t address, RW rw)
+{
+
+   fprintf(stderr, "inserting %d in  %u \n",nodeId, address);
+   return rw_entry_is_conflicting(&ps_hashtable[address%NUM_OF_ELEMENTS], nodeId, rw);
+}
+
+INLINED void
+ps_hashtable_delete(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
+                                tm_intern_addr_t address, RW rw)
+{
+   fprintf(stderr, "deleting %d from %u \n",nodeId, address);
+   uintptr_t index = address%NUM_OF_ELEMENTS;
+   if (rw == WRITE) {
+      if (rw_entry_is_writer(&ps_hashtable[index],nodeId)) {
+         rw_entry_unset_writer(&ps_hashtable[index]);
+      }
+   } else {
+      rw_entry_unset(&ps_hashtable[index],nodeId);
+   }
+}
+INLINED void
+ps_hashtable_delete_node(ps_hashtable_t ps_hashtable, nodeid_t nodeId)
+{
+
+   fprintf(stderr, "deleting node  %d  \n",nodeId);
+   uintptr_t i;
+   for (i=0;i<NUM_OF_ELEMENTS;i++) {
+      if (rw_entry_is_writer(&ps_hashtable[i],nodeId)) {
+         rw_entry_unset_writer(&ps_hashtable[i]);
+      }
+      rw_entry_unset(&ps_hashtable[i],nodeId);
+   }
+}
+
+INLINED void
+ps_hashtable_print(ps_hashtable_t ps_hashtable)
+{
+
+    PRINTS("__PRINT PS_HASHTABLE________________________________________________\n");
+    uintptr_t i;
+    for (i = 0; i < NUM_OF_ELEMENTS; i++) {
+        PRINTS(" [%"PRIxIA"]: Write: %-3d\n   ", i, ps_hashtable[i].shorts[3]);
+        rw_entry_print_readers(&ps_hashtable[i]);
+    }
+    FLUSH;
 }
 
 #elif  USE_HASHTABLE_SDD

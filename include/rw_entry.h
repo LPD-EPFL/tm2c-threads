@@ -21,7 +21,7 @@ extern "C" {
 
 #define NO_WRITERI 0x10000000
 #define NO_WRITER 0x1000
-#define NUM_OF_BUCKETS 48
+#define NUM_OF_BUCKETS 48 
 
 
 #define FIELD(rw_entry, field) (rw_entry->n##field)
