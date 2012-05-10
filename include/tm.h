@@ -28,12 +28,18 @@ extern "C" {
 #define ONCE                            if (NODE_ID() == 1 || TOTAL_NODES() == 1)
 
 
-#ifdef BACKOFF
-#define BACKOFF_MAX                     3
-#define BACKOFF_DELAY                   172
-#else
+#ifndef BACKOFF_RETRY
+  /*
+    if BACKOFF_RETRY is set, the BACKOFF-RETRY contention management scheme is used. This is similar to the TCP-IP exponentional increasing backoff and retry. When BACKOFF_MAX = infinitiy -> then every tx is expected to terminate whp.
+   */
 #define BACKOFF_MAX                     10
 #define BACKOFF_DELAY                   631
+#else
+  /*
+  else, in case of a conflict the transaction is not aborted, but backsoff and retries to acquire the same address BACKOFF_MAX time beforee aborting
+  */
+#define BACKOFF_MAX                     3
+#define BACKOFF_DELAY                   172
 #endif
 
 
@@ -299,7 +305,7 @@ extern "C" {
 #endif
                 //the node is NOT already subscribed for the address
                 CONFLICT_TYPE conflict;
-#ifdef BACKOFF
+#ifndef BACKOFF_RETRY
                 unsigned int num_delays = 1;
                 unsigned int delay = BACKOFF_DELAY;
 
@@ -307,7 +313,7 @@ retry:
 #endif
 
                 if ((conflict = ps_subscribe(addr)) != NO_CONFLICT) {
-#ifdef BACKOFF
+#ifndef BACKOFF_RETRY
                     if (num_delays++ < BACKOFF_MAX) {
                         udelay(delay);
                         delay = (2^num_delays) * BACKOFF_DELAY;
@@ -338,7 +344,7 @@ retry:
 #endif
 
         CONFLICT_TYPE conflict;
-#ifdef BACKOFF
+#ifndef BACKOFF_RETRY
         unsigned int num_delays = 0;
         unsigned int delay = BACKOFF_DELAY;
 
@@ -349,7 +355,7 @@ retry:
 #else      
         if ((conflict = ps_publish(address)) != NO_CONFLICT) {
 #endif
-#ifdef BACKOFF
+#ifndef BACKOFF_RETRY
             if (num_delays++ < BACKOFF_MAX) {
                 udelay(delay);
                 delay *= 2;
@@ -392,7 +398,7 @@ retry:
 #endif
 
         CONFLICT_TYPE conflict;
-#ifdef BACKOFF
+#ifndef BACKOFF_RETRY
         unsigned int num_delays = 0;
         unsigned int delay = BACKOFF_DELAY;
 
@@ -403,7 +409,7 @@ retry:
 #else      
         if ((conflict = ps_publish(address)) != NO_CONFLICT) {
 #endif
-#ifdef BACKOFF
+#ifndef BACKOFF_RETRY
             if (num_delays++ < BACKOFF_MAX) {
                 udelay(delay);
                 delay *= 2;

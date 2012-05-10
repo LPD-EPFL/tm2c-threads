@@ -6,7 +6,7 @@ PLATFORM_DEFINES = -DPLATFORM_CLUSTER \
                    -DPGAS \
                    -UDEBUG_UTILIZATION \
                    -UDO_TIMINGS \
-                   -DBACKOFF \
+                   -UBACKOFF_RETRY \
                    -UFINISH_ALL_PARALLEL \
 
 HELPER_APPS += barrier_syncer

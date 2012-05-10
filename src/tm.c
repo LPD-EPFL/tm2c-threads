@@ -122,7 +122,7 @@ void handle_abort(stm_tx_t *stm_tx, CONFLICT_TYPE reason) {
     read_set_empty(stm_tx->read_set);
     mem_info_on_abort(stm_tx->mem_info);
     
-#ifndef BACKOFF
+#ifdef BACKOFF_RETRY
     /*BACKOFF and RETRY*/
     unsigned int wait_max = pow(2, (stm_tx->retries < BACKOFF_MAX ? stm_tx->retries : BACKOFF_MAX)) * BACKOFF_DELAY;
     unsigned int wait = rand_range(wait_max);
@@ -159,7 +159,7 @@ void ps_publish_all() {
     while (locked < nb_entries) {
         CONFLICT_TYPE conflict;
         tm_addr_t addr = to_addr(write_entries[locked].address);
-#ifdef BACKOFF
+#ifndef BACKOFF_RETRY
         unsigned int num_delays = 1;
         unsigned int delay = BACKOFF_DELAY; //micro
 retry:
@@ -170,7 +170,7 @@ retry:
         if ((conflict = ps_publish(addr)) != NO_CONFLICT) {
 #endif
             //ps_publish_finish_all(locked);
-#ifdef BACKOFF
+#ifndef BACKOFF_RETRY
             if (num_delays++ < BACKOFF_MAX) {
                 udelay(delay);
                 delay = (2^num_delays) * BACKOFF_DELAY;
