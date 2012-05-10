@@ -21,7 +21,7 @@ inline void ssmp_recv_from(int from, ssmp_msg_t *msg, int length) {
   memcpy(msg, tmpm, length);
   tmpm->state = 0;
 
-  msg->sender = from;
+  //  msg->sender = from; //do not set the sender of the msg since we know him :)
 
   PD("recved from %d\n", from);
 }
