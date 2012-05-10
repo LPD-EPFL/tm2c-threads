@@ -10,6 +10,11 @@
 #include "fakemem.h"
 #endif
 
+#define DEBUG_UTILIZATION_OFF
+#ifdef  DEBUG_UTILIZATION
+unsigned int read_reqs_num = 0, write_reqs_num = 0;
+#endif
+
 //initialy use the memory allocation of RCCE
 static void RCCE_shmalloc_init(sys_t_vcharp mem, size_t size);
 sys_t_vcharp RCCE_shmalloc(size_t size);
@@ -17,6 +22,7 @@ void RCCE_shfree(sys_t_vcharp mem);
 
 #define TM_MEM_SIZE (128 * 1024 * 1024)
 
+static PS_COMMAND *ps_remote;
 DynamicHeader *udn_header; //headers for messaging
 tmc_sync_barrier_t *barrier_apps, *barrier_all; //BARRIERS
 
@@ -181,13 +187,14 @@ sys_ps_init_(void) {
 void
 sys_dsl_init(void) {
 
-    psc = (PS_COMMAND *) malloc(sizeof (PS_COMMAND)); //TODO: free at finalize + check for null
+  ps_remote = (PS_COMMAND *) malloc(sizeof (PS_COMMAND)); //TODO: free at finalize + check for null
+  psc = (PS_COMMAND *) malloc(sizeof (PS_COMMAND)); //TODO: free at finalize + check for null
 
-    if (psc == NULL) {
-        PRINT("malloc ps_command == NULL || ps_remote == NULL || psc == NULL");
-    }
+  if (psc == NULL) {
+    PRINT("malloc ps_command == NULL || ps_remote == NULL || psc == NULL");
+  }
 
-    BARRIERW
+  BARRIERW
 }
 
 void
@@ -203,189 +210,191 @@ sys_ps_term(void) {
 // If value == NULL, we just return the address.
 // Otherwise, we return the value.
 
-static inline void
-sys_ps_command_send(unsigned short int target,
-        PS_COMMAND_TYPE command,
-        tm_intern_addr_t address,
-        uint32_t* value,
-        CONFLICT_TYPE response) {
+INLINED void 
+sys_ps_command_reply(nodeid_t sender,
+		     PS_REPLY_TYPE command,
+		     tm_addr_t address,
+		     uint32_t* value,
+		     CONFLICT_TYPE response)
+{
+  PS_REPLY reply;
+  reply.type = command;
+  reply.response = response;
 
-#ifndef PGAS
-    tmc_udn_send_1(udn_header[target], UDN0_DEMUX_TAG, response);
-#else //PGAS
-    if (command == PS_SUBSCRIBE_RESPONSE) {
-        tmc_udn_send_2(udn_header[target], UDN0_DEMUX_TAG, response, *(int *) value);
-    }
-    else {
-        tmc_udn_send_1(udn_header[target], UDN0_DEMUX_TAG, response);
-    }
+  PRINTD("sys_ps_command_reply: src=%u target=%d", reply.nodeId, sender);
+#ifdef PGAS
+  if (value != NULL) {
+    reply.value = *value;
+    PRINTD("sys_ps_command_reply: read value %u\n", reply.value);
+  } else {
+    reply.address = (uintptr_t) address;
+  }
+#else
+  reply.address = (uintptr_t) address;
 #endif
+
+  tmc_udn_send_buffer(udn_header[sender], UDN0_DEMUX_TAG, &reply, sizeof(reply)/sizeof(int_reg_t));
+
+  //  PRINT("REPLY to %d | type %d | resp %d", sender, reply.type, reply.response);
+
 }
 
 void dsl_communication() {
-    int sender;
-    PS_COMMAND_TYPE command;
-    unsigned int address;
+  int sender;
+  PS_COMMAND_TYPE command;
+  unsigned int address;
 
-    while (1) {
+  while (1) {
 
-        sender = tmc_udn0_receive();
-        command = tmc_udn0_receive();
+    tmc_udn0_receive_buffer(ps_remote, sizeof(PS_COMMAND)/sizeof(int_reg_t));
+    sender = ps_remote->nodeId;
 
-        switch (command) {
-            case PS_SUBSCRIBE:
-                address = tmc_udn0_receive();
-
+    /*    PRINT("CMD from %d | type %d | addr %u", 
+	  sender, ps_remote->type, ps_remote->address);
+    */
+    
+    switch (ps_remote->type) {
+    case PS_SUBSCRIBE:
 #ifdef DEBUG_UTILIZATION
-                read_reqs_num++;
+      read_reqs_num++;
 #endif
 
 #ifdef PGAS
-
-                //PRINT("RL addr: %3d, val: %d", address, *(int *) PGAS_read(address));
-
-                sys_ps_command_send(sender, PS_SUBSCRIBE_RESPONSE,
-                        address,
-                        PGAS_read(address),
-                        try_subscribe(sender, address));
+      /*
+	PRINT("RL addr: %3d, val: %d", address, PGAS_read(address));
+      */
+      sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE,
+			   ps_remote->address, 
+			   PGAS_read(ps_remote->address),
+			   try_subscribe(sender, ps_remote->address));
 #else
-                sys_ps_command_send(sender, PS_SUBSCRIBE_RESPONSE,
-                        address,
-                        NULL,
-                        try_subscribe(sender, address));
+      sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE, 
+			   ps_remote->address, 
+			   NULL,
+			   try_subscribe(sender, ps_remote->address));
+      //sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE, address, NO_CONFLICT);
 #endif
-                break;
-            case PS_PUBLISH:
-            {
-                address = tmc_udn0_receive();
+      break;
+    case PS_PUBLISH:
+      {
 
 #ifdef DEBUG_UTILIZATION
-                write_reqs_num++;
+	write_reqs_num++;
 #endif
 
-                CONFLICT_TYPE conflict = try_publish(sender, address);
+	CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
 #ifdef PGAS
-                //XXX: fix for pgas
-                int write_val = tmc_udn0_receive();
-                if (conflict == NO_CONFLICT) {
-		  //                    PRINT("WL from %d for %d val %d", sender, address, write_val);
-                    write_set_pgas_insert(PGAS_write_sets[sender],
-                            write_val,
-                            address);
-                }
+	if (conflict == NO_CONFLICT) {
+	  /*
+	    union {
+	    int i;
+	    unsigned short s[2];
+	    } convert;
+	    convert.i = write_value;
+	    PRINT("\t\t\tWriting (val:%d|nxt:%d) to address %d", convert.s[0], convert.s[1], address);
+	  */  
+	  write_set_pgas_insert(PGAS_write_sets[sender],
+				ps_remote->write_value, 
+				ps_remote->address);
+	}
 #endif
-                sys_ps_command_send(sender, PS_PUBLISH_RESPONSE,
-                        address,
-                        NULL,
-                        conflict);
-                break;
-            }
+	sys_ps_command_reply(sender, PS_PUBLISH_RESPONSE, 
+			     ps_remote->address,
+			     NULL,
+			     conflict);
+	break;
+      }
 #ifdef PGAS
-            case PS_WRITE_INC:
-            {
-                address = tmc_udn0_receive();
-                int write_val = tmc_udn0_receive();
+    case PS_WRITE_INC:
+      {
 
 #ifdef DEBUG_UTILIZATION
-                write_reqs_num++;
+	write_reqs_num++;
 #endif
-                CONFLICT_TYPE conflict = try_publish(sender, address);
-                if (conflict == NO_CONFLICT) {
-
-                   // PRINT("PS_WRITE_INC from %2d for %3d, old: %3d, new: %d", sender, address, *(int *) PGAS_read(address),
-                     //       *(int *) PGAS_read(address) + write_val);
-
-                    write_set_pgas_insert(PGAS_write_sets[sender],
-                            *(int *) PGAS_read(address) + write_val,
-                            address);
-                }
-                sys_ps_command_send(sender, PS_PUBLISH_RESPONSE,
-                        address,
-                        NULL,
-                        conflict);
-                break;
-            }
-            case PS_LOAD_NONTX:
-                address = tmc_udn0_receive();
-		//                PRINT("PGAS_READ for %d", address);
-                tmc_udn_send_2(udn_header[sender], UDN0_DEMUX_TAG, NO_CONFLICT, *(int *) PGAS_read(address));
-                break;
-            case PS_STORE_NONTX:
-                address = tmc_udn0_receive();
-                unsigned int write_val = tmc_udn0_receive();
-		//                PRINT("PGAS_WRITE for %d, val: %d", address, write_val);
-                PGAS_write(address, write_val);
-		break;
+	CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
+	if (conflict == NO_CONFLICT) {
+	  //		      PRINT("wval for %d is %d", address, write_value);
+	  /*
+	    PRINT("PS_WRITE_INC from %2d for %3d, old: %3d, new: %d", sender, address, PGAS_read(address),
+	    PGAS_read(address) + write_value);
+	  */
+	  write_set_pgas_insert(PGAS_write_sets[sender], 
+				*(int *) PGAS_read(ps_remote->address) + ps_remote->write_value,
+                                ps_remote->address);
+	}
+	sys_ps_command_reply(sender, PS_PUBLISH_RESPONSE,
+			     ps_remote->address,
+			     NULL,
+			     conflict);
+	break;
+      }
+    case PS_LOAD_NONTX:
+      {
+	//		PRINT("((non-tx ld: from %d, addr %d (val: %d)))", sender, address, (*PGAS_read(address)));
+	sys_ps_command_reply(sender, PS_LOAD_NONTX_RESPONSE,
+			     ps_remote->address,
+			     PGAS_read(ps_remote->address),
+			     NO_CONFLICT);
+		
+	break;
+      }
+    case PS_STORE_NONTX:
+      {
+	//		PRINT("((non-tx st: from %d, addr %d (val: %d)))", sender, address, (write_value));
+	PGAS_write(ps_remote->address, (int) ps_remote->write_value);
+	break;
+      }
 #endif
-            case PS_REMOVE_NODE:
-            {
+    case PS_REMOVE_NODE:
 #ifdef PGAS
-                int response = tmc_udn0_receive();
-                if (response == NO_CONFLICT) {
-                    write_set_pgas_persist(PGAS_write_sets[sender]);
-                }
-                PGAS_write_sets[sender] = write_set_pgas_empty(PGAS_write_sets[sender]);
+      if (ps_remote->response == NO_CONFLICT) {
+	write_set_pgas_persist(PGAS_write_sets[sender]);
+      }
+      PGAS_write_sets[sender] = write_set_pgas_empty(PGAS_write_sets[sender]);
 #endif
-                ps_hashtable_delete_node(ps_hashtable, sender);
-                break;
-            }
-            case PS_UNSUBSCRIBE:
-                address = tmc_udn0_receive();
-                ps_hashtable_delete(ps_hashtable, sender, address, READ);
-                break;
-            case PS_PUBLISH_FINISH:
-                address = tmc_udn0_receive();
-                ps_hashtable_delete(ps_hashtable, sender, address, WRITE);
-                break;
-	case PS_STATS:
-            {
-	        union {
-                    int from[2];
-                    double to;
-                } convert;
-                convert.from[0] = tmc_udn0_receive();
-                convert.from[1] = tmc_udn0_receive();
-		double duration = convert.to;
+      ps_hashtable_delete_node(ps_hashtable, sender);
+      break;
+    case PS_UNSUBSCRIBE:
+      ps_hashtable_delete(ps_hashtable, sender, ps_remote->address, READ);
+      break;
+    case PS_PUBLISH_FINISH:
+      ps_hashtable_delete(ps_hashtable, sender, ps_remote->address, WRITE);
+      break;
+    case PS_STATS:
+      {
+	if (ps_remote->tx_duration) {
+	  stats_aborts += ps_remote->aborts;
+	  stats_commits += ps_remote->commits;
+	  stats_duration += ps_remote->tx_duration;
+	  stats_max_retries = stats_max_retries < ps_remote->max_retries ? ps_remote->max_retries : stats_max_retries;
+	  stats_total += ps_remote->commits + ps_remote->aborts;
+	}
+	else {
+	  stats_aborts_raw += ps_remote->aborts_raw;
+	  stats_aborts_war += ps_remote->aborts_war;
+	  stats_aborts_waw += ps_remote->aborts_waw;
+	}
+	if (++stats_received >= 2*NUM_APP_NODES) {
+	  if (NODE_ID() == 0) {
+	    print_global_stats();
 
-		if (duration) {
-		  if (!ID) { PRINT("stats 1 from %d", sender); }
-		  unsigned int aborts = tmc_udn0_receive();
-		  stats_aborts += aborts;
-		  unsigned int commits = tmc_udn0_receive();		  
-		  stats_commits += commits;
-		  stats_duration += duration;
-		  unsigned int max_retries = tmc_udn0_receive();
-		  stats_max_retries = stats_max_retries < max_retries ? max_retries
-		    : stats_max_retries;
-		  stats_total += commits + aborts;
-		}
-		else {
-		  stats_aborts_raw += tmc_udn0_receive();
-		  stats_aborts_war += tmc_udn0_receive();
-		  stats_aborts_waw += tmc_udn0_receive();
-		}
+	    print_hashtable_usage();
 
-		if (++stats_received >= 2*NUM_APP_NODES) {
-                    if (ID == 0) {
-                        print_global_stats();
-
-                        print_hashtable_usage();
-
-                    }
+	  }
 
 #ifdef DEBUG_UTILIZATION
-                    PRINT("*** Completed requests: %d", read_reqs_num + write_reqs_num);
+	  PRINT("*** Completed requests: %d", read_reqs_num + write_reqs_num);
 #endif
 
-                    EXIT(0);
-                }
-            }
-            default:
-                PRINTD("REMOTE MSG: ??");
-        }
-
+	  EXIT(0);
+	}
+      default:
+	PRINTD("REMOTE MSG: ??");
+      }
     }
+  }
 }
+
 
 
 
