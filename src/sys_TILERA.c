@@ -21,6 +21,9 @@ sys_t_vcharp RCCE_shmalloc(size_t size);
 void RCCE_shfree(sys_t_vcharp mem);
 
 #define TM_MEM_SIZE (128 * 1024 * 1024)
+#define PS_COMMAND_WORDS 8
+#define PS_REPLY_WORDS 3
+
 
 static PS_COMMAND *ps_remote;
 DynamicHeader *udn_header; //headers for messaging
@@ -233,9 +236,7 @@ sys_ps_command_reply(nodeid_t sender,
   reply.address = (uintptr_t) address;
 #endif
 
-  tmc_udn_send_buffer(udn_header[sender], UDN0_DEMUX_TAG, &reply, sizeof(reply)/sizeof(int_reg_t));
-
-  //  PRINT("REPLY to %d | type %d | resp %d", sender, reply.type, reply.response);
+  tmc_udn_send_buffer(udn_header[sender], UDN0_DEMUX_TAG, &reply, PS_REPLY_WORDS);
 
 }
 
@@ -243,10 +244,10 @@ void dsl_communication() {
   int sender;
   PS_COMMAND_TYPE command;
   unsigned int address;
-
+  PRINT("ps rep words = %d", sizeof(PS_REPLY)/sizeof(int_reg_t));
   while (1) {
 
-    tmc_udn0_receive_buffer(ps_remote, sizeof(PS_COMMAND)/sizeof(int_reg_t));
+    tmc_udn0_receive_buffer(ps_remote, PS_COMMAND_WORDS);
     sender = ps_remote->nodeId;
 
     /*    PRINT("CMD from %d | type %d | addr %u", 
