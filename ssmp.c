@@ -7,9 +7,11 @@
 /* library variables */
 /* ------------------------------------------------------------------------------- */
 
-ssmp_msg_t *ssmp_mem;
+static ssmp_msg_t *ssmp_mem;
 ssmp_msg_t **ssmp_recv_buf;
 ssmp_msg_t **ssmp_send_buf;
+static ssmp_chunk_t *ssmp_chunk_mem;
+ssmp_chunk_t **ssmp_chunk_buf;
 int ssmp_num_ues_;
 int ssmp_id_;
 int last_recv_from;
@@ -24,13 +26,14 @@ int *ues_initialized;
 void ssmp_init(int num_procs)
 {
   //create the shared space which will be managed by the allocator
-  int sizem, sizeb, sizeckp, sizeui, size;
+  int sizem, sizeb, sizeckp, sizeui, sizecnk, size;;
 
   sizem = (num_procs * num_procs) * sizeof(ssmp_msg_t);
   sizeb = SSMP_NUM_BARRIERS * sizeof(ssmp_barrier_t);
   sizeckp = SSMP_NUM_BARRIERS * num_procs * sizeof(ssmp_chk_t);
   sizeui = num_procs * sizeof(int);
-  size = sizem + sizeb + sizeckp + sizeui;
+  sizecnk = num_procs * sizeof(ssmp_chunk_t);
+  size = sizem + sizeb + sizeckp + sizeui + sizecnk;
 
   char keyF[100];
   sprintf(keyF,"/ssmp_mem");
@@ -70,11 +73,9 @@ void ssmp_init(int num_procs)
   ssmp_barrier = (ssmp_barrier_t *) (mem_just_int + sizem);
   ssmp_chk_t *chks = (ssmp_chk_t *) (mem_just_int + sizem + sizeb);
   ues_initialized = (int *) (mem_just_int + sizem + sizeb + sizeckp);
+  ssmp_chunk_mem = (ssmp_chunk_t *) (mem_just_int + sizem + sizeb + sizeckp + sizeui);
+
   int ue;
-  for (ue = 0; ue < num_procs; ue++) {
-    ues_initialized[ue] = 0;
-  }
-  
   for (ue = 0; ue < SSMP_NUM_BARRIERS * num_procs; ue++) {
     chks[ue] = 0;
   }
@@ -92,7 +93,8 @@ void ssmp_init(int num_procs)
 void ssmp_mem_init(int id, int num_ues) {
   ssmp_recv_buf = (ssmp_msg_t **) malloc(num_ues * sizeof(ssmp_msg_t *));
   ssmp_send_buf = (ssmp_msg_t **) malloc(num_ues * sizeof(ssmp_msg_t *));
-  if (ssmp_recv_buf == NULL || ssmp_send_buf == NULL) {
+  ssmp_chunk_buf = (ssmp_chunk_t **) malloc(num_ues * sizeof(ssmp_chunk_t *));
+  if (ssmp_recv_buf == NULL || ssmp_send_buf == NULL || ssmp_chunk_buf == NULL) {
     perror("malloc@ ssmp_mem_init\n");
     exit(-1);
   }
@@ -103,6 +105,9 @@ void ssmp_mem_init(int id, int num_ues) {
     ssmp_recv_buf[core]->state = 0;
 
     ssmp_send_buf[core] = ssmp_mem + (core * num_ues) + id;
+
+    ssmp_chunk_buf[core] = ssmp_chunk_mem + core;
+    ssmp_chunk_buf[core]->state = 0;
   }
 
   ssmp_id_ = id;

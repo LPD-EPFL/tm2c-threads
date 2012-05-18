@@ -1,8 +1,8 @@
 #include "ssmp.h"
 
-extern ssmp_msg_t *ssmp_mem;
 extern ssmp_msg_t **ssmp_recv_buf;
 extern ssmp_msg_t **ssmp_send_buf;
+extern ssmp_chunk_t **ssmp_chunk_buf;
 extern int ssmp_num_ues_;
 extern int ssmp_id_;
 extern int last_recv_from;
@@ -22,6 +22,33 @@ inline void ssmp_recv_from(int from, ssmp_msg_t *msg, int length) {
   m->state = 0;
 
   msg->sender = from;
+
+  PD("recved from %d\n", from);
+}
+
+inline void ssmp_recv_from_big(int from, void *data, int length) {
+  int last_chunk = length % SSMP_CHUNK_SIZE;
+  int num_chunks = length / SSMP_CHUNK_SIZE;
+
+  while(num_chunks--) {
+
+    while(!ssmp_chunk_buf[from]->state);
+
+    memcpy(data, ssmp_chunk_buf[from], SSMP_CHUNK_SIZE);
+    data = ((char *) data) + SSMP_CHUNK_SIZE;
+
+    ssmp_chunk_buf[from]->state = 0;
+  }
+
+  if (!last_chunk) {
+    return;
+  }
+
+  while(!ssmp_chunk_buf[from]->state);
+
+  memcpy(data, ssmp_chunk_buf[from], last_chunk);
+
+  ssmp_chunk_buf[from]->state = 0;
 
   PD("recved from %d\n", from);
 }

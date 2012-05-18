@@ -38,6 +38,19 @@ one2one: libssmp.a one2one.o common.h
 one2one.o:	one2one.c ssmp.c
 		gcc $(VER_FLAGS) -D_GNU_SOURCE -c one2one.c $(DEBUG_CFLAGS) $(PERF_CLFAGS)
 
+one2onebig: libssmp.a one2onebig.o common.h
+	gcc $(VER_FLAGS) -o one2onebig one2onebig.o libssmp.a -lrt $(DEBUG_CFLAGS) $(PERF_CLFAGS)	
+
+one2onebig.o:	one2onebig.c ssmp.c
+		gcc $(VER_FLAGS) -D_GNU_SOURCE -c one2onebig.c $(DEBUG_CFLAGS) $(PERF_CLFAGS)
+
+mainbig:	libssmp.a mainbig.o common.h
+	gcc $(VER_FLAGS) -o mainbig mainbig.o libssmp.a -lrt $(DEBUG_CFLAGS) $(PERF_CLFAGS) 
+
+mainbig.o:	mainbig.c
+	gcc $(VER_FLAGS) -D_GNU_SOURCE -c mainbig.c $(DEBUG_CFLAGS) $(PERF_CLFAGS)
+
+
 barrier: libssmp.a barrier.o common.h
 	gcc $(VER_FLAGS) -o barrier barrier.o libssmp.a -lrt $(DEBUG_CFLAGS) $(PERF_CLFAGS)	
 

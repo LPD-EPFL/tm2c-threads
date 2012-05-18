@@ -17,6 +17,7 @@
 /* defines */
 /* ------------------------------------------------------------------------------- */
 #define SSMP_NUM_BARRIERS 16 /*number of available barriers*/
+#define SSMP_CHUNK_SIZE 1020
 
 #define SP(args...) printf("[%d] ", ssmp_id_); printf(args); printf("\n"); fflush(stdout)
 #ifdef SSMP_DEBUG
@@ -46,6 +47,11 @@ union {
     int sender;
   };
 } ssmp_msg_t;
+
+typedef struct {
+  unsigned char data[SSMP_CHUNK_SIZE];
+  int state;
+} ssmp_chunk_t;
 
 /*type used for color-based function, i.e. functions that operate on a subset of the cores according to a color function*/
 typedef struct {
@@ -82,6 +88,8 @@ extern void ssmp_term(void);
 /* blocking send length words to to */
 /* blocking in the sense that the data are copied to the receiver's buffer */
 extern inline void ssmp_send(int to, ssmp_msg_t *msg, int length);
+extern inline void ssmp_send_big(int to, void *data, int length);
+
 /* blocking until the receivers reads the data */
 extern inline void ssmp_sendb(int to, ssmp_msg_t *msg, int length);
 /* blocking send from 1 to 6 words to to */
@@ -127,6 +135,8 @@ extern inline void ssmp_broadcast_par(int w0, int w1, int w2, int w3); //XXX: fi
 
 /* blocking receive from process from length bytes */
 extern inline void ssmp_recv_from(int from, ssmp_msg_t *msg, int length);
+extern inline void ssmp_recv_from_big(int from, void *data, int length);
+
 /* blocking receive from process from 6 bytes */
 extern inline void ssmp_recv_from6(int from, ssmp_msg_t *msg);
 /* non-blocking receive from process from
