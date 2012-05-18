@@ -43,6 +43,7 @@
 #endif
 
 #define DEFAULT_DURATION                10
+#define DEFAULT_DELAY                   0
 #define DEFAULT_NB_ACCOUNTS             1024
 #define DEFAULT_NB_THREADS              1
 #define DEFAULT_READ_ALL                20
@@ -50,6 +51,9 @@
 #define DEFAULT_READ_THREADS            0
 #define DEFAULT_WRITE_THREADS           0
 #define DEFAULT_DISJOINT                0
+
+int delay = DEFAULT_DELAY;
+
 
 #define XSTR(s)                         STR(s)
 #define STR(s)                          #s
@@ -248,6 +252,7 @@ bank_t * test(void *data, double duration, int nb_accounts) {
     PF_START(0);
 
     FOR(duration) {
+
         if (d->id < d->read_cores) {
             /* Read all */
             //  PRINT("READ ALL1");
@@ -295,6 +300,12 @@ bank_t * test(void *data, double duration, int nb_accounts) {
                 d->nb_transfer++;
             }
         }
+
+	if (delay) {
+	  //	PRINT("delaying %u us", delay);
+	  udelay(rand_range(delay));
+	}
+
     }
     PF_STOP(0);
 
@@ -318,6 +329,7 @@ TASKMAIN(int argc, char **argv) {
         {"accounts", required_argument, NULL, 'a'},
         {"contention-manager", required_argument, NULL, 'c'},
         {"duration", required_argument, NULL, 'd'},
+        {"delay", required_argument, NULL, 'D'},
         {"num-threads", required_argument, NULL, 'n'},
         {"read-all-rate", required_argument, NULL, 'r'},
         {"read-threads", required_argument, NULL, 'R'},
@@ -370,6 +382,8 @@ TASKMAIN(int argc, char **argv) {
                         "        Number of accounts in the bank (default=" XSTR(DEFAULT_NB_ACCOUNTS) ")\n"
                         "  -d, --duration <double>\n"
                         "        Test duration in seconds (0=infinite, default=" XSTR(DEFAULT_DURATION) ")\n"
+                        "  -d, --delay <int>\n"
+                        "        Delay after succesfull request. Used to understress the system, default=" XSTR(DEFAULT_DELAY) ")\n"
                         "  -r, --read-all-rate <int>\n"
                         "        Percentage of read-all transactions (default=" XSTR(DEFAULT_READ_ALL) ")\n"
                         "  -R, --read-threads <int>\n"
@@ -386,6 +400,9 @@ TASKMAIN(int argc, char **argv) {
                 break;
             case 'd':
                 duration = atof(optarg);
+                break;
+            case 'D':
+                delay = atoi(optarg);
                 break;
             case 'r':
                 read_all = atoi(optarg);
