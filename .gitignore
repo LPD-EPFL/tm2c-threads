@@ -8,4 +8,7 @@ cscope*
 one2one
 main
 gmon*
-barrier
+barriercolor_*
+main_*
+one2onebig
+mainbig

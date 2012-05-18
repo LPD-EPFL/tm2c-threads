@@ -83,11 +83,11 @@ int main(int argc, char **argv) {
     while(1) {
       ssmp_recv_from(from, &msg, 24);
       if (msg.w0 < 0) {
-	P("exiting ..");
 	int co;
 	for (co = 0; co < ssmp_num_ues(); co++) {
 	  //P("from[%d] = %d", co, from[co]);
 	}
+	P("exiting..");
 	exit(0);
       }
       
@@ -103,6 +103,8 @@ int main(int argc, char **argv) {
       ssmp_send(to, &msg, 24);
       //      ssmp_recv_from(to, &msg);
     }
+
+
   }
 
   
@@ -124,16 +126,11 @@ int main(int argc, char **argv) {
 	 _ticks, _ticksm);
 
 
+
   ssmp_barrier_wait(1);
-  if (ssmp_id() == 1) {
-    P("terminating --");
-    int core; 
-    for (core = 0; core < ssmp_num_ues(); core++) {
-      if (core % 2 == 0) {
-	ssmp_send1(core, -1);
-      }
-    }
-  }
+  int ex = -1;
+  ssmp_send(ssmp_id() - 1, (ssmp_msg_t *) &ex, sizeof(int));
+
 
   ssmp_term();
   return 0;
