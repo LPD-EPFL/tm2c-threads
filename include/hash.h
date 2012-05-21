@@ -1,10 +1,10 @@
-#infndef _HASH_H
+#ifndef _HASH_H
 #define _HASH_H
 
 #define hash hast_tw
 
 /* Thomas Wang's 32 bit Mix Function */
-INLINED unsigned int 
+static inline unsigned int 
 hash_tw(unsigned int key)
 {
   key += ~(key << 15);
