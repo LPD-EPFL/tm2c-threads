@@ -281,3 +281,4 @@ ifeq (,$(filter %clean,$(MAKECMDGOALS)))
 -include $(APP_DEPS)
 -include $(BMARKS_DEPS)
 endif
+
