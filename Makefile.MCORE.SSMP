@@ -4,7 +4,7 @@ PLATFORM_LIBS = -lssmp -lrt
 
 #endif
 PLATFORM_DEFINES = -DPLATFORM_MCORE \
-                   -UPGAS \
+                   -DPGAS \
                    -DREAD_BUF_OFF \
                    -ULIBTASK \
                    -UBACKOFF_RETRY \
@@ -19,4 +19,4 @@ ARCHIVE_SRCS_PURE += mcore_malloc.c
 ARCHIVE_SRCS_PURE += sys_MCORE_ssmp.c
 
 # same as cluster, non-pgas experiments will not work
-ALL_BMARKS = bank mbll
+ALL_BMARKS = bank mbll ht

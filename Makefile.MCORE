@@ -5,7 +5,7 @@ PLATFORM_LDFLAGS =
 PLATFORM_LIBS = -ltaskplus -lshrimp -lrt
 
 PLATFORM_DEFINES = -DPLATFORM_MCORE \
-                   -UPGAS \
+                   -DPGAS \
                    -DREAD_BUF_OFF \
                    -DLIBTASK \
                    -UBACKOFF_RETRY \
