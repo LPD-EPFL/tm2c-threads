@@ -35,7 +35,7 @@ extern "C" {
 
   typedef struct {
     unsigned int type; //PS_COMMAND_TYPE
-#if defined(PLATFORM_CLUSTER) || defined(PLATFORM_MCORE)
+#if defined(PLATFORM_CLUSTER) || defined(PLATFORM_MCORE) || defined(PLATFORM_TILERA)
     // we need IDs on networked systems
     nodeid_t nodeId;
 #endif

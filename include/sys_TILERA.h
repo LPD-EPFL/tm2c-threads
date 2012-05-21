@@ -60,68 +60,27 @@ extern "C" {
   INLINED int
   sys_sendcmd(void* data, size_t len, nodeid_t to)
   {
-    PS_COMMAND *cmd = (PS_COMMAND *) data;
-
-    if (cmd->type != PS_REMOVE_NODE) {
-#ifdef PGAS
-        if (cmd->type == PS_WRITE_INC || cmd->type == PS_PUBLISH || cmd->type == PS_STORE_NONTX) {
-            tmc_udn_send_4(udn_header[to], UDN0_DEMUX_TAG, ID, cmd->type, cmd->address, cmd->write_value);
-            return 1;
-        }
-#endif
-	// not pgas or not a WRITE cmd
-        tmc_udn_send_3(udn_header[to], UDN0_DEMUX_TAG, ID, cmd->type, cmd->address);
-    }
-    else { /* PS_REMOVE_NODE */
-#ifndef PGAS
-        tmc_udn_send_2(udn_header[to], UDN0_DEMUX_TAG, ID, cmd->type);
-#else   //PGAS
-        tmc_udn_send_3(udn_header[to], UDN0_DEMUX_TAG, ID, cmd->type, cmd->response);
-#endif
-    }
+    tmc_udn_send_buffer(udn_header[to], UDN0_DEMUX_TAG,
+			data, len/sizeof(int_reg_t));
   }
+
 
   INLINED int
   sys_sendcmd_all(void* data, size_t len)
   {
-      PS_COMMAND *cmd = (PS_COMMAND *) data;
-
-    union {
-        int from[2];
-        double to;
-    } convert;
-    convert.to = cmd->tx_duration;
-    /*
-    PRINT("tmc_udn_send_10(%d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d)", 
-	  0, UDN0_DEMUX_TAG, ID, PS_STATS,cmd->aborts, cmd->aborts_raw, cmd->aborts_war,
-	  cmd->aborts_waw, cmd->commits, convert.from[0],
-	  convert.from[1], cmd->max_retries);
-    */
-
     int target;
     for (target = 0; target < NUM_DSL_NODES; target++) {
-      if (convert.to) {
-        tmc_udn_send_7(udn_header[dsl_nodes[target]], UDN0_DEMUX_TAG, ID, PS_STATS,
-			convert.from[0], convert.from[1], cmd->aborts, cmd->commits,
-			cmd->max_retries);
-      }
-      else {
-	tmc_udn_send_7(udn_header[dsl_nodes[target]], UDN0_DEMUX_TAG, ID, PS_STATS,
-			convert.from[0], convert.from[1], 
-			cmd->aborts_raw, cmd->aborts_war, cmd->aborts_waw);
-      }
+      tmc_udn_send_buffer(udn_header[dsl_nodes[target]], UDN0_DEMUX_TAG,
+			  data, len/sizeof(int_reg_t));
     }
     return 1;
+  
   }
 
   INLINED int
   sys_recvcmd(void* data, size_t len, nodeid_t from)
   {
-    PS_COMMAND *cmd = (PS_COMMAND *) data;
-    cmd->response = tmc_udn0_receive();
-#ifdef PGAS
-    cmd->value = tmc_udn0_receive();
-#endif
+    tmc_udn0_receive_buffer(data, len/sizeof(int_reg_t));
   }
 
   INLINED double

@@ -126,6 +126,7 @@ do {\
     return ( (unsigned long long)lo)|( ((unsigned long long)hi)<<32 );
   }
 #endif
+#define getticks get_cycle_count
 #endif
 
 #define ENTRY_TIMES_SIZE 16

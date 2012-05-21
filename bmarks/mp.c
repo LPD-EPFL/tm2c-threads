@@ -10,7 +10,13 @@
 
 #include "tm.h"
 
+#ifdef PLATFORM_TILERA
+#include <arch/cycle.h>
+#define getticks get_cycle_count
+#endif
+
 #define REPS 1000000
+typedef long long int ticks;
 
 MAIN(int argc, char **argv) {
 
@@ -18,7 +24,7 @@ MAIN(int argc, char **argv) {
 
     TM_INIT
 
-    if (argc >= 1) {
+    if (argc > 1) {
         steps = atoll(argv[1]);
     }
 

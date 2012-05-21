@@ -72,7 +72,7 @@ static inline void
 ps_sendb(nodeid_t target, PS_COMMAND_TYPE command,
          tm_intern_addr_t address, CONFLICT_TYPE response)
 {
-#if defined(PLATFORM_CLUSTER) || defined(PLATFORM_MCORE)
+#if defined(PLATFORM_CLUSTER) || defined(PLATFORM_MCORE) || defined(PLATFORM_TILERA)
 	psc->nodeId = ID;
 #endif
     psc->type = command;
@@ -92,7 +92,7 @@ ps_sendbv(nodeid_t target, PS_COMMAND_TYPE command,
          tm_intern_addr_t address, uint32_t value,
          CONFLICT_TYPE response)
 {
-#if defined(PLATFORM_CLUSTER) || defined(PLATFORM_MCORE)
+#if defined(PLATFORM_CLUSTER) || defined(PLATFORM_MCORE) || defined(PLATFORM_TILERA)
 	psc->nodeId = ID;
 #endif
     psc->type = command;
@@ -111,7 +111,7 @@ ps_sendbv(nodeid_t target, PS_COMMAND_TYPE command,
 
 static inline CONFLICT_TYPE
 ps_recvb(nodeid_t from) {
-#ifdef PLATFORM_MCORE
+#if defined(PLATFORM_MCORE) || defined(PLATFORM_TILERA)
     PS_REPLY cmd;
     sys_recvcmd(&cmd, sizeof (PS_REPLY), from);
 #else
@@ -190,12 +190,8 @@ CONFLICT_TYPE ps_store_inc(tm_addr_t address, int increment) {
     nodes_contacted[responsible_node]++;
 
     ps_sendbv(responsible_node, PS_WRITE_INC, intern_addr, (uint32_t) increment, NO_CONFLICT);
-#ifdef PLATFORM_TILERA
-    CONFLICT_TYPE response = udn0_receive();
-#else 
-    CONFLICT_TYPE response = ps_recvb(responsible_node);
-#endif
-    return response;
+
+    return ps_recvb(responsible_node);
 }
 #endif
 
