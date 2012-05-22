@@ -86,7 +86,7 @@ endif
 
 
 ifneq (,$(findstring DPGAS,$(PLATFORM_DEFINES)))
-ALL_BMARKS += bankpgas mbllpgas mbhtpgas mp
+ALL_BMARKS += bankpgas mbllpgas mbhtpgas
 endif
 
 # define the compiler now, if platform makefile exported something through
