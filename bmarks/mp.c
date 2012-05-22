@@ -16,7 +16,9 @@
 #endif
 
 #define REPS 1000000
+#ifndef SSMP
 typedef long long int ticks;
+#endif
 
 MAIN(int argc, char **argv) {
 
