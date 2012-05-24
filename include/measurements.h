@@ -126,6 +126,7 @@ do {\
     return ( (unsigned long long)lo)|( ((unsigned long long)hi)<<32 );
   }
 #endif
+#include <arch/cycle.h>
 #define getticks get_cycle_count
 #endif
 

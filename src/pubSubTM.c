@@ -295,6 +295,13 @@ void ps_send_stats(stm_tx_node_t* stats, double duration) {
     sys_sendcmd_all(psc, sizeof (PS_COMMAND));
 }
 
+ CONFLICT_TYPE ps_dummy_msg(nodeid_t node) {
+   node = dsl_nodes[node];
+   ps_sendb(node, PS_UKNOWN, NULL, NO_CONFLICT);
+    CONFLICT_TYPE response = ps_recvb(node);
+    return response;
+}
+
 static inline nodeid_t
 get_responsible_node(tm_intern_addr_t addr) {
 

@@ -19,7 +19,8 @@ extern "C" {
     PS_LOAD_NONTX, //8
     PS_STORE_NONTX, //9
     PS_WRITE_INC,
-    PS_STATS
+    PS_STATS,
+    PS_UKNOWN
   } PS_COMMAND_TYPE;
 
   typedef enum {
@@ -28,6 +29,7 @@ extern "C" {
     PS_ABORTED,
     PS_LOAD_NONTX_RESPONSE,
     PS_STORE_NONTX_RESPONSE,
+    PS_UKNOWN_RESPONSE
   } PS_REPLY_TYPE;
 
   //TODO: make it union with address normal int..
