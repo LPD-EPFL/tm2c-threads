@@ -1,0 +1,31 @@
+Let t2mc_base be the base directory of tm2c installation.
+
+1. Create the following directories:
+   	  tm2c_base/external
+   	  tm2c_base/external/include
+     	  tm2c_base/external/lib
+
+2. Install the libconfig library:
+   	   ./configure --disable-cxx --prefix PATH_TO/tm2c_base/external
+	   make install
+
+3. For TM2C with shrimp (Nikola's MP lib):
+       	    git clone http://lpdserver.epfl.ch/~knezevic/shrimp.git
+	    mkdir shrimp/external
+	    install khash.h <http://attractivechaos.awardspace.com/khash.h> into shrimp/external/include
+	    install libatomic_ops using ./configure --prefix=LOCATION_OF_SHRIMP/EXTERNAL
+	    build shrimp:
+	    	  make clean 
+		  make install PREFIX=LOCATION_OF_DTM/EXTERNAL
+
+then you can go to tm2c_base and do: 
+     	     make clean all
+
+4. For TM2C with ssmp (my MP lib):
+       	    git clone ssh://lpdserver.epfl.ch/~trigonak/devel/ssmp.git
+	    make
+	    copy ssmp.h into tm2c_base/external/include
+	    copy libssmp.a into tm2c_base/external/lib
+	    
+then you can go to tm2c_base and do: 
+     	     make clean all
