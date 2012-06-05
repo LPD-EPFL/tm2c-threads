@@ -4,10 +4,6 @@
 
 #include <assert.h>
 
-#ifndef PGAS
-#error "Need PGAS defined for the mp latencies benchmark"
-#endif
-
 #include "tm.h"
 
 #ifdef PLATFORM_TILERA
@@ -37,8 +33,9 @@ MAIN(int argc, char **argv) {
     }
 
 
-
+#ifdef PGAS
     int *sm = (int *) sys_shmalloc(steps * sizeof (int));
+#endif
 
     ONCE {
       PRINT("## sending %lld messages", steps);
@@ -52,7 +49,11 @@ MAIN(int argc, char **argv) {
 
 
     for (rounds = 0; rounds < steps; rounds++) {
+#ifdef PGAS
       sum += (int) NONTX_LOAD(sm + rounds);
+#else
+      DUMMY_MSG(rounds % NUM_DSL_NODES);
+#endif
     }
      
 
