@@ -39,7 +39,7 @@ ARCHIVE_SRCS_PURE:= pubSubTM.c tm.c log.c dslock.c \
 APPS_DIR := apps
 # add the non PGAS applications only if PGAS is not defined
 ifeq (,$(findstring DPGAS,$(PLATFORM_DEFINES)))
-APPS = tm1 tm2 tm3 tm4 tm5 tm6 tm7 tm8 tm9 tm10
+#APPS = tm1 tm2 tm3 tm4 tm5 tm6 tm7 tm8 tm9 tm10
 endif
 
 # apps that need tasklib in order to compile

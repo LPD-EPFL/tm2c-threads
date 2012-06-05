@@ -15,6 +15,7 @@
 #include <fcntl.h>
 #include <sched.h>
 #include <assert.h>
+#include <limits.h>
 #include <ssmp.h>
 
 
@@ -23,6 +24,8 @@
 #include "dslock.h"
 #include "pgas.h"
 #include "mcore_malloc.h"
+
+#include "hash.h"
 
 //#define DEBUG_UTILIZATION
 #ifdef  DEBUG_UTILIZATION
@@ -215,6 +218,9 @@ sys_ps_command_reply(nodeid_t sender,
 }
 
 
+#define NB 48
+#define BITS 0
+unsigned int usages[NB];
 
 void
 dsl_communication()
@@ -226,6 +232,10 @@ dsl_communication()
   ssmp_color_buf_t cbuf;
   ssmp_color_buf_init(&cbuf, color_app);
 
+  
+  int j;
+  for (j = 0; j < NB; j++) usages[j] = 0;
+
   while (1) {
 
     ssmp_recv_color(&cbuf, &msg, sizeof(*ps_remote));
@@ -233,8 +243,11 @@ dsl_communication()
     
     ps_remote = (PS_COMMAND *) &msg;
 
+    //    usages[hash_tw(ps_remote->address) % NB]++;
+
     switch (ps_remote->type) {
     case PS_SUBSCRIBE:
+
 #ifdef DEBUG_UTILIZATION
       read_reqs_num++;
 #endif
@@ -352,6 +365,12 @@ dsl_communication()
 
 	    print_hashtable_usage();
 
+	    int j;
+	    unsigned long long sumh = 0;
+	    for (j = 0; j < NB; j++) sumh+=usages[j];
+	    for (j = 0; j < NB; j++) {
+	      //	      printf("usages[%02d] = %0.2f [%d]\n", j, 100*(usages[j]/(double)sumh), usages[j]);
+	    }
 	  }
 
 #ifdef DEBUG_UTILIZATION
