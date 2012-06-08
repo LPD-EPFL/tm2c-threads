@@ -4,7 +4,7 @@ PLATFORM_LIBS = -lssmp -lrt
 
 #endif
 PLATFORM_DEFINES = -DPLATFORM_MCORE \
-                   -DPGAS \
+                   -UPGAS \
                    -DREAD_BUF_OFF \
                    -ULIBTASK \
                    -UBACKOFF_RETRY \
