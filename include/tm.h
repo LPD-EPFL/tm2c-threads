@@ -244,6 +244,10 @@ extern "C" {
 	} while (0)
 #endif
 
+#define DUMMY_MSG(to)				\
+  ps_dummy_msg(to)
+  
+
 
     /*early release of READ lock -- TODO: the entry remains in read-set, so one
      SHOULD NOT try to re-read the address cause the tx things it keeps the lock*/
