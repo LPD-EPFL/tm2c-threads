@@ -13,8 +13,11 @@
 extern "C" {
 #endif
 
+#include <limits.h>
+#include "hash.h"
 #include "common.h"
 #include "rw_entry.h"
+
 
 /*
  * This section defines the interface the hash table needs to provide.
@@ -386,6 +389,15 @@ ps_hashtable_print(ps_hashtable_t ps_hashtable)
 
 #elif  USE_HASHTABLE_VT
 
+INLINED unsigned int ps_get_hash(uintptr_t address){
+    if (ID==0) fprintf(stderr, "%u\n",hash_tw(address % UINT_MAX));
+    return hash_tw(address % UINT_MAX);
+}
+
+#ifdef DEBUG_UTILIZATION
+    extern int bucket_usages[];
+#endif
+
 INLINED ps_hashtable_t
 ps_hashtable_new()
 {
@@ -418,14 +430,23 @@ INLINED CONFLICT_TYPE
 ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
                                 tm_intern_addr_t address, RW rw)
 {
-    return vthash_insert_bucket(ps_hashtable[address % NUM_OF_BUCKETS], nodeId, address, rw);
+#ifdef DEBUG_UTILIZATION
+    bucket_usages[ps_get_hash(address)%NUM_OF_BUCKETS]++;
+#endif
+    if (ID==0){
+        fprintf(stderr, "%u goes to %u\n", ps_get_hash(address),ps_get_hash(address)%NUM_OF_BUCKETS);
+    }
+    return vthash_insert_bucket(ps_hashtable[ps_get_hash(address) % NUM_OF_BUCKETS], nodeId, address, rw);
 }
 
 INLINED void
 ps_hashtable_delete(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
                                 tm_intern_addr_t address, RW rw)
 {
-    vthash_delete_bucket(ps_hashtable[address % NUM_OF_BUCKETS], nodeId, address, rw);
+//#ifdef DEBUG_UTILIZATION
+//    fprintf(stderr, "%u\n",ps_get_hash(address)%NUM_OF_BUCKETS);
+//#endif
+    vthash_delete_bucket(ps_hashtable[ps_get_hash(address) % NUM_OF_BUCKETS], nodeId, address, rw);
 }
 
 INLINED void

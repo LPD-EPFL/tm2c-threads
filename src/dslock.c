@@ -28,8 +28,9 @@ unsigned long int stats_total = 0,
 double stats_duration = 0;
 
 #ifdef DEBUG_UTILIZATION
-unsigned int read_reqs_num = 0;
-unsigned int write_reqs_num = 0;
+extern unsigned int read_reqs_num;
+extern unsigned int write_reqs_num;
+int bucket_usages[50];
 #endif
 
 void dsl_init(void) {
