@@ -9,7 +9,7 @@ PLATFORM_DEFINES = -DPLATFORM_MCORE \
                    -ULIBTASK \
                    -UBACKOFF_RETRY \
                    -UFINISH_ALL_PARALLEL \
-                   -DDEBUG_UTILIZATION \
+                   -UDEBUG_UTILIZATION \
 		   -UDO_TIMINGS \
 		   -DSSMP
 

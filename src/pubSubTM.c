@@ -306,12 +306,9 @@ void ps_send_stats(stm_tx_node_t* stats, double duration) {
 
 static inline nodeid_t
 get_responsible_node(tm_intern_addr_t addr) {
-    unsigned int hash_val = hash_tw(addr % UINT_MAX);
-    if (ID==1) {
-        fprintf(stderr, "%u\n",hash_val);
-    }
-    return dsl_nodes[hash_val % NUM_DSL_NODES];
+//    unsigned int hash_val = hash_tw((addr>>2) % UINT_MAX);
+//    return dsl_nodes[hash_val % NUM_DSL_NODES];
     /* shift right by DHT_ADDRESS_MASK, thus making 2^DHT_ADDRESS_MASK continuous
         address handled by the same node*/
-    //return dsl_nodes[((addr) >> DHT_ADDRESS_MASK) % NUM_DSL_NODES];
+    return dsl_nodes[((addr) >> DHT_ADDRESS_MASK) % NUM_DSL_NODES];
 }

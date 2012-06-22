@@ -63,6 +63,11 @@ typedef struct uthash_elem_struct** ps_hashtable_t;
 typedef rw_entry_t* ps_hashtable_t;
 
 #elif  USE_HASHTABLE_SDD
+#elif  USE_FIXED_HASH
+
+#include "lock_log.h"
+#include "fixed_hash.h"
+typedef fixed_hash_entry_t** ps_hashtable_t;
 
 #elif  USE_HASHTABLE_VT
 #include "vthash.h"
@@ -387,15 +392,95 @@ ps_hashtable_print(ps_hashtable_t ps_hashtable)
 
 #elif  USE_HASHTABLE_SDD
 
+#elif USE_FIXED_HASH
+
+lock_log_set_t** the_logs;
+int next_log_free;
+int* log_map;
+
+INLINED unsigned int ps_get_hash(uintptr_t address){
+    return hash_tw((address>>2) % UINT_MAX);
+}
+
+
+INLINED ps_hashtable_t
+ps_hashtable_new()
+{
+    int i;
+    the_logs=(lock_log_set_t**) malloc(NUM_APP_NODES*sizeof(lock_log_set_t*));
+    log_map=(int*)malloc(NUM_UES * sizeof(int));
+    for (i=0;i<NUM_APP_NODES;i++){
+        the_logs[i]=lock_log_set_new();
+    }
+    next_log_free=0;
+    for (i=0;i<NUM_UES;i++) {
+        log_map[i]=-1;
+    }
+    return fixed_hash_init(); 
+}
+INLINED CONFLICT_TYPE
+ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
+                                tm_intern_addr_t address, RW rw)
+{
+    //fprintf(stderr, "start insert %u\n",address);
+    //usleep(100);
+    if (log_map[nodeId]==-1) {
+        log_map[nodeId]=next_log_free;
+        next_log_free++;
+    }
+    CONFLICT_TYPE conflict = fixed_hash_insert_in_bucket(ps_hashtable, ps_get_hash(address)%NUM_OF_BUCKETS, nodeId, address, rw, the_logs[log_map[nodeId]]);
+    //fprintf(stderr, "end insert\n");
+    //if (conflict!=NO_CONFLICT)fprintf(stderr, "with conflict!\n");
+    //usleep(100);
+    return conflict;
+}
+
+INLINED void
+ps_hashtable_delete(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
+                                tm_intern_addr_t address, RW rw)
+{
+    //fprintf(stderr, "start delete\n");
+    //usleep(100);
+    fixed_hash_delete_from_bucket(ps_hashtable, ps_get_hash(address)%NUM_OF_BUCKETS, nodeId, address, rw);
+    //fprintf(stderr, "end delete\n");
+    //usleep(100);
+}
+
+INLINED void
+ps_hashtable_delete_node(ps_hashtable_t ps_hashtable, nodeid_t nodeId)
+{
+    //fprintf(stderr, "start del all\n");
+    //usleep(100);
+    lock_log_set_t* the_log = the_logs[log_map[nodeId]];
+    int i;
+    for (i=0;i<the_log->nb_entries;i++) {
+       if (the_log->lock_log_entries[i].rw % 2 == 1) {
+        fixed_hash_delete_from_entry((fixed_hash_entry_t*)the_log->lock_log_entries[i].address, the_log->lock_log_entries[i].index, nodeId, READ);
+       }
+        if (the_log->lock_log_entries[i].rw >= 2) {
+         fixed_hash_delete_from_entry((fixed_hash_entry_t*)the_log->lock_log_entries[i].address, the_log->lock_log_entries[i].index, nodeId, WRITE);
+       }
+    }
+    lock_log_set_empty(the_log);
+    //fprintf(stderr, "end del all\n");
+    //usleep(100);
+}
+
+INLINED void
+ps_hashtable_print(ps_hashtable_t ps_hashtable)
+{
+}
+
 #elif  USE_HASHTABLE_VT
 
 INLINED unsigned int ps_get_hash(uintptr_t address){
-    if (ID==0) fprintf(stderr, "%u\n",hash_tw(address % UINT_MAX));
-    return hash_tw(address % UINT_MAX);
+    return hash_tw((address>>2) % UINT_MAX);
 }
 
 #ifdef DEBUG_UTILIZATION
     extern int bucket_usages[];
+    extern int bucket_current[];
+    extern int bucket_max[];
 #endif
 
 INLINED ps_hashtable_t
@@ -431,11 +516,12 @@ ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
                                 tm_intern_addr_t address, RW rw)
 {
 #ifdef DEBUG_UTILIZATION
-    bucket_usages[ps_get_hash(address)%NUM_OF_BUCKETS]++;
-#endif
-    if (ID==0){
-        fprintf(stderr, "%u goes to %u\n", ps_get_hash(address),ps_get_hash(address)%NUM_OF_BUCKETS);
+    unsigned int index = ps_get_hash(address)%NUM_OF_BUCKETS;
+    bucket_usages[index]++;
+    if (bucket_max[index]<ps_hashtable[index]->nb_entries) {
+        bucket_max[index]=ps_hashtable[index]->nb_entries;
     }
+#endif
     return vthash_insert_bucket(ps_hashtable[ps_get_hash(address) % NUM_OF_BUCKETS], nodeId, address, rw);
 }
 
@@ -443,9 +529,9 @@ INLINED void
 ps_hashtable_delete(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
                                 tm_intern_addr_t address, RW rw)
 {
-//#ifdef DEBUG_UTILIZATION
-//    fprintf(stderr, "%u\n",ps_get_hash(address)%NUM_OF_BUCKETS);
-//#endif
+#ifdef DEBUG_UTILIZATION
+    bucket_current[ps_get_hash(address)%NUM_OF_BUCKETS]--;
+#endif
     vthash_delete_bucket(ps_hashtable[ps_get_hash(address) % NUM_OF_BUCKETS], nodeId, address, rw);
 }
 
