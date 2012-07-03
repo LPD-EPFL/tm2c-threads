@@ -6,6 +6,8 @@ PLATFORM = MCORE.SSMP
 # USE_HASHTABLE_UTHASH: uthash.h from <http://uthash.sourceforge.net/>
 # USE_HASHTABLE_SDD:   Sunrise Data Dictionary <>
 # USE_HASHTABLE_VT:     hashtable by Vasilis
+# USE_FIXED_HASH:    fixed hash
+# USE_ARRAY:     array
 HASHTABLE = USE_FIXED_HASH
 .PHONY: all 
 
@@ -28,7 +30,7 @@ DEFINES := $(PLATFORM_DEFINES) $(EXTRA_DEFINES)
 DEBUG_FLAGS := #-g -ggdb -fno-inline#-DDEBUG 
 
 ## Archive ##
-ARCHIVE_SRCS_PURE:= pubSubTM.c tm.c log.c lock_log.c dslock.c \
+ARCHIVE_SRCS_PURE:= pubSubTM.c tm.c log.c lock_log.c array_log.c dslock.c \
 			measurements.c pgas.c config.c fakemem.c
 
 # Include the platform specific Makefile

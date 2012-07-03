@@ -59,7 +59,8 @@ struct uthash_elem_struct {
 typedef struct uthash_elem_struct** ps_hashtable_t;
 
 #elif USE_ARRAY
-#define NUM_OF_ELEMENTS 128 * 1024 * 1024
+#include "array_log.h"
+#define NUM_OF_ELEMENTS 1024 * 1024 * 1024 / NUM_DSL_NODES
 typedef rw_entry_t* ps_hashtable_t;
 
 #elif  USE_HASHTABLE_SDD
@@ -323,6 +324,9 @@ ps_hashtable_print(ps_hashtable_t ps_hashtable)
 }
 
 #elif USE_ARRAY
+array_log_set_t** the_logs;
+int next_log_free;
+int* log_map;
 
 INLINED ps_hashtable_t
 ps_hashtable_new() {
@@ -336,25 +340,55 @@ ps_hashtable_new() {
    for (i = 0; i < NUM_OF_ELEMENTS; i++) {
       ps_hashtable[i].shorts[3] = NO_WRITER;
    }
+    int j;
+    the_logs=(array_log_set_t**) malloc(NUM_APP_NODES*sizeof(array_log_set_t*));
+    log_map=(int*)malloc(NUM_UES * sizeof(int));
+    for (j=0;j<NUM_APP_NODES;j++){
+        the_logs[j]=array_log_set_new();
+    }
+    next_log_free=0;
+    for (j=0;j<NUM_UES;j++) {
+        log_map[j]=-1;
+    }
 
    return ps_hashtable;
+}
+
+INLINED ps_get_index(tm_intern_addr_t address){
+   //uintptr_t index=((address>>2)/NUM_DSL_NODES)%NUM_OF_ELEMENTS;
+   uintptr_t index=((((address>>4)/NUM_DSL_NODES) << 2) +  ((address%16) >> 2))%NUM_OF_ELEMENTS;
 }
 
 INLINED CONFLICT_TYPE
 ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
                                 tm_intern_addr_t address, RW rw)
 {
+    if (log_map[nodeId]==-1) {
+        log_map[nodeId]=next_log_free;
+        next_log_free++;
+    }
 
-   fprintf(stderr, "inserting %d in  %u \n",nodeId, address);
-   return rw_entry_is_conflicting(&ps_hashtable[address%NUM_OF_ELEMENTS], nodeId, rw);
+    array_log_set_t* the_log = the_logs[log_map[nodeId]];
+    uintptr_t index=ps_get_index(address);
+   //fprintf(stderr, "inserting %d in  %u \n",nodeId, address);
+   CONFLICT_TYPE conflict = rw_entry_is_conflicting(&ps_hashtable[index], nodeId, rw);
+   //fprintf(stderr, "ch1\n");
+   //sleep(1);
+if (conflict==NO_CONFLICT){
+        array_log_set_insert(the_log,index);
+    }
+    //fprintf(stderr, "done inserting\n");
+    //sleep(1);
+    return conflict;
+
 }
 
 INLINED void
 ps_hashtable_delete(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
                                 tm_intern_addr_t address, RW rw)
 {
-   fprintf(stderr, "deleting %d from %u \n",nodeId, address);
-   uintptr_t index = address%NUM_OF_ELEMENTS;
+   //fprintf(stderr, "deleting %d from %u \n",nodeId, address);
+   uintptr_t index = ps_get_index(address);
    if (rw == WRITE) {
       if (rw_entry_is_writer(&ps_hashtable[index],nodeId)) {
          rw_entry_unset_writer(&ps_hashtable[index]);
@@ -367,14 +401,18 @@ INLINED void
 ps_hashtable_delete_node(ps_hashtable_t ps_hashtable, nodeid_t nodeId)
 {
 
-   fprintf(stderr, "deleting node  %d  \n",nodeId);
-   uintptr_t i;
-   for (i=0;i<NUM_OF_ELEMENTS;i++) {
-      if (rw_entry_is_writer(&ps_hashtable[i],nodeId)) {
-         rw_entry_unset_writer(&ps_hashtable[i]);
+   //fprintf(stderr, "deleting node  %d  \n",nodeId);
+ 
+    array_log_set_t* the_log = the_logs[log_map[nodeId]];
+    int i;
+    for (i=0;i<the_log->nb_entries;i++) {
+      uintptr_t index = the_log->array_log_entries[i].address;
+      if (rw_entry_is_writer(&ps_hashtable[index],nodeId)) {
+         rw_entry_unset_writer(&ps_hashtable[index]);
       }
-      rw_entry_unset(&ps_hashtable[i],nodeId);
-   }
+      rw_entry_unset(&ps_hashtable[index],nodeId);
+    }
+    array_log_set_empty(the_log);
 }
 
 INLINED void

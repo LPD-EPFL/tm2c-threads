@@ -16,7 +16,7 @@
 #include <sched.h>
 #include <assert.h>
 #include <ssmp.h>
-
+#include <numa.h>
 
 #include "common.h"
 #include "pubSubTM.h"
@@ -126,6 +126,7 @@ fork_done:
 			  strerror(errno));
 		EXIT(3);
 	}
+    numa_set_preferred(place/6);
 }
 
 void
