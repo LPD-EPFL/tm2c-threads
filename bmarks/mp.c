@@ -6,9 +6,25 @@
 
 #include "tm.h"
 
+
+#ifndef SSMP
+typedef long long int ticks;
+#endif 
+
 #ifdef PLATFORM_TILERA
 #include <arch/cycle.h>
 #define getticks get_cycle_count
+#endif
+
+#ifdef PLATFORM_iRCCE
+
+EXINLINED ticks getticks(void) {
+  ticks ret;
+  
+  __asm__ __volatile__("rdtsc" : "=A" (ret));
+  return ret;
+}
+
 #endif
 
 #define REPS 1000000
