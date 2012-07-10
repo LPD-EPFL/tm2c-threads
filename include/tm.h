@@ -162,9 +162,12 @@ extern "C" {
 
 #define TM_END                                                          \
     PRINTD("|| FAKE: TM ends");                                         \
-    ps_send_stats(stm_tx_node, duration__);                             \
+    ps_send_stats(stm_tx_node, duration__);}
+
+  /*
     tx_metadata_free(&stm_tx);                                          \
     free(stm_tx_node); }
+  */
 
 #define TM_END_STATS                                                    \
     PRINTD("|| FAKE: TM ends");                                         \
