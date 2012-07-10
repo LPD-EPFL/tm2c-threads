@@ -281,9 +281,15 @@ dsl_communication()
 
 	  EXIT(0);
 	}
-      default:
-	PRINTD("REMOTE MSG: ??");
+	break;
       }
+      default:
+	{
+	  sys_ps_command_reply(sender, PS_UKNOWN_RESPONSE,
+			       NULL,
+			       NULL,
+			       NO_CONFLICT);
+	}
     }
   }
 }
