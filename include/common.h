@@ -100,12 +100,19 @@ extern "C" {
 	extern nodeid_t NUM_DSL_NODES;
     
 /*  ------- Plug platform related things here BEGIN ------- */
-#ifdef PLATFORM_iRCCE
+#if defined(PLATFORM_iRCCE) || defined(PLATFORM_SCC_SSMP)
+
+#ifdef SSMP
+#include "RCCE.h"
+#include "sys_SCC_ssmp.h"
+#else
 #include "iRCCE.h"
 #include "sys_iRCCE.h"
-extern RCCE_COMM RCCE_COMM_APP;
+  extern RCCE_COMM RCCE_COMM_APP;
 #define BARRIER RCCE_barrier(&RCCE_COMM_APP);
 #define BARRIERW RCCE_barrier(&RCCE_COMM_WORLD);
+
+#endif
 
 #endif 
 
