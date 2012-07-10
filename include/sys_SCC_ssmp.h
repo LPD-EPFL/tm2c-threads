@@ -68,7 +68,8 @@ to_addr(tm_intern_addr_t i_addr)
 INLINED int
 sys_sendcmd(void* data, size_t len, nodeid_t to)
 {
-  ssmp_sendl(to, (ssmp_msg_t *) data, len/sizeof(int));
+  //  ssmp_sendl(to, (ssmp_msg_t *) data, len/sizeof(int));
+  ssmp_send(to, (ssmp_msg_t *) data);
   return 1;
 }
 
@@ -77,7 +78,9 @@ sys_sendcmd_all(void* data, size_t len)
 {
   int target;
   for (target = 0; target < NUM_DSL_NODES; target++) {
-    ssmp_sendl(dsl_nodes[target], (ssmp_msg_t *) data, len/sizeof(int));
+    //    ssmp_sendl(dsl_nodes[target], (ssmp_msg_t *) data, len/sizeof(int));
+    //    PRINT("sending stats to %d", dsl_nodes[target]);
+    ssmp_send(dsl_nodes[target], (ssmp_msg_t *) data);
   }
   return 1;
 }
