@@ -13,6 +13,7 @@ typedef long long int ticks;
 
 #ifdef PLATFORM_TILERA
 #include <arch/cycle.h>
+#include <tmc/cpus.h>
 #define getticks get_cycle_count
 #elif defined(PLATFORM_iRCCE)
 typedef long long int ticks;
@@ -58,6 +59,8 @@ MAIN(int argc, char **argv) {
     ONCE {
       PRINT("## sending %lld messages", steps);
     }
+
+    PRINT("running on %d", tmc_cpus_get_my_cpu());
     BARRIER
 
       long long int rounds, sum = 0;
@@ -65,14 +68,18 @@ MAIN(int argc, char **argv) {
     double _start = wtime();
     ticks _start_ticks = getticks();
 
-
-    for (rounds = 0; rounds < steps; rounds++) {
+    //    int to = (ID - 1)/2;
+    //    PRINT("sending to %d", to);
+    steps += ID;
+    for (rounds = ID; rounds < steps; rounds++) {
 #ifdef PGAS
       sum += (int) NONTX_LOAD(sm + rounds);
 #else
       DUMMY_MSG(rounds % NUM_DSL_NODES);
+      //DUMMY_MSG(to);
 #endif
     }
+    steps -= ID;
      
 
     BARRIER;

@@ -1,6 +1,7 @@
 # Main Makefile for DSTM
+
 # For platform, choose one out of: iRCCE, SCC.SSMP, MCORE, MCORE.SSMP,CLUSTER,TILERA
-PLATFORM = SCC.SSMP
+PLATFORM = TILERA
 # USE_HASHTABLE_KHASH:  khash.h from <http://www.freewebs.com/attractivechaos/khash.h>
 # USE_HASHTABLE_UTHASH: uthash.h from <http://uthash.sourceforge.net/>
 # USE_HASHTABLE_SDD:   Sunrise Data Dictionary <>
@@ -24,7 +25,7 @@ LIBS := -L$(TOP)/external/lib \
 # EXTRA_DEFINES are passed through the command line
 DEFINES := $(PLATFORM_DEFINES) $(EXTRA_DEFINES)
 
-DEBUG_FLAGS := #-g -ggdb -fno-inline#-DDEBUG 
+DEBUG_FLAGS := -g #-ggdb -fno-inline#-DDEBUG 
 
 ## Archive ##
 ARCHIVE_SRCS_PURE:= pubSubTM.c tm.c log.c dslock.c \
@@ -38,7 +39,7 @@ ARCHIVE_SRCS_PURE:= pubSubTM.c tm.c log.c dslock.c \
 APPS_DIR := apps
 # add the non PGAS applications only if PGAS is not defined
 ifeq (,$(findstring DPGAS,$(PLATFORM_DEFINES)))
-APPS = tm1 tm2 tm3 tm4 tm5 tm6 tm7 tm8 tm9 tm10
+APPS = #tm1 tm2 tm3 tm4 tm5 tm6 tm7 tm8 tm9 tm10
 endif
 
 # apps that need tasklib in order to compile
