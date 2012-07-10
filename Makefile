@@ -1,7 +1,7 @@
 # Main Makefile for DSTM
 
 # For platform, choose one out of: iRCCE,MCORE, MCORE.SSMP,CLUSTER,TILERA
-PLATFORM = MCORE.SSMP
+PLATFORM = iRCCE
 # USE_HASHTABLE_KHASH:  khash.h from <http://www.freewebs.com/attractivechaos/khash.h>
 # USE_HASHTABLE_UTHASH: uthash.h from <http://uthash.sourceforge.net/>
 # USE_HASHTABLE_SDD:   Sunrise Data Dictionary <>
@@ -79,7 +79,7 @@ BMARKS = bank #bankseq \
 BMARKS_NON_WORKING = mtest
 
 # all bmarks that need to be built
-ALL_BMARKS = $(BMARKS) mbll mbht mr
+ALL_BMARKS = $(BMARKS) mbll mbht mr mp
 endif 
 
 ## The rest of the Makefile ##
