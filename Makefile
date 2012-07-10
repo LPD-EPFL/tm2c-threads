@@ -1,7 +1,6 @@
 # Main Makefile for DSTM
-
-# For platform, choose one out of: iRCCE,MCORE, MCORE.SSMP,CLUSTER,TILERA
-PLATFORM = iRCCE
+# For platform, choose one out of: iRCCE, SCC.SSMP, MCORE, MCORE.SSMP,CLUSTER,TILERA
+PLATFORM = SCC.SSMP
 # USE_HASHTABLE_KHASH:  khash.h from <http://www.freewebs.com/attractivechaos/khash.h>
 # USE_HASHTABLE_UTHASH: uthash.h from <http://uthash.sourceforge.net/>
 # USE_HASHTABLE_SDD:   Sunrise Data Dictionary <>
@@ -155,9 +154,10 @@ $(ARCHIVE):
 	@(cd $(RCCEPATH) ; make)
 endif
 
-ifeq ($(PLATFORM),TILERA)
+# We do this only on the SCC with ssmp
+ifeq ($(PLATFORM),SCC.SSMP)
 $(ARCHIVE):
-	@(cp ./external/tmp/libconfig-1.4.8_tilera/lib/.libs/libconfig.* ./external/lib/)
+	@(cd $(RCCEPATH) ; make API=gory)
 endif
 
 
@@ -170,7 +170,15 @@ ifeq ($(PLATFORM),iRCCE)
 	@$(AR) cr $(DSTM_ARCHIVE) $(ARCHIVE_OBJS) .ar-lib/*.o
 	@rm -rf .ar-lib
 else
+ifeq ($(PLATFORM),SCC.SSMP)
+	@rm -rf .ar-lib
+	@mkdir .ar-lib
+	@(cd .ar-lib && ar x $(ARCHIVE))
+	@$(AR) cr $(DSTM_ARCHIVE) $(ARCHIVE_OBJS) .ar-lib/*.o
+	@rm -rf .ar-lib
+else
 	$(AR) cr $(DSTM_ARCHIVE) $(ARCHIVE_OBJS)
+endif
 endif
 	ranlib $(DSTM_ARCHIVE)
 

@@ -46,8 +46,8 @@ extern "C" {
 
 #ifdef PLATFORM_MCORE
 #define REF_SPEED_GHZ           2.1
-#elif defined(PLATFORM_iRCCE)
-#define REF_SPEED_GHZ           0.8
+#elif defined(PLATFORM_iRCCE) || defined(PLATFORM_SCC_SSMP)
+#define REF_SPEED_GHZ           0.533
 #elif defined(PLATFORM_TILERA)
 #define REF_SPEED_GHZ           0.7
 #else
