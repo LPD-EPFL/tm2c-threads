@@ -100,7 +100,7 @@ extern "C" {
 	extern nodeid_t NUM_DSL_NODES;
     
 /*  ------- Plug platform related things here BEGIN ------- */
-#ifdef PLATFORM_iRCCE
+#if defined(PLATFORM_iRCCE) || defined(PLATFORM_SCC_SSMP)
 
 #ifdef SSMP
 #include "RCCE.h"
