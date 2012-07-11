@@ -39,6 +39,12 @@ EXINLINED ticks getticks(void) {
 #define REPS 1000000
 #ifndef SSMP
 typedef long long int ticks;
+inline ticks getticks(void)
+  {
+    unsigned hi, lo;
+    __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
+    return ( (unsigned long long)lo)|( ((unsigned long long)hi)<<32 );
+  }
 #endif
 
 MAIN(int argc, char **argv) {
@@ -60,10 +66,7 @@ MAIN(int argc, char **argv) {
       PRINT("## sending %lld messages", steps);
     }
 
-#if defined(PLATFORM_TILERA)
-    PRINT("running on %d", tmc_cpus_get_my_cpu());
-#endif
-   BARRIER
+    BARRIER
 
       long long int rounds, sum = 0;
 
