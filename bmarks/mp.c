@@ -37,7 +37,7 @@ EXINLINED ticks getticks(void) {
 #endif
 
 #define REPS 1000000
-#ifndef SSMP
+#ifdef PLATFORM_MCORE
 typedef long long int ticks;
 inline ticks getticks(void)
   {
