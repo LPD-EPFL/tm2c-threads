@@ -1,6 +1,6 @@
 # Main Makefile for DSTM
 
-# For platform, choose one out of: iRCCE,MCORE, MCORE.SSMP,CLUSTER,TILERA
+# For platform, choose one out of: iRCCE, SCC.SSMP, MCORE, MCORE.SSMP,CLUSTER,TILERA
 PLATFORM = MCORE.SSMP
 # USE_HASHTABLE_KHASH:  khash.h from <http://www.freewebs.com/attractivechaos/khash.h>
 # USE_HASHTABLE_UTHASH: uthash.h from <http://uthash.sourceforge.net/>
@@ -25,7 +25,7 @@ LIBS := -L$(TOP)/external/lib \
 # EXTRA_DEFINES are passed through the command line
 DEFINES := $(PLATFORM_DEFINES) $(EXTRA_DEFINES)
 
-DEBUG_FLAGS := #-g -ggdb -fno-inline#-DDEBUG 
+DEBUG_FLAGS := -g #-ggdb -fno-inline#-DDEBUG 
 
 ## Archive ##
 ARCHIVE_SRCS_PURE:= pubSubTM.c tm.c log.c dslock.c \
@@ -39,7 +39,7 @@ ARCHIVE_SRCS_PURE:= pubSubTM.c tm.c log.c dslock.c \
 APPS_DIR := apps
 # add the non PGAS applications only if PGAS is not defined
 ifeq (,$(findstring DPGAS,$(PLATFORM_DEFINES)))
-#APPS = tm1 tm2 tm3 tm4 tm5 tm6 tm7 tm8 tm9 tm10
+APPS = #tm1 tm2 tm3 tm4 tm5 tm6 tm7 tm8 tm9 tm10
 endif
 
 # apps that need tasklib in order to compile
@@ -79,7 +79,7 @@ BMARKS = bank #bankseq \
 BMARKS_NON_WORKING = mtest
 
 # all bmarks that need to be built
-ALL_BMARKS = $(BMARKS) mbll mbht mr
+ALL_BMARKS = $(BMARKS) mbll mbht mr mp
 endif 
 
 ## The rest of the Makefile ##
@@ -155,9 +155,10 @@ $(ARCHIVE):
 	@(cd $(RCCEPATH) ; make)
 endif
 
-ifeq ($(PLATFORM),TILERA)
+# We do this only on the SCC with ssmp
+ifeq ($(PLATFORM),SCC.SSMP)
 $(ARCHIVE):
-	@(cp ./external/tmp/libconfig-1.4.8_tilera/lib/.libs/libconfig.* ./external/lib/)
+	@(cd $(RCCEPATH) ; make API=gory)
 endif
 
 
@@ -170,7 +171,15 @@ ifeq ($(PLATFORM),iRCCE)
 	@$(AR) cr $(DSTM_ARCHIVE) $(ARCHIVE_OBJS) .ar-lib/*.o
 	@rm -rf .ar-lib
 else
+ifeq ($(PLATFORM),SCC.SSMP)
+	@rm -rf .ar-lib
+	@mkdir .ar-lib
+	@(cd .ar-lib && ar x $(ARCHIVE))
+	@$(AR) cr $(DSTM_ARCHIVE) $(ARCHIVE_OBJS) .ar-lib/*.o
+	@rm -rf .ar-lib
+else
 	$(AR) cr $(DSTM_ARCHIVE) $(ARCHIVE_OBJS)
+endif
 endif
 	ranlib $(DSTM_ARCHIVE)
 

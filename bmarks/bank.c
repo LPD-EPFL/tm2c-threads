@@ -253,6 +253,19 @@ bank_t * test(void *data, double duration, int nb_accounts) {
 
     FOR(duration) {
 
+      /*      while(d->nb_transfer++ < 1000000) {
+	src = (int) (rand_range(rand_max) - 1) + rand_min;
+	dst = (int) (rand_range(rand_max) - 1) + rand_min;
+	if (dst == src)
+	  dst = ((src + 1) % rand_max) + rand_min;
+	
+	//total(bank, 1);
+	//src = 0 ; dst = 1;
+	transfer(&bank->accounts[src], &bank->accounts[dst], 1);
+	
+      }
+      continue;
+      */
         if (d->id < d->read_cores) {
             /* Read all */
             //  PRINT("READ ALL1");

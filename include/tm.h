@@ -39,7 +39,7 @@ extern "C" {
   else, in case of a conflict the transaction is not aborted, but backsoff and retries to acquire the same address BACKOFF_MAX time beforee aborting
   */
 #define BACKOFF_MAX                     3
-#define BACKOFF_DELAY                   7
+#define BACKOFF_DELAY                   23
 #endif
 
 
@@ -162,9 +162,12 @@ extern "C" {
 
 #define TM_END                                                          \
     PRINTD("|| FAKE: TM ends");                                         \
-    ps_send_stats(stm_tx_node, duration__);                             \
+    ps_send_stats(stm_tx_node, duration__);}
+
+  /*
     tx_metadata_free(&stm_tx);                                          \
     free(stm_tx_node); }
+  */
 
 #define TM_END_STATS                                                    \
     PRINTD("|| FAKE: TM ends");                                         \

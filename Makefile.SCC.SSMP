@@ -5,32 +5,27 @@ else
 endif
 SYMBOLSPATH=$(RCCEPATH)/common/symbols
 
-API          := nongory
+API          := gory
 
 -include $(SYMBOLSPATH)
 
 PLATFORM_CFLAGS = -O3
-PLATFORM_LDFLAGS =
-PLATFORM_LIBS = 
-PLATFORM_DEFINES = -DPLATFORM_iRCCE \
+PLATFORM_LDFLAGS = 
+PLATFORM_LIBS = -lssmp
+PLATFORM_DEFINES = -DPLATFORM_SCC_SSMP \
+		   -DSSMP \
                    -DDSL \
                    -UPGAS \
                    -DREAD_BUF_OFF \
                    -UDEBUG_UTILIZATION \
                    -UDO_TIMINGS \
-                   -DBACKOFF_RETRY \
-                   -DSENDLIST \
-                   -UFINISH_ALL_PARALLEL \
+                   -UBACKOFF_RETRY \
 
 HAS_TASKLIB = no
 
-iRCCE_SRCS +=iRCCE_isend.c iRCCE_irecv.c iRCCE_isend32.c iRCCE_irecv32.c \
-			 iRCCE_admin.c iRCCE_synch.c iRCCE_send.c iRCCE_recv.c \
-			 iRCCE_get.c iRCCE_put.c iRCCE_waitlist.c 
+#no iRCCE for ssmp :)
 
-ARCHIVE_SRCS_PURE += $(addprefix iRCCE/, $(iRCCE_SRCS))
-
-ARCHIVE_SRCS_PURE += sys_iRCCE.c
+ARCHIVE_SRCS_PURE += sys_SCC_ssmp.c
 
 # These are RCCE-only apps
 #APPS += toall all2all \
@@ -38,6 +33,3 @@ ARCHIVE_SRCS_PURE += sys_iRCCE.c
 #	  	ring ring_token ring_simple
 
 INCLUDES += -I$(RCCEPATH)/include
-
-$(SRCPATH)/iRCCE/%.o:: $(SRCPATH)/iRCCE/%.c
-	$(C) $(CFLAGS) $(RCCE_FLAGS) -o $@ -c $<

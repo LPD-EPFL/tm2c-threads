@@ -389,6 +389,8 @@ void dsl_communication() {
 
 	  EXIT(0);
 	}
+	break;
+      }
       default:
 	{
 	  sys_ps_command_reply(sender, PS_UKNOWN_RESPONSE,
@@ -396,7 +398,6 @@ void dsl_communication() {
 			       NULL,
 			       NO_CONFLICT);
 	}
-      }
     }
   }
 }

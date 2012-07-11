@@ -10,6 +10,6 @@ PLATFORM_DEFINES = -DPLATFORM_TILERA \
                    -UDEBUG_UTILIZATION \
                    -UDO_TIMINGS \
                    -UBACKOFF_RETRY \
-                   -UDISABLE_CC
+                   -DDISABLE_CC
 
 ARCHIVE_SRCS_PURE+=sys_TILERA.c
