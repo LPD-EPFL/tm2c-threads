@@ -39,7 +39,7 @@ extern "C" {
   else, in case of a conflict the transaction is not aborted, but backsoff and retries to acquire the same address BACKOFF_MAX time beforee aborting
   */
 #define BACKOFF_MAX                     3
-#define BACKOFF_DELAY                   23
+#define BACKOFF_DELAY                   11
 #endif
 
 
