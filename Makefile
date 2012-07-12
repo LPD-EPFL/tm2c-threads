@@ -25,7 +25,7 @@ LIBS := -L$(TOP)/external/lib \
 # EXTRA_DEFINES are passed through the command line
 DEFINES := $(PLATFORM_DEFINES) $(EXTRA_DEFINES)
 
-DEBUG_FLAGS := -g #-ggdb -fno-inline#-DDEBUG 
+DEBUG_FLAGS := #-g #-ggdb -fno-inline#-DDEBUG 
 
 ## Archive ##
 ARCHIVE_SRCS_PURE:= pubSubTM.c tm.c log.c dslock.c \
