@@ -28,8 +28,11 @@ unsigned long int stats_total = 0,
 double stats_duration = 0;
 
 #ifdef DEBUG_UTILIZATION
-unsigned int read_reqs_num = 0;
-unsigned int write_reqs_num = 0;
+extern unsigned int read_reqs_num;
+extern unsigned int write_reqs_num;
+int bucket_usages[NUM_OF_BUCKETS];
+int bucket_current[NUM_OF_BUCKETS];
+int bucket_max[NUM_OF_BUCKETS];
 #endif
 
 void dsl_init(void) {
@@ -142,7 +145,7 @@ void print_hashtable_usage() {
     }
 
     for (i = 0; i < NUM_OF_BUCKETS; i++) {
-        printf("bucket [%02d]\tusages: %d\t percentage: %f%%\n", i, bucket_usages[i], (100 * (double) bucket_usages[i]) / total_usages);
+        printf("bucket [%02d]\tusages: %d\t percentage: %f%%\tmax size: %d\n", i, bucket_usages[i], (100 * (double) bucket_usages[i]) / total_usages, bucket_max[i]);
     }
 
 #endif

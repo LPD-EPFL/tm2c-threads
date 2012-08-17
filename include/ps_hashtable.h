@@ -13,8 +13,11 @@
 extern "C" {
 #endif
 
+#include <limits.h>
+#include "hash.h"
 #include "common.h"
 #include "rw_entry.h"
+
 
 /*
  * This section defines the interface the hash table needs to provide.
@@ -53,13 +56,29 @@ struct uthash_elem_struct {
  * Hence, ps_hashtable_t will be a pointer to a pointer. This way, we can
  * initialize a variable.
  */
-typedef struct uthash_elem_struct** ps_hashtable_t;
+  typedef struct uthash_elem_struct** ps_hashtable_t;
+
+#elif USE_ARRAY
+#include "array_log.h"
+#define NUM_OF_ELEMENTS 1024 * 1024 * 1024 / NUM_DSL_NODES
+typedef rw_entry_t* ps_hashtable_t;
 
 #elif  USE_HASHTABLE_SDD
+#elif  USE_FIXED_HASH
+
+#include "lock_log.h"
+#include "fixed_hash.h"
+  typedef fixed_hash_entry_t** ps_hashtable_t;
+
+#elif USE_HASHTABLE_SSHT
+
+#include "ssht.h"
+#include "ssht_log.h"
+  typedef ssht_hashtable_t ps_hashtable_t;
 
 #elif  USE_HASHTABLE_VT
 #include "vthash.h"
-typedef vthash_bucket_t** ps_hashtable_t;
+  typedef vthash_bucket_t** ps_hashtable_t;
 
 #else
 #error "No type of hashtable implementation given."
@@ -310,9 +329,275 @@ ps_hashtable_print(ps_hashtable_t ps_hashtable)
 	}
 }
 
+#elif USE_ARRAY
+array_log_set_t** the_logs;
+int next_log_free;
+int* log_map;
+
+INLINED ps_hashtable_t
+ps_hashtable_new() {
+   ps_hashtable_t ps_hashtable;
+   if ((ps_hashtable = (ps_hashtable_t) calloc(NUM_OF_ELEMENTS, sizeof(rw_entry_t)))==NULL) {
+      PRINTDNN("calloc ps_hashtable @ os_hashtable_init\n");
+      return NULL;
+   }
+
+   uintptr_t i;
+   for (i = 0; i < NUM_OF_ELEMENTS; i++) {
+      ps_hashtable[i].shorts[3] = NO_WRITER;
+   }
+    int j;
+    the_logs=(array_log_set_t**) malloc(NUM_APP_NODES*sizeof(array_log_set_t*));
+    log_map=(int*)malloc(NUM_UES * sizeof(int));
+    for (j=0;j<NUM_APP_NODES;j++){
+        the_logs[j]=array_log_set_new();
+    }
+    next_log_free=0;
+    for (j=0;j<NUM_UES;j++) {
+        log_map[j]=-1;
+    }
+
+   return ps_hashtable;
+}
+
+INLINED ps_get_index(tm_intern_addr_t address){
+   //uintptr_t index=((address>>2)/NUM_DSL_NODES)%NUM_OF_ELEMENTS;
+   uintptr_t index=((((address>>4)/NUM_DSL_NODES) << 2) +  ((address%16) >> 2))%NUM_OF_ELEMENTS;
+}
+
+INLINED CONFLICT_TYPE
+ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
+                                tm_intern_addr_t address, RW rw)
+{
+    if (log_map[nodeId]==-1) {
+        log_map[nodeId]=next_log_free;
+        next_log_free++;
+    }
+
+    array_log_set_t* the_log = the_logs[log_map[nodeId]];
+    uintptr_t index=ps_get_index(address);
+   //fprintf(stderr, "inserting %d in  %u \n",nodeId, address);
+   CONFLICT_TYPE conflict = rw_entry_is_conflicting(&ps_hashtable[index], nodeId, rw);
+   //fprintf(stderr, "ch1\n");
+   //sleep(1);
+if (conflict==NO_CONFLICT){
+        array_log_set_insert(the_log,index);
+    }
+    //fprintf(stderr, "done inserting\n");
+    //sleep(1);
+    return conflict;
+
+}
+
+INLINED void
+ps_hashtable_delete(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
+                                tm_intern_addr_t address, RW rw)
+{
+   //fprintf(stderr, "deleting %d from %u \n",nodeId, address);
+   uintptr_t index = ps_get_index(address);
+   if (rw == WRITE) {
+      if (rw_entry_is_writer(&ps_hashtable[index],nodeId)) {
+         rw_entry_unset_writer(&ps_hashtable[index]);
+      }
+   } else {
+      rw_entry_unset(&ps_hashtable[index],nodeId);
+   }
+}
+INLINED void
+ps_hashtable_delete_node(ps_hashtable_t ps_hashtable, nodeid_t nodeId)
+{
+
+   //fprintf(stderr, "deleting node  %d  \n",nodeId);
+ 
+    array_log_set_t* the_log = the_logs[log_map[nodeId]];
+    int i;
+    for (i=0;i<the_log->nb_entries;i++) {
+      uintptr_t index = the_log->array_log_entries[i].address;
+      if (rw_entry_is_writer(&ps_hashtable[index],nodeId)) {
+         rw_entry_unset_writer(&ps_hashtable[index]);
+      }
+      rw_entry_unset(&ps_hashtable[index],nodeId);
+    }
+    array_log_set_empty(the_log);
+}
+
+INLINED void
+ps_hashtable_print(ps_hashtable_t ps_hashtable)
+{
+
+    PRINTS("__PRINT PS_HASHTABLE________________________________________________\n");
+    uintptr_t i;
+    for (i = 0; i < NUM_OF_ELEMENTS; i++) {
+        PRINTS(" [%"PRIxIA"]: Write: %-3d\n   ", i, ps_hashtable[i].shorts[3]);
+        rw_entry_print_readers(&ps_hashtable[i]);
+    }
+    FLUSH;
+}
+
 #elif  USE_HASHTABLE_SDD
 
+#elif USE_FIXED_HASH
+
+lock_log_set_t** the_logs;
+int next_log_free;
+int* log_map;
+
+INLINED unsigned int ps_get_hash(uintptr_t address){
+    return hash_tw((address>>2) % UINT_MAX);
+}
+
+
+INLINED ps_hashtable_t
+ps_hashtable_new()
+{
+    int i;
+    the_logs=(lock_log_set_t**) malloc(NUM_APP_NODES*sizeof(lock_log_set_t*));
+    log_map=(int*)malloc(NUM_UES * sizeof(int));
+    for (i=0;i<NUM_APP_NODES;i++){
+        the_logs[i]=lock_log_set_new();
+    }
+    next_log_free=0;
+    for (i=0;i<NUM_UES;i++) {
+        log_map[i]=-1;
+    }
+    return fixed_hash_init(); 
+}
+INLINED CONFLICT_TYPE
+ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
+                                tm_intern_addr_t address, RW rw)
+{
+    //fprintf(stderr, "start insert %u\n",address);
+    //usleep(100);
+    if (log_map[nodeId]==-1) {
+        log_map[nodeId]=next_log_free;
+        next_log_free++;
+    }
+    CONFLICT_TYPE conflict = fixed_hash_insert_in_bucket(ps_hashtable, ps_get_hash(address)%NUM_OF_BUCKETS, nodeId, address, rw, the_logs[log_map[nodeId]]);
+    //fprintf(stderr, "end insert\n");
+    //if (conflict!=NO_CONFLICT)fprintf(stderr, "with conflict!\n");
+    //usleep(100);
+    return conflict;
+}
+
+INLINED void
+ps_hashtable_delete(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
+                                tm_intern_addr_t address, RW rw)
+{
+    //fprintf(stderr, "start delete\n");
+    //usleep(100);
+    fixed_hash_delete_from_bucket(ps_hashtable, ps_get_hash(address)%NUM_OF_BUCKETS, nodeId, address, rw);
+    //fprintf(stderr, "end delete\n");
+    //usleep(100);
+}
+
+INLINED void
+ps_hashtable_delete_node(ps_hashtable_t ps_hashtable, nodeid_t nodeId)
+{
+    //fprintf(stderr, "start del all\n");
+    //usleep(100);
+    lock_log_set_t* the_log = the_logs[log_map[nodeId]];
+    int i;
+    for (i=0;i<the_log->nb_entries;i++) {
+       if (the_log->lock_log_entries[i].rw % 2 == 1) {
+        fixed_hash_delete_from_entry((fixed_hash_entry_t*)the_log->lock_log_entries[i].address, the_log->lock_log_entries[i].index, nodeId, READ);
+       }
+        if (the_log->lock_log_entries[i].rw >= 2) {
+         fixed_hash_delete_from_entry((fixed_hash_entry_t*)the_log->lock_log_entries[i].address, the_log->lock_log_entries[i].index, nodeId, WRITE);
+       }
+    }
+    lock_log_set_empty(the_log);
+    //fprintf(stderr, "end del all\n");
+    //usleep(100);
+}
+
+INLINED void
+ps_hashtable_print(ps_hashtable_t ps_hashtable)
+{
+}
+
+#elif USE_HASHTABLE_SSHT
+
+  ssht_log_set_t **logs;
+  uint32_t next_log_free;
+  int32_t *log_map;
+
+INLINED unsigned int ps_get_hash(uintptr_t address){
+    return hash_tw((address>>2) % UINT_MAX);
+}
+
+
+INLINED ps_hashtable_t
+ps_hashtable_new()
+{
+  uint32_t i;
+  logs = (ssht_log_set_t **) malloc(NUM_APP_NODES * sizeof(ssht_log_set_t*));
+  assert(logs != NULL);
+  log_map = (int32_t *) malloc(NUM_UES * sizeof(int));
+  assert(log_map != NULL);
+
+  for (i=0; i < NUM_APP_NODES; i++){
+    logs[i] = ssht_log_set_new();
+  }
+
+  next_log_free = 0;
+
+  for (i=0; i<NUM_UES; i++) {
+    log_map[i] = -1;
+  }
+
+  return ssht_new();
+}
+
+INLINED CONFLICT_TYPE
+ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
+                                tm_intern_addr_t address, RW rw)
+{
+  uint32_t bu = ps_get_hash(address) % NUM_OF_BUCKETS;
+  CONFLICT_TYPE conflict = ssht_insert(nodeId, ps_hashtable, bu, address, rw);
+  if (conflict == NO_CONFLICT) {
+    if (log_map[nodeId] < 0) {
+      log_map[nodeId] = next_log_free++;
+    }
+    ssht_log_set_insert(logs[log_map[nodeId]], address, bu);
+  }
+  return conflict;
+}
+
+INLINED void
+ps_hashtable_delete(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
+                                tm_intern_addr_t address, RW rw)
+{
+  ssht_remove(ps_hashtable, ps_get_hash(address)%NUM_OF_BUCKETS, address, rw);
+}
+
+INLINED void
+ps_hashtable_delete_node(ps_hashtable_t ps_hashtable, nodeid_t nodeId)
+{
+  ssht_log_set_t *log = logs[log_map[nodeId]];
+  uint32_t j;
+  for (j = 0; j < log->nb_entries; j++) {
+    ssht_removeg(ps_hashtable, log->log_entries[j].index, log->log_entries[j].address);
+  }
+  ssht_log_set_empty(log);
+}
+
+INLINED void
+ps_hashtable_print(ps_hashtable_t ps_hashtable)
+{
+}
+
+
 #elif  USE_HASHTABLE_VT
+
+INLINED unsigned int ps_get_hash(uintptr_t address){
+    return hash_tw((address>>2) % UINT_MAX);
+}
+
+#ifdef DEBUG_UTILIZATION
+    extern int bucket_usages[];
+    extern int bucket_current[];
+    extern int bucket_max[];
+#endif
 
 INLINED ps_hashtable_t
 ps_hashtable_new()
@@ -346,14 +631,24 @@ INLINED CONFLICT_TYPE
 ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
                                 tm_intern_addr_t address, RW rw)
 {
-    return vthash_insert_bucket(ps_hashtable[address % NUM_OF_BUCKETS], nodeId, address, rw);
+#ifdef DEBUG_UTILIZATION
+    unsigned int index = ps_get_hash(address)%NUM_OF_BUCKETS;
+    bucket_usages[index]++;
+    if (bucket_max[index]<ps_hashtable[index]->nb_entries) {
+        bucket_max[index]=ps_hashtable[index]->nb_entries;
+    }
+#endif
+    return vthash_insert_bucket(ps_hashtable[ps_get_hash(address) % NUM_OF_BUCKETS], nodeId, address, rw);
 }
 
 INLINED void
 ps_hashtable_delete(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
                                 tm_intern_addr_t address, RW rw)
 {
-    vthash_delete_bucket(ps_hashtable[address % NUM_OF_BUCKETS], nodeId, address, rw);
+#ifdef DEBUG_UTILIZATION
+    bucket_current[ps_get_hash(address)%NUM_OF_BUCKETS]--;
+#endif
+    vthash_delete_bucket(ps_hashtable[ps_get_hash(address) % NUM_OF_BUCKETS], nodeId, address, rw);
 }
 
 INLINED void

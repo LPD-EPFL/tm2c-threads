@@ -1,6 +1,6 @@
 PLATFORM_CFLAGS =
 PLATFORM_LDFLAGS = 
-PLATFORM_LIBS = -lssmp -lrt
+PLATFORM_LIBS = -lssmp -lrt -lnuma
 
 #endif
 PLATFORM_DEFINES = -DPLATFORM_MCORE \
@@ -9,6 +9,7 @@ PLATFORM_DEFINES = -DPLATFORM_MCORE \
                    -ULIBTASK \
                    -UBACKOFF_RETRY \
                    -UFINISH_ALL_PARALLEL \
+                   -UDEBUG_UTILIZATION \
 		   -UDO_TIMINGS \
 		   -DSSMP
 
@@ -19,4 +20,4 @@ ARCHIVE_SRCS_PURE += mcore_malloc.c
 ARCHIVE_SRCS_PURE += sys_MCORE_ssmp.c
 
 # same as cluster, non-pgas experiments will not work
-ALL_BMARKS = bank
+ALL_BMARKS = bank mbll ht
