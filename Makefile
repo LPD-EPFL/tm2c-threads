@@ -6,9 +6,10 @@ PLATFORM = MCORE.SSMP
 # USE_HASHTABLE_UTHASH: uthash.h from <http://uthash.sourceforge.net/>
 # USE_HASHTABLE_SDD:   Sunrise Data Dictionary <>
 # USE_HASHTABLE_VT:     hashtable by Vasilis
+# USE_HASHTABLE_SSHT:     Super-Simple-HT (counting readers)
 # USE_FIXED_HASH:    fixed hash
 # USE_ARRAY:     array
-HASHTABLE = USE_FIXED_HASH
+HASHTABLE = USE_HASHTABLE_SSHT
 .PHONY: all 
 
 all:

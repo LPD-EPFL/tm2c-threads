@@ -16,6 +16,7 @@
 #include <sched.h>
 #include <assert.h>
 #include <ssmp.h>
+#include <ssmp_send.h>
 #include <numa.h>
 
 #include "common.h"
@@ -212,7 +213,10 @@ sys_ps_command_reply(nodeid_t sender,
   reply.address = (uintptr_t) address;
 #endif
 
-  ssmp_send(sender, (ssmp_msg_t *) &reply, sizeof(PS_REPLY));
+  ssmp_msg_t *msg = (ssmp_msg_t *) &reply;
+  ssmp_send(sender, msg, 24);
+  //  ssmp_sendm(sender, msg);
+  //ssmp_send_inline(sender, msg);
 }
 
 
@@ -220,22 +224,30 @@ sys_ps_command_reply(nodeid_t sender,
 void
 dsl_communication()
 {
-  int sender;
-  ssmp_msg_t msg;
+  unsigned int sender;
   PS_COMMAND_TYPE command;
 
-  ssmp_color_buf_t cbuf;
-  ssmp_color_buf_init(&cbuf, color_app);
+  ssmp_msg_t *msg;
+  msg = (ssmp_msg_t *) malloc(sizeof(ssmp_msg_t));
+
+  ssmp_color_buf_t *cbuf;
+  cbuf = (ssmp_color_buf_t *) malloc(sizeof(ssmp_color_buf_t));
+  if (msg == NULL || cbuf == NULL) {
+    PRINT("malloc @ dsl_communication");
+    exit(-1);
+  }
+  ssmp_color_buf_init(cbuf, color_app);
 
   while (1) {
 
-    ssmp_recv_color(&cbuf, &msg, sizeof(*ps_remote));
-    sender = msg.sender;
+    ssmp_recv_color(cbuf, msg, sizeof(*ps_remote));
+    sender = msg->sender;
     
-    ps_remote = (PS_COMMAND *) &msg;
+    ps_remote = (PS_COMMAND *) msg;
 
     switch (ps_remote->type) {
     case PS_SUBSCRIBE:
+
 #ifdef DEBUG_UTILIZATION
       read_reqs_num++;
 #endif
@@ -258,7 +270,6 @@ dsl_communication()
       break;
     case PS_PUBLISH:
       {
-
 #ifdef DEBUG_UTILIZATION
 	write_reqs_num++;
 #endif
@@ -280,7 +291,6 @@ dsl_communication()
 #ifdef PGAS
     case PS_WRITE_INC:
       {
-
 #ifdef DEBUG_UTILIZATION
 	write_reqs_num++;
 #endif

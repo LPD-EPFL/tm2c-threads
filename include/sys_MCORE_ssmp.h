@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <ssmp.h>
+//#include <ssmp_send.h>
+//#include <ssmp_recv.h>
 
 #include "common.h"
 #include "messaging.h"
@@ -39,6 +41,9 @@ INLINED int
 sys_sendcmd(void* data, size_t len, nodeid_t to)
 {
   ssmp_send(to, (ssmp_msg_t *) data, len);
+  //  ssmp_msg_t *msg = (ssmp_msg_t *) data;
+  //  ssmp_send_inline(to, msg);
+  //  ssmp_sendm(to, msg);
 }
 
 INLINED int
@@ -55,6 +60,9 @@ INLINED int
 sys_recvcmd(void* data, size_t len, nodeid_t from)
 {
   ssmp_recv_from(from, (ssmp_msg_t *) data, len);
+  //ssmp_recv_from_inline(from, (ssmp_msg_t *) data);
+  //ssmp_msg_t *msg = (ssmp_msg_t *) data;
+  //  ssmp_recv_fromm(from, msg);
 }
 
 INLINED tm_intern_addr_t

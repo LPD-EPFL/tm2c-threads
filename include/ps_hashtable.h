@@ -56,7 +56,7 @@ struct uthash_elem_struct {
  * Hence, ps_hashtable_t will be a pointer to a pointer. This way, we can
  * initialize a variable.
  */
-typedef struct uthash_elem_struct** ps_hashtable_t;
+  typedef struct uthash_elem_struct** ps_hashtable_t;
 
 #elif USE_ARRAY
 #include "array_log.h"
@@ -68,11 +68,17 @@ typedef rw_entry_t* ps_hashtable_t;
 
 #include "lock_log.h"
 #include "fixed_hash.h"
-typedef fixed_hash_entry_t** ps_hashtable_t;
+  typedef fixed_hash_entry_t** ps_hashtable_t;
+
+#elif USE_HASHTABLE_SSHT
+
+#include "ssht.h"
+#include "ssht_log.h"
+  typedef ssht_hashtable_t ps_hashtable_t;
 
 #elif  USE_HASHTABLE_VT
 #include "vthash.h"
-typedef vthash_bucket_t** ps_hashtable_t;
+  typedef vthash_bucket_t** ps_hashtable_t;
 
 #else
 #error "No type of hashtable implementation given."
@@ -508,6 +514,78 @@ INLINED void
 ps_hashtable_print(ps_hashtable_t ps_hashtable)
 {
 }
+
+#elif USE_HASHTABLE_SSHT
+
+  ssht_log_set_t **logs;
+  uint32_t next_log_free;
+  int32_t *log_map;
+
+INLINED unsigned int ps_get_hash(uintptr_t address){
+    return hash_tw((address>>2) % UINT_MAX);
+}
+
+
+INLINED ps_hashtable_t
+ps_hashtable_new()
+{
+  uint32_t i;
+  logs = (ssht_log_set_t **) malloc(NUM_APP_NODES * sizeof(ssht_log_set_t*));
+  assert(logs != NULL);
+  log_map = (int32_t *) malloc(NUM_UES * sizeof(int));
+  assert(log_map != NULL);
+
+  for (i=0; i < NUM_APP_NODES; i++){
+    logs[i] = ssht_log_set_new();
+  }
+
+  next_log_free = 0;
+
+  for (i=0; i<NUM_UES; i++) {
+    log_map[i] = -1;
+  }
+
+  return ssht_new();
+}
+
+INLINED CONFLICT_TYPE
+ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
+                                tm_intern_addr_t address, RW rw)
+{
+  uint32_t bu = ps_get_hash(address) % NUM_OF_BUCKETS;
+  CONFLICT_TYPE conflict = ssht_insert(nodeId, ps_hashtable, bu, address, rw);
+  if (conflict == NO_CONFLICT) {
+    if (log_map[nodeId] < 0) {
+      log_map[nodeId] = next_log_free++;
+    }
+    ssht_log_set_insert(logs[log_map[nodeId]], address, bu);
+  }
+  return conflict;
+}
+
+INLINED void
+ps_hashtable_delete(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
+                                tm_intern_addr_t address, RW rw)
+{
+  ssht_remove(ps_hashtable, ps_get_hash(address)%NUM_OF_BUCKETS, address, rw);
+}
+
+INLINED void
+ps_hashtable_delete_node(ps_hashtable_t ps_hashtable, nodeid_t nodeId)
+{
+  ssht_log_set_t *log = logs[log_map[nodeId]];
+  uint32_t j;
+  for (j = 0; j < log->nb_entries; j++) {
+    ssht_removeg(ps_hashtable, log->log_entries[j].index, log->log_entries[j].address);
+  }
+  ssht_log_set_empty(log);
+}
+
+INLINED void
+ps_hashtable_print(ps_hashtable_t ps_hashtable)
+{
+}
+
 
 #elif  USE_HASHTABLE_VT
 
