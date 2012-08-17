@@ -37,7 +37,7 @@ EXINLINED ticks getticks(void) {
 #endif
 
 #define REPS 1000000
-#ifndef SSMP
+#ifdef PLATFORM_MCORE
 typedef long long int ticks;
 inline ticks getticks(void)
   {
@@ -73,18 +73,18 @@ MAIN(int argc, char **argv) {
     double _start = wtime();
     ticks _start_ticks = getticks();
 
-    //    int to = (ID - 1)/2;
-    //    PRINT("sending to %d", to);
-    steps += ID;
-    for (rounds = ID; rounds < steps; rounds++) {
+    int to = (ID - 1)/2;
+    PRINT("sending to %d", to);
+    //    steps += ID;
+    for (rounds = 0; rounds < steps; rounds++) {
 #ifdef PGAS
       sum += (int) NONTX_LOAD(sm + rounds);
 #else
-      DUMMY_MSG(rounds % NUM_DSL_NODES);
-      //DUMMY_MSG(to);
+      //      DUMMY_MSG(rounds % NUM_DSL_NODES);
+      DUMMY_MSG(to);
 #endif
     }
-    steps -= ID;
+    //    steps -= ID;
      
 
     BARRIER;
