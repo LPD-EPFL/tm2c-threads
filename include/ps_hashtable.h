@@ -553,13 +553,11 @@ ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
                                 tm_intern_addr_t address, RW rw)
 {
   uint32_t bu = ps_get_hash(address) % NUM_OF_BUCKETS;
-  CONFLICT_TYPE conflict = ssht_insert(nodeId, ps_hashtable, bu, address, rw);
-  if (conflict == NO_CONFLICT) {
-    if (log_map[nodeId] < 0) {
-      log_map[nodeId] = next_log_free++;
-    }
-    ssht_log_set_insert(logs[log_map[nodeId]], address, bu);
+  if (log_map[nodeId] < 0) {
+    log_map[nodeId] = next_log_free++;
   }
+
+  CONFLICT_TYPE conflict = ssht_insert(ps_hashtable, bu, logs[log_map[nodeId]], nodeId,  address, rw);
   return conflict;
 }
 
@@ -567,7 +565,7 @@ INLINED void
 ps_hashtable_delete(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
                                 tm_intern_addr_t address, RW rw)
 {
-  ssht_remove(ps_hashtable, ps_get_hash(address)%NUM_OF_BUCKETS, address, rw);
+  //  ssht_remove(ps_hashtable, ps_get_hash(address)%NUM_OF_BUCKETS, address, rw);
 }
 
 INLINED void
@@ -576,7 +574,7 @@ ps_hashtable_delete_node(ps_hashtable_t ps_hashtable, nodeid_t nodeId)
   ssht_log_set_t *log = logs[log_map[nodeId]];
   uint32_t j;
   for (j = 0; j < log->nb_entries; j++) {
-    ssht_removeg(ps_hashtable, log->log_entries[j].index, log->log_entries[j].address);
+    ssht_remove(ps_hashtable, log->log_entries[j].address, log->log_entries[j].index);
   }
   ssht_log_set_empty(log);
 }
