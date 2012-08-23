@@ -1,6 +1,7 @@
 
 *#
 *.a
+*.d
 *.o
 *~
 /apps/tm10
@@ -18,6 +19,7 @@
 /bmarks/mr
 /bmarks/readonly
 /boo
+/c.c
 /data
 /external/*
 /external/tmp/libconfig-1.4.8/examples/c++/.deps/
@@ -40,9 +42,12 @@
 /mbll.nofair
 /nbproject/*
 /nbproject/private/*
+/oprof
 /outp
 /pgas.changes
+/profile
 /run_sim.sh
+/runrt
 collect.awk
 collect.sh
 collect1.awk
@@ -59,4 +64,3 @@ runrep_.awk
 runrep_.log
 runrepm
 runrrep
-*.d

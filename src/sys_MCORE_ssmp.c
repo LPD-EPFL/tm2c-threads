@@ -18,8 +18,9 @@
 #include <limits.h>
 #include <ssmp.h>
 #include <ssmp_send.h>
+#ifdef PLATFORM_NUMA
 #include <numa.h>
-
+#endif /* PLATFORM_NUMA */
 #include "common.h"
 #include "pubSubTM.h"
 #include "dslock.h"
@@ -130,7 +131,9 @@ fork_done:
 			  strerror(errno));
 		EXIT(3);
 	}
-    numa_set_preferred(place/6);
+#ifdef PLATFORM_NUMA
+	numa_set_preferred(place/6);
+#endif /* PLATFORM_NUMA */
 }
 
 void
