@@ -19,7 +19,7 @@
 #define SIZE_ENTRY 4
 #define ENTRY_PER_CL 8
 #define ADDR_PER_CL ENTRY_PER_CL
-#define UNUSED_BYTES 16
+#define UNUSED_BYTES 12
 
 
 #define NO_WRITER 0x1000
@@ -55,6 +55,7 @@ typedef struct bucket {
   uint64_t num_elems;
 #endif
   struct bucket * next;
+  int32_t free;
   entry_t entry[ENTRY_PER_CL];
   char dummy[UNUSED_BYTES];
 } bucket_t;
@@ -170,7 +171,15 @@ INLINED CONFLICT_TYPE bucket_insert_r(bucket_t * bu, ssht_log_set_t *log, uintpt
 
     //    cur_size++;
 
-    for (i = 0; i < ADDR_PER_CL; i++) {
+    if (btmp->free > 0) {
+      i = btmp->free;
+      btmp->free = -1;
+    }
+    else {
+      i = 0;
+    }
+
+    for (; i < ADDR_PER_CL; i++) {
       if (btmp->addr[i] == 0) {
 	btmp->num_elems++;
 	btmp->addr[i] = addr;
@@ -247,7 +256,15 @@ INLINED CONFLICT_TYPE bucket_insert_w(bucket_t * bu, ssht_log_set_t *log, uintpt
 
     //    cur_size++;
 
-    for (i = 0; i < ADDR_PER_CL; i++) {
+    if (btmp->free > 0) {
+      i = btmp->free;
+      btmp->free = -1;
+    }
+    else {
+      i = 0;
+    }
+
+    for (; i < ADDR_PER_CL; i++) {
       if (btmp->addr[i] == 0) {
 	btmp->num_elems++;
 	btmp->addr[i] = addr;
@@ -384,6 +401,7 @@ INLINED uint32_t ssht_bucket_remove_index(bucket_t * bu, uint32_t index) {
   if (bu->entry[index].whole == ENTRY_FREE) {
     bu->addr[index] = 0;
     bu->num_elems--;
+    bu->free = index;
   }
 
   return TRUE;
