@@ -2,7 +2,7 @@
 #define _HT_H_
 
 
-#define MOVE_EMPTY
+//#define MOVE_EMPTY
 
 #include <inttypes.h>
 #include "ssht_log.h"
