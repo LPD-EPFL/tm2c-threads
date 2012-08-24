@@ -76,6 +76,12 @@ typedef rw_entry_t* ps_hashtable_t;
 #include "ssht_log.h"
   typedef ssht_hashtable_t ps_hashtable_t;
 
+#elif USE_SSLARRAY
+
+#include "sslarray.h"
+#include "sslarray_log.h"
+  typedef sslarray_t ps_hashtable_t;
+
 #elif  USE_HASHTABLE_VT
 #include "vthash.h"
   typedef vthash_bucket_t** ps_hashtable_t;
@@ -508,6 +514,83 @@ ps_hashtable_delete_node(ps_hashtable_t ps_hashtable, nodeid_t nodeId)
     lock_log_set_empty(the_log);
     //fprintf(stderr, "end del all\n");
     //usleep(100);
+}
+
+INLINED void
+ps_hashtable_print(ps_hashtable_t ps_hashtable)
+{
+}
+
+
+#elif USE_SSLARRAY
+
+  sslarray_log_set_t **logs;
+  uint32_t next_log_free;
+  int32_t *log_map;
+
+
+INLINED tm_intern_addr_t ps_get_index(tm_intern_addr_t address){
+   //uintptr_t index=((address>>2)/NUM_DSL_NODES)%NUM_OF_ELEMENTS;
+  //  tm_intern_addr_t index=((((address>>4)/NUM_DSL_NODES) << 2) +  ((address%16) >> 2))%SSLARRAY_SIZE;
+  //  tm_intern_addr_t index= address % SSLARRAY_SIZE;
+  tm_intern_addr_t index= address & 0x0000000000FFFFFF;
+  //  PRINT("index %d", index);
+  return index;
+}
+
+
+INLINED ps_hashtable_t
+ps_hashtable_new()
+{
+  uint32_t i;
+  logs = (sslarray_log_set_t **) malloc(NUM_APP_NODES * sizeof(sslarray_log_set_t*));
+  assert(logs != NULL);
+  log_map = (int32_t *) malloc(NUM_UES * sizeof(int));
+  assert(log_map != NULL);
+
+  for (i=0; i < NUM_APP_NODES; i++){
+    logs[i] = sslarray_log_set_new();
+  }
+
+  next_log_free = 0;
+
+  for (i=0; i<NUM_UES; i++) {
+    log_map[i] = -1;
+  }
+
+  return sslarray_new();
+}
+
+INLINED CONFLICT_TYPE
+ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
+                                tm_intern_addr_t address, RW rw)
+{
+  
+  address = ps_get_index(address);
+  if (log_map[nodeId] < 0) {
+    log_map[nodeId] = next_log_free++;
+  }
+
+  CONFLICT_TYPE conflict = sslarray_insert(ps_hashtable, logs[log_map[nodeId]], nodeId,  address, rw);
+  return conflict;
+}
+
+INLINED void
+ps_hashtable_delete(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
+                                tm_intern_addr_t address, RW rw)
+{
+  //  sslarray_remove(ps_hashtable, ps_get_hash(address)%NUM_OF_BUCKETS, address, rw);
+}
+
+INLINED void
+ps_hashtable_delete_node(ps_hashtable_t ps_hashtable, nodeid_t nodeId)
+{
+  sslarray_log_set_t *log = logs[log_map[nodeId]];
+  uint32_t j;
+  for (j = 0; j < log->nb_entries; j++) {
+    sslarray_remove(ps_hashtable, log->log_entries[j]);
+  }
+  sslarray_log_set_empty(log);
 }
 
 INLINED void

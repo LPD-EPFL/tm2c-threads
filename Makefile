@@ -7,9 +7,10 @@ PLATFORM = MCORE.SSMP
 # USE_HASHTABLE_SDD:   Sunrise Data Dictionary <>
 # USE_HASHTABLE_VT:     hashtable by Vasilis
 # USE_HASHTABLE_SSHT:     Super-Simple-HT (counting readers)
+# USE_SSLARRAY:     Super-Simple-Lock-Array
 # USE_FIXED_HASH:    fixed hash
 # USE_ARRAY:     array
-HASHTABLE = USE_HASHTABLE_SSHT
+HASHTABLE = USE_SSLARRAY
 .PHONY: all 
 
 all:

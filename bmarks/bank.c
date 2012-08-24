@@ -100,9 +100,11 @@ int transfer(account_t *src, account_t *dst, int amount) {
 
 #ifdef LOAD_STORE
             //TODO: test and use the TX_LOAD_STORE
+      //      PRINT("src %d @ %p", src->number, &src->number);
 	TX_LOAD_STORE(&src->balance, -, amount, TYPE_INT);
+    //	PRINT("dst %d @ %p ", dst->number, &dst->number);
     TX_LOAD_STORE(&dst->balance, +, amount, TYPE_INT);
-
+    //    PRINT("---");
     PF_STOP(3)
     TX_COMMIT_NO_PUB;
     PF_STOP(2)
