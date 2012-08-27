@@ -251,6 +251,8 @@ dsl_communication()
   int j;
   for (j = 0; j < NB; j++) usages[j] = 0;
 
+  uintptr_t addr_prev = NULL; uint32_t req_num = 0;
+
   while (1) {
 
     ssmp_recv_color(cbuf, msg, sizeof(*ps_remote));
@@ -271,11 +273,19 @@ dsl_communication()
       /*
 	PRINT("RL addr: %3d, val: %d", address, PGAS_read(address));
       */
+      
       sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE,
 			   ps_remote->address, 
 			   PGAS_read(ps_remote->address),
 			   try_subscribe(sender, ps_remote->address));
 #else
+      /* if (NODE_ID() == 0) { */
+      /* 	if (sender == 1) { */
+      /* 	  printf("[%3d] addr %p \tdiff %d\n", req_num++, ps_remote->address, addr_prev - ps_remote->address); */
+      /* 	  addr_prev = ps_remote->address; */
+      /* 	} */
+      /* } */
+      
       sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE, 
 			   ps_remote->address, 
 			   NULL,

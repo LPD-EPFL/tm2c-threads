@@ -22,7 +22,7 @@
 #define TRUE 1
 
 
-#define SSLARRAY_SIZE 10*1024*1024
+#define SSLARRAY_SIZE 16777216
 
 extern unsigned int num_moves;
 extern unsigned int cur_size, max_size;

@@ -99,12 +99,9 @@ int transfer(account_t *src, account_t *dst, int amount) {
     PF_START(3)
 
 #ifdef LOAD_STORE
-            //TODO: test and use the TX_LOAD_STORE
-      //      PRINT("src %d @ %p", src->number, &src->number);
+      //      PRINT("%d @ %p  ==> %d @ %p", src->number, &src->balance, dst->number, &dst->balance);
 	TX_LOAD_STORE(&src->balance, -, amount, TYPE_INT);
-    //	PRINT("dst %d @ %p ", dst->number, &dst->number);
     TX_LOAD_STORE(&dst->balance, +, amount, TYPE_INT);
-    //    PRINT("---");
     PF_STOP(3)
     TX_COMMIT_NO_PUB;
     PF_STOP(2)
@@ -248,8 +245,6 @@ bank_t * test(void *data, double duration, int nb_accounts) {
 
     /* Wait on barrier */
     BARRIER
-
-    // PRINT("chk %d", chk++); //0
 
     PF_START(0);
 
@@ -472,7 +467,7 @@ TASKMAIN(int argc, char **argv) {
 
     /* Init STM */
     BARRIER
-
+      
 
     data->id = NODE_ID();
     data->read_all = read_all;
@@ -499,6 +494,7 @@ TASKMAIN(int argc, char **argv) {
     printf("  #read-all   : %lu\n", data->nb_read_all);
     printf("  #write-all  : %lu\n", data->nb_write_all);
     FLUSH
+
 
     ONCE
     {

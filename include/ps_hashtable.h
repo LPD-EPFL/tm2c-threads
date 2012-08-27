@@ -60,7 +60,8 @@ struct uthash_elem_struct {
 
 #elif USE_ARRAY
 #include "array_log.h"
-#define NUM_OF_ELEMENTS 1024 * 1024 * 1024 / NUM_DSL_NODES
+  //#define NUM_OF_ELEMENTS 1024 * 1024 * 1024 / NUM_DSL_NODES
+#define NUM_OF_ELEMENTS 16777216
 typedef rw_entry_t* ps_hashtable_t;
 
 #elif  USE_HASHTABLE_SDD
@@ -366,9 +367,13 @@ ps_hashtable_new() {
    return ps_hashtable;
 }
 
-INLINED ps_get_index(tm_intern_addr_t address){
+INLINED tm_intern_addr_t ps_get_index(tm_intern_addr_t address){
    //uintptr_t index=((address>>2)/NUM_DSL_NODES)%NUM_OF_ELEMENTS;
-   uintptr_t index=((((address>>4)/NUM_DSL_NODES) << 2) +  ((address%16) >> 2))%NUM_OF_ELEMENTS;
+  //  tm_intern_addr_t index=((((address>>4)/NUM_DSL_NODES) << 2) +  ((address%16) >> 2))%SSLARRAY_SIZE;
+  //  tm_intern_addr_t index= address % SSLARRAY_SIZE;
+  tm_intern_addr_t index= address & 0x0000000000FFFFFF;
+  //  PRINT("index %d", index);
+  return index;
 }
 
 INLINED CONFLICT_TYPE
@@ -383,12 +388,20 @@ ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
     array_log_set_t* the_log = the_logs[log_map[nodeId]];
     uintptr_t index=ps_get_index(address);
    //fprintf(stderr, "inserting %d in  %u \n",nodeId, address);
-   CONFLICT_TYPE conflict = rw_entry_is_conflicting(&ps_hashtable[index], nodeId, rw);
+    rw_entry_t *rwe = &ps_hashtable[index];
+   CONFLICT_TYPE conflict = rw_entry_is_conflicting(rwe, nodeId, rw);
    //fprintf(stderr, "ch1\n");
    //sleep(1);
-if (conflict==NO_CONFLICT){
-        array_log_set_insert(the_log,index);
-    }
+   if (conflict==NO_CONFLICT){
+     if (rw == READ) {
+       rw_entry_set(rwe, nodeId);
+     }
+     else {
+       rw_entry_set_writer(rwe, nodeId);
+     }
+     array_log_set_insert(the_log,index);
+   }
+
     //fprintf(stderr, "done inserting\n");
     //sleep(1);
     return conflict;
@@ -402,10 +415,9 @@ ps_hashtable_delete(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
    //fprintf(stderr, "deleting %d from %u \n",nodeId, address);
    uintptr_t index = ps_get_index(address);
    if (rw == WRITE) {
-      if (rw_entry_is_writer(&ps_hashtable[index],nodeId)) {
-         rw_entry_unset_writer(&ps_hashtable[index]);
-      }
-   } else {
+     rw_entry_unset_writer(&ps_hashtable[index]);
+   } 
+   else {
       rw_entry_unset(&ps_hashtable[index],nodeId);
    }
 }
@@ -422,7 +434,9 @@ ps_hashtable_delete_node(ps_hashtable_t ps_hashtable, nodeid_t nodeId)
       if (rw_entry_is_writer(&ps_hashtable[index],nodeId)) {
          rw_entry_unset_writer(&ps_hashtable[index]);
       }
-      rw_entry_unset(&ps_hashtable[index],nodeId);
+      else {
+	rw_entry_unset(&ps_hashtable[index],nodeId);
+      }
     }
     array_log_set_empty(the_log);
 }
