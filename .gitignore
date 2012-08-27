@@ -4,6 +4,7 @@
 *.d
 *.o
 *~
+/TODO
 /apps/tm10
 /apps/tm[0-9]
 /bank.sm.pgas.r0
