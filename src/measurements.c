@@ -8,7 +8,6 @@ ticks total_sum_ticks[ENTRY_TIMES_SIZE] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 long long total_samples[ENTRY_TIMES_SIZE] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 const char *measurement_msgs[ENTRY_TIMES_SIZE];
 ticks getticks_correction = 0;
-#endif
 
 ticks getticks_correction_calc() {
 #define GETTICKS_CALC_REPS 1000000
@@ -23,3 +22,4 @@ ticks getticks_correction_calc() {
   getticks_correction = (ticks)(t_dur / (double) GETTICKS_CALC_REPS);
   return getticks_correction;
 }
+#endif
