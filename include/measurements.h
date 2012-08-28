@@ -22,7 +22,7 @@ extern "C" {
 #define PF_PRINT_TICKS          
 #define PF_PRINT                
 #define PF_EXCLUDE(pos)         
-    
+#define PF_CORRECTION
 #else
 #define PF_MSG(pos, msg)        SET_PROF_MSG_POS(pos, msg)
 #define PF_START(pos)           ENTRY_TIME_POS(pos)
@@ -31,6 +31,7 @@ extern "C" {
 #define PF_PRINT_TICKS          REPORT_TIMINGS
 #define PF_PRINT                REPORT_TIMINGS_SECS
 #define PF_EXCLUDE(pos)         EXCLUDE_ENTRY(pos)
+#define PF_CORRECTION           MEASUREREMENT_CORRECTION
 #endif
 
 #ifdef DO_TIMINGS
@@ -141,13 +142,17 @@ do {\
     extern ticks total_sum_ticks[ENTRY_TIMES_SIZE];
     extern long long total_samples[ENTRY_TIMES_SIZE];
     extern const char *measurement_msgs[ENTRY_TIMES_SIZE];
+  extern ticks getticks_correction;
 
+  extern ticks getticks_correction_calc();
+
+#define MEASUREREMENT_CORRECTION() getticks_correction_calc();
 #define SET_PROF_MSG(msg) SET_PROF_MSG_POS(0, msg) 
 #define ENTRY_TIME ENTRY_TIME_POS(0)
 #define EXIT_TIME EXIT_TIME_POS(0)
 #define KILL_ENTRY_TIME KILL_ENTRY_TIME_POS(0)
 
-#define SET_PROF_MSG_POS(pos, msg)\
+#define SET_PROF_MSG_POS(pos, msg)		\
   measurement_msgs[pos] = msg;
 
 #define ENTRY_TIME_POS(position)					\
@@ -158,10 +163,10 @@ do {									\
 
 #define EXIT_TIME_POS(position)						\
   do {									\
+    ticks exit_time = getticks();					\
     if (entry_time_valid[position]) {					\
       entry_time_valid[position] = M_FALSE;				\
-      ticks exit_time = getticks();					\
-      total_sum_ticks[position] += (exit_time - entry_time[position]);	\
+      total_sum_ticks[position] += (exit_time - entry_time[position] - getticks_correction);	\
       total_samples[position]++;					\
 }} while (0);
 
