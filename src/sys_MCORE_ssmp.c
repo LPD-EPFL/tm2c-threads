@@ -132,7 +132,7 @@ fork_done:
 		EXIT(3);
 	}
 #ifdef PLATFORM_NUMA
-	numa_set_preferred(place/6);
+	numa_set_preferred(rank/6);
 #endif /* PLATFORM_NUMA */
 }
 
