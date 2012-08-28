@@ -146,7 +146,7 @@ do {\
 
   extern ticks getticks_correction_calc();
 
-#define MEASUREREMENT_CORRECTION() getticks_correction_calc();
+#define MEASUREREMENT_CORRECTION getticks_correction_calc();
 #define SET_PROF_MSG(msg) SET_PROF_MSG_POS(0, msg) 
 #define ENTRY_TIME ENTRY_TIME_POS(0)
 #define EXIT_TIME EXIT_TIME_POS(0)
