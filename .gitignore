@@ -7,14 +7,18 @@
 /TODO
 /apps/tm10
 /apps/tm[0-9]
+/bank.cm.r100
 /bank.sm.pgas.r0
 /bank.sm.pgas.r100
 /bmarks/bank
+/bmarks/bank_*
 /bmarks/bankpgas
 /bmarks/bankseq
 /bmarks/mbht
+/bmarks/mbht_*
 /bmarks/mbhtpgas
 /bmarks/mbll
+/bmarks/mbll_*
 /bmarks/mbllpgas
 /bmarks/mp
 /bmarks/mr
@@ -44,6 +48,7 @@
 /nbproject/*
 /nbproject/private/*
 /oprof
+/out
 /outp
 /pgas.changes
 /profile
