@@ -48,6 +48,17 @@ extern "C" {
 
 #define DSLNDPERNODES   2 /* 1 dedicated DS-Locking core per DSLNDPERNODES cores*/
 
+
+#if defined(PLATFORM_MCORE)
+#define REF_SPEED_GHZ           2.1
+#elif defined(PLATFORM_iRCCE) || defined(PLATFORM_SCC_SSMP)
+#define REF_SPEED_GHZ           0.533
+#elif defined(PLATFORM_TILERA)
+#define REF_SPEED_GHZ           0.7
+#else
+#error "Need to set REF_SPEED_GHZ for the platform"
+#endif
+
 #define MED printf("[%02d] ", NODE_ID());
 #define PRINT(args...) printf("[%02d] ", NODE_ID()); printf(args); printf("\n"); fflush(stdout)
 #define PRINTNF(args...) printf("[%02d] ", NODE_ID()); printf(args); printf("\n"); fflush(stdout)

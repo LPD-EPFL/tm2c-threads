@@ -45,15 +45,6 @@ extern "C" {
 #include <stdio.h>
 #include <math.h>
 
-#ifdef PLATFORM_MCORE
-#define REF_SPEED_GHZ           2.1
-#elif defined(PLATFORM_iRCCE) || defined(PLATFORM_SCC_SSMP)
-#define REF_SPEED_GHZ           0.533
-#elif defined(PLATFORM_TILERA)
-#define REF_SPEED_GHZ           0.7
-#else
-#error "Need to set REF_SPEED_GHZ for the platform"
-#endif
     // =============================== GETTIMEOFDAY ================================ {{{
 #ifdef DO_TIMINGS_STD
 #define ENTRY_TIMES_SIZE 8
