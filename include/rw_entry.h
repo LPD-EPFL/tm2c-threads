@@ -30,59 +30,6 @@ extern "C" {
 typedef struct rw_entry {
 
     union {
-#ifdef SINGLEBITS
-        struct {
-        	unsigned int n0 : 1;
-        	unsigned int n1 : 1;
-        	unsigned int n2 : 1;
-        	unsigned int n3 : 1;
-        	unsigned int n4 : 1;
-        	unsigned int n5 : 1;
-        	unsigned int n6 : 1;
-        	unsigned int n7 : 1;
-        	unsigned int n8 : 1;
-        	unsigned int n9 : 1;
-        	unsigned int n10 : 1;
-        	unsigned int n11 : 1;
-        	unsigned int n12 : 1;
-        	unsigned int n13 : 1;
-        	unsigned int n14 : 1;
-        	unsigned int n15 : 1;
-        	unsigned int n16 : 1;
-        	unsigned int n17 : 1;
-        	unsigned int n18 : 1;
-        	unsigned int n19 : 1;
-        	unsigned int n20 : 1;
-        	unsigned int n21 : 1;
-        	unsigned int n22 : 1;
-        	unsigned int n23 : 1;
-        	unsigned int n24 : 1;
-        	unsigned int n25 : 1;
-        	unsigned int n26 : 1;
-        	unsigned int n27 : 1;
-        	unsigned int n28 : 1;
-        	unsigned int n29 : 1;
-        	unsigned int n30 : 1;
-        	unsigned int n31 : 1;
-        	unsigned int n32 : 1;
-        	unsigned int n33 : 1;
-        	unsigned int n34 : 1;
-        	unsigned int n35 : 1;
-        	unsigned int n36 : 1;
-        	unsigned int n37 : 1;
-        	unsigned int n38 : 1;
-        	unsigned int n39 : 1;
-        	unsigned int n40 : 1;
-        	unsigned int n41 : 1;
-        	unsigned int n42 : 1;
-        	unsigned int n43 : 1;
-        	unsigned int n44 : 1;
-        	unsigned int n45 : 1;
-        	unsigned int n46 : 1;
-        	unsigned int n47 : 1;
-        	unsigned short int writer;
-    	} bits;
-#endif
     	unsigned short int shorts[4];
     	unsigned int ints[2];
 	};
@@ -147,7 +94,7 @@ INLINED void
 rw_entry_clear(rw_entry_t *rwe)
 {
     rwe->ints[0] = 0;
-    rwe->shorts[3] = NO_WRITER;
+    rwe->ints[1] = NO_WRITERI;
 }
 
 INLINED BOOLEAN
