@@ -10,7 +10,7 @@ PLATFORM = MCORE.SSMP
 # USE_SSLARRAY:     Super-Simple-Lock-Array
 # USE_FIXED_HASH:    fixed hash
 # USE_ARRAY:     array
-HASHTABLE = USE_FIXED_HASH
+HASHTABLE = USE_HASHTABLE_SSHT
 .PHONY: all 
 
 all:

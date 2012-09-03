@@ -671,7 +671,7 @@ ps_hashtable_delete_node(ps_hashtable_t ps_hashtable, nodeid_t nodeId)
   ssht_log_set_t *log = logs[log_map[nodeId]];
   uint32_t j;
   for (j = 0; j < log->nb_entries; j++) {
-    ssht_remove(ps_hashtable, log->log_entries[j].address, log->log_entries[j].index);
+    ssht_remove(ps_hashtable, log->log_entries[j].address, nodeId, log->log_entries[j].index);
   }
   ssht_log_set_empty(log);
 }
