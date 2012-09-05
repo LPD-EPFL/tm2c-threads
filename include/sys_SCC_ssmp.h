@@ -30,18 +30,21 @@ extern "C" {
 
 extern tm_addr_t shmem_start_address;
 extern nodeid_t *dsl_nodes;
+  extern nodeid_t MY_NODE_ID;
+  extern nodeid_t MY_TOTAL_NODES;
+
 #define PS_BUFFER_SIZE 32
     
-INLINED nodeid_t
+EXINLINED nodeid_t
 NODE_ID(void)
 {
-	return (nodeid_t)RCCE_ue();
+  return MY_NODE_ID;
 }
 
 INLINED nodeid_t
 TOTAL_NODES(void)
 {
-	return (nodeid_t)RCCE_num_ues();
+  return MY_TOTAL_NODES;
 }
 
 INLINED tm_intern_addr_t
@@ -55,7 +58,7 @@ to_intern_addr(tm_addr_t addr)
 }
 
 
-INLINED tm_addr_t
+EXINLINED tm_addr_t
 to_addr(tm_intern_addr_t i_addr)
 {
 #ifdef PGAS

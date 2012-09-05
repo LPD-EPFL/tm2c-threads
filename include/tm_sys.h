@@ -31,7 +31,7 @@ void sys_shfree(sys_t_vcharp);
 /*
  * Functions to deal with the number of nodes.
  */
-INLINED nodeid_t NODE_ID(void);
+EXINLINED nodeid_t NODE_ID(void);
 INLINED nodeid_t TOTAL_NODES(void);
 
 /*
@@ -60,7 +60,7 @@ INLINED int sys_sendcmd_all(void* data, size_t len);
  * the machine address.
  */
 INLINED tm_intern_addr_t to_intern_addr(tm_addr_t addr);
-INLINED tm_addr_t to_addr(tm_intern_addr_t i_addr);
+EXINLINED tm_addr_t to_addr(tm_intern_addr_t i_addr);
 
 /*
  * Random numbers related functions
