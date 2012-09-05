@@ -127,10 +127,15 @@ void handle_abort(stm_tx_t *stm_tx, CONFLICT_TYPE reason) {
     
 #ifdef BACKOFF_RETRY
     /*BACKOFF and RETRY*/
-    unsigned int wait_max = pow(2, (stm_tx->retries < BACKOFF_MAX ? stm_tx->retries : BACKOFF_MAX)) * BACKOFF_DELAY;
-    unsigned int wait = rand_range(wait_max);
-    //PRINT("\t\t\t\t\t\t... backoff for %5d micros (retries: %3d | max: %d)", wait, stm_tx->retries, wait_max);
-    udelay(wait);
+    if (BACKOFF_MAX > 0)  {
+      unsigned int wait_max = pow(2, (stm_tx->retries < BACKOFF_MAX ? stm_tx->retries : BACKOFF_MAX)) * BACKOFF_DELAY;
+      unsigned int wait = rand_range(wait_max);
+      //PRINT("\t\t\t\t\t\t... backoff for %5d micros (retries: %3d | max: %d)", wait, stm_tx->retries, wait_max);
+      ndelay(wait);
+    }
+    else {
+      wait_cycles(50 * stm_tx->retries);
+    }
 #endif
     
 }
@@ -164,7 +169,7 @@ void ps_publish_all() {
         tm_addr_t addr = to_addr(write_entries[locked].address);
 #ifndef BACKOFF_RETRY
         unsigned int num_delays = 0;
-        unsigned int delay = BACKOFF_DELAY; //micro
+        unsigned int delay = BACKOFF_DELAY; //nano
 retry:
 #endif
 #ifdef PGAS
@@ -175,7 +180,7 @@ retry:
             //ps_publish_finish_all(locked);
 #ifndef BACKOFF_RETRY
             if (num_delays++ < BACKOFF_MAX) {
-	      udelay(rand_range(delay));
+	      ndelay(rand_range(delay));
 	      delay *= 2;
 	      goto retry;
             }

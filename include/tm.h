@@ -66,7 +66,7 @@ extern "C" {
   else, in case of a conflict the transaction is not aborted, but backsoff and retries to acquire the same address BACKOFF_MAX time beforee aborting
   */
 #define BACKOFF_MAX                     3
-#define BACKOFF_DELAY                   11
+#define BACKOFF_DELAY                   200
 #endif
 
 
@@ -349,7 +349,7 @@ retry:
                 if ((conflict = ps_subscribe(addr)) != NO_CONFLICT) {
 #ifndef BACKOFF_RETRY
                     if (num_delays++ < BACKOFF_MAX) {
-		      udelay(rand_range(delay));
+		      ndelay(rand_range(delay));
 		      delay *= 2;
 		      goto retry;
                     }
@@ -391,7 +391,7 @@ retry:
 #endif
 #ifndef BACKOFF_RETRY
             if (num_delays++ < BACKOFF_MAX) {
-	      udelay(rand_range(delay));
+	      ndelay(rand_range(delay));
 	      delay *= 2;
 	      goto retry;
             }
@@ -445,7 +445,7 @@ retry:
 #endif
 #ifndef BACKOFF_RETRY
             if (num_delays++ < BACKOFF_MAX) {
-                udelay(delay);
+                ndelay(delay);
                 delay *= 2;
                 goto retry;
             }
