@@ -428,11 +428,17 @@ srand_core()
 }
 
 void 
-udelay(unsigned int micros)
+udelay(uint64_t micros)
 {
-   double __ts_end = wtime() + ((double) micros / 1000000);
-   while (wtime() < __ts_end);
-   //usleep(micros);
+  ticks in_cycles = 21000 * micros;
+  wait_cycles(in_cycles);
+}
+
+void 
+ndelay(uint64_t nanos)
+{
+  ticks in_cycles = 2.1 * nanos;
+  wait_cycles(in_cycles);
 }
 
 void

@@ -70,7 +70,8 @@ void srand_core();
 /*
  * Helper functions
  */
-void udelay(unsigned int micros);
+void udelay(uint64_t micros);
+void ndelay(uint64_t micros);
 
 INLINED double wtime(void);
 
