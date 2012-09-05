@@ -61,7 +61,7 @@ void ps_init_(void) {
     unsigned int j;
     for (j = 0; j < NUM_UES; j++) {
         nodes_contacted[j] = 0;
-        if (j % DSLNDPERNODES == 0) {
+        if (!is_app_core(j)) {
             dsl_nodes[dsln++] = j;
         }
     }

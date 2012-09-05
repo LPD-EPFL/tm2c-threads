@@ -29,15 +29,48 @@ const char *conflict_reasons[4] = {
     "WRITE_AFTER_WRITE"
 };
 
+
+//custom assignment
+const unsigned short buf[8] = {0xAAAA,0xAAAA,0xAAAA,0xAAAA,0xAAAA,0xAAAA,0xAAAA,0xAAAA};
+/* set to 1 if dsl node */
+const uint8_t dsl_node[] =
+  {
+    1, 0, 0, 0, 0, 0,		/* 6 */
+    0, 0, 0, 0, 0, 0,		/* 12 */
+    0, 0, 0, 0, 0, 0,		/* 18 */
+    0, 0, 1, 0, 0, 0,		/* 24 */
+    0, 0, 0, 1, 0, 0,		/* 30 */
+    0, 0, 0, 0, 0, 0,		/* 36 */
+    0, 0, 0, 0, 0, 0,		/* 42 */
+    0, 0, 0, 0, 0, 1,		/* 48 */
+    0, 0, 0, 0, 0, 0,		/* ... */
+    0, 0, 0, 0, 0, 0,		/*  */
+    0, 0, 0, 0, 0, 0,		/*  */
+    0, 0, 0, 0, 0, 0,		/*  */
+  };
+
 /*______________________________________________________________________________________________________
  * TM Interface                                                                                         |
  *______________________________________________________________________________________________________|
  */
 
+#define DSL_BY_MOD
+#define DSLPERNODE 4
+
+int is_app_core(int id) {
+    //return 0 if dsl node, 1 otherwise
+#if defined(DSL_BY_MOD)
+  return (id % DSLPERNODE) != 0;
+#elif defined(HEX_ASSIGNEMENT)
+  return (buf[id/(8 * sizeof(unsigned short))]>>(id%(8 * sizeof(unsigned short))))&0x01;
+#else
+  return !dsl_node[id];
+#endif
+}
+
 void tm_init() {
     sys_tm_init();
-
-    if (ID % DSLNDPERNODES == 0) {
+    if (!is_app_core(ID)) {
         //dsl node
         dsl_init();
     }
@@ -62,19 +95,26 @@ init_system(int* argc, char** argv[])
   /* calculate the getticks correction if DO_TIMINGS is set */
   PF_CORRECTION;
 
-	/* call platform level initializer */
-	sys_init_system(argc, argv);
+  /* call platform level initializer */
+  sys_init_system(argc, argv);
 
-	/* initialize globals */
-	ID            = NODE_ID();
-	NUM_UES       = TOTAL_NODES();
-	NUM_DSL_NODES = ((NUM_UES/DSLNDPERNODES)) + (NUM_UES%DSLNDPERNODES ? 1 : 0);
-	NUM_APP_NODES = NUM_UES-NUM_DSL_NODES;
+  /* initialize globals */
+  ID            = NODE_ID();
+  NUM_UES       = TOTAL_NODES();
 
-	//	fprintf(stderr, "ID: %u\nNUM_UES: %u\nNUM_DSL_NODES: %u\nNUM_APP_NODES: %u\n",
-	//		ID, NUM_UES, NUM_DSL_NODES, NUM_APP_NODES);
+  uint32_t i, tot=0;
+  for (i =0; i < NUM_UES; i++) {
+    if (!is_app_core(i)) {
+      tot++;
+    }
+  }
+  NUM_DSL_NODES = tot;
+  NUM_APP_NODES = NUM_UES - tot;
 
-	init_barrier();
+  //	fprintf(stderr, "ID: %u\nNUM_UES: %u\nNUM_DSL_NODES: %u\nNUM_APP_NODES: %u\n",
+  //		ID, NUM_UES, NUM_DSL_NODES, NUM_APP_NODES);
+
+  init_barrier();
 }
 /*
  * Trampolining code for terminating everything
@@ -82,7 +122,7 @@ init_system(int* argc, char** argv[])
 void
 tm_term()
 {
-    if (ID % DSLNDPERNODES == 0) {
+    if (!is_app_core(ID)) {
         // DSL node
         // common stuff
 

@@ -37,6 +37,8 @@ unsigned int read_reqs_num = 0, write_reqs_num = 0;
 PS_REPLY* ps_remote_msg; // holds the received msg
 static PS_COMMAND *ps_remote;
 
+INLINED nodeid_t min_dsl_id();
+
 INLINED void sys_ps_command_reply(nodeid_t sender,
                     PS_REPLY_TYPE command,
                     tm_addr_t address,
@@ -245,7 +247,7 @@ dsl_communication()
     PRINT("malloc @ dsl_communication");
     exit(-1);
   }
-  ssmp_color_buf_init(cbuf, color_app);
+  ssmp_color_buf_init(cbuf, is_app_core);
 
   
   int j;
@@ -382,8 +384,9 @@ dsl_communication()
 	  stats_aborts_war += ps_remote->aborts_war;
 	  stats_aborts_waw += ps_remote->aborts_waw;
 	}
+
 	if (++stats_received >= 2*NUM_APP_NODES) {
-	  if (NODE_ID() == 0) {
+	  if (NODE_ID() == min_dsl_id()) {
 	    print_global_stats();
 
 	    print_hashtable_usage();
@@ -439,6 +442,21 @@ ndelay(uint64_t nanos)
 {
   ticks in_cycles = 2.1 * nanos;
   wait_cycles(in_cycles);
+}
+
+
+INLINED nodeid_t
+min_dsl_id() 
+{
+  uint32_t i;
+  for (i = 0; i < TOTAL_NODES(); i++)
+    {
+      if (!is_app_core(i))
+	{
+	  return i;
+	}
+    }
+  return i;
 }
 
 void

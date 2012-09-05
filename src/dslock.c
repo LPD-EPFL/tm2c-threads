@@ -47,7 +47,7 @@ void dsl_init(void) {
 
     nodeid_t j;
     for (j = 0; j < NUM_UES; j++) {
-        if (j % DSLNDPERNODES) { /*only for non DSL cores*/
+        if (is_app_core(j)) { /*only for non DSL cores*/
             PGAS_write_sets[j] = write_set_pgas_new();
             if (PGAS_write_sets[j] == NULL) {
                 PRINT("malloc PGAS_write_sets[i] == NULL");

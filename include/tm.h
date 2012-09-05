@@ -52,7 +52,7 @@ extern "C" {
     duration__ = __end - __start;
 
 
-#define ONCE                            if (NODE_ID() == 1 || TOTAL_NODES() == 1)
+#define ONCE                            if (NODE_ID() == min_app_id() || TOTAL_NODES() == 1)
 
 
 #ifdef BACKOFF_RETRY
@@ -458,8 +458,21 @@ retry:
 
     void ps_unsubscribe_all();
 
-    int color(int id, void *aux);
+    int is_app_core(int id);
 
+    INLINED nodeid_t
+      min_app_id() 
+    {
+      uint32_t i;
+      for (i = 0; i < TOTAL_NODES(); i++)
+	{
+	  if (is_app_core(i))
+	    {
+	      return i;
+	    }
+        }
+      return i;
+    }
 
     void init_system(int* argc, char** argv[]);
 

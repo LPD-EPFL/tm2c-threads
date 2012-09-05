@@ -62,7 +62,7 @@ sys_sendcmd_all(void* data, size_t len)
 
 	nodeid_t to;
 	for (to=0; to < TOTAL_NODES(); to++) {
-		if (to % DSLNDPERNODES == 0) {
+		if (!is_app_core(to)) {
 			PRINTD("sys_sendcmd_all: to = %u, rc = %d", to, rc);
 			sys_sendcmd(data, len, to);
 		}

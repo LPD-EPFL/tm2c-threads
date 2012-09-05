@@ -45,10 +45,6 @@ sys_shfree(sys_t_vcharp ptr)
 }
 
 
-static int color(int id, void *aux) {
-    return !(id % DSLNDPERNODES);
-}
-
 RCCE_COMM RCCE_COMM_APP;
 
 static iRCCE_RECV_REQUEST *recv_requests;
@@ -77,7 +73,7 @@ tm_addr_t shmem_start_address;
 void
 sys_tm_init()
 {
-    RCCE_comm_split(color, NULL, &RCCE_COMM_APP);
+    RCCE_comm_split(is_app_core, NULL, &RCCE_COMM_APP);
 
 #ifndef PGAS
     if (shmem_start_address == NULL) {
@@ -128,7 +124,7 @@ sys_dsl_init(void)
     // Create recv request for each possible (other) core.
     unsigned int i;
     for (i = 0; i < NUM_UES; i++) {
-        if (i % DSLNDPERNODES) { /*only for non DSL cores*/
+        if (is_app_core(i)) { /*only for non DSL cores*/
             iRCCE_irecv(buf + i * PS_BUFFER_SIZE, PS_BUFFER_SIZE, i, &recv_requests[i]);
             iRCCE_add_recv_to_wait_list(&waitlist, &recv_requests[i]);
         }

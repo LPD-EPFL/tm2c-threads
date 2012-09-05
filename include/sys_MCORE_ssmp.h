@@ -31,6 +31,8 @@ NODE_ID(void)
 }
 
 
+extern int is_app_core(int id);
+
 INLINED nodeid_t
 TOTAL_NODES(void)
 {
