@@ -12,6 +12,9 @@
 #include "fakemem.h"
 #endif
 
+nodeid_t MY_NODE_ID;
+nodeid_t MY_TOTAL_NODES;
+
 INLINED void sys_ps_command_reply(nodeid_t sender,
                     PS_REPLY_TYPE command,
                     tm_addr_t address,
@@ -23,6 +26,10 @@ void
 sys_init_system(int* argc, char** argv[])
 {
   RCCE_init(argc, argv);
+
+  MY_NODE_ID = RCCE_ue();
+  MY_TOTAL_NODES = RCCE_num_ues();
+
   ssmp_init(RCCE_num_ues(), RCCE_ue());
 }
 
@@ -177,7 +184,7 @@ dsl_communication()
 			   try_subscribe(sender, ps_remote->address));
 #else
       sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE, 
-			   ps_remote->address, 
+			   (tm_addr_t) ps_remote->address, 
 			   NULL,
 			   try_subscribe(sender, ps_remote->address));
       //sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE, address, NO_CONFLICT);
@@ -199,7 +206,7 @@ dsl_communication()
 	}
 #endif
 	sys_ps_command_reply(sender, PS_PUBLISH_RESPONSE, 
-			     ps_remote->address,
+			     (tm_addr_t) ps_remote->address,
 			     NULL,
 			     conflict);
 	break;
@@ -310,11 +317,38 @@ srand_core()
 }
 
 
-void 
-udelay(unsigned int micros)
+static inline void
+wait_cycles(uint64_t ncycles)
 {
-    double __ts_end = RCCE_wtime() + ((double) micros / 1000000);
-    while (RCCE_wtime() < __ts_end);
+  if (ncycles < 256) 
+    {
+      volatile int64_t _ncycles = ncycles;
+      _ncycles >>= 3;
+      _ncycles -= 3;
+      while (_ncycles-- > 0)
+	{
+	  asm("nop");
+	}
+    }
+  else {
+    ticks _target = getticks() + ncycles - 50;
+    while (getticks() < _target) ;
+  }
+}
+
+
+void 
+udelay(uint64_t micros)
+{
+  ticks in_cycles = REF_SPEED_GHZ * 1000 * micros;
+  wait_cycles(in_cycles);
+}
+
+void 
+ndelay(uint64_t nanos)
+{
+  ticks in_cycles = REF_SPEED_GHZ * nanos;
+  wait_cycles(in_cycles);
 }
 
 void

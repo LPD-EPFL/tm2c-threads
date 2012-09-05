@@ -430,14 +430,14 @@ srand_core()
 void 
 udelay(uint64_t micros)
 {
-  ticks in_cycles = 21000 * micros;
+  ticks in_cycles = REF_SPEED_GHZ * 1000 * micros;
   wait_cycles(in_cycles);
 }
 
 void 
 ndelay(uint64_t nanos)
 {
-  ticks in_cycles = 2.1 * nanos;
+  ticks in_cycles = REF_SPEED_GHZ * nanos;
   wait_cycles(in_cycles);
 }
 
