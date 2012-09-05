@@ -14,10 +14,10 @@ extern "C" {
 #endif
 
 #include <limits.h>
+#include <assert.h>
 #include "hash.h"
 #include "common.h"
 #include "rw_entry.h"
-
 
 /*
  * This section defines the interface the hash table needs to provide.
