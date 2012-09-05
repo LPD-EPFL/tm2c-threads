@@ -1,8 +1,9 @@
+PLATFORM_NUMA=1
+
 PLATFORM_CFLAGS = -O3
 PLATFORM_LDFLAGS = 
-PLATFORM_LIBS = -lssmp -lrt -lnuma
+PLATFORM_LIBS = -lssmp -lrt
 
-#endif
 PLATFORM_DEFINES = -DPLATFORM_MCORE \
                    -UPGAS \
                    -DREAD_BUF_OFF \
@@ -13,6 +14,10 @@ PLATFORM_DEFINES = -DPLATFORM_MCORE \
 		   -UDO_TIMINGS \
 		   -DSSMP
 
+ifeq ($(PLATFORM_NUMA),1)
+PLATFORM_LIBS += -lnuma
+PLATFORM_DEFINES += -DPLATFORM_NUMA
+endif
 
 HAS_TASKLIB = no
 

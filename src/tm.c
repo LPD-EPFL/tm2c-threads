@@ -59,6 +59,9 @@ void tm_init() {
 void
 init_system(int* argc, char** argv[])
 {
+  /* calculate the getticks correction if DO_TIMINGS is set */
+  PF_CORRECTION;
+
 	/* call platform level initializer */
 	sys_init_system(argc, argv);
 

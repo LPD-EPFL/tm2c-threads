@@ -21,9 +21,36 @@
 extern "C" {
 #endif
 
-#define FOR(seconds)            double starting__ = wtime();\
-                                while ((duration__ =\
-                                       (wtime() - starting__)) < (seconds))
+#define FOR(seconds)					\
+  double __ticks_per_sec = 1000000000*REF_SPEED_GHZ;	\
+  ticks __duration_ticks = (seconds) * __ticks_per_sec;	\
+  ticks __start_ticks = getticks();			\
+  ticks __end_ticks = __start_ticks + __duration_ticks;	\
+  while ((getticks()) < __end_ticks) {			\
+  uint32_t __reps;					\
+  for (__reps = 0; __reps < 100; __reps++) {
+
+#define END_FOR						\
+  }}							\
+    __end_ticks = getticks();				\
+    __duration_ticks = __end_ticks - __start_ticks;	\
+    duration__ = __duration_ticks / __ticks_per_sec;
+
+
+
+
+#define FOR_SEC(seconds)			\
+  double __start = wtime();			\
+  double __end = __start + (seconds);		\
+  while (wtime() < __end) {			\
+  uint32_t __reps;				\
+  for (__reps = 0; __reps < 100; __reps++) {
+
+#define END_FOR_SEC					\
+  }}							\
+    __end = wtime();					\
+    duration__ = __end - __start;
+
 
 #define ONCE                            if (NODE_ID() == 1 || TOTAL_NODES() == 1)
 

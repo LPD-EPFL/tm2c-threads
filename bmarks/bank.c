@@ -99,10 +99,9 @@ int transfer(account_t *src, account_t *dst, int amount) {
     PF_START(3)
 
 #ifdef LOAD_STORE
-            //TODO: test and use the TX_LOAD_STORE
+      //      PRINT("%d @ %p  ==> %d @ %p", src->number, &src->balance, dst->number, &dst->balance);
 	TX_LOAD_STORE(&src->balance, -, amount, TYPE_INT);
     TX_LOAD_STORE(&dst->balance, +, amount, TYPE_INT);
-
     PF_STOP(3)
     TX_COMMIT_NO_PUB;
     PF_STOP(2)
@@ -247,79 +246,78 @@ bank_t * test(void *data, double duration, int nb_accounts) {
     /* Wait on barrier */
     BARRIER
 
-    // PRINT("chk %d", chk++); //0
-
     PF_START(0);
 
     FOR(duration) {
 
       /*      while(d->nb_transfer++ < 1000000) {
-	src = (int) (rand_range(rand_max) - 1) + rand_min;
-	dst = (int) (rand_range(rand_max) - 1) + rand_min;
-	if (dst == src)
-	  dst = ((src + 1) % rand_max) + rand_min;
+	      src = (int) (rand_range(rand_max) - 1) + rand_min;
+	      dst = (int) (rand_range(rand_max) - 1) + rand_min;
+	      if (dst == src)
+	      dst = ((src + 1) % rand_max) + rand_min;
 	
-	//total(bank, 1);
-	//src = 0 ; dst = 1;
-	transfer(&bank->accounts[src], &bank->accounts[dst], 1);
+	      //total(bank, 1);
+	      //src = 0 ; dst = 1;
+	      transfer(&bank->accounts[src], &bank->accounts[dst], 1);
 	
-      }
-      continue;
+	      }
+	      continue;
       */
-        if (d->id < d->read_cores) {
-            /* Read all */
-            //  PRINT("READ ALL1");
-            total(bank, 1);
-            d->nb_read_all++;
-        }
-        else if (d->id < d->read_cores + d->write_cores) {
-            /* Write all */
-            reset(bank);
-            d->nb_write_all++;
-        }
-        else {
-            nb = (int) (rand_range(100) - 1);
-            if (nb < d->read_all) {
-                //     PRINT("READ ALL2");
-                /* Read all */
-                total(bank, 1);
-                d->nb_read_all++;
-            }
-            else if (nb < d->read_all + d->write_all) {
-                /* Write all */
-                //     PRINT("WRITE ALL");
-                reset(bank);
-                d->nb_write_all++;
-            }
-            else {
-                /* Choose random accounts */
-                src = (int) (rand_range(rand_max) - 1) + rand_min;
-                //assert(src < (rand_max + rand_min));
-                //assert(src >= 0);
-                dst = (int) (rand_range(rand_max) - 1) + rand_min;
-                //assert(dst < (rand_max + rand_min));
-                //assert(dst >= 0);
-                if (dst == src)
-                    dst = ((src + 1) % rand_max) + rand_min;
-
-                PF_START(1)
-#ifndef PLATFORM_CLUSTER
-               transfer(&bank->accounts[I(src)], &bank->accounts[I(dst)], 1);
-#else
-               transfer(&bank->accounts[src], &bank->accounts[dst], 1);
-#endif
-                PF_STOP(1)
-
-                d->nb_transfer++;
-            }
-        }
-
-	if (delay) {
-	  //	PRINT("delaying %u us", delay);
-	  udelay(rand_range(delay));
+      if (d->id < d->read_cores) {
+	/* Read all */
+	//  PRINT("READ ALL1");
+	total(bank, 1);
+	d->nb_read_all++;
+      }
+      else if (d->id < d->read_cores + d->write_cores) {
+	/* Write all */
+	reset(bank);
+	d->nb_write_all++;
+      }
+      else {
+	nb = (int) (rand_range(100) - 1);
+	if (nb < d->read_all) {
+	  //     PRINT("READ ALL2");
+	  /* Read all */
+	  total(bank, 1);
+	  d->nb_read_all++;
 	}
+	else if (nb < d->read_all + d->write_all) {
+	  /* Write all */
+	  //     PRINT("WRITE ALL");
+	  reset(bank);
+	  d->nb_write_all++;
+	}
+	else {
+	  /* Choose random accounts */
+	  src = (int) (rand_range(rand_max) - 1) + rand_min;
+	  //assert(src < (rand_max + rand_min));
+	  //assert(src >= 0);
+	  dst = (int) (rand_range(rand_max) - 1) + rand_min;
+	  //assert(dst < (rand_max + rand_min));
+	  //assert(dst >= 0);
+	  if (dst == src)
+	    dst = ((src + 1) % rand_max) + rand_min;
 
-    }
+	  PF_START(1)
+#ifndef PLATFORM_CLUSTER
+	    transfer(&bank->accounts[I(src)], &bank->accounts[I(dst)], 1);
+#else
+	  transfer(&bank->accounts[src], &bank->accounts[dst], 1);
+#endif
+	  PF_STOP(1)
+
+	    d->nb_transfer++;
+	}
+      }
+
+      if (delay) {
+	//	PRINT("delaying %u us", delay);
+	udelay(rand_range(delay));
+      }
+	
+    } END_FOR;
+
     PF_STOP(0);
 
     //reset(bank);
@@ -470,7 +468,7 @@ TASKMAIN(int argc, char **argv) {
 
     /* Init STM */
     BARRIER
-
+      
 
     data->id = NODE_ID();
     data->read_all = read_all;
@@ -497,6 +495,7 @@ TASKMAIN(int argc, char **argv) {
     printf("  #read-all   : %lu\n", data->nb_read_all);
     printf("  #write-all  : %lu\n", data->nb_write_all);
     FLUSH
+
 
     ONCE
     {

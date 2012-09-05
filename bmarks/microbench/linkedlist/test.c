@@ -152,7 +152,7 @@ void *test(void *data, double duration) {
         else { // remove/add (even failed) is considered as an update
             unext = (rand_range_re(&d->seed, 100) - 1 < d->update);
         }
-    }
+    } END_FOR;
 
     return NULL;
 }

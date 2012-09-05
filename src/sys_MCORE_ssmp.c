@@ -18,8 +18,9 @@
 #include <limits.h>
 #include <ssmp.h>
 #include <ssmp_send.h>
+#ifdef PLATFORM_NUMA
 #include <numa.h>
-
+#endif /* PLATFORM_NUMA */
 #include "common.h"
 #include "pubSubTM.h"
 #include "dslock.h"
@@ -130,7 +131,9 @@ fork_done:
 			  strerror(errno));
 		EXIT(3);
 	}
-    numa_set_preferred(place/6);
+#ifdef PLATFORM_NUMA
+	numa_set_preferred(rank/6);
+#endif /* PLATFORM_NUMA */
 }
 
 void
@@ -248,6 +251,8 @@ dsl_communication()
   int j;
   for (j = 0; j < NB; j++) usages[j] = 0;
 
+  uintptr_t addr_prev = NULL; uint32_t req_num = 0;
+
   while (1) {
 
     ssmp_recv_color(cbuf, msg, sizeof(*ps_remote));
@@ -268,11 +273,19 @@ dsl_communication()
       /*
 	PRINT("RL addr: %3d, val: %d", address, PGAS_read(address));
       */
+      
       sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE,
 			   ps_remote->address, 
 			   PGAS_read(ps_remote->address),
 			   try_subscribe(sender, ps_remote->address));
 #else
+      /* if (NODE_ID() == 0) { */
+      /* 	if (sender == 1) { */
+      /* 	  printf("[%3d] addr %p \tdiff %d\n", req_num++, ps_remote->address, addr_prev - ps_remote->address); */
+      /* 	  addr_prev = ps_remote->address; */
+      /* 	} */
+      /* } */
+      
       sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE, 
 			   ps_remote->address, 
 			   NULL,
@@ -415,11 +428,17 @@ srand_core()
 }
 
 void 
-udelay(unsigned int micros)
+udelay(uint64_t micros)
 {
-   double __ts_end = wtime() + ((double) micros / 1000000);
-   while (wtime() < __ts_end);
-   //usleep(micros);
+  ticks in_cycles = 21000 * micros;
+  wait_cycles(in_cycles);
+}
+
+void 
+ndelay(uint64_t nanos)
+{
+  ticks in_cycles = 2.1 * nanos;
+  wait_cycles(in_cycles);
 }
 
 void

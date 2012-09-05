@@ -194,7 +194,7 @@ void *test(void *data, double duration) {
             cnext = (r >= d->update + d->snapshot);
         }
 
-    }
+    } END_FOR;
 
     /* Free transaction */
 
@@ -272,7 +272,7 @@ void *test2(void *data, double duration) {
                 d->nb_snapshot++;
             }
         }
-    }
+    } END_FOR;
 
     /* Free transaction */
     return NULL;
