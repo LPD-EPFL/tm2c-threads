@@ -233,7 +233,7 @@ unsigned int usages[NB];
 void
 dsl_communication()
 {
-  unsigned int sender;
+  nodeid_t sender, last_recv_from = 0;
   PS_COMMAND_TYPE command;
 
   ssmp_msg_t *msg;
@@ -255,9 +255,9 @@ dsl_communication()
 
   while (1) {
 
-    ssmp_recv_color(cbuf, msg, sizeof(*ps_remote));
+    last_recv_from = ssmp_recv_color_start(cbuf, msg, last_recv_from + 1);
     sender = msg->sender;
-    
+
     ps_remote = (PS_COMMAND *) msg;
 
     //    usages[hash_tw(ps_remote->address) % NB]++;
