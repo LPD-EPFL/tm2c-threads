@@ -2,10 +2,11 @@
 #define _HT_H_
 
 
-#define MOVE_EMPTY
+//#define MOVE_EMPTY
 
 #include <inttypes.h>
 #include "ssht_log.h"
+#include <assert.h>
 
 #ifndef INLINED
 #if __GNUC__ && !__GNUC_STDC_INLINE__
@@ -17,9 +18,9 @@
 
 #define CACHE_LINE_SIZE 64
 #define SIZE_ENTRY 4
-#define ENTRY_PER_CL 8
+#define ENTRY_PER_CL 15
 #define ADDR_PER_CL ENTRY_PER_CL
-#define UNUSED_BYTES 16
+#define UNUSED_BYTES 0
 
 
 #define NO_WRITER 0x1000
@@ -50,9 +51,9 @@ typedef struct entry {
 typedef struct bucket {
   addr_t addr[ADDR_PER_CL];
 #ifdef MOVE_EMPTY
-  uint64_t empty;
+  uint32_t empty;
 #else
-  uint64_t num_elems;
+  uint32_t num_elems;
 #endif
   struct bucket * next;
   entry_t entry[ENTRY_PER_CL];
@@ -68,6 +69,9 @@ INLINED ssht_hashtable_t ssht_new() {
   hashtable = (ssht_hashtable_t) calloc(NUM_BUCKETS, sizeof(bucket_t));
   assert(hashtable != NULL);
   assert(sizeof(bucket_t) == (2*CACHE_LINE_SIZE));
+
+  printf("sizeof(addr_t) = %d\n", sizeof(addr_t));
+  printf("sizeof(bucket_t) = %d\n", sizeof(bucket_t));
 
   unsigned int i;
   for (i = 0; i < NUM_BUCKETS; i++) {
