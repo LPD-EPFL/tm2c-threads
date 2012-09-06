@@ -8,11 +8,12 @@ PLATFORM_DEFINES = -DPLATFORM_MCORE \
                    -UPGAS \
                    -DREAD_BUF_OFF \
                    -ULIBTASK \
-                   -UBACKOFF_RETRY \
+                   -DBACKOFF_RETRY \
                    -UFINISH_ALL_PARALLEL \
                    -UDEBUG_UTILIZATION \
 		   -UDO_TIMINGS \
-		   -DSSMP
+		   -DSSMP \
+		   -DFAIRCM
 
 ifeq ($(PLATFORM_NUMA),1)
 PLATFORM_LIBS += -lnuma
