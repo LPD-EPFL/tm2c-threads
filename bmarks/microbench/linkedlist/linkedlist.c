@@ -44,7 +44,7 @@ intset_t *set_new() {
         perror("malloc");
         EXIT(1);
     }
-    max = new_node(VAL_MAX, NULL, 0);
+    max = new_node(VAL_MAX, 0, 0);
     min = new_node(VAL_MIN, OF(max), 0);
     set->head = OF(min);
     return set;
@@ -500,8 +500,8 @@ void set_print(intset_t* set) {
         goto null;
     }
     while (node->nextp != NULL) {
-        printf("%d -> ", node->val);
-        node = ND(node->next);
+      printf("%u -> ", (unsigned int) node->val);
+      node = ND(node->next);
     }
 
 null:

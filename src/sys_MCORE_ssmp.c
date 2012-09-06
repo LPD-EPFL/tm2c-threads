@@ -197,7 +197,7 @@ sys_dsl_init(void)
   BARRIERW
 
 #ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
-  cm_abort_flags = (int32_t *) malloc(TOTAL_NODES() * sizeof(int32_t *));
+  cm_abort_flags = (int32_t **) malloc(TOTAL_NODES() * sizeof(int32_t *));
   assert(cm_abort_flags != NULL);
 
   uint32_t i;
@@ -281,7 +281,7 @@ dsl_communication()
   int j;
   for (j = 0; j < NB; j++) usages[j] = 0;
 
-  uintptr_t addr_prev = NULL; uint32_t req_num = 0;
+  uintptr_t addr_prev = 0; uint32_t req_num = 0;
 
   while (1) {
 
@@ -326,7 +326,7 @@ dsl_communication()
       /* } */
       
       sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE, 
-			   ps_remote->address, 
+			   (tm_addr_t) ps_remote->address, 
 			   NULL,
 			   try_subscribe(sender, ps_remote->address));
       //sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE, address, NO_CONFLICT);
@@ -347,7 +347,7 @@ dsl_communication()
 	}
 #endif
 	sys_ps_command_reply(sender, PS_PUBLISH_RESPONSE, 
-			     ps_remote->address,
+			     (tm_addr_t) ps_remote->address,
 			     NULL,
 			     conflict);
 	break;
@@ -533,7 +533,10 @@ cm_init(nodeid_t node) {
    else
    {
       //only if it is just created                                                                 
-      ftruncate(abrtfd, cache_line);
+     if (!ftruncate(abrtfd, cache_line))
+       {
+	 printf("ftruncate failed\n");
+       }
    }
 
    int32_t *tmp = (int32_t *) mmap(NULL, 64, PROT_READ | PROT_WRITE, MAP_SHARED, abrtfd, 0);

@@ -13,7 +13,7 @@ PLATFORM_DEFINES = -DPLATFORM_MCORE \
                    -UDEBUG_UTILIZATION \
 		   -UDO_TIMINGS \
 		   -DSSMP \
-		   -DNOCM
+		   -DFAIRCM
 
 ifeq ($(PLATFORM_NUMA),1)
 PLATFORM_LIBS += -lnuma

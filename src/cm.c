@@ -135,7 +135,7 @@ void contention_manager_pri_print() {
     }
     found[max_index] = 1;
     if (max > 0) {
-      printf("%02d [%d] > ", max_index, max);
+      printf("%02llu [%llu] > ", (long long unsigned int) max_index, (long long unsigned int) max);
     }
   }
   printf("none\n");
