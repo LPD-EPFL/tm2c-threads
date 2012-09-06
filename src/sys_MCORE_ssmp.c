@@ -125,12 +125,7 @@ fork_done:
 	ssmp_mem_init(MY_NODE_ID, MY_TOTAL_NODES);
 
 	// Now, pin the process to the right core (NODE_ID == core id)
-	int place;
-	if (rank%2 != 0) {
-		place = MY_TOTAL_NODES/2+rank/2;
-	} else {
-		place = rank/2;
-	}
+	int place = rank;
 	cpu_set_t mask;
 	CPU_ZERO(&mask);
 	CPU_SET(place, &mask);
