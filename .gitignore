@@ -57,10 +57,6 @@
 /run_sim.sh
 /run_sim.sh
 /runrt
-collect.awk
-collect.sh
-collect1.awk
-collect2.awk
 cscope.*
 cscope.out
 out.runrrep
