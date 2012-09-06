@@ -260,19 +260,6 @@ bank_t * test(void *data, double duration, int nb_accounts) {
 
       FOR(duration) {
 
-      
-      /* while(d->nb_transfer++ < 1000000) { */
-      /* 	src = (int) (rand_range(rand_max) - 1) + rand_min; */
-      /* 	dst = (int) (rand_range(rand_max) - 1) + rand_min; */
-      /* 	if (dst == src) */
-      /* 	  dst = ((src + 1) % rand_max) + rand_min; */
-	
-      /* 	//total(bank, 1); */
-      /* 	transfer(&bank->accounts[src], &bank->accounts[dst], 1); */
-	
-      /* } */
-      /* continue; */
-      
       if (d->id < d->read_cores) {
 	/* Read all */
 	//  PRINT("READ ALL1");
@@ -328,7 +315,6 @@ bank_t * test(void *data, double duration, int nb_accounts) {
 
     //reset(bank);
 
-    PRINT("~~");
     PF_PRINT
     BARRIER
 
@@ -496,11 +482,16 @@ TASKMAIN(int argc, char **argv) {
 
     BARRIER
 
-    printf("---Core %d\n", NODE_ID());
-    printf("  #transfer   : %lu\n", data->nb_transfer);
-    printf("  #read-all   : %lu\n", data->nb_read_all);
-    printf("  #write-all  : %lu\n", data->nb_write_all);
-    FLUSH
+      uint32_t nd;
+    for (nd = 0; nd < TOTAL_NODES(); nd++) {
+      if (NODE_ID() == nd) {
+	printf("---Core %d\n  #transfer   : %lu\n  #read-all   : %lu\n  #write-all  : %lu\n", 
+	       NODE_ID(), data->nb_transfer, data->nb_read_all, data->nb_write_all);
+	FLUSH
+      }
+      BARRIER
+    }
+
 
     BARRIER
 
