@@ -403,7 +403,7 @@ dsl_communication()
 	  PRINT("*** Completed requests: %d", read_reqs_num + write_reqs_num);
 #endif
 
-	  EXIT(0);
+	  return;
 	}
 	break;
       }

@@ -65,10 +65,12 @@ void dsl_init(void) {
     PRINT("[DSL NODE] Initialized pub-sub..");
 
     dsl_communication();
-
-	sys_dsl_term();
-
-	term_system();
+    BARRIERW
+    
+    sys_dsl_term();
+    
+    term_system();
+    EXIT(0);
 }
 
 void print_global_stats() {

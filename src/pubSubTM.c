@@ -295,6 +295,8 @@ void ps_send_stats(stm_tx_node_t* stats, double duration) {
     psc->tx_duration = 0;
     
     sys_sendcmd_all(psc, sizeof (PS_COMMAND));
+
+    BARRIERW
 }
 
  CONFLICT_TYPE ps_dummy_msg(nodeid_t node) {
