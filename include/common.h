@@ -110,6 +110,43 @@ extern "C" {
 	extern nodeid_t NUM_APP_NODES;
 	extern nodeid_t NUM_DSL_NODES;
     
+
+  INLINED nodeid_t
+  min_dsl_id() 
+  {
+    uint32_t i;
+    for (i = 0; i < NUM_UES; i++)
+      {
+	if (!is_app_core(i))
+	  {
+	    return i;
+	  }
+      }
+    return i;
+  }
+
+  INLINED nodeid_t
+  min_app_id() 
+  {
+    uint32_t i;
+    for (i = 0; i < NUM_UES; i++)
+      {
+	if (is_app_core(i))
+	  {
+	    return i;
+	  }
+      }
+    return i;
+  }
+
+#define ONCE							\
+  if (is_app_core(ID) && NODE_ID() == min_app_id() ||	\
+      ID == min_dsl_id() ||				\
+      NUM_UES == 1)
+
+
+
+
 /*  ------- Plug platform related things here BEGIN ------- */
 #if defined(PLATFORM_iRCCE) || defined(PLATFORM_SCC_SSMP)
 

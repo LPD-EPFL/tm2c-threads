@@ -445,24 +445,13 @@ ndelay(uint64_t nanos)
 }
 
 
-INLINED nodeid_t
-min_dsl_id() 
-{
-  uint32_t i;
-  for (i = 0; i < TOTAL_NODES(); i++)
-    {
-      if (!is_app_core(i))
-	{
-	  return i;
-	}
-    }
-  return i;
-}
 
 void
 init_barrier()
 {
+  ssmp_barrier_init(1, 0, is_app_core);
 
+  BARRIERW;
 }
 
 void

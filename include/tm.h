@@ -52,9 +52,6 @@ extern "C" {
     duration__ = __end - __start;
 
 
-#define ONCE                            if (NODE_ID() == min_app_id() || TOTAL_NODES() == 1)
-
-
 #ifdef BACKOFF_RETRY
   /*
     if BACKOFF_RETRY is set, the BACKOFF-RETRY contention management scheme is used. This is similar to the TCP-IP exponentional increasing backoff and retry. When BACKOFF_MAX = infinitiy -> then every tx is expected to terminate whp.
@@ -459,20 +456,6 @@ retry:
     void ps_unsubscribe_all();
 
     int is_app_core(int id);
-
-    INLINED nodeid_t
-      min_app_id() 
-    {
-      uint32_t i;
-      for (i = 0; i < TOTAL_NODES(); i++)
-	{
-	  if (is_app_core(i))
-	    {
-	      return i;
-	    }
-        }
-      return i;
-    }
 
     void init_system(int* argc, char** argv[]);
 
