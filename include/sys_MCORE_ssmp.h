@@ -82,16 +82,16 @@ to_addr(tm_intern_addr_t i_addr)
 {
 #ifdef PGAS
 #else
-	return (tm_addr_t)i_addr;
+  return (tm_addr_t)i_addr;
 #endif
 }
 
 INLINED double
 wtime(void)
 {
-	struct timeval t;
-	gettimeofday(&t,NULL);
-	return (double)t.tv_sec + ((double)t.tv_usec)/1000000.0;
+  struct timeval t;
+  gettimeofday(&t,NULL);
+  return (double)t.tv_sec + ((double)t.tv_usec)/1000000.0;
 }
 
 
