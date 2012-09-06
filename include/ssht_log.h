@@ -17,16 +17,9 @@ extern "C" {
 
 #define SSHT_LOG_SET_SIZE 1024
 
-#ifdef MOVE_EMPTY
-  //  typedef uintptr_t entry_addr_t;
-  #define entry_addr_t uintptr_t
-#else 
-  //  typedef struct bucket_t * entry_addr_t;
-  #define entry_addr_t struct bucket *
-#endif
   typedef struct ssht_log_entry {
-    entry_addr_t address;    //the address that is locked (MOVE_EMPTY) or the * to the bucket
-    uint32_t index; //the bucket num (MOVE_EMPTY) or the index of the entry in the bucket
+    uintptr_t * address;    //* to the addr index for this entry
+    struct ssht_rw_entry * entry; //* to the specific entry
   } ssht_log_entry_t;
 
   typedef struct ssht_log_set {
@@ -85,23 +78,11 @@ extern "C" {
     return &ssht_log_set->log_entries[ssht_log_set->nb_entries++];
   }
 
-  INLINED void ssht_log_set_insert(ssht_log_set_t *ssht_log_set, entry_addr_t address, uint32_t index) {
+  INLINED void ssht_log_set_insert(ssht_log_set_t *ssht_log_set, uintptr_t *addr, struct ssht_rw_entry *entry) {
     ssht_log_entry_t *we = ssht_log_set_entry(ssht_log_set);
-    we->address = address;
-    we->index = index;
+    we->address = addr;
+    we->entry = entry;
   }
-
-  INLINED ssht_log_entry_t * ssht_log_set_contains(ssht_log_set_t *ssht_log_set, entry_addr_t address, uint32_t index) {
-    unsigned int i;
-    for (i = ssht_log_set->nb_entries; i-- > 0; ) {
-      if ((ssht_log_set->log_entries[i].address == address) && (ssht_log_set->log_entries[i].index==index)) {
-	return &ssht_log_set->log_entries[i];
-      }
-    }
-
-    return NULL;
-  }
-
 
 #ifdef	__cplusplus
 }

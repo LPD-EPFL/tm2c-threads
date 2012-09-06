@@ -12,7 +12,8 @@ PLATFORM_DEFINES = -DPLATFORM_MCORE \
                    -UFINISH_ALL_PARALLEL \
                    -UDEBUG_UTILIZATION \
 		   -UDO_TIMINGS \
-		   -DSSMP
+		   -DSSMP \
+		   -DNOCM
 
 ifeq ($(PLATFORM_NUMA),1)
 PLATFORM_LIBS += -lnuma

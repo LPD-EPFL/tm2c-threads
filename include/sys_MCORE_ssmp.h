@@ -6,13 +6,12 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <ssmp.h>
-//#include <ssmp_send.h>
-//#include <ssmp_recv.h>
 
 #include "common.h"
 #include "messaging.h"
 #include "mcore_malloc.h"
 #include "fakemem.h"
+
 
 #define BARRIER  ssmp_barrier_wait(1);
 #define BARRIERW ssmp_barrier_wait(0);
@@ -22,6 +21,11 @@ extern nodeid_t MY_TOTAL_NODES;
 
 extern PS_REPLY* ps_remote_msg; // holds the received msg
 extern nodeid_t *dsl_nodes;
+
+#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+extern int32_t **cm_abort_flags;
+extern int32_t *cm_abort_flag_mine;
+#endif /* CM_H */
 
 /* --- inlined methods --- */
 INLINED nodeid_t
@@ -94,5 +98,46 @@ wtime(void)
   return (double)t.tv_sec + ((double)t.tv_usec)/1000000.0;
 }
 
+
+#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+INLINED void
+abort_node(nodeid_t node, CONFLICT_TYPE reason) {
+  //  uint32_t p = 0;
+  while (__sync_val_compare_and_swap(cm_abort_flags[node], NO_CONFLICT, reason) == PERSISTING_WRITES) {
+    //    p++; 
+    wait_cycles(180); 
+  }
+
+  /* if (p > 0) { */
+  /*   PRINT("Wait %3d rounds", p); */
+  /* } */
+
+}
+
+INLINED CONFLICT_TYPE
+check_aborted() {
+  return (*cm_abort_flag_mine != NO_CONFLICT);
+}
+
+INLINED CONFLICT_TYPE
+get_abort_reason() {
+  return (*cm_abort_flag_mine);	
+}
+
+INLINED void
+set_tx_running() {
+  *cm_abort_flag_mine = NO_CONFLICT;
+}
+
+INLINED void
+set_tx_committed() {
+  *cm_abort_flag_mine = TX_COMMITED;
+}
+
+INLINED CONFLICT_TYPE
+set_tx_persisting() {
+  return __sync_bool_compare_and_swap(cm_abort_flag_mine, NO_CONFLICT, PERSISTING_WRITES);
+}
+#endif	/* NOCM */
 
 #endif

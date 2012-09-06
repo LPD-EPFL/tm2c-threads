@@ -66,7 +66,6 @@ extern "C" {
 #define BACKOFF_DELAY                   200
 #endif
 
-
     extern stm_tx_t *stm_tx;
     extern stm_tx_node_t *stm_tx_node;
     extern double duration__;
@@ -125,26 +124,73 @@ extern "C" {
 #define WLOCKS_ACQUIRE()        ps_publish_all()
 #endif
 
+  /* -------------------------------------------------------------------------------- */
+  /* Contention management related macros */
+  /* -------------------------------------------------------------------------------- */
+
+#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+#define TXRUNNING()     set_tx_running();
+#define TXCOMMITTED()   set_tx_committed();
+
+#define TXPERSISTING()				\
+  if (!set_tx_persisting()) {			\
+    TX_ABORT(get_abort_reason());		\
+  }
+
+#define TXCHKABORTED()				\
+  if (check_aborted()) {			\
+    TX_ABORT(get_abort_reason());		\
+  }
+#else  /* if no CM */
+#define TXRUNNING()     ;
+#define TXCOMMITTED()   ;
+#define TXPERSISTING()  ;
+#define TXCHKABORTED()	;
+#endif	/* NOCM */
+
+#if defined(WHOLLY) || defined(NOCM)
+#define CM_METADATA_INIT_ON_START            ;
+#define CM_METADATA_INIT_ON_FIRST_START      ;
+#define CM_METADATA_UPDATE_ON_COMMIT         ;
+#elif defined(FAIRCM)
+#define CM_METADATA_INIT_ON_START            stm_tx->start_ts = getticks();
+#define CM_METADATA_INIT_ON_FIRST_START      ;
+#define CM_METADATA_UPDATE_ON_COMMIT         stm_tx_node->tx_duration += (getticks() - stm_tx->start_ts);
+#elif defined(GREEDY)
+#define CM_METADATA_INIT_ON_START            ;
+#define CM_METADATA_INIT_ON_FIRST_START      stm_tx->start_ts = getticks();
+#define CM_METADATA_UPDATE_ON_COMMIT         ;
+#else  /* no cm defined */
+#error "One of the contention managers should be selected"
+#endif
+
+
 #define TX_START                                                        \
     { PRINTD("|| Starting new tx");                                     \
+    CM_METADATA_INIT_ON_FIRST_START;					\
     short int reason;                                                   \
     if ((reason = sigsetjmp(stm_tx->env, 0)) != 0) {                    \
         PRINTD("|| restarting due to %d", reason);                      \
         stm_tx->write_set = WSET_EMPTY(stm_tx->write_set);              \
         stm_tx->read_set = read_set_empty(stm_tx->read_set);            \
     }                                                                   \
-    stm_tx->retries++;
+    stm_tx->retries++;                                                  \
+    TXRUNNING();							\
+    CM_METADATA_INIT_ON_START;
 
 #define TX_ABORT(reason)                                                \
-    PRINTD("|| aborting tx");                                           \
+    PRINTD("|| aborting tx (%d)", reason);				\
     handle_abort(stm_tx, reason);                                       \
     siglongjmp(stm_tx->env, reason);
 
 #define TX_COMMIT                                                       \
     PRINTD("|| commiting tx");                                          \
     WLOCKS_ACQUIRE();                                                   \
+    TXPERSISTING();							\
     WSET_PERSIST(stm_tx->write_set);                                    \
+    TXCOMMITTED();							\
     ps_finish_all(NO_CONFLICT);                                         \
+    CM_METADATA_UPDATE_ON_COMMIT;					\
     mem_info_on_commit(stm_tx->mem_info);                               \
     stm_tx_node->tx_starts += stm_tx->retries;                          \
     stm_tx_node->tx_commited++;                                         \
@@ -161,15 +207,31 @@ extern "C" {
 #define TX_COMMIT_NO_STATS                                              \
     PRINTD("|| commiting tx");                                          \
     WLOCKS_ACQUIRE();                                                   \
+    TXPERSISTING();							\
     WSET_PERSIST(stm_tx->write_set);                                    \
+    TXCOMMITTED();							\
     ps_finish_all(NO_CONFLICT);                                         \
+    CM_METADATA_UPDATE_ON_COMMIT;					\
     mem_info_on_commit(stm_tx->mem_info);                               \
     stm_tx = tx_metadata_empty(stm_tx);}
 
+#define TX_COMMIT_NO_PUB_NO_STATS					\
+    TXPERSISTING();							\
+    WSET_PERSIST(stm_tx->write_set);                                    \
+    TXCOMMITTED();							\
+    ps_finish_all(NO_CONFLICT);                                         \
+    CM_METADATA_UPDATE_ON_COMMIT;					\
+    mem_info_on_commit(stm_tx->mem_info);                               \
+    stm_tx = tx_metadata_empty(stm_tx);}
+
+
 #define TX_COMMIT_NO_PUB                                                \
     PRINTD("|| commiting tx");                                          \
+    TXPERSISTING();							\
     WSET_PERSIST(stm_tx->write_set);                                    \
+    TXCOMMITTED();							\
     ps_finish_all(NO_CONFLICT);                                         \
+    CM_METADATA_UPDATE_ON_COMMIT;					\
     mem_info_on_commit(stm_tx->mem_info);                               \
     stm_tx_node->tx_starts += stm_tx->retries;                          \
     stm_tx_node->tx_commited++;                                         \
@@ -240,9 +302,10 @@ extern "C" {
 #endif /* EAGER_WRITE_ACQ */
 
 #else /* !PGAS */
-#define TX_STORE(addr, ptr, datatype)                                   \
-	do {                                                                \
-		tm_intern_addr_t intern_addr = to_intern_addr(addr);            \
+#define TX_STORE(addr, ptr, datatype)                                           \
+	do {                                                                    \
+		TXCHKABORTED();\
+                tm_intern_addr_t intern_addr = to_intern_addr(addr);            \
 		write_set_update(stm_tx->write_set,                             \
 		                 datatype,                                      \
 		                 ((void *)(ptr)), intern_addr);                 \
@@ -264,7 +327,7 @@ extern "C" {
 #else
 #define TX_LOAD_STORE(addr, op, value, datatype)                        \
 	do {                                                                \
-		tx_wlock(addr);                                                 \
+                tx_wlock(addr);                                                 \
 		int temp__ = (*(int *) (addr)) op (value);                      \
 		tm_intern_addr_t intern_addr = to_intern_addr((tm_addr_t)addr); \
 		write_set_update(stm_tx->write_set, TYPE_INT, &temp__, intern_addr);   \
@@ -341,6 +404,7 @@ extern "C" {
                 unsigned int delay = BACKOFF_DELAY;
 
 retry:
+                TXCHKABORTED();
 #endif
 
                 if ((conflict = ps_subscribe(addr)) != NO_CONFLICT) {
@@ -380,6 +444,7 @@ retry:
         unsigned int delay = BACKOFF_DELAY;
 
 retry:
+        TXCHKABORTED();
 #endif
 #ifdef PGAS
         if ((conflict = ps_publish(address, value)) != NO_CONFLICT) {
@@ -434,6 +499,7 @@ retry:
         unsigned int delay = BACKOFF_DELAY;
 
 retry:
+        TXCHKABORTED();
 #endif
 #ifdef PGAS
         if ((conflict = ps_store_inc(address, value)) != NO_CONFLICT) {

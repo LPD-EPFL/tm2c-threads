@@ -54,10 +54,16 @@ INLINED void sys_ps_command_reply(nodeid_t sender,
 nodeid_t MY_NODE_ID;
 nodeid_t MY_TOTAL_NODES;
 
+
+#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+int32_t **cm_abort_flags;
+int32_t *cm_abort_flag_mine;
+#endif /* NOCM */
+
+
 void
 sys_init_system(int* argc, char** argv[])
 {
-
 
 	if (*argc < 2) {
 		fprintf(stderr, "Not enough parameters (%d)\n", *argc);
@@ -163,24 +169,46 @@ sys_shfree(sys_t_vcharp ptr)
 void
 sys_tm_init()
 {
+
 }
 
 void
 sys_ps_init_(void)
 {
-	BARRIERW
-	
-	MCORE_shmalloc_init(1024*1024*1024); //1GB
 
-	ps_remote_msg = NULL;
-	PRINTD("sys_ps_init: done");
+#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+  cm_abort_flag_mine = cm_init(NODE_ID());
+  *cm_abort_flag_mine = NO_CONFLICT;
+#endif
+
+  MCORE_shmalloc_init(1024*1024*1024); //1GB
+
+  BARRIERW
+
+  ps_remote_msg = NULL;
+  PRINTD("sys_ps_init: done");
+
+  BARRIERW
 }
 
 void
 sys_dsl_init(void)
 {
+  BARRIERW
+
+#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+  cm_abort_flags = (int32_t *) malloc(TOTAL_NODES() * sizeof(int32_t *));
+  assert(cm_abort_flags != NULL);
+
+  uint32_t i;
+  for (i = 0; i < TOTAL_NODES(); i++) {
+    //TODO: make it open only for app nodes
+    cm_abort_flags[i] = cm_init(i);    
+  }
+#endif
+
   ps_remote = (PS_COMMAND *) malloc(sizeof (PS_COMMAND)); //TODO: free at finalize + check for null
-	BARRIERW
+  BARRIERW
 
 }
 
@@ -264,6 +292,15 @@ dsl_communication()
 
     //    usages[hash_tw(ps_remote->address) % NB]++;
 
+    
+#if defined(WHOLLY) || defined(FAIRCM)
+        cm_metadata_core[sender].timestamp = (ticks) ps_remote->tx_metadata;
+#elif defined(GREEDY)
+	if (cm_metadata_core[sender].timestamp == 0) {
+	  cm_metadata_core[sender].timestamp = getticks() - (ticks) ps_remote->tx_metadata;
+	}
+#endif
+    
     switch (ps_remote->type) {
     case PS_SUBSCRIBE:
 
@@ -363,6 +400,10 @@ dsl_communication()
       PGAS_write_sets[sender] = write_set_pgas_empty(PGAS_write_sets[sender]);
 #endif
       ps_hashtable_delete_node(ps_hashtable, sender);
+
+#if defined(GREEDY)
+      cm_metadata_core[sender].timestamp = 0;
+#endif
       break;
     case PS_UNSUBSCRIBE:
       ps_hashtable_delete(ps_hashtable, sender, ps_remote->address, READ);
@@ -433,18 +474,16 @@ srand_core()
 void 
 udelay(uint64_t micros)
 {
-  ticks in_cycles = 21000 * micros;
+  ticks in_cycles = REF_SPEED_GHZ * 1000 * micros;
   wait_cycles(in_cycles);
 }
 
 void 
 ndelay(uint64_t nanos)
 {
-  ticks in_cycles = 2.1 * nanos;
+  ticks in_cycles = REF_SPEED_GHZ * nanos;
   wait_cycles(in_cycles);
 }
-
-
 
 void
 init_barrier()
@@ -466,3 +505,42 @@ global_barrier()
 
 }
 
+#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+static int32_t *
+cm_init(nodeid_t node) {
+   char keyF[50];
+   sprintf(keyF,"/cm_abort_flag%03d", node);
+
+   size_t cache_line = 64;
+
+   int abrtfd = shm_open(keyF, O_CREAT | O_EXCL | O_RDWR, S_IRWXU | S_IRWXG);
+   if (abrtfd<0)
+   {
+      if (errno != EEXIST)
+      {
+         perror("In shm_open");
+         exit(1);
+      }
+
+      //this time it is ok if it already exists                                                    
+      abrtfd = shm_open(keyF, O_CREAT | O_RDWR, S_IRWXU | S_IRWXG);
+      if (abrtfd<0)
+      {
+         perror("In shm_open");
+         exit(1);
+      }
+   }
+   else
+   {
+      //only if it is just created                                                                 
+      ftruncate(abrtfd, cache_line);
+   }
+
+   int32_t *tmp = (int32_t *) mmap(NULL, 64, PROT_READ | PROT_WRITE, MAP_SHARED, abrtfd, 0);
+   assert(tmp != NULL);
+   
+   //   PRINT("-- opened %s @ %p for CM of %d", keyF, tmp, node);
+
+   return tmp;
+}
+#endif	/* NOCM */

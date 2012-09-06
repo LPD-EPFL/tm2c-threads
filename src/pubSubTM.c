@@ -8,6 +8,9 @@
 
 #include "common.h"
 #include "pubSubTM.h"
+#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+#include "tm.h"
+#endif
 
 #include <limits.h>
 #include "hash.h"
@@ -29,21 +32,19 @@ PS_COMMAND *psc;
 int read_value;
 
 static inline void ps_sendb(nodeid_t target, PS_COMMAND_TYPE operation,
+        tm_intern_addr_t address);
+static inline void ps_sendbr(nodeid_t target, PS_COMMAND_TYPE operation,
         tm_intern_addr_t address, CONFLICT_TYPE response);
 static inline void ps_sendbv(nodeid_t target, PS_COMMAND_TYPE operation,
         tm_intern_addr_t address, uint32_t value,
         CONFLICT_TYPE response);
 static inline CONFLICT_TYPE ps_recvb(nodeid_t from);
 
-inline void unsubscribe(nodeid_t nodeId, tm_addr_t shmem_address);
-
 /*
  * Takes the local representation of the address, and finds the node
  * responsible for it.
  */
 static inline nodeid_t get_responsible_node(tm_intern_addr_t addr);
-
-inline void publish_finish(nodeid_t nodeId, tm_addr_t shmem_address);
 
 void ps_init_(void) {
     PRINTD("NUM_DSL_NODES = %d", NUM_DSL_NODES);
@@ -72,6 +73,28 @@ void ps_init_(void) {
 
 static inline void
 ps_sendb(nodeid_t target, PS_COMMAND_TYPE command,
+         tm_intern_addr_t address)
+{
+#if defined(PLATFORM_CLUSTER) || defined(PLATFORM_MCORE) || defined(PLATFORM_TILERA)
+	psc->nodeId = ID;
+#endif
+    psc->type = command;
+    psc->address = address;
+    //psc->response = response;
+
+#if defined(WHOLLY)
+    psc->tx_metadata = stm_tx_node->tx_commited;
+#elif defined(FAIRCM)
+    psc->tx_metadata = stm_tx_node->tx_duration;
+#elif defined(GREEDY)
+    psc->tx_metadata = getticks() - stm_tx->start_ts;
+#endif
+    sys_sendcmd(psc, sizeof (PS_COMMAND), target);
+
+}
+
+static inline void
+ps_sendbr(nodeid_t target, PS_COMMAND_TYPE command,
          tm_intern_addr_t address, CONFLICT_TYPE response)
 {
 #if defined(PLATFORM_CLUSTER) || defined(PLATFORM_MCORE) || defined(PLATFORM_TILERA)
@@ -81,11 +104,6 @@ ps_sendb(nodeid_t target, PS_COMMAND_TYPE command,
     psc->address = address;
     psc->response = response;
     sys_sendcmd(psc, sizeof (PS_COMMAND), target);
-#ifdef LOG_LATENCIES
-   gettimeofday(&after,NULL);
-   double t2 = (double) after.tv_sec + after.tv_usec / 1e6f;
-   fprintf(stderr, "%d sent at %f\n",getpid(),t2);
-#endif
 
 }
 
@@ -121,9 +139,7 @@ ps_recvb(nodeid_t from) {
     sys_recvcmd(&cmd, sizeof (PS_COMMAND), from);
 #endif
 #ifdef PGAS
-    PF_START(0)
     read_value = cmd.value;
-    PF_STOP(0)
 #endif
 	return cmd.response;
 }
@@ -142,20 +158,15 @@ ps_subscribe(tm_addr_t address) {
 
     nodes_contacted[responsible_node]++;
 
-    //PF_START(1)
+
 #ifdef PGAS
     //ps_send_rl(responsible_node, (unsigned int) address);
     ps_sendbv(responsible_node, PS_SUBSCRIBE, intern_addr, 0, NO_CONFLICT);
 #else
-    //PF_START(2)
-    ps_sendb(responsible_node, PS_SUBSCRIBE, intern_addr, NO_CONFLICT);
-    //PF_STOP(2)
+    ps_sendb(responsible_node, PS_SUBSCRIBE, intern_addr);
 #endif
-    //    PRINTD("[SUB] addr: %d to %02d", address_offs, responsible_node);
-    //PF_START(3)
+
     CONFLICT_TYPE response = ps_recvb(responsible_node);
-    //PF_STOP(3)
-    // PF_STOP(1)
 
     return response;
 }
@@ -176,10 +187,11 @@ CONFLICT_TYPE ps_publish(tm_addr_t address) {
 #ifdef PGAS
     ps_sendbv(responsible_node, PS_PUBLISH, intern_addr, value, NO_CONFLICT);
 #else
-    ps_sendb(responsible_node, PS_PUBLISH, intern_addr, NO_CONFLICT); //make sync
+    ps_sendb(responsible_node, PS_PUBLISH, intern_addr); //make sync
 #endif
-    CONFLICT_TYPE response = ps_recvb(responsible_node);
 
+    CONFLICT_TYPE response = ps_recvb(responsible_node);
+    
     return response;
 }
 
@@ -202,7 +214,7 @@ ps_load(tm_addr_t address) {
   tm_intern_addr_t intern_addr = to_intern_addr(address);
   nodeid_t responsible_node = get_responsible_node(intern_addr);
 
-  ps_sendb(responsible_node, PS_LOAD_NONTX, intern_addr, NO_CONFLICT);
+  ps_sendb(responsible_node, PS_LOAD_NONTX, intern_addr);
   ps_recvb(responsible_node);
 
   return read_value;
@@ -224,7 +236,7 @@ void ps_unsubscribe(tm_addr_t address) {
     nodeid_t responsible_node = get_responsible_node(intern_addr);
 
     nodes_contacted[responsible_node]--;
-    ps_sendb(responsible_node, PS_UNSUBSCRIBE, intern_addr, NO_CONFLICT);
+    ps_sendb(responsible_node, PS_UNSUBSCRIBE, intern_addr);
 
 #ifdef PLATFORM_CLUSTER
 	ps_recvb(responsible_node);
@@ -237,7 +249,7 @@ void ps_publish_finish(tm_addr_t address) {
 
     nodes_contacted[responsible_node]--;
 
-    ps_sendb(responsible_node, PS_PUBLISH_FINISH, intern_addr, NO_CONFLICT);
+    ps_sendb(responsible_node, PS_PUBLISH_FINISH, intern_addr);
 
 #ifdef PLATFORM_CLUSTER
 	ps_recvb(responsible_node);
@@ -259,7 +271,7 @@ void ps_finish_all(CONFLICT_TYPE conflict) {
         if (nodes_contacted[i] != 0) { //can be changed to non-blocking
 
 #ifndef FINISH_ALL_PARALLEL
-            ps_sendb(i, PS_REMOVE_NODE, 0, conflict);
+            ps_sendbr(i, PS_REMOVE_NODE, 0, conflict);
 #ifdef PLATFORM_CLUSTER
             // need a dummy receive, due to the way how ZMQ works
             ps_recvb(i);
@@ -301,7 +313,7 @@ void ps_send_stats(stm_tx_node_t* stats, double duration) {
 
  CONFLICT_TYPE ps_dummy_msg(nodeid_t node) {
    node = dsl_nodes[node];
-   ps_sendb(node, PS_UKNOWN, NULL, NO_CONFLICT);
+   ps_sendb(node, PS_UKNOWN, *(int *)NULL);
     CONFLICT_TYPE response = ps_recvb(node);
     return response;
 }

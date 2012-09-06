@@ -34,58 +34,52 @@ extern "C" {
 
   //TODO: make it union with address normal int..
   //A command to the pub-sub
-
-  typedef struct {
-    unsigned int type; //PS_COMMAND_TYPE
+typedef struct ps_command_struct {
+        unsigned int type; //PS_COMMAND_TYPE
 #if defined(PLATFORM_CLUSTER) || defined(PLATFORM_MCORE) || defined(PLATFORM_TILERA)
-    // we need IDs on networked systems
-    nodeid_t nodeId;
+        // we need IDs on networked systems
+        nodeid_t nodeId;
 #endif
 
-    union {
+        union {
 
-      struct {
+            struct {
 
-	union {
-	  int response; //BOOLEAN
-	  unsigned int target; //nodeId
-	};
+                union {
+                    int response; /* used in PS_REMOVE_NODE with PGAS to say persist or not */
+                    int write_value;
+                };
 
-	union {
-	  tm_intern_addr_t address; /* address of the data, internal
+                tm_intern_addr_t address; /* address of the data, internal
 				       representation */
-	  int32_t value;
-	};
-      };
+            };
 
-      //stats collecting
-      union {
-	struct {
-	  unsigned int commits;
-	  unsigned int aborts;
-	  unsigned int max_retries;
-	};
-	struct {
-	  unsigned int aborts_war;
-	  unsigned int aborts_raw;
-	  unsigned int aborts_waw;
+            //stats collecting
 
-	};
-      };
-    };
+            union {
 
-    union {
-      double tx_duration;
+                struct {
+                    unsigned int commits;
+                    unsigned int aborts;
+                    unsigned int max_retries;
+                };
 
-      struct {
-	unsigned int abrt_attacker;
-	unsigned int abrt_reason;
-      };
+                struct {
+                    unsigned int aborts_war;
+                    unsigned int aborts_raw;
+                    unsigned int aborts_waw;
 
-      int write_value;
-      double stats_msg_seq; //not 0 in the first status msg, 0 in the second status msg
-    };
-  } PS_COMMAND;
+                };
+            };
+        };
+
+        union {
+            double tx_duration;
+            uint64_t tx_metadata;
+            double stats_msg_seq; //not 0 in the first status msg, 0 in the second status msg
+        };
+        int dummy_to_make_it_32_bytes;
+    } PS_COMMAND;
 
   typedef struct {
     unsigned int type; //PS_REPLY_TYPE

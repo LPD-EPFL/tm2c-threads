@@ -131,8 +131,8 @@ INLINED CONFLICT_TYPE fixed_hash_insert_in_bucket(fixed_hash_entry_t** the_hash,
      }
 
     if (conflict==NO_CONFLICT){
-        unsigned short logRW = (rw==READ) ? 1 : 2;
-        lock_log_set_insert(the_log,(uintptr_t) current, i, logRW);
+      //        unsigned short logRW = (rw==READ) ? 1 : 2;
+        lock_log_set_insert(the_log,(uintptr_t) current, i, rw);
     }
     //fprintf(stderr, "finised insert in bucket\n");
     //usleep(100);

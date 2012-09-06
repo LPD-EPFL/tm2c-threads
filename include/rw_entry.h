@@ -12,7 +12,9 @@ extern "C" {
 #endif
 
 #include "common.h"
-
+#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+#include "cm.h"
+#endif
 
 /*__________________________________________________________________________________________________
 * RW ENTRY                                                                                         |
@@ -118,6 +120,28 @@ rw_entry_is_unique_reader(rw_entry_t *rwe, nodeid_t nodeId)
   return (BOOLEAN) (tmp.ll == rwe->ll);
 }
 
+INLINED
+void rw_entry_fetch_readers(rw_entry_t *rwe, unsigned short *readers) {
+
+    union {
+        unsigned long long int lli;
+        unsigned int i[2];
+    } convert;
+
+    convert.i[0] = rwe->ints[0];
+    convert.i[1] = rwe->shorts[2];
+    int i;
+    for (i = 0; i < NUM_UES; i++) {
+        if (convert.lli & 0x01) {
+            readers[i] = 1;
+        }
+        else {
+            readers[i] = 0;
+        }
+        convert.lli >>= 1;
+    }
+}
+
 INLINED void
 rw_entry_set_writer(rw_entry_t *rwe, nodeid_t nodeId)
 {
@@ -154,38 +178,86 @@ rw_entry_new()
     return r;
 }
 
-/*
- * Detect whether the new insert into the entry would cause a possible
- * READ/WRITE, WRITE/READ, and WRITE/WRITE conflict.
- */
-INLINED CONFLICT_TYPE
-rw_entry_is_conflicting(rw_entry_t* rw_entry, nodeid_t nodeId, RW rw)
-{
-  if (rw_entry == NULL) {
-    PRINT("was NULL");
-    return NO_CONFLICT;
-  }
+    /*
+     * Detect whether the new insert into the entry would cause a possible
+     * READ/WRITE, WRITE/READ, and WRITE/WRITE conflict.
+     */
+    INLINED CONFLICT_TYPE
+    rw_entry_is_conflicting(rw_entry_t* rw_entry, nodeid_t nodeId, RW rw) {
+        //XXX: is it needed??
+        //    if (rw_entry == NULL) {
+        //        return NO_CONFLICT;
+        //    }
+        
+        if (rw == WRITE) { /*publishing*/
+            if (rw_entry_has_writer(rw_entry)) { /*WRITE/WRITE conflict*/
+                //here the logic for WRITE -> WRITE
+#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+                if (contention_manager(nodeId, &rw_entry->shorts[3], WRITE_AFTER_WRITE) == TRUE) {
+                    //attacker won - old aborted
+                    return NO_CONFLICT;
+                } 
+                else {
+                    return WRITE_AFTER_WRITE;
+                }
+#else
+		return WRITE_AFTER_WRITE;
+#endif	/* NOCM */
+            } 
+            else if (!rw_entry_is_empty(rw_entry)) { /*Possible WRITE AFTER READ*/
+                /* /\*if the only writer is the one that "asks"*\/ */
+                /* if (rw_entry_is_unique_reader(rw_entry, nodeId)) { */
+                /*     return NO_CONFLICT; */
+                /* }  */
+                /* else {  */
+		  /*WRITE AFTER READ conflict*/
+                    // here the logic for READ -> WRITE
+#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+                    unsigned short readers[NUM_UES];
+                    rw_entry_fetch_readers(rw_entry, readers);
+                    readers[nodeId] = 0;
+                    
+                    if (contention_manager(nodeId, readers, WRITE_AFTER_READ) == TRUE) {
+                        rw_entry_clear(rw_entry);
+                        return NO_CONFLICT;
+                    } 
+                    else {
+                        return WRITE_AFTER_READ;
+                    }
+#else
+		    return WRITE_AFTER_READ;
+#endif	/* NOCM */
+                /* } */
+            } 
+            else {
+                return NO_CONFLICT;
+            }
+        } 
+        /*READING/subscribing ---------------------------------------*/
+        else { /*subscribing*/
+            if (rw_entry_has_writer(rw_entry)
+                    && !rw_entry_is_writer(rw_entry, nodeId)) { /*READ AFTER WRITE*/
+                //TODO: here the logic for READ -> WRITE
 
-  if (rw == WRITE) { /*publishing*/
-    if (rw_entry_has_writer(rw_entry)) { /*WRITE/WRITE conflict*/
-      return WRITE_AFTER_WRITE;
-    } 
-    else if (!rw_entry_is_empty(rw_entry)) { /*Possible READ/WRITE*/
-      return WRITE_AFTER_READ;
-    } 
-    else {
-      return NO_CONFLICT;
+#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+                if (contention_manager(nodeId, &rw_entry->shorts[3], READ_AFTER_WRITE) == TRUE) {
+                    //attacker won - old aborted
+                    rw_entry_unset_writer(rw_entry);
+                    return NO_CONFLICT;
+                } 
+                else {
+                    return READ_AFTER_WRITE;
+                }
+#else
+		return READ_AFTER_WRITE;
+#endif	/* NOCM */
+
+            } 
+            else {
+                return NO_CONFLICT;
+            }
+        }
     }
-  } 
-  else { /*subscribing*/
-    if (rw_entry_has_writer(rw_entry)) { /*WRITE/READ*/
-      return READ_AFTER_WRITE;
-    } 
-    else {
-      return NO_CONFLICT;
-    }
-  }
-}
 
 INLINED void 
 rw_entry_print_readers(rw_entry_t *rwe) 
