@@ -7,22 +7,27 @@
 #include "ssht_log.h"
 #include <assert.h>
 #ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
-#include "cm.h"
+#  include "cm.h"
 #endif 
 
 #ifndef INLINED
-#if __GNUC__ && !__GNUC_STDC_INLINE__
-#define INLINED static inline __attribute__((always_inline))
-#else
-#define INLINED inline
-#endif
+#  if __GNUC__ && !__GNUC_STDC_INLINE__
+#    define INLINED static inline __attribute__((always_inline))
+#  else
+#    define INLINED inline
+#  endif
 #endif
 
 #define CACHE_LINE_SIZE 64
 #define SIZE_ENTRY 4
 #define ADDR_PER_CL 7
 #define ENTRY_PER_CL ADDR_PER_CL
-#define UNUSED_DW (14 - ADDR_PER_CL)
+
+#ifdef SCC
+#define PADDING_BYTES 32
+#else
+#define PADDING_BYTES 0
+#endif	/* SCC */
 
 #define MAX_READERS 62
   
@@ -33,11 +38,7 @@
 #define TRUE 1
 
 
-#define NUM_BUCKETS 47
-
-
-extern unsigned int num_moves;
-extern unsigned int cur_size, max_size;
+#define NUM_BUCKETS NUM_OF_BUCKETS
 
 typedef uintptr_t addr_t;
 
@@ -47,9 +48,10 @@ typedef struct ssht_rw_entry {
   uint8_t writer;
 } ssht_rw_entry_t;
 
-typedef struct __attribute__ ((aligned (64))) bucket {
-  addr_t addr[ADDR_PER_CL];
-  struct bucket * next;
+typedef struct ALIGNED(64) bucket {          /* SCC */
+  addr_t addr[ADDR_PER_CL];	             /* 4 * 7   28 */
+  struct bucket * next;			     /* 4       32 */
+  uint8_t padding[PADDING_BYTES];
   ssht_rw_entry_t entry[ENTRY_PER_CL];
 } bucket_t;
 
