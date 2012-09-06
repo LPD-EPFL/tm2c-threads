@@ -9,6 +9,8 @@
 #include "ps_hashtable.h"
 extern ps_hashtable_t ps_hashtable;
 
+#ifndef NOCM 			/* any CM: wholly, greedy, faircm */
+
 static int32_t * cm_init();
 
 BOOLEAN 
@@ -141,3 +143,5 @@ void contention_manager_pri_print() {
   printf("none\n");
   FLUSH;
 }
+
+#endif	/* NOCM */
