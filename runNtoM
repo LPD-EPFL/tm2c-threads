@@ -1,0 +1,24 @@
+#!/bin/sh
+
+N=2;
+M=6;
+
+if [ $# -eq 3 ]; then
+    M=$1;
+    shift;
+elif [ $# -eq 4 ]; then
+    N=$1;
+    shift;
+    M=$1;
+    shift;
+fi
+
+app=$1;
+shift;
+
+echo "#nue\tThroughput\tCi rate\tLatency";
+
+for nue in $(seq $N 1 $M); do
+    echo -n "$nue\t";
+    ./run $nue $app $@ | grep ")))" | sed 's/)//g' | cut -d"(" -f1
+done
