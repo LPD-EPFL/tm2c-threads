@@ -36,14 +36,14 @@ extern "C" {
  */
     
 #ifdef USE_HASHTABLE_KHASH
-#include "khash.h"
+#  include "khash.h"
 
 // name, key_t, val_t, is_map, _hashf, _hasheq
 KHASH_MAP_INIT_INT(rw_entry_address,rw_entry_t*);
 typedef khash_t(rw_entry_address)* ps_hashtable_t;
 
 #elif  USE_HASHTABLE_UTHASH
-#include "uthash.h"
+#  include "uthash.h"
 
 struct uthash_elem_struct {
     tm_intern_addr_t address;            /* we'll use this field as the key */
@@ -59,42 +59,42 @@ struct uthash_elem_struct {
   typedef struct uthash_elem_struct** ps_hashtable_t;
 
 #elif USE_ARRAY
-#include "array_log.h"
+#  include "array_log.h"
   //#define NUM_OF_ELEMENTS 1024 * 1024 * 1024 / NUM_DSL_NODES
-#define NUM_OF_ELEMENTS 16777216
+#  define NUM_OF_ELEMENTS 16777216
 typedef rw_entry_t* ps_hashtable_t;
 
 #elif  USE_HASHTABLE_SDD
 #elif  USE_FIXED_HASH
 
-#include "lock_log.h"
-#include "fixed_hash.h"
+#  include "lock_log.h"
+#  include "fixed_hash.h"
   typedef fixed_hash_entry_t** ps_hashtable_t;
 
 #elif USE_HASHTABLE_SSHT
 
-#include "ssht.h"
-#include "ssht_log.h"
+#  include "ssht.h"
+#  include "ssht_log.h"
   typedef ssht_hashtable_t ps_hashtable_t;
 
 #elif USE_SSLARRAY
 
-#include "sslarray.h"
-#include "sslarray_log.h"
+#  include "sslarray.h"
+#  include "sslarray_log.h"
   typedef sslarray_t ps_hashtable_t;
 
 #elif  USE_HASHTABLE_VT
-#include "vthash.h"
+#  include "vthash.h"
   typedef vthash_bucket_t** ps_hashtable_t;
 
 #else
-#error "No type of hashtable implementation given."
+#  error "No type of hashtable implementation given."
 #endif
 
 /*
  * create, initialize and return a ps_hashtable
  */
-EXINLINED ps_hashtable_t ps_hashtable_new();
+ps_hashtable_t ps_hashtable_new();
 
 /*
  * insert a reader of writer for the address into the hashatable. The hashtable is the constract that keeps
@@ -102,21 +102,21 @@ EXINLINED ps_hashtable_t ps_hashtable_new();
  *
  * Returns: type of TM conflict caused by inserting given values
  */
-EXINLINED CONFLICT_TYPE ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
+CONFLICT_TYPE ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
                                 tm_intern_addr_t address, RW rw);
 
 /*
  * delete a reader of writer for the address from the hashatable.
  */
-EXINLINED void ps_hashtable_delete(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
+void ps_hashtable_delete(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
                                 tm_intern_addr_t address, RW rw);
 
-EXINLINED void ps_hashtable_delete_node(ps_hashtable_t ps_hashtable, nodeid_t nodeId);
+void ps_hashtable_delete_node(ps_hashtable_t ps_hashtable, nodeid_t nodeId);
 
 /*
  * traverse and print the ps_hastable contents
  */
-EXINLINED void ps_hashtable_print(ps_hashtable_t ps_hashtable);
+void ps_hashtable_print(ps_hashtable_t ps_hashtable);
 
 #ifdef    __cplusplus
 }

@@ -18,26 +18,35 @@
 #include <libconfig.h>
 
 #ifndef INLINED
-# if __GNUC__ && !__GNUC_STDC_INLINE__
-#  define INLINED static inline __attribute__((always_inline))
-# else
-#  define INLINED inline
-# endif
+#  if __GNUC__ && !__GNUC_STDC_INLINE__ && !SCC
+#    define INLINED static inline __attribute__((always_inline))
+#  else
+#    define INLINED inline
+#  endif
 #endif
 
 #ifndef EXINLINED
-#if __GNUC__ && !__GNUC_STDC_INLINE__
-#define EXINLINED extern inline
-#else
-#define EXINLINED inline
+#  if __GNUC__ && !__GNUC_STDC_INLINE__ && !SCC
+#    define EXINLINED extern inline
+#  else
+#    define EXINLINED inline
+#  endif
 #endif
+
+#ifndef ALIGNED(N)
+#  if __GNUC__ && !SCC
+#    define ALIGNED(N) __attribute__ ((aligned (N)))
+#  else
+//#    warning "The alignement of elemenets should be explicitly handled"
+#    define ALIGNED(N)
+#  endif
 #endif
 
 #include "measurements.h"
 #include "tm_types.h"
 
 #ifdef PGAS
-#define EAGER_WRITE_ACQ         /*ENABLE eager write lock acquisition*/
+#  define EAGER_WRITE_ACQ         /*ENABLE eager write lock acquisition*/
 #endif
 
 #ifdef	__cplusplus
@@ -50,13 +59,13 @@ extern "C" {
 
 
 #if defined(PLATFORM_MCORE)
-#define REF_SPEED_GHZ           2.1
+#  define REF_SPEED_GHZ           2.1
 #elif defined(PLATFORM_iRCCE) || defined(PLATFORM_SCC_SSMP)
-#define REF_SPEED_GHZ           0.533
+#  define REF_SPEED_GHZ           0.533
 #elif defined(PLATFORM_TILERA)
-#define REF_SPEED_GHZ           0.7
+#  define REF_SPEED_GHZ           0.7
 #else
-#error "Need to set REF_SPEED_GHZ for the platform"
+#  error "Need to set REF_SPEED_GHZ for the platform"
 #endif
 
 #define MED printf("[%02d] ", NODE_ID());
@@ -74,21 +83,21 @@ extern "C" {
 
 #define FLUSH fflush(stdout);
 #ifdef DEBUG
-#define FLUSHD fflush(stdout);
-#define ME printf("%d: ", NODE_ID())
-#define PRINTF(args...) printf(args)
-#define PRINTD(args...) ME; printf(args); printf("\n"); fflush(stdout)
-#define PRINTDNN(args...) ME; printf(args); fflush(stdout)
-#define PRINTD1(UE, args...) if(NODE_ID() == (UE)) { ME; printf(args); printf("\n"); fflush(stdout); }
-#define TS printf("[%f] ", wtime())
+#  define FLUSHD fflush(stdout);
+#  define ME printf("%d: ", NODE_ID())
+#  define PRINTF(args...) printf(args)
+#  define PRINTD(args...) ME; printf(args); printf("\n"); fflush(stdout)
+#  define PRINTDNN(args...) ME; printf(args); fflush(stdout)
+#  define PRINTD1(UE, args...) if(NODE_ID() == (UE)) { ME; printf(args); printf("\n"); fflush(stdout); }
+#  define TS printf("[%f] ", wtime())
 #else
-#define FLUSHD
-#define ME
-#define PRINTF(args...)
-#define PRINTD(args...)
-#define PRINTDNN(args...)
-#define PRINTD1(UE, args...)
-#define TS
+#  define FLUSHD
+#  define ME
+#  define PRINTF(args...)
+#  define PRINTD(args...)
+#  define PRINTDNN(args...)
+#  define PRINTD1(UE, args...)
+#  define TS
 #endif
 
     typedef enum {
@@ -114,6 +123,9 @@ extern "C" {
 	extern nodeid_t NUM_APP_NODES;
 	extern nodeid_t NUM_DSL_NODES;
     
+
+  extern int is_app_core(int);
+  extern int is_dsl_core(int);
 
   INLINED nodeid_t
   min_dsl_id() 
@@ -154,17 +166,17 @@ extern "C" {
 /*  ------- Plug platform related things here BEGIN ------- */
 #if defined(PLATFORM_iRCCE) || defined(PLATFORM_SCC_SSMP)
 
-#ifdef SSMP
-#include "RCCE.h"
-#include "sys_SCC_ssmp.h"
-#else
-#include "iRCCE.h"
-#include "sys_iRCCE.h"
+#  ifdef SSMP
+#    include "RCCE.h"
+#    include "sys_SCC_ssmp.h"
+#  else
+#    include "iRCCE.h"
+#    include "sys_iRCCE.h"
   extern RCCE_COMM RCCE_COMM_APP;
-#define BARRIER RCCE_barrier(&RCCE_COMM_APP);
-#define BARRIERW RCCE_barrier(&RCCE_COMM_WORLD);
+#    define BARRIER RCCE_barrier(&RCCE_COMM_APP);
+#    define BARRIERW RCCE_barrier(&RCCE_COMM_WORLD);
 
-#endif
+#  endif
 
 #endif 
 
@@ -177,7 +189,7 @@ extern void*  zmq_barrier_client;     // socket for applying for the barrier
 
 EXINLINED char *zmq_s_recv(void *socket);
 EXINLINED int zmq_s_send(void *socket, char *string);
-#define BARRIER_(type)    do {                                               \
+#  define BARRIER_(type)    do {                                               \
     PRINT("BARRIER %s\n", type);                                             \
     if ((ID % DSLNDPERNODES == 0) && !strcmp(type,"app")) break;             \
     PRINT("Waiting at the barrier\n");                                       \
@@ -189,50 +201,50 @@ EXINLINED int zmq_s_send(void *socket, char *string);
     PRINT("Passed through the barrier\n");                                   \
 } while (0);
 
-#define BARRIER    BARRIER_("app")
-#define BARRIERW   BARRIER_("all")
+#  define BARRIER    BARRIER_("app")
+#  define BARRIERW   BARRIER_("all")
 #endif
 
 #ifdef PLATFORM_MCORE
 
-#ifndef SSMP
-#include "sys_MCORE.h"
-#else
-#include "sys_MCORE_ssmp.h"
-#endif
+#  ifndef SSMP
+#    include "sys_MCORE.h"
+#  else
+#    include "sys_MCORE_ssmp.h"
+#  endif
 #endif
 
 #ifdef PLATFORM_TILERA
 	/*
 	 * TILERA related includes
 	 */
-#include <tmc/alloc.h>
-#include <tmc/cpus.h>
-#include <tmc/task.h>
-#include <tmc/udn.h>
-#include <tmc/spin.h>
-#include <tmc/sync.h>
-#include <tmc/cmem.h>
+#  include <tmc/alloc.h>
+#  include <tmc/cpus.h>
+#  include <tmc/task.h>
+#  include <tmc/udn.h>
+#  include <tmc/spin.h>
+#  include <tmc/sync.h>
+#  include <tmc/cmem.h>
 
-#include "sys_TILERA.h"
+#  include "sys_TILERA.h"
 
 
 extern DynamicHeader *udn_header; //headers for messaging
 extern tmc_sync_barrier_t *barrier_apps, *barrier_all; //BARRIERS
 
-#define BARRIER tmc_sync_barrier_wait(barrier_apps); //app cores only
-#define BARRIERW tmc_sync_barrier_wait(barrier_all); //all cores
+#  define BARRIER tmc_sync_barrier_wait(barrier_apps); //app cores only
+#  define BARRIERW tmc_sync_barrier_wait(barrier_all); //all cores
 
 
 
-#define RCCE_num_ues TOTAL_NODES
-#define RCCE_ue NODE_ID
-#define RCCE_acquire_lock(a) 
-#define RCCE_release_lock(a)
-#define RCCE_init(a,b)
-#define iRCCE_init(a)
+#  define RCCE_num_ues TOTAL_NODES
+#  define RCCE_ue NODE_ID
+#  define RCCE_acquire_lock(a) 
+#  define RCCE_release_lock(a)
+#  define RCCE_init(a,b)
+#  define iRCCE_init(a)
 
-#define t_vcharp sys_t_vcharp
+#  define t_vcharp sys_t_vcharp
 
 #endif
 
@@ -240,9 +252,9 @@ extern tmc_sync_barrier_t *barrier_apps, *barrier_all; //BARRIERS
 
 #define TASKMAIN MAIN
 #ifdef LIBTASK
-#define MAIN void taskmain
+#  define MAIN void taskmain
 #else
-#define MAIN int main
+#  define MAIN int main
 #endif
 #define EXIT(reason) exit(reason);
 #define EXITALL(reason) exit((reason))

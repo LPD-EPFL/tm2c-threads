@@ -19,7 +19,8 @@ PLATFORM_DEFINES = -DPLATFORM_SCC_SSMP \
                    -DREAD_BUF_OFF \
                    -UDEBUG_UTILIZATION \
                    -UDO_TIMINGS \
-                   -UBACKOFF_RETRY \
+                   -DBACKOFF_RETRY \
+		   -DNOCM		   
 
 HAS_TASKLIB = no
 
