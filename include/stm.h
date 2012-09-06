@@ -47,6 +47,9 @@ extern "C" {
         unsigned long aborts_raw; /* Aborts due to read after write (cumulative) */
         unsigned long aborts_waw; /* Aborts due to write after write (cumulative) */
         unsigned long max_retries; /* Maximum number of consecutive aborts (retries) */
+#if defined(FAIRCM) || defined(GREEDY)
+      ticks start_ts;
+#endif
     } stm_tx_t;
 
     typedef struct stm_tx_node {
@@ -57,6 +60,9 @@ extern "C" {
         unsigned long aborts_war;
         unsigned long aborts_raw;
         unsigned long aborts_waw;
+#ifdef FAIRCM
+      ticks tx_duration;
+#endif
     } stm_tx_node_t;
 
     INLINED void tx_metadata_node_print(stm_tx_node_t * stm_tx_node) {
@@ -99,6 +105,10 @@ extern "C" {
         stm_tx_node_temp->aborts_raw = 0;
         stm_tx_node_temp->aborts_waw = 0;
 
+#if defined(FAIRCM)
+	stm_tx_node_temp->tx_duration = 1;
+#endif
+
         return stm_tx_node_temp;
     }
 
@@ -124,6 +134,10 @@ extern "C" {
         stm_tx_temp->aborts_raw = 0;
         stm_tx_temp->aborts_waw = 0;
         stm_tx_temp->max_retries = 0;
+
+#if defined(FAIRCM) || defined(GREEDY)
+	stm_tx_temp->start_ts = 0;
+#endif
 
         return stm_tx_temp;
     }

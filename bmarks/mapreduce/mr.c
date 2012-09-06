@@ -146,7 +146,7 @@ MAIN(int argc, char** argv) {
         fseek(fp, 0L, SEEK_END);
         printf("MapReduce --\n");
         printf("Fillename \t: %s\n", filename);
-        printf("Filesize  \t: %d bytes\n", ftell(fp));
+        printf("Filesize  \t: %ld bytes\n", ftell(fp));
         printf("Chunksize \t: %d bytes\n", chunk_size);
         FLUSH
     }

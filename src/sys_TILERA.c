@@ -67,10 +67,14 @@ sys_init_system(int* argc, char** argv[]) {
     // Reserve the UDN rectangle that surrounds our cpus.
     if (tmc_udn_init(&cpus) < 0)
         tmc_task_die("Failure in 'tmc_udn_init(0)'.");
-
-    NUM_DSL_NODES = (int) ((NUM_UES / DSLNDPERNODES)) + (NUM_UES
-            % DSLNDPERNODES ? 1 : 0);
-    NUM_APP_NODES = NUM_UES - NUM_DSL_NODES;
+    uint32_t i, tot = 0;
+    for (i = 0; i < NUM_UES; i++) {
+      if (!is_app_core(i)) {
+	tot++;
+      }
+    }
+    NUM_DSL_NODES = tot;
+    NUM_APP_NODES = NUM_UES - tot;
 
     barrier_apps = (tmc_sync_barrier_t *) tmc_cmem_calloc(1, sizeof (tmc_sync_barrier_t));
     barrier_all = (tmc_sync_barrier_t *) tmc_cmem_calloc(1, sizeof (tmc_sync_barrier_t));

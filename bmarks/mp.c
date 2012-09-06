@@ -101,9 +101,9 @@ MAIN(int argc, char **argv) {
 	   "%.2f msgs/us\n\t"
 	   "%f ns latency\n"
 	   "in ticks:\n\t"
-	   "in %lld ticks\n\t"
-	   "%lld ticks/msg\n", steps, _time, ((double)steps/(1000*1000*_time)), lat,
-	   _ticks, _ticksm);
+	   "in %llu ticks\n\t"
+	   "%llu ticks/msg\n", steps, _time, ((double)steps/(1000*1000*_time)), lat,
+	   (long long unsigned int) _ticks, (long long unsigned int) _ticksm);
 
 
     PRINT("sum -- %lld", sum);

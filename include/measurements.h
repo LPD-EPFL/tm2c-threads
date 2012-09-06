@@ -134,7 +134,6 @@ do {\
     extern long long total_samples[ENTRY_TIMES_SIZE];
     extern const char *measurement_msgs[ENTRY_TIMES_SIZE];
   extern ticks getticks_correction;
-
   extern ticks getticks_correction_calc();
 
 #define MEASUREREMENT_CORRECTION getticks_correction_calc();

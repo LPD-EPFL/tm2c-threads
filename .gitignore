@@ -1,4 +1,3 @@
-
 *#
 *.a
 *.d
@@ -48,10 +47,14 @@
 /nbproject/*
 /nbproject/private/*
 /oprof
+/oprof
 /out
 /outp
 /pgas.changes
+/pgas.changes
 /profile
+/profile
+/run_sim.sh
 /run_sim.sh
 /runrt
 collect.awk

@@ -33,7 +33,7 @@ DEBUG_FLAGS := #-g -ggdb -fno-inline#-DDEBUG
 
 ## Archive ##
 ARCHIVE_SRCS_PURE:= pubSubTM.c tm.c log.c lock_log.c array_log.c dslock.c \
-			measurements.c pgas.c config.c fakemem.c
+			measurements.c pgas.c config.c fakemem.c ps_hashtable.c cm.c
 
 # Include the platform specific Makefile
 # This file has the modifications related to the current platform

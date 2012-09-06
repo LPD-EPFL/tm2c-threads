@@ -37,6 +37,8 @@ unsigned int read_reqs_num = 0, write_reqs_num = 0;
 PS_REPLY* ps_remote_msg; // holds the received msg
 static PS_COMMAND *ps_remote;
 
+INLINED nodeid_t min_dsl_id();
+
 INLINED void sys_ps_command_reply(nodeid_t sender,
                     PS_REPLY_TYPE command,
                     tm_addr_t address,
@@ -52,10 +54,16 @@ INLINED void sys_ps_command_reply(nodeid_t sender,
 nodeid_t MY_NODE_ID;
 nodeid_t MY_TOTAL_NODES;
 
+
+#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+int32_t **cm_abort_flags;
+int32_t *cm_abort_flag_mine;
+#endif /* NOCM */
+
+
 void
 sys_init_system(int* argc, char** argv[])
 {
-
 
 	if (*argc < 2) {
 		fprintf(stderr, "Not enough parameters (%d)\n", *argc);
@@ -117,12 +125,7 @@ fork_done:
 	ssmp_mem_init(MY_NODE_ID, MY_TOTAL_NODES);
 
 	// Now, pin the process to the right core (NODE_ID == core id)
-	int place;
-	if (rank%2 != 0) {
-		place = MY_TOTAL_NODES/2+rank/2;
-	} else {
-		place = rank/2;
-	}
+	int place = rank;
 	cpu_set_t mask;
 	CPU_ZERO(&mask);
 	CPU_SET(place, &mask);
@@ -161,24 +164,46 @@ sys_shfree(sys_t_vcharp ptr)
 void
 sys_tm_init()
 {
+
 }
 
 void
 sys_ps_init_(void)
 {
-	BARRIERW
-	
-	MCORE_shmalloc_init(1024*1024*1024); //1GB
 
-	ps_remote_msg = NULL;
-	PRINTD("sys_ps_init: done");
+#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+  cm_abort_flag_mine = cm_init(NODE_ID());
+  *cm_abort_flag_mine = NO_CONFLICT;
+#endif
+
+  MCORE_shmalloc_init(1024*1024*1024); //1GB
+
+  BARRIERW
+
+  ps_remote_msg = NULL;
+  PRINTD("sys_ps_init: done");
+
+  BARRIERW
 }
 
 void
 sys_dsl_init(void)
 {
+  BARRIERW
+
+#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+  cm_abort_flags = (int32_t **) malloc(TOTAL_NODES() * sizeof(int32_t *));
+  assert(cm_abort_flags != NULL);
+
+  uint32_t i;
+  for (i = 0; i < TOTAL_NODES(); i++) {
+    //TODO: make it open only for app nodes
+    cm_abort_flags[i] = cm_init(i);    
+  }
+#endif
+
   ps_remote = (PS_COMMAND *) malloc(sizeof (PS_COMMAND)); //TODO: free at finalize + check for null
-	BARRIERW
+  BARRIERW
 
 }
 
@@ -233,7 +258,7 @@ unsigned int usages[NB];
 void
 dsl_communication()
 {
-  unsigned int sender;
+  nodeid_t sender, last_recv_from = 0;
   PS_COMMAND_TYPE command;
 
   ssmp_msg_t *msg;
@@ -245,23 +270,32 @@ dsl_communication()
     PRINT("malloc @ dsl_communication");
     exit(-1);
   }
-  ssmp_color_buf_init(cbuf, color_app);
+  ssmp_color_buf_init(cbuf, is_app_core);
 
   
   int j;
   for (j = 0; j < NB; j++) usages[j] = 0;
 
-  uintptr_t addr_prev = NULL; uint32_t req_num = 0;
+  uintptr_t addr_prev = 0; uint32_t req_num = 0;
 
   while (1) {
 
-    ssmp_recv_color(cbuf, msg, sizeof(*ps_remote));
+    last_recv_from = ssmp_recv_color_start(cbuf, msg, last_recv_from + 1);
     sender = msg->sender;
-    
+
     ps_remote = (PS_COMMAND *) msg;
 
     //    usages[hash_tw(ps_remote->address) % NB]++;
 
+    
+#if defined(WHOLLY) || defined(FAIRCM)
+        cm_metadata_core[sender].timestamp = (ticks) ps_remote->tx_metadata;
+#elif defined(GREEDY)
+	if (cm_metadata_core[sender].timestamp == 0) {
+	  cm_metadata_core[sender].timestamp = getticks() - (ticks) ps_remote->tx_metadata;
+	}
+#endif
+    
     switch (ps_remote->type) {
     case PS_SUBSCRIBE:
 
@@ -287,7 +321,7 @@ dsl_communication()
       /* } */
       
       sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE, 
-			   ps_remote->address, 
+			   (tm_addr_t) ps_remote->address, 
 			   NULL,
 			   try_subscribe(sender, ps_remote->address));
       //sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE, address, NO_CONFLICT);
@@ -308,7 +342,7 @@ dsl_communication()
 	}
 #endif
 	sys_ps_command_reply(sender, PS_PUBLISH_RESPONSE, 
-			     ps_remote->address,
+			     (tm_addr_t) ps_remote->address,
 			     NULL,
 			     conflict);
 	break;
@@ -361,6 +395,10 @@ dsl_communication()
       PGAS_write_sets[sender] = write_set_pgas_empty(PGAS_write_sets[sender]);
 #endif
       ps_hashtable_delete_node(ps_hashtable, sender);
+
+#if defined(GREEDY)
+      cm_metadata_core[sender].timestamp = 0;
+#endif
       break;
     case PS_UNSUBSCRIBE:
       ps_hashtable_delete(ps_hashtable, sender, ps_remote->address, READ);
@@ -382,8 +420,9 @@ dsl_communication()
 	  stats_aborts_war += ps_remote->aborts_war;
 	  stats_aborts_waw += ps_remote->aborts_waw;
 	}
+
 	if (++stats_received >= 2*NUM_APP_NODES) {
-	  if (NODE_ID() == 0) {
+	  if (NODE_ID() == min_dsl_id()) {
 	    print_global_stats();
 
 	    print_hashtable_usage();
@@ -400,7 +439,7 @@ dsl_communication()
 	  PRINT("*** Completed requests: %d", read_reqs_num + write_reqs_num);
 #endif
 
-	  EXIT(0);
+	  return;
 	}
 	break;
       }
@@ -444,7 +483,9 @@ ndelay(uint64_t nanos)
 void
 init_barrier()
 {
+  ssmp_barrier_init(1, 0, is_app_core);
 
+  BARRIERW;
 }
 
 void
@@ -459,3 +500,45 @@ global_barrier()
 
 }
 
+#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+static int32_t *
+cm_init(nodeid_t node) {
+   char keyF[50];
+   sprintf(keyF,"/cm_abort_flag%03d", node);
+
+   size_t cache_line = 64;
+
+   int abrtfd = shm_open(keyF, O_CREAT | O_EXCL | O_RDWR, S_IRWXU | S_IRWXG);
+   if (abrtfd<0)
+   {
+      if (errno != EEXIST)
+      {
+         perror("In shm_open");
+         exit(1);
+      }
+
+      //this time it is ok if it already exists                                                    
+      abrtfd = shm_open(keyF, O_CREAT | O_RDWR, S_IRWXU | S_IRWXG);
+      if (abrtfd<0)
+      {
+         perror("In shm_open");
+         exit(1);
+      }
+   }
+   else
+   {
+      //only if it is just created                                                                 
+     if (!ftruncate(abrtfd, cache_line))
+       {
+	 printf("ftruncate failed\n");
+       }
+   }
+
+   int32_t *tmp = (int32_t *) mmap(NULL, 64, PROT_READ | PROT_WRITE, MAP_SHARED, abrtfd, 0);
+   assert(tmp != NULL);
+   
+   //   PRINT("-- opened %s @ %p for CM of %d", keyF, tmp, node);
+
+   return tmp;
+}
+#endif	/* NOCM */

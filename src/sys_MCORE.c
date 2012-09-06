@@ -197,7 +197,7 @@ sys_ps_init_(void)
 	nodeid_t j;
 	for (j = 0; j < NUM_UES; j++) {
 		// initialize the sockets to all dsl nodes.
-		if (j % DSLNDPERNODES == 0) {
+		if (!is_app_core(j)) {
 			int rfd = dial_node(j);
 			fdnoblock(rfd);
 			nodes_sockets[j] = rfd;
@@ -221,7 +221,7 @@ sys_dsl_init(void)
 	nodeid_t j;
 	for (j = 0; j < NUM_UES; j++) {
 		// initialize the sockets to all app nodes.
-		if (j % DSLNDPERNODES != 0) {
+		if (is_app_core(j)) {
 			int rfd = dial_node(j);
 			fdnoblock(rfd);
 			nodes_sockets[j] = rfd;
@@ -237,7 +237,7 @@ sys_dsl_term(void)
 {
 	nodeid_t j;
 	for (j = 0; j < NUM_UES; j++) {
-		if (j % DSLNDPERNODES != 0) {
+		if (is_app_core(j)) {
 			if (nodes_sockets[j] != -1)
 				netclose(nodes_sockets[j]);
 		}
@@ -250,7 +250,7 @@ sys_ps_term(void)
 {
 	nodeid_t j;
 	for (j = 0; j < NUM_UES; j++) {
-		if (j % DSLNDPERNODES == 0) {
+		if (!is_app_core(j)) {
 			if (nodes_sockets[j] != -1)
 				netclose(nodes_sockets[j]);
 		}

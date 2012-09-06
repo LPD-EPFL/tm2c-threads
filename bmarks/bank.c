@@ -93,18 +93,15 @@ int transfer(account_t *src, account_t *dst, int amount) {
 
     int i, j;
 
-    PF_START(2)
     /* Allow overdrafts */
     TX_START
-    PF_START(3)
 
 #ifdef LOAD_STORE
-      //      PRINT("%d @ %p  ==> %d @ %p", src->number, &src->balance, dst->number, &dst->balance);
+            //TODO: test and use the TX_LOAD_STORE
 	TX_LOAD_STORE(&src->balance, -, amount, TYPE_INT);
     TX_LOAD_STORE(&dst->balance, +, amount, TYPE_INT);
-    PF_STOP(3)
+
     TX_COMMIT_NO_PUB;
-    PF_STOP(2)
 #else
 	i = *(int *) TX_LOAD(&src->balance);
     i -= amount;
@@ -143,6 +140,10 @@ int total(bank_t *bank, int transactional) {
 #endif
         }
         TX_COMMIT
+    }
+
+    if (total != 0) {
+      PRINT("Got a bank total of: %d", total);
     }
 
     return total;
@@ -246,23 +247,19 @@ bank_t * test(void *data, double duration, int nb_accounts) {
     /* Wait on barrier */
     BARRIER
 
-    PF_START(0);
+    // PRINT("chk %d", chk++); //0
 
-    FOR(duration) {
+      TX_START
+    /*   TX_LOAD(&bank->accounts[0].balance); */
+    /* int lol = 0; */
+    /* TX_STORE(&bank->accounts[1].balance, &lol, TYPE_INT); */
+    TX_COMMIT_NO_STATS
+      total(bank, 0);
 
-      /*      while(d->nb_transfer++ < 1000000) {
-	      src = (int) (rand_range(rand_max) - 1) + rand_min;
-	      dst = (int) (rand_range(rand_max) - 1) + rand_min;
-	      if (dst == src)
-	      dst = ((src + 1) % rand_max) + rand_min;
-	
-	      //total(bank, 1);
-	      //src = 0 ; dst = 1;
-	      transfer(&bank->accounts[src], &bank->accounts[dst], 1);
-	
-	      }
-	      continue;
-      */
+    BARRIER
+
+      FOR(duration) {
+
       if (d->id < d->read_cores) {
 	/* Read all */
 	//  PRINT("READ ALL1");
@@ -299,15 +296,14 @@ bank_t * test(void *data, double duration, int nb_accounts) {
 	  if (dst == src)
 	    dst = ((src + 1) % rand_max) + rand_min;
 
-	  PF_START(1)
 #ifndef PLATFORM_CLUSTER
-	    transfer(&bank->accounts[I(src)], &bank->accounts[I(dst)], 1);
+	  transfer(&bank->accounts[I(src)], &bank->accounts[I(dst)], 1);
 #else
+
 	  transfer(&bank->accounts[src], &bank->accounts[dst], 1);
 #endif
-	  PF_STOP(1)
 
-	    d->nb_transfer++;
+	  d->nb_transfer++;
 	}
       }
 
@@ -315,14 +311,10 @@ bank_t * test(void *data, double duration, int nb_accounts) {
 	//	PRINT("delaying %u us", delay);
 	udelay(rand_range(delay));
       }
-	
     } END_FOR;
-
-    PF_STOP(0);
 
     //reset(bank);
 
-    PRINT("~~");
     PF_PRINT
     BARRIER
 
@@ -468,9 +460,9 @@ TASKMAIN(int argc, char **argv) {
 
     /* Init STM */
     BARRIER
-      
 
-    data->id = NODE_ID();
+
+    data->id = NODE_ID() / 2;
     data->read_all = read_all;
     data->read_cores = read_cores;
     data->write_all = write_all;
@@ -490,12 +482,18 @@ TASKMAIN(int argc, char **argv) {
 
     BARRIER
 
-    printf("---Core %d\n", NODE_ID());
-    printf("  #transfer   : %lu\n", data->nb_transfer);
-    printf("  #read-all   : %lu\n", data->nb_read_all);
-    printf("  #write-all  : %lu\n", data->nb_write_all);
-    FLUSH
+      uint32_t nd;
+    for (nd = 0; nd < TOTAL_NODES(); nd++) {
+      if (NODE_ID() == nd) {
+	printf("---Core %d\n  #transfer   : %lu\n  #read-all   : %lu\n  #write-all  : %lu\n", 
+	       NODE_ID(), data->nb_transfer, data->nb_read_all, data->nb_write_all);
+	FLUSH
+      }
+      BARRIER
+    }
 
+
+    BARRIER
 
     ONCE
     {

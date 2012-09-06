@@ -29,15 +29,48 @@ const char *conflict_reasons[4] = {
     "WRITE_AFTER_WRITE"
 };
 
+
+//custom assignment
+const unsigned short buf[8] = {0xAAAA,0xAAAA,0xAAAA,0xAAAA,0xAAAA,0xAAAA,0xAAAA,0xAAAA};
+/* set to 1 if dsl node */
+const uint8_t dsl_node[] =
+  {
+    1, 0, 0, 0, 0, 0,		/* 6 */
+    0, 0, 0, 0, 0, 0,		/* 12 */
+    0, 0, 0, 0, 0, 0,		/* 18 */
+    0, 0, 1, 0, 0, 0,		/* 24 */
+    0, 0, 0, 1, 0, 0,		/* 30 */
+    0, 0, 0, 0, 0, 0,		/* 36 */
+    0, 0, 0, 0, 0, 0,		/* 42 */
+    0, 0, 0, 0, 0, 1,		/* 48 */
+    0, 0, 0, 0, 0, 0,		/* ... */
+    0, 0, 0, 0, 0, 0,		/*  */
+    0, 0, 0, 0, 0, 0,		/*  */
+    0, 0, 0, 0, 0, 0,		/*  */
+  };
+
 /*______________________________________________________________________________________________________
  * TM Interface                                                                                         |
  *______________________________________________________________________________________________________|
  */
 
+#define DSL_BY_MOD
+#define DSLPERNODE 6
+
+int is_app_core(int id) {
+    //return 0 if dsl node, 1 otherwise
+#if defined(DSL_BY_MOD)
+  return (id % DSLPERNODE) != 0;
+#elif defined(HEX_ASSIGNEMENT)
+  return (buf[id/(8 * sizeof(unsigned short))]>>(id%(8 * sizeof(unsigned short))))&0x01;
+#else
+  return !dsl_node[id];
+#endif
+}
+
 void tm_init() {
     sys_tm_init();
-
-    if (ID % DSLNDPERNODES == 0) {
+    if (!is_app_core(ID)) {
         //dsl node
         dsl_init();
     }
@@ -62,19 +95,26 @@ init_system(int* argc, char** argv[])
   /* calculate the getticks correction if DO_TIMINGS is set */
   PF_CORRECTION;
 
-	/* call platform level initializer */
-	sys_init_system(argc, argv);
+  /* call platform level initializer */
+  sys_init_system(argc, argv);
 
-	/* initialize globals */
-	ID            = NODE_ID();
-	NUM_UES       = TOTAL_NODES();
-	NUM_DSL_NODES = ((NUM_UES/DSLNDPERNODES)) + (NUM_UES%DSLNDPERNODES ? 1 : 0);
-	NUM_APP_NODES = NUM_UES-NUM_DSL_NODES;
+  /* initialize globals */
+  ID            = NODE_ID();
+  NUM_UES       = TOTAL_NODES();
 
-	//	fprintf(stderr, "ID: %u\nNUM_UES: %u\nNUM_DSL_NODES: %u\nNUM_APP_NODES: %u\n",
-	//		ID, NUM_UES, NUM_DSL_NODES, NUM_APP_NODES);
+  uint32_t i, tot=0;
+  for (i =0; i < NUM_UES; i++) {
+    if (!is_app_core(i)) {
+      tot++;
+    }
+  }
+  NUM_DSL_NODES = tot;
+  NUM_APP_NODES = NUM_UES - tot;
 
-	init_barrier();
+  //	fprintf(stderr, "ID: %u\nNUM_UES: %u\nNUM_DSL_NODES: %u\nNUM_APP_NODES: %u\n",
+  //		ID, NUM_UES, NUM_DSL_NODES, NUM_APP_NODES);
+
+  init_barrier();
 }
 /*
  * Trampolining code for terminating everything
@@ -82,7 +122,7 @@ init_system(int* argc, char** argv[])
 void
 tm_term()
 {
-    if (ID % DSLNDPERNODES == 0) {
+    if (!is_app_core(ID)) {
         // DSL node
         // common stuff
 
@@ -127,10 +167,15 @@ void handle_abort(stm_tx_t *stm_tx, CONFLICT_TYPE reason) {
     
 #ifdef BACKOFF_RETRY
     /*BACKOFF and RETRY*/
-    unsigned int wait_max = pow(2, (stm_tx->retries < BACKOFF_MAX ? stm_tx->retries : BACKOFF_MAX)) * BACKOFF_DELAY;
-    unsigned int wait = rand_range(wait_max);
-    //PRINT("\t\t\t\t\t\t... backoff for %5d micros (retries: %3d | max: %d)", wait, stm_tx->retries, wait_max);
-    udelay(wait);
+    if (BACKOFF_MAX > 0)  {
+      unsigned int wait_max = pow(2, (stm_tx->retries < BACKOFF_MAX ? stm_tx->retries : BACKOFF_MAX)) * BACKOFF_DELAY;
+      unsigned int wait = rand_range(wait_max);
+      //PRINT("\t\t\t\t\t\t... backoff for %5d micros (retries: %3d | max: %d)", wait, stm_tx->retries, wait_max);
+      ndelay(wait);
+    }
+    else {
+      wait_cycles(50 * stm_tx->retries);
+    }
 #endif
     
 }
@@ -164,7 +209,7 @@ void ps_publish_all() {
         tm_addr_t addr = to_addr(write_entries[locked].address);
 #ifndef BACKOFF_RETRY
         unsigned int num_delays = 0;
-        unsigned int delay = BACKOFF_DELAY; //micro
+        unsigned int delay = BACKOFF_DELAY; //nano
 retry:
 #endif
 #ifdef PGAS
@@ -175,7 +220,7 @@ retry:
             //ps_publish_finish_all(locked);
 #ifndef BACKOFF_RETRY
             if (num_delays++ < BACKOFF_MAX) {
-	      udelay(rand_range(delay));
+	      ndelay(rand_range(delay));
 	      delay *= 2;
 	      goto retry;
             }

@@ -288,8 +288,8 @@ void print_set(intset_t *set) {
         goto null;
     }
     while (node->nextp != NULL) {
-        printf("%d -> ", node->val);
-        node = ND(node->next);
+      printf("%u -> ", (unsigned int) node->val);
+      node = ND(node->next);
     }
 
 null:

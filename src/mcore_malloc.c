@@ -49,7 +49,10 @@ MCORE_shmalloc_init(size_t size)
    else
    {
       //only if it is just created
-      ftruncate(shmfd,size);
+     if (!ftruncate(shmfd,size))
+       {
+	 printf("ftruncate failed\n");
+       }
    }
 
   t_vcharp mem = (t_vcharp) mmap(NULL, size,PROT_READ | PROT_WRITE, MAP_SHARED, shmfd, 0);

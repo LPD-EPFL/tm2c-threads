@@ -95,7 +95,11 @@ extern "C" {
         NO_CONFLICT,
         READ_AFTER_WRITE,
         WRITE_AFTER_READ,
-        WRITE_AFTER_WRITE
+        WRITE_AFTER_WRITE,
+#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+	PERSISTING_WRITES, 	/* used for contention management */
+	TX_COMMITED		/* used for contention management */
+#endif 				/* NOCM */
     } CONFLICT_TYPE;
 
     /* read or write request
@@ -110,6 +114,43 @@ extern "C" {
 	extern nodeid_t NUM_APP_NODES;
 	extern nodeid_t NUM_DSL_NODES;
     
+
+  INLINED nodeid_t
+  min_dsl_id() 
+  {
+    uint32_t i;
+    for (i = 0; i < NUM_UES; i++)
+      {
+	if (!is_app_core(i))
+	  {
+	    return i;
+	  }
+      }
+    return i;
+  }
+
+  INLINED nodeid_t
+  min_app_id() 
+  {
+    uint32_t i;
+    for (i = 0; i < NUM_UES; i++)
+      {
+	if (is_app_core(i))
+	  {
+	    return i;
+	  }
+      }
+    return i;
+  }
+
+#define ONCE							\
+  if (is_app_core(ID) && NODE_ID() == min_app_id() ||	\
+      ID == min_dsl_id() ||				\
+      NUM_UES == 1)
+
+
+
+
 /*  ------- Plug platform related things here BEGIN ------- */
 #if defined(PLATFORM_iRCCE) || defined(PLATFORM_SCC_SSMP)
 
