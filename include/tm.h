@@ -57,7 +57,7 @@ extern "C" {
     if BACKOFF_RETRY is set, the BACKOFF-RETRY contention management scheme is used. This is similar to the TCP-IP exponentional increasing backoff and retry. When BACKOFF_MAX = infinitiy -> then every tx is expected to terminate whp.
    */
 #define BACKOFF_MAX                     0
-#define BACKOFF_DELAY                   7
+#define BACKOFF_DELAY                   20000
 #else
   /*
   else, in case of a conflict the transaction is not aborted, but backsoff and retries to acquire the same address BACKOFF_MAX time beforee aborting

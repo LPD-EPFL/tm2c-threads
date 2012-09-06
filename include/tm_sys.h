@@ -70,6 +70,7 @@ void srand_core();
 /*
  * Helper functions
  */
+void wait_cycles(uint64_t ncycles);
 void udelay(uint64_t micros);
 void ndelay(uint64_t micros);
 
