@@ -266,21 +266,17 @@ dsl_communication()
 
   ssmp_color_buf_t *cbuf;
   cbuf = (ssmp_color_buf_t *) malloc(sizeof(ssmp_color_buf_t));
-  if (msg == NULL || cbuf == NULL) {
-    PRINT("malloc @ dsl_communication");
-    exit(-1);
-  }
+  assert(msg != NULL && cbuf != NULL);
+
   ssmp_color_buf_init(cbuf, is_app_core);
 
   
   int j;
   for (j = 0; j < NB; j++) usages[j] = 0;
 
-  uintptr_t addr_prev = 0; uint32_t req_num = 0;
-
   while (1) {
 
-    last_recv_from = ssmp_recv_color_start(cbuf, msg, last_recv_from + 1);
+    last_recv_from = ssmp_recv_color_start(cbuf, msg, last_recv_from) + 1;
     sender = msg->sender;
 
     ps_remote = (PS_COMMAND *) msg;
@@ -309,7 +305,7 @@ dsl_communication()
       */
       
       sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE,
-			   ps_remote->address, 
+			   (tm_addr_t) ps_remote->address, 
 			   PGAS_read(ps_remote->address),
 			   try_subscribe(sender, ps_remote->address));
 #else
@@ -365,7 +361,7 @@ dsl_communication()
                                 ps_remote->address);
 	}
 	sys_ps_command_reply(sender, PS_PUBLISH_RESPONSE,
-			     ps_remote->address,
+			     (tm_addr_t) ps_remote->address,
 			     NULL,
 			     conflict);
 	break;
@@ -528,9 +524,9 @@ cm_init(nodeid_t node) {
    else
    {
       //only if it is just created                                                                 
-     if (!ftruncate(abrtfd, cache_line))
+     if(ftruncate(abrtfd, cache_line))
        {
-	 printf("ftruncate failed\n");
+	 printf("ftruncate");
        }
    }
 

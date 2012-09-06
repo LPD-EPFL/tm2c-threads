@@ -96,7 +96,7 @@ sys_tm_init()
 void
 sys_ps_init_(void)
 {
-  
+  BARRIERW
 }
 
 void
@@ -110,6 +110,7 @@ sys_dsl_init(void)
     PRINTD("malloc ps_command == NULL || ps_remote == NULL || psc == NULL");
   }
 
+  BARRIERW
 }
 
 void
@@ -149,27 +150,31 @@ sys_ps_command_reply(nodeid_t sender,
   reply.address = (uintptr_t) address;
 #endif
 
-  ssmp_sendl(sender, (ssmp_msg_t *) &reply, sizeof(PS_REPLY)/sizeof(int));
+  ssmp_sendl(sender, (ssmp_msg_t *) &reply, 6);
 }
 
 
 void
 dsl_communication()
 {
-  int sender;
-  ssmp_msg_t msg;
+  nodeid_t sender, last_recv_from = 0;
   PS_COMMAND_TYPE command;
 
-  ssmp_color_buf_t cbuf;
-  ssmp_color_buf_init(&cbuf, color_app);
+  ssmp_msg_t *msg;
+  msg = (ssmp_msg_t *) malloc(sizeof(ssmp_msg_t));
+
+  ssmp_color_buf_t *cbuf;
+  cbuf = (ssmp_color_buf_t *) malloc(sizeof(ssmp_color_buf_t));
+  assert(msg != NULL && cbuf != NULL);
+
+  ssmp_color_buf_init(cbuf, is_app_core);
 
   while (1) {
 
-    //    ssmp_recv_color(&cbuf, &msg, sizeof(*ps_remote)/sizeof(int));
-    ssmp_recv_color(&cbuf, &msg, 6);
-    sender = msg.sender;
+    last_recv_from = ssmp_recv_color_start(cbuf, msg, last_recv_from, 6) + 1;
+    sender = msg->sender;
     
-    ps_remote = (PS_COMMAND *) &msg;
+    ps_remote = (PS_COMMAND *) msg;
 
     switch (ps_remote->type) {
     case PS_SUBSCRIBE:
@@ -275,7 +280,7 @@ dsl_communication()
 	  stats_aborts_waw += ps_remote->aborts_waw;
 	}
 	if (++stats_received >= 2*NUM_APP_NODES) {
-	  if (NODE_ID() == 0) {
+	  ONCE {
 	    print_global_stats();
 
 	    print_hashtable_usage();
@@ -286,7 +291,7 @@ dsl_communication()
 	  PRINT("*** Completed requests: %d", read_reqs_num + write_reqs_num);
 #endif
 
-	  EXIT(0);
+	  return;
 	}
 	break;
       }
@@ -317,7 +322,7 @@ srand_core()
 }
 
 
-static inline void
+INLINED void
 wait_cycles(uint64_t ncycles)
 {
   if (ncycles < 256) 
@@ -354,5 +359,7 @@ ndelay(uint64_t nanos)
 void
 init_barrier()
 {
-  ssmp_barrier_wait(0);
+  ssmp_barrier_init(1, 0, is_app_core);
+
+  BARRIERW
 }
