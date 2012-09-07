@@ -15,6 +15,15 @@
 nodeid_t MY_NODE_ID;
 nodeid_t MY_TOTAL_NODES;
 
+#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+ssmp_mpb_line_t *abort_reason_mine;
+ssmp_mpb_line_t **abort_reasons;
+ssmp_mpb_line_t *persisting_mine;
+ssmp_mpb_line_t **persisting;
+t_vcharp *cm_abort_flags;
+t_vcharp cm_abort_flag_mine;
+#endif /* CM_H */
+
 INLINED void sys_ps_command_reply(nodeid_t sender,
                     PS_REPLY_TYPE command,
                     tm_addr_t address,
@@ -96,6 +105,14 @@ sys_tm_init()
 void
 sys_ps_init_(void)
 {
+
+#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+  abort_reason_mine = (ssmp_mpb_line_t *) ssmp_mpb_alloc(NODE_ID(), sizeof(ssmp_mpb_line_t));
+  persisting_mine = (ssmp_mpb_line_t *) ssmp_mpb_alloc(NODE_ID(), sizeof(ssmp_mpb_line_t));
+  mpb_write_line(persisting_mine, 0);
+  cm_abort_flag_mine = virtual_lockaddress[NODE_ID()];
+#endif /* CM_H */
+
   BARRIERW
 }
 
@@ -109,6 +126,27 @@ sys_dsl_init(void)
   if (ps_command == NULL || ps_remote == NULL || psc == NULL) {
     PRINTD("malloc ps_command == NULL || ps_remote == NULL || psc == NULL");
   }
+
+#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+  abort_reasons = (ssmp_mpb_line_t **) malloc(TOTAL_NODES() * sizeof(ssmp_mpb_line_t *));
+  persisting = (ssmp_mpb_line_t **) malloc(TOTAL_NODES() * sizeof(ssmp_mpb_line_t *));
+  assert(abort_reasons != NULL && persisting != NULL);
+  uint32_t n;
+  for (n = 0; n < TOTAL_NODES(); n++)
+    {
+      if (is_app_core(n)) 
+	{
+	  abort_reasons[n] = (ssmp_mpb_line_t *) ssmp_mpb_alloc(n, sizeof(ssmp_mpb_line_t));
+	  persisting[n] = (ssmp_mpb_line_t *) ssmp_mpb_alloc(n, sizeof(ssmp_mpb_line_t));
+	}
+      else 
+	{
+	  abort_reasons[n] = NULL;
+	  persisting[n] = NULL;
+	}
+  }
+  cm_abort_flags = virtual_lockaddress;
+#endif /* CM_H */
 
   BARRIERW
 }
@@ -175,6 +213,17 @@ dsl_communication()
     sender = msg->sender;
     
     ps_remote = (PS_COMMAND *) msg;
+
+
+#if defined(WHOLLY) || defined(FAIRCM)
+    cm_metadata_core[sender].timestamp = (ticks) ps_remote->tx_metadata;
+#elif defined(GREEDY)
+    if (cm_metadata_core[sender].timestamp == 0) {
+      cm_metadata_core[sender].timestamp = getticks() - (ticks) ps_remote->tx_metadata;
+    }
+#endif
+
+
 
     switch (ps_remote->type) {
     case PS_SUBSCRIBE:
