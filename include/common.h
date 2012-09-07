@@ -8,6 +8,10 @@
 #ifndef COMMON_H
 #define	COMMON_H
 
+#ifdef	__cplusplus
+extern "C" {
+#endif
+
 //#define PGAS
 
 #include <stdlib.h>
@@ -49,10 +53,6 @@
 #  define EAGER_WRITE_ACQ         /*ENABLE eager write lock acquisition*/
 #endif
 
-#ifdef	__cplusplus
-extern "C" {
-#endif
-
 #define MAX_NODES 256 /* Maximum expected number of nodes */
 
 #define DSLNDPERNODES   2 /* 1 dedicated DS-Locking core per DSLNDPERNODES cores*/
@@ -60,7 +60,7 @@ extern "C" {
 
 #if defined(PLATFORM_MCORE)
 #  define REF_SPEED_GHZ           2.1
-#elif defined(PLATFORM_iRCCE) || defined(PLATFORM_SCC_SSMP)
+#elif defined(SCC)
 #  define REF_SPEED_GHZ           0.533
 #elif defined(PLATFORM_TILERA)
 #  define REF_SPEED_GHZ           0.7
