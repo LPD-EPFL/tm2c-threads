@@ -31,7 +31,7 @@ ps_hashtable_new()
 	return hash;
 }
 
-INLINED CONFLICT_TYPE
+inline CONFLICT_TYPE
 ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId, tm_intern_addr_t address, RW rw)
 {
 	khiter_t k;
@@ -64,7 +64,7 @@ ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId, tm_intern_addr
 	return NO_CONFLICT;
 }
 
-INLINED void
+inline void
 ps_hashtable_delete(ps_hashtable_t ps_hashtable, nodeid_t nodeId, tm_intern_addr_t address, RW rw)
 {
 	khiter_t k;
@@ -85,7 +85,7 @@ ps_hashtable_delete(ps_hashtable_t ps_hashtable, nodeid_t nodeId, tm_intern_addr
 	}
 }
 
-INLINED void
+inline void
 ps_hashtable_delete_node(ps_hashtable_t ps_hashtable, nodeid_t nodeId)
 {
 	khiter_t k;
@@ -104,7 +104,7 @@ ps_hashtable_delete_node(ps_hashtable_t ps_hashtable, nodeid_t nodeId)
 		}
 }
 
-INLINED void
+inline void
 ps_hashtable_print(ps_hashtable_t ps_hashtable)
 {
     PRINTS("__PRINT PS_HASHTABLE________________________________________________\n");
@@ -133,7 +133,7 @@ ps_hashtable_new()
 	return ht;
 }
 
-INLINED CONFLICT_TYPE
+inline CONFLICT_TYPE
 ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId, tm_intern_addr_t address, RW rw)
 {
 	struct uthash_elem_struct *el;
@@ -174,7 +174,7 @@ ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId, tm_intern_addr
 	return NO_CONFLICT;
 }
 
-INLINED void
+inline void
 ps_hashtable_delete(ps_hashtable_t ps_hashtable, nodeid_t nodeId, tm_intern_addr_t address, RW rw)
 {
 	struct uthash_elem_struct *el;
@@ -199,7 +199,7 @@ ps_hashtable_delete(ps_hashtable_t ps_hashtable, nodeid_t nodeId, tm_intern_addr
 	}
 }
 
-INLINED void
+inline void
 ps_hashtable_delete_node(ps_hashtable_t ps_hashtable, nodeid_t nodeId)
 {
 	struct uthash_elem_struct *el, *tmp;
@@ -219,7 +219,7 @@ ps_hashtable_delete_node(ps_hashtable_t ps_hashtable, nodeid_t nodeId)
 	}
 }
 
-INLINED void
+inline void
 ps_hashtable_print(ps_hashtable_t ps_hashtable)
 {
     PRINTS("__PRINT PS_HASHTABLE________________________________________________\n");
@@ -265,7 +265,7 @@ ps_hashtable_new() {
    return ps_hashtable;
 }
 
-static inline tm_intern_addr_t 
+inline tm_intern_addr_t 
 ps_get_index(tm_intern_addr_t address){
    //uintptr_t index=((address>>2)/NUM_DSL_NODES)%NUM_OF_ELEMENTS;
   //  tm_intern_addr_t index=((((address>>4)/NUM_DSL_NODES) << 2) +  ((address%16) >> 2))%SSLARRAY_SIZE;
@@ -275,7 +275,7 @@ ps_get_index(tm_intern_addr_t address){
   return index;
 }
 
-INLINED CONFLICT_TYPE
+inline CONFLICT_TYPE
 ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
                                 tm_intern_addr_t address, RW rw)
 {
@@ -307,7 +307,7 @@ ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
 
 }
 
-INLINED void
+inline void
 ps_hashtable_delete(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
                                 tm_intern_addr_t address, RW rw)
 {
@@ -320,7 +320,7 @@ ps_hashtable_delete(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
       rw_entry_unset(&ps_hashtable[index],nodeId);
    }
 }
-INLINED void
+inline void
 ps_hashtable_delete_node(ps_hashtable_t ps_hashtable, nodeid_t nodeId)
 {
 
@@ -340,7 +340,7 @@ ps_hashtable_delete_node(ps_hashtable_t ps_hashtable, nodeid_t nodeId)
     array_log_set_empty(the_log);
 }
 
-INLINED void
+inline void
 ps_hashtable_print(ps_hashtable_t ps_hashtable)
 {
 
@@ -361,7 +361,7 @@ lock_log_set_t** the_logs;
 int next_log_free;
 int* log_map;
 
-static inline uint32_t
+inline uint32_t
 ps_get_hash(uintptr_t address)
 {
     return hash_tw((address>>2) % UINT_MAX);
@@ -383,7 +383,7 @@ ps_hashtable_new()
     }
     return fixed_hash_init(); 
 }
-INLINED CONFLICT_TYPE
+inline CONFLICT_TYPE
 ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
                                 tm_intern_addr_t address, RW rw)
 {
@@ -400,7 +400,7 @@ ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
     return conflict;
 }
 
-INLINED void
+inline void
 ps_hashtable_delete(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
                                 tm_intern_addr_t address, RW rw)
 {
@@ -411,7 +411,7 @@ ps_hashtable_delete(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
     //usleep(100);
 }
 
-INLINED void
+inline void
 ps_hashtable_delete_node(ps_hashtable_t ps_hashtable, nodeid_t nodeId)
 {
     //fprintf(stderr, "start del all\n");
@@ -434,7 +434,7 @@ ps_hashtable_delete_node(ps_hashtable_t ps_hashtable, nodeid_t nodeId)
     //usleep(100);
 }
 
-INLINED void
+inline void
 ps_hashtable_print(ps_hashtable_t ps_hashtable)
 {
 }
@@ -447,7 +447,7 @@ ps_hashtable_print(ps_hashtable_t ps_hashtable)
   int32_t *log_map;
 
 
-static inline tm_intern_addr_t 
+inline tm_intern_addr_t 
 ps_get_index(tm_intern_addr_t address) 
 {
    //uintptr_t index=((address>>2)/NUM_DSL_NODES)%NUM_OF_ELEMENTS;
@@ -481,7 +481,7 @@ ps_hashtable_new()
   return sslarray_new();
 }
 
-INLINED CONFLICT_TYPE
+inline CONFLICT_TYPE
 ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
                                 tm_intern_addr_t address, RW rw)
 {
@@ -495,14 +495,14 @@ ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
   return conflict;
 }
 
-INLINED void
+inline void
 ps_hashtable_delete(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
                                 tm_intern_addr_t address, RW rw)
 {
   //  sslarray_remove(ps_hashtable, ps_get_hash(address)%NUM_OF_BUCKETS, address, rw);
 }
 
-INLINED void
+inline void
 ps_hashtable_delete_node(ps_hashtable_t ps_hashtable, nodeid_t nodeId)
 {
   sslarray_log_set_t *log = logs[log_map[nodeId]];
@@ -513,7 +513,7 @@ ps_hashtable_delete_node(ps_hashtable_t ps_hashtable, nodeid_t nodeId)
   sslarray_log_set_empty(log);
 }
 
-INLINED void
+inline void
 ps_hashtable_print(ps_hashtable_t ps_hashtable)
 {
 }
@@ -524,7 +524,7 @@ ps_hashtable_print(ps_hashtable_t ps_hashtable)
   uint32_t next_log_free;
   int32_t *log_map;
 
-static inline uint32_t
+inline uint32_t
 ps_get_hash(uintptr_t address)
 {
   return hash_tw((address>>2) % UINT_MAX);
@@ -553,7 +553,7 @@ ps_hashtable_new()
   return ssht_new();
 }
 
-INLINED CONFLICT_TYPE
+inline CONFLICT_TYPE
 ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
                                 tm_intern_addr_t address, RW rw)
 {
@@ -566,14 +566,14 @@ ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
   return conflict;
 }
 
-INLINED void
+inline void
 ps_hashtable_delete(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
                                 tm_intern_addr_t address, RW rw)
 {
   //  ssht_remove(ps_hashtable, ps_get_hash(address)%NUM_OF_BUCKETS, address, rw);
 }
 
-INLINED void
+inline void
 ps_hashtable_delete_node(ps_hashtable_t ps_hashtable, nodeid_t nodeId)
 {
   ssht_log_set_t *log = logs[log_map[nodeId]];
@@ -585,7 +585,7 @@ ps_hashtable_delete_node(ps_hashtable_t ps_hashtable, nodeid_t nodeId)
   ssht_log_set_empty(log);
 }
 
-INLINED void
+inline void
 ps_hashtable_print(ps_hashtable_t ps_hashtable)
 {
 }
@@ -593,7 +593,7 @@ ps_hashtable_print(ps_hashtable_t ps_hashtable)
 
 #elif  USE_HASHTABLE_VT
 
-static inline uint32_t
+inline uint32_t
 ps_get_hash(uintptr_t address){
     return hash_tw((address>>2) % UINT_MAX);
 }
@@ -632,7 +632,7 @@ ps_hashtable_new()
     return ps_hashtable;
 }
 
-INLINED CONFLICT_TYPE
+inline CONFLICT_TYPE
 ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
                                 tm_intern_addr_t address, RW rw)
 {
@@ -646,7 +646,7 @@ ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
     return vthash_insert_bucket(ps_hashtable[ps_get_hash(address) % NUM_OF_BUCKETS], nodeId, address, rw);
 }
 
-INLINED void
+inline void
 ps_hashtable_delete(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
                                 tm_intern_addr_t address, RW rw)
 {
@@ -656,7 +656,7 @@ ps_hashtable_delete(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
     vthash_delete_bucket(ps_hashtable[ps_get_hash(address) % NUM_OF_BUCKETS], nodeId, address, rw);
 }
 
-INLINED void
+inline void
 ps_hashtable_delete_node(ps_hashtable_t ps_hashtable, nodeid_t nodeId)
 {
     int nbucket;
@@ -701,7 +701,7 @@ ps_hashtable_delete_node(ps_hashtable_t ps_hashtable, nodeid_t nodeId)
 /*
  * traverse and print the ps_hastable contents
  */
-INLINED void
+inline void
 ps_hashtable_print(ps_hashtable_t ps_hashtable)
 {
 

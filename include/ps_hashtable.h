@@ -94,7 +94,7 @@ typedef rw_entry_t* ps_hashtable_t;
 /*
  * create, initialize and return a ps_hashtable
  */
-ps_hashtable_t ps_hashtable_new();
+extern ps_hashtable_t ps_hashtable_new();
 
 /*
  * insert a reader of writer for the address into the hashatable. The hashtable is the constract that keeps
@@ -102,21 +102,21 @@ ps_hashtable_t ps_hashtable_new();
  *
  * Returns: type of TM conflict caused by inserting given values
  */
-CONFLICT_TYPE ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
+extern CONFLICT_TYPE ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
                                 tm_intern_addr_t address, RW rw);
 
 /*
  * delete a reader of writer for the address from the hashatable.
  */
-void ps_hashtable_delete(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
+extern void ps_hashtable_delete(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
                                 tm_intern_addr_t address, RW rw);
 
-void ps_hashtable_delete_node(ps_hashtable_t ps_hashtable, nodeid_t nodeId);
+extern void ps_hashtable_delete_node(ps_hashtable_t ps_hashtable, nodeid_t nodeId);
 
 /*
  * traverse and print the ps_hastable contents
  */
-void ps_hashtable_print(ps_hashtable_t ps_hashtable);
+extern void ps_hashtable_print(ps_hashtable_t ps_hashtable);
 
 #ifdef    __cplusplus
 }

@@ -63,10 +63,9 @@ INLINED ssht_hashtable_t ssht_new() {
   ssht_hashtable_t hashtable;
   hashtable = (ssht_hashtable_t) calloc(NUM_BUCKETS, sizeof(bucket_t));
   assert(hashtable != NULL);
-  assert(sizeof(bucket_t) % CACHE_LINE_SIZE == 0);
 
-  printf("sizeof(addr_t) = %d\n", sizeof(addr_t));
-  printf("sizeof(bucket_t) = %d\n", sizeof(bucket_t));
+  assert(sizeof(ssht_rw_entry_t) % CACHE_LINE_SIZE == 0);
+  assert(sizeof(bucket_t) % CACHE_LINE_SIZE == 0);
 
   unsigned int i;
   for (i = 0; i < NUM_BUCKETS; i++) {

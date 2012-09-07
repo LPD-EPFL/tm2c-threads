@@ -33,7 +33,7 @@
 #  endif
 #endif
 
-#ifndef ALIGNED(N)
+#ifndef ALIGNED
 #  if __GNUC__ && !SCC
 #    define ALIGNED(N) __attribute__ ((aligned (N)))
 #  else

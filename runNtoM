@@ -16,7 +16,7 @@ fi
 app=$1;
 shift;
 
-echo "#nue\tThroughput\tCi rate\tLatency";
+echo "#nue\tThroughput CRate  Latency";
 
 for nue in $(seq $N 1 $M); do
     echo -n "$nue\t";
