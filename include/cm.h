@@ -19,13 +19,13 @@ extern cm_metadata_t *cm_metadata_core;
 
 static int32_t * cm_init();
 
-EXINLINED BOOLEAN 
+extern BOOLEAN 
 contention_manager(nodeid_t attacker, unsigned short *defenders, CONFLICT_TYPE conflict);
 
-EXINLINED BOOLEAN 
+extern BOOLEAN 
 contention_manager_raw_waw(nodeid_t attacker, unsigned short defender, CONFLICT_TYPE conflict);
 
-EXINLINED BOOLEAN 
+extern BOOLEAN 
 contention_manager_war(nodeid_t attacker, uint8_t *defenders, CONFLICT_TYPE conflict);
 
 #endif /* CM_H */

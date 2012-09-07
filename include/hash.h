@@ -1,11 +1,11 @@
 #ifndef _HASH_H
 #define _HASH_H
 
-#define hash hast_tw
+#include "common.h"
 
 /* Thomas Wang's 32 bit Mix Function */
-static inline unsigned int 
-hash_tw(unsigned int key)
+EXINLINED uint32_t 
+hash_tw(uint32_t key)
 {
   key += ~(key << 15);
   key ^=  (key >> 10);
