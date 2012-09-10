@@ -55,7 +55,7 @@ const uint8_t dsl_node[] =
  */
 
 #define DSL_BY_MOD
-#define DSLPERNODE 4
+#define DSLPERNODE 3
 
 int is_app_core(int id) {
     //return 0 if dsl node, 1 otherwise
@@ -258,3 +258,5 @@ tx_cas(tm_addr_t addr, uint32_t oldval, uint32_t newval)
   
   return ret;    
 }
+
+

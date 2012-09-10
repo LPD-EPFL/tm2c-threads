@@ -1,14 +1,26 @@
 #ifndef _MEASUREMENTS_H_
 #define _MEASUREMENTS_H_
 
-#include "common.h"
-#ifdef SSMP
-#include <ssmp.h>
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include "common.h"
+#ifdef SSMP
+#  include <ssmp.h>
+#endif
+
+#ifndef REF_SPEED_GHZ
+#  if defined(PLATFORM_MCORE)
+#    define REF_SPEED_GHZ           2.1
+#  elif defined(SCC)
+#    define REF_SPEED_GHZ           0.533
+#  elif defined(PLATFORM_TILERA)
+#    define REF_SPEED_GHZ           0.7
+#  else
+#    error "Need to set REF_SPEED_GHZ for the platform"
+#  endif
+#endif  /* REF_SPEED_GHZ */
 
 #define DO_TIMINGS_TICKS
 

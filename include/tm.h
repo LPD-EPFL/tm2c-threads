@@ -315,6 +315,9 @@ extern "C" {
 #define TX_CAS(addr, oldval, newval)		\
   tx_cas(addr, oldval, newval);
 
+#define TX_CASI(addr, oldval, newval)		\
+  tx_casi(addr, oldval, newval);
+
 
 #if defined(PLATFORM_CLUSTER) || defined(PGAS)
 #define NONTX_STORE(addr, val, datatype)                                \
@@ -521,6 +524,7 @@ retry:
     }
 
 uint32_t tx_cas(tm_addr_t addr, uint32_t oldval, uint32_t newval);
+extern inline uint32_t tx_casi(tm_addr_t addr, uint32_t oldval, uint32_t newval);
 
 
 #define taskudelay udelay

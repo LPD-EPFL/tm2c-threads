@@ -107,8 +107,9 @@ extern "C" {
         WRITE_AFTER_WRITE,
 #ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
 	PERSISTING_WRITES, 	/* used for contention management */
-	TX_COMMITED		/* used for contention management */
+	TX_COMMITED,		/* used for contention management */
 #endif 				/* NOCM */
+	CAS_SUCCESS
     } CONFLICT_TYPE;
 
     /* read or write request

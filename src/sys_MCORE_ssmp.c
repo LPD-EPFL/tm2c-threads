@@ -189,6 +189,8 @@ sys_ps_init_(void)
 void
 sys_dsl_init(void)
 {
+  MCORE_shmalloc_init(1024*1024*1024); //1GB
+
   BARRIERW
 
 #ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
@@ -341,6 +343,30 @@ dsl_communication()
 			     (tm_addr_t) ps_remote->address,
 			     NULL,
 			     conflict);
+	break;
+      }
+    case PS_CAS:
+      {
+#ifdef DEBUG_UTILIZATION
+	write_reqs_num++;
+#endif
+	CONFLICT_TYPE conflict = ssht_insert_w_test(ps_hashtable, sender, ps_remote->address);
+
+	if (conflict == NO_CONFLICT)
+	  {
+	    uint32_t *addr = (uint32_t *) ps_remote->address;
+	    if (*addr == ps_remote->oldval)
+	      {
+		*addr = ps_remote->write_value;
+		conflict = CAS_SUCCESS;
+	      }
+	  }
+
+	sys_ps_command_reply(sender, PS_CAS_RESPONSE,
+			     (tm_addr_t) ps_remote->address,
+			     NULL,
+			     conflict);
+
 	break;
       }
 #ifdef PGAS

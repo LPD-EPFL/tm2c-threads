@@ -75,7 +75,7 @@ static inline void
 ps_sendb(nodeid_t target, PS_COMMAND_TYPE command,
          tm_intern_addr_t address)
 {
-#if defined(PLATFORM_CLUSTER) || defined(PLATFORM_MCORE) || defined(PLATFORM_TILERA)
+#if defined(PLATFORM_CLUSTER) || defined(PLATFORM_TILERA)
 	psc->nodeId = ID;
 #endif
     psc->type = command;
@@ -97,7 +97,7 @@ static inline void
 ps_sendbr(nodeid_t target, PS_COMMAND_TYPE command,
          tm_intern_addr_t address, CONFLICT_TYPE response)
 {
-#if defined(PLATFORM_CLUSTER) || defined(PLATFORM_MCORE) || defined(PLATFORM_TILERA)
+#if defined(PLATFORM_CLUSTER) || defined(PLATFORM_TILERA)
 	psc->nodeId = ID;
 #endif
     psc->type = command;
@@ -112,7 +112,7 @@ ps_sendbv(nodeid_t target, PS_COMMAND_TYPE command,
          tm_intern_addr_t address, uint32_t value,
          CONFLICT_TYPE response)
 {
-#if defined(PLATFORM_CLUSTER) || defined(PLATFORM_MCORE) || defined(PLATFORM_TILERA)
+#if defined(PLATFORM_CLUSTER) || defined(PLATFORM_TILERA)
 	psc->nodeId = ID;
 #endif
     psc->type = command;
@@ -128,6 +128,30 @@ ps_sendbv(nodeid_t target, PS_COMMAND_TYPE command,
 #endif
 
 }
+
+static inline void
+ps_send_cas(nodeid_t target, PS_COMMAND_TYPE command, tm_intern_addr_t address,
+	    uint32_t oldval, uint32_t newval)
+{
+#if defined(PLATFORM_CLUSTER) || defined(PLATFORM_TILERA)
+	psc->nodeId = ID;
+#endif
+    psc->type = command;
+    psc->oldval = oldval;
+    psc->address = address;
+    psc->write_value = newval;
+
+#if defined(WHOLLY)
+    psc->tx_metadata = stm_tx_node->tx_commited;
+#elif defined(FAIRCM)
+    psc->tx_metadata = stm_tx_node->tx_duration;
+#elif defined(GREEDY)
+    psc->tx_metadata = getticks() - stm_tx->start_ts;
+#endif
+    sys_sendcmd(psc, sizeof (PS_COMMAND), target);
+
+}
+
 
 static inline CONFLICT_TYPE
 ps_recvb(nodeid_t from) {
@@ -208,6 +232,68 @@ CONFLICT_TYPE ps_store_inc(tm_addr_t address, int increment) {
     return ps_recvb(responsible_node);
 }
 #endif
+
+inline uint32_t 
+tx_casi(tm_addr_t addr, uint32_t oldval, uint32_t newval)
+{
+  CONFLICT_TYPE response;
+  //  stm_tx->retries = 0;
+  //  CM_METADATA_INIT_ON_FIRST_START;
+  do
+    {
+      //      CM_METADATA_INIT_ON_START;
+      //      stm_tx->retries++;
+      
+      tm_intern_addr_t intern_addr = to_intern_addr(addr);
+      nodeid_t responsible_node = get_responsible_node(intern_addr);
+
+      ps_send_cas(responsible_node, PS_CAS, intern_addr, oldval, newval);
+      response = ps_recvb(responsible_node);
+      if (response == NO_CONFLICT || response == CAS_SUCCESS)
+	{
+	  break;
+	}
+      
+      /* /\* aborted *\/ */
+      /* stm_tx->aborts++; */
+
+      /* switch (response) */
+      /* 	{ */
+      /* 	case READ_AFTER_WRITE: */
+      /* 	  stm_tx->aborts_raw++; */
+      /* 	  break; */
+      /* 	case WRITE_AFTER_READ: */
+      /* 	  stm_tx->aborts_war++; */
+      /* 	  break; */
+      /* 	case WRITE_AFTER_WRITE: */
+      /* 	  stm_tx->aborts_waw++; */
+      /* 	  break; */
+      /* 	default: */
+      /* 	  ; */
+      /* 	  /\* nothing *\/ */
+      /* 	} */
+
+      /* wait_cycles(150 * stm_tx->retries); */
+    }
+  while (1);
+
+  
+  //  CM_METADATA_UPDATE_ON_COMMIT;
+  /* stm_tx_node->tx_starts += stm_tx->retries;                           */
+  /* stm_tx_node->tx_commited++;                                          */
+  /* stm_tx_node->tx_aborted += stm_tx->aborts;                           */
+  /* stm_tx_node->max_retries =                                           */
+  /*   (stm_tx->retries < stm_tx_node->max_retries)                       */
+  /*   ? stm_tx_node->max_retries  */
+  /*   : stm_tx->retries;                                           */
+  /* stm_tx_node->aborts_war += stm_tx->aborts_war;                       */
+  /* stm_tx_node->aborts_raw += stm_tx->aborts_raw;                       */
+  /* stm_tx_node->aborts_waw += stm_tx->aborts_waw;                       */
+
+  /* stm_tx = tx_metadata_empty(stm_tx); */
+
+  return (response == CAS_SUCCESS);
+}
 
 uint32_t
 ps_load(tm_addr_t address) {
@@ -318,6 +404,9 @@ void ps_send_stats(stm_tx_node_t* stats, double duration) {
     return response;
 }
 
+
+ uint32_t p = 1;
+
 static inline nodeid_t
 get_responsible_node(tm_intern_addr_t addr) {
 #ifdef USE_ARRAY
@@ -325,8 +414,9 @@ get_responsible_node(tm_intern_addr_t addr) {
 #else
 //    unsigned int hash_val = hash_tw((addr>>2) % UINT_MAX);
 ///    return dsl_nodes[hash_val % NUM_DSL_NODES];
-    /* shift right by DHT_ADDRESS_MASK, thus making 2^DHT_ADDRESS_MASK continuous
+    /* shift right by RESP_NODE_MASK, thus making 2^RESP_NODE_MASK continuous
         address handled by the same node*/
-    return dsl_nodes[((addr) >> DHT_ADDRESS_MASK) % NUM_DSL_NODES];
+    
+    return dsl_nodes[((addr) >> RESP_NODE_MASK) % NUM_DSL_NODES];
 #endif
 }
