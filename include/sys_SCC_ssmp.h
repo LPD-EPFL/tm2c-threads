@@ -38,8 +38,8 @@ extern "C" {
 #ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
   extern ssmp_mpb_line_t *abort_reason_mine;
   extern ssmp_mpb_line_t **abort_reasons;
-  extern ssmp_mpb_line_t *persisting_mine;
-  extern ssmp_mpb_line_t **persisting;
+  extern volatile ssmp_mpb_line_t *persisting_mine;
+  extern volatile ssmp_mpb_line_t **persisting;
   extern t_vcharp *cm_abort_flags;
   extern t_vcharp cm_abort_flag_mine;
   extern t_vcharp virtual_lockaddress[48];
@@ -118,39 +118,67 @@ wtime(void)
 #ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
 
 INLINED void
-mpb_write_line(ssmp_mpb_line_t *line, uint32_t val)
+mpb_write_line(volatile ssmp_mpb_line_t *line, uint32_t val)
 {
-  line->words[0] = val;
   uint32_t w;
-  for (w = 1; w < 8; w++)	/* flushing Write Combine Buffer */
+  for (w = 0; w < 8; w++)	/* flushing Write Combine Buffer */
     {
-      line->words[w] = 0;
+      line->words[w] = val;
     }
 }
 
 INLINED void
 abort_node(nodeid_t node, CONFLICT_TYPE reason) {
-  MPB_INV();
-  while (persisting[node]->words[0] == 1)
-    {
-      MPB_INV();
-      wait_cycles(80);
-    } 
+  uint32_t wper = 0, no_per = 0;
+  
+  do
+  {
+    
+    uint32_t was_aborted = (*cm_abort_flags[node] == 0);
+    if (!was_aborted)
+      {
+	mpb_write_line(abort_reasons[node], reason);
+	break;
+      }
+    else 
+      {
+	MPB_INV();
+	uint32_t was_persisting = 0;
+	while (persisting[node]->words[0] == 1)
+	  {
+	    was_persisting++;
+	    MPB_INV();
+	    wait_cycles(80);
+	  }
 
-  uint32_t was_aborted = (*cm_abort_flags[node] == 0);
-  if (!was_aborted)
-    {
-      mpb_write_line(abort_reasons[node], reason);
-    }
+	if (was_persisting) 
+	  {
+	    if (no_per > 0) 
+	      {
+		PRINT("waited %2d for nothing %d and persisint %d", node, no_per, was_persisting);
+	      }
+	    /* else if (was_persisting > 1) */
+	    /*   { */
+	    /* 	PRINT("waited persisting of %d : %d", node, was_persisting); */
+	    /*   } */
+	    break;
+	  }
 
-  MPB_INV();
-  while (persisting[node]->words[0] == 1)
-    {
-      MPB_INV();
-      wait_cycles(80);
-    } 
-      
+	was_aborted = (*cm_abort_flags[node] == 0);
+	if (!was_aborted)
+	  {
+	    mpb_write_line(abort_reasons[node], reason);
+	  }
+	
+	break;
 
+
+	no_per++;
+	PRINT("wating %02d for %d times", node, no_per);
+	udelay(1000 * no_per);	  
+      }
+  }
+ while (1);
 }
 
 INLINED CONFLICT_TYPE
@@ -173,14 +201,15 @@ set_tx_running() {
 
 INLINED void
 set_tx_committed() {
+  *cm_abort_flag_mine = 0;
   mpb_write_line(persisting_mine, 0);
 }
 
 INLINED CONFLICT_TYPE
 set_tx_persisting() {
   mpb_write_line(persisting_mine, 1);
-  uint32_t aborted = (*cm_abort_flag_mine == 0);
-  if (aborted) {
+  uint32_t was_aborted = (*cm_abort_flag_mine == 0);
+  if (was_aborted) {
     mpb_write_line(persisting_mine, 0);
     return 0;
   }

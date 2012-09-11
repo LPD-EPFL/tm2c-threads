@@ -18,8 +18,8 @@ nodeid_t MY_TOTAL_NODES;
 #ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
 ssmp_mpb_line_t *abort_reason_mine;
 ssmp_mpb_line_t **abort_reasons;
-ssmp_mpb_line_t *persisting_mine;
-ssmp_mpb_line_t **persisting;
+volatile ssmp_mpb_line_t *persisting_mine;
+volatile ssmp_mpb_line_t **persisting;
 t_vcharp *cm_abort_flags;
 t_vcharp cm_abort_flag_mine;
 #endif /* CM_H */
@@ -129,7 +129,7 @@ sys_dsl_init(void)
 
 #ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
   abort_reasons = (ssmp_mpb_line_t **) malloc(TOTAL_NODES() * sizeof(ssmp_mpb_line_t *));
-  persisting = (ssmp_mpb_line_t **) malloc(TOTAL_NODES() * sizeof(ssmp_mpb_line_t *));
+  persisting = (volatile ssmp_mpb_line_t **) malloc(TOTAL_NODES() * sizeof(ssmp_mpb_line_t *));
   assert(abort_reasons != NULL && persisting != NULL);
   uint32_t n;
   for (n = 0; n < TOTAL_NODES(); n++)
