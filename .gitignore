@@ -7,6 +7,7 @@
 /apps/tm10
 /apps/tm[0-9]
 /bank.cm.r100
+/bank.r0.cc
 /bank.sm.pgas.r0
 /bank.sm.pgas.r100
 /bmarks/bank
@@ -43,6 +44,7 @@
 /external/tmp/libconfig-1.4.8_scc/tests/.deps/
 /external/tmp/libconfig-1.4.8_scc/tests/.libs/
 /external/tmp/libconfig-1.4.8_scc/tinytest/.deps/
+/ll.i1024.u0
 /mbll.nofair
 /nbproject/*
 /nbproject/private/*
@@ -54,9 +56,12 @@
 /pgas.changes
 /profile
 /profile
+/profile_samples
+/prun
 /run_sim.sh
 /run_sim.sh
 /runrt
+/screenlog.0
 cscope.*
 cscope.out
 out.runrrep
