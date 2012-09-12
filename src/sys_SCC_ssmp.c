@@ -192,6 +192,11 @@ sys_ps_command_reply(nodeid_t sender,
 }
 
 
+#define DEBUG_UTILIZATION
+#ifdef DEBUG_UTILIZATION
+uint64_t write_reqs_num = 0, read_reqs_num = 0;
+#endif
+
 void
 dsl_communication()
 {
@@ -337,7 +342,7 @@ dsl_communication()
 	  }
 
 #ifdef DEBUG_UTILIZATION
-	  PRINT("*** Completed requests: %d", read_reqs_num + write_reqs_num);
+	  PRINT("*** Completed requests: %llu", (long long unsigned int) read_reqs_num + write_reqs_num);
 #endif
 
 	  return;

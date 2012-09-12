@@ -28,4 +28,6 @@ contention_manager_raw_waw(nodeid_t attacker, unsigned short defender, CONFLICT_
 extern BOOLEAN 
 contention_manager_war(nodeid_t attacker, uint8_t *defenders, CONFLICT_TYPE conflict);
 
+void
+contention_manager_pri_print(void);
 #endif /* CM_H */

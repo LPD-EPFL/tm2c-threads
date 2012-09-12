@@ -106,8 +106,7 @@ contention_manager_war(nodeid_t attacker, uint8_t *defenders, CONFLICT_TYPE conf
   //attacker won all readers
   //TODO: handle the aborting
   for (i = 0; i < NUM_UES; i++) {
-    if (defenders[i]) {
-      //      defenders[i] = 0;
+    if (defenders[i] && i != attacker) {
       abort_node((unsigned int) i, conflict);
       ps_hashtable_delete_node(ps_hashtable, i);
     }
