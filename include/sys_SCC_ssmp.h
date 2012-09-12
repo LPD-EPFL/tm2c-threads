@@ -117,6 +117,13 @@ wtime(void)
 
 #ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
 
+/* 
+   using the TST as follows:
+     - tst set = tx is running
+     - tst not set = tx not running (aborted, persisting, comitted)
+*/
+
+
 INLINED void
 mpb_write_line(volatile ssmp_mpb_line_t *line, uint32_t val)
 {
@@ -129,63 +136,28 @@ mpb_write_line(volatile ssmp_mpb_line_t *line, uint32_t val)
 
 INLINED void
 abort_node(nodeid_t node, CONFLICT_TYPE reason) {
-  uint32_t wper = 0, no_per = 0;
+  mpb_write_line(abort_reasons[node], reason);
   
-  do
-  {
-    
-    uint32_t was_aborted = (*cm_abort_flags[node] == 0);
-    if (!was_aborted)
-      {
-	mpb_write_line(abort_reasons[node], reason);
-	break;
-      }
-    else 
-      {
-	MPB_INV();
-	uint32_t was_persisting = 0;
-	while (persisting[node]->words[0] == 1)
-	  {
-	    was_persisting++;
-	    MPB_INV();
-	    wait_cycles(80);
-	  }
-
-	if (was_persisting) 
-	  {
-	    if (no_per > 0) 
-	      {
-		PRINT("waited %2d for nothing %d and persisint %d", node, no_per, was_persisting);
-	      }
-	    /* else if (was_persisting > 1) */
-	    /*   { */
-	    /* 	PRINT("waited persisting of %d : %d", node, was_persisting); */
-	    /*   } */
-	    break;
-	  }
-
-	was_aborted = (*cm_abort_flags[node] == 0);
-	if (!was_aborted)
-	  {
-	    mpb_write_line(abort_reasons[node], reason);
-	  }
-	
-	break;
-
-
-	no_per++;
-	PRINT("wating %02d for %d times", node, no_per);
-	udelay(1000 * no_per);	  
-      }
-  }
- while (1);
+  *cm_abort_flags[node] = 0;
+  
+  MPB_INV();
+  uint32_t was_persisting = 0;
+  while (persisting[node]->words[0] == 1)
+    {
+      was_persisting = 1;
+      MPB_INV();
+      wait_cycles(80);
+    }
+  
+  if (!was_persisting) 
+    {
+      *cm_abort_flags[node] = 0;
+    }
 }
 
 INLINED CONFLICT_TYPE
 check_aborted() {
-  uint32_t aborted = (*cm_abort_flag_mine == 0);
-  *cm_abort_flag_mine = 0;
-  return aborted;
+  return *cm_abort_flag_mine;
 }
 
 INLINED CONFLICT_TYPE
@@ -196,20 +168,18 @@ get_abort_reason() {
 
 INLINED void
 set_tx_running() {
-  *cm_abort_flag_mine = 0;
+  *cm_abort_flag_mine & 0x1; 	/* set the flag */
 }
 
 INLINED void
 set_tx_committed() {
-  *cm_abort_flag_mine = 0;
   mpb_write_line(persisting_mine, 0);
 }
 
 INLINED CONFLICT_TYPE
 set_tx_persisting() {
   mpb_write_line(persisting_mine, 1);
-  uint32_t was_aborted = (*cm_abort_flag_mine == 0);
-  if (was_aborted) {
+  if (*cm_abort_flag_mine) { 	/* was aborted */
     mpb_write_line(persisting_mine, 0);
     return 0;
   }
