@@ -192,7 +192,7 @@ sys_ps_command_reply(nodeid_t sender,
 }
 
 
-#define DEBUG_UTILIZATION
+//#define DEBUG_UTILIZATION
 #ifdef DEBUG_UTILIZATION
 uint64_t write_reqs_num = 0, read_reqs_num = 0;
 #endif
