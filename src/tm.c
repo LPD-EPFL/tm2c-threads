@@ -55,7 +55,7 @@ const uint8_t dsl_node[] =
  */
 
 #define DSL_BY_MOD
-#define DSLPERNODE 2
+#define DSLPERNODE 4
 
 int is_app_core(int id) {
     //return 0 if dsl node, 1 otherwise
@@ -237,4 +237,24 @@ void ps_unsubscribe_all() {
     for (i = 0; i < stm_tx->read_set->nb_entries; i++) {
         ps_unsubscribe(to_addr(read_entries[i].address));
     }
+}
+
+uint32_t		/* boolean */
+tx_cas(tm_addr_t addr, uint32_t oldval, uint32_t newval)
+{
+  uint32_t ret = 0;
+
+  TX_START
+    {
+      tx_wlock(addr);
+      uint32_t *addr_ui = (uint32_t *) addr;
+      if (*addr_ui == oldval)
+	{
+	  *addr_ui = newval;
+	  ret = 1;
+	}
+    }
+  TX_COMMIT_NO_PUB_NO_STATS;
+  
+  return ret;    
 }
