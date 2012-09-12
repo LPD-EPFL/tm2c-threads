@@ -4,6 +4,7 @@
  * Data structures to be used for the DS locking
  */
 
+
 #ifndef RW_ENTRY_H
 #define	RW_ENTRY_H
 
@@ -205,10 +206,10 @@ rw_entry_new()
 #endif	/* NOCM */
             } 
             else if (!rw_entry_is_empty(rw_entry)) { /*Possible WRITE AFTER READ*/
-                /* /\*if the only writer is the one that "asks"*\/ */
-                /* if (rw_entry_is_unique_reader(rw_entry, nodeId)) { */
-                /*     return NO_CONFLICT; */
-                /* }  */
+              /*if the only writer is the one that "asks"*/
+                if (rw_entry_is_unique_reader(rw_entry, nodeId)) {
+                    return NO_CONFLICT;
+                }
                 /* else {  */
 		  /*WRITE AFTER READ conflict*/
                     // here the logic for READ -> WRITE
