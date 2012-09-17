@@ -143,6 +143,26 @@ typedef uint64_t ticks;
     return i;
   }
 
+  /*
+    returns the posisition of the core id in the seq of dsl cores
+    e.g., having 6 cores total and core 2 and 4 are dsl, then
+    the call to this function with node=2=>0, with node=4=>1
+   */
+  INLINED nodeid_t
+  dsl_id_seq(nodeid_t node) 
+  {
+    uint32_t i, seq = 0;
+    for (i = 0; i < node; i++)
+      {
+	if (!is_app_core(i))
+	  {
+	    seq++;
+	  }
+      }
+    return seq;
+  }
+
+
   INLINED nodeid_t
   min_app_id() 
   {
