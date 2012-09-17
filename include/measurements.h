@@ -10,18 +10,30 @@ extern "C" {
 #  include <ssmp.h>
 #endif
 
-#ifndef REF_SPEED_GHZ
-#  if defined(PLATFORM_MCORE)
-#    define REF_SPEED_GHZ           2.1
-#  elif defined(SCC)
-#    define REF_SPEED_GHZ           0.533
+#ifndef SSMP
+#  if defined(__i386__)
+  EXINLINED ticks getticks(void) {
+    ticks ret;
+
+    __asm__ __volatile__("rdtsc" : "=A" (ret));
+    return ret;
+  }
+#  elif defined(__x86_64__)
+  EXINLINED ticks getticks(void)
+  {
+    unsigned hi, lo;
+    __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
+    return ( (unsigned long long)lo)|( ((unsigned long long)hi)<<32 );
+  }
 #  elif defined(PLATFORM_TILERA)
-#    define REF_SPEED_GHZ           0.7
-#  else
-#    error "Need to set REF_SPEED_GHZ for the platform"
+#    define getticks get_cycle_count
 #  endif
-#endif	/* REF_SPEED_GHZ */
-  
+#endif
+
+
+
+
+
 #define DO_TIMINGS_TICKS
 
 #ifndef DO_TIMINGS
@@ -112,27 +124,6 @@ do {\
 #elif defined DO_TIMINGS_TICKS
   
 #  include <stdint.h>
-#  ifndef SSMP
-  typedef uint64_t ticks;
-
-#    if defined(__i386__)
-  EXINLINED ticks getticks(void) {
-    ticks ret;
-
-    __asm__ __volatile__("rdtsc" : "=A" (ret));
-    return ret;
-  }
-#    elif defined(__x86_64__)
-  EXINLINED ticks getticks(void)
-  {
-    unsigned hi, lo;
-    __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
-    return ( (unsigned long long)lo)|( ((unsigned long long)hi)<<32 );
-  }
-#    endif
-#    include <arch/cycle.h>
-#    define getticks get_cycle_count
-#  endif
 
 #  define ENTRY_TIMES_SIZE 16
 

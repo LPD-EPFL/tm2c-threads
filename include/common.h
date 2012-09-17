@@ -19,6 +19,7 @@ extern "C" {
 #include <string.h>
 #include <stddef.h>
 #include <unistd.h>
+#include <inttypes.h>
 #include <libconfig.h>
 
 #ifndef INLINED
@@ -46,7 +47,6 @@ extern "C" {
 #  endif
 #endif
 
-#include "measurements.h"
 #include "tm_types.h"
 
 #ifdef PGAS
@@ -67,6 +67,8 @@ extern "C" {
 #else
 #  error "Need to set REF_SPEED_GHZ for the platform"
 #endif
+
+typedef uint64_t ticks;
 
 #define MED printf("[%02d] ", NODE_ID());
 #define PRINT(args...) printf("[%02d] ", NODE_ID()); printf(args); printf("\n"); fflush(stdout)
@@ -161,7 +163,7 @@ extern "C" {
       NUM_UES == 1)
 
 
-
+#include "measurements.h"
 
 /*  ------- Plug platform related things here BEGIN ------- */
 #if defined(PLATFORM_iRCCE) || defined(PLATFORM_SCC_SSMP)
@@ -225,6 +227,7 @@ EXINLINED int zmq_s_send(void *socket, char *string);
 #  include <tmc/spin.h>
 #  include <tmc/sync.h>
 #  include <tmc/cmem.h>
+#  include <arch/cycle.h> 
 
 #  include "sys_TILERA.h"
 
