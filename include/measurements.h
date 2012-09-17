@@ -30,14 +30,16 @@ extern "C" {
 #  endif
 #endif
 
-
-
-
-
-#define DO_TIMINGS_TICKS
+  /* 
+     #   DO_TIMINGS_TICKS
+     #   DO_TIMINGS_TICKS_SIMPLE
+     #   DO_TIMINGS_STD
+ */
+#define DO_TIMINGS_TICKS_SIMPLE
 
 #ifndef DO_TIMINGS
 #  undef DO_TIMINGS_TICKS
+#  undef DO_TIMINGS_TICKS_SIMPLE
 #  undef DO_TIMINGS_STD
 #  define PF_MSG(pos, msg)        
 #  define PF_START(pos)           
@@ -61,7 +63,9 @@ extern "C" {
 #ifdef DO_TIMINGS
 #  ifndef DO_TIMINGS_STD
 #    ifndef DO_TIMINGS_TICKS
+#      ifndef DO_TIMINGS_TICKS_SIMPLE
 #      error Define either DO_TIMINGS_STD or DO_TIMINGS_TICKS
+#      endif
 #    endif
 #  endif
 #endif
@@ -210,50 +214,94 @@ while (0);
 
 #  define trunc
 
-    EXINLINED void prints_ticks_stats(int start, int end) {
-        int i, mpoints = 0;
-        unsigned long long tsamples = 0;
-        ticks tticks = 0;
-
-        for (i = start; i < end; i++) {
-            if (total_samples[i]) {
-                mpoints++;
-                tsamples += total_samples[i];
-                tticks += total_sum_ticks[i];
-            }
-        }
-
-        printf("(PROFILING) >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
-
-        for (i = start; i < end; i++) {
-            if (total_samples[i] && total_sum_ticks[i]) {
-                printf("[%02d]%s:\n", i, measurement_msgs[i]);
-                double ticks_perc = 100 * ((double) total_sum_ticks[i] / tticks);
-                double secs = total_sum_ticks[i] / (REF_SPEED_GHZ * 1.e9);
-                int s = (int) trunc(secs);
-                int ms = (int) trunc((secs - s) * 1000);
-                int us = (int) trunc(((secs - s) * 1000000) - (ms * 1000));
-                int ns = (int) trunc(((secs - s) * 1000000000) - (ms * 1000000) - (us * 1000));
-                double secsa = (total_sum_ticks[i] / total_samples[i]) / (REF_SPEED_GHZ * 1.e9);
-                int sa = (int) trunc(secsa);
-                int msa = (int) trunc((secsa - sa) * 1000);
-                int usa = (int) trunc(((secsa - sa) * 1000000) - (msa * 1000));
-                int nsa = (int) trunc(((secsa - sa) * 1000000000) - (msa * 1000000) - (usa * 1000));
-                printf("  [%2.1f%%] \tsamples: %-16llu | time: %3d %3d %3d %3d | avg time: %3d %3d %3d %3d \t(s ms us ns) || ticks: %.2f\n",
-                        ticks_perc, total_samples[i],
-                        s, ms, us, ns,
-                        sa, msa, usa, nsa,
-                        (double) total_sum_ticks[i]/total_samples[i]);
-            }
-        }
-
-        printf("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< (PROFILING)\n");
-        fflush(stdout);
-    }
-
 #  define REPORT_TIMINGS_SECS_RANGE(start,end) \
         prints_ticks_stats(start, end);
 
+
+    // }}} 
+    // ================================== TICKS SIMPLE version ================================== {{{
+#elif defined(DO_TIMINGS_TICKS_SIMPLE)
+  
+#  include <stdint.h>
+
+#  define ENTRY_TIMES_SIZE 16
+
+  enum timings_bool_t {
+    M_FALSE, M_TRUE
+  };
+
+  extern ticks entry_time[ENTRY_TIMES_SIZE];
+  extern ticks total_sum_ticks[ENTRY_TIMES_SIZE];
+  extern long long total_samples[ENTRY_TIMES_SIZE];
+  extern const char *measurement_msgs[ENTRY_TIMES_SIZE];
+  extern ticks getticks_correction;
+  extern ticks getticks_correction_calc();
+
+#  define MEASUREREMENT_CORRECTION getticks_correction_calc();
+#  define SET_PROF_MSG(msg) SET_PROF_MSG_POS(0, msg) 
+#  define ENTRY_TIME ENTRY_TIME_POS(0)
+#  define EXIT_TIME EXIT_TIME_POS(0)
+#  define KILL_ENTRY_TIME KILL_ENTRY_TIME_POS(0)
+
+#  define SET_PROF_MSG_POS(pos, msg)		\
+  measurement_msgs[pos] = msg;
+
+#  define ENTRY_TIME_POS(position)					\
+do {									\
+  entry_time[position] = getticks();					\
+} while (0);
+
+#  define EXIT_TIME_POS(position)					\
+  do {									\
+    total_sum_ticks[position] +=					\
+      (getticks() - entry_time[position] - getticks_correction);	\
+    total_samples[position]++;						\
+  } while (0);
+
+#  define EXCLUDE_ENTRY(position)					\
+        do {                                                            \
+        total_samples[position] = 0;                                    \
+        } while(0);
+
+#  ifndef _MEASUREMENTS_ID_
+#    define _MEASUREMENTS_ID_ -1
+#  endif
+
+#  define REPORT_TIMINGS REPORT_TIMINGS_RANGE(0,ENTRY_TIMES_SIZE)
+
+#  define REPORT_TIMINGS_RANGE(start,end)					\
+  do {                                                                  \
+    int i;                                                              \
+    for (i = start; i < end; i++) {					\
+      if (total_samples[i]) {						\
+	printf("[%02d]%s:\n", i, measurement_msgs[i]);	\
+	printf("  samples: %-16llu| ticks: %-16llu| avg ticks: %-16llu\n", \
+		total_samples[i], total_sum_ticks[i], total_sum_ticks[i] / total_samples[i]);\
+        }                                                               \
+    }                                                                   \
+}                                                                       \
+while (0);
+
+#  define REPORT_TIMINGS_SECS REPORT_TIMINGS_SECS_RANGE(0, ENTRY_TIMES_SIZE)
+
+#  define REPORT_TIMINGS_SECS_RANGE_(start,end)                            \
+  do {                                                                  \
+    int i;                                                              \
+    for (i = start; i < end; i++) {					\
+      if (total_samples[i]) {						\
+	printf("[%02d]%s:\n", i, measurement_msgs[i]);	\
+	printf("  samples: %-16llu | secs: %-4.10f | avg ticks: %-4.10f\n", \
+		total_samples[i], total_sum_ticks[i] / (REF_SPEED_GHZ * 1.e9),   \
+                (total_sum_ticks[i] / total_samples[i])/ (REF_SPEED_GHZ * 1.e9));\
+        }                                                               \
+    }                                                                   \
+}                                                                       \
+while (0);
+
+#  define trunc
+
+#  define REPORT_TIMINGS_SECS_RANGE(start,end) \
+        prints_ticks_stats(start, end);
 
 
     // }}}
