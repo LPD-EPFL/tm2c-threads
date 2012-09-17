@@ -60,6 +60,8 @@
 /prun
 /run_sim.sh
 /run_sim.sh
+/runcrash
+/rundebug
 /runrt
 /screenlog.0
 cscope.*
