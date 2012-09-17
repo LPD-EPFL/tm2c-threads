@@ -23,13 +23,9 @@ extern "C" {
 */
 
 #define NO_WRITERI 0x10000000
-#define NO_WRITERLL 0x1000000000000000
+#define NO_WRITERLL 0x100000000000000ULL
 #define NO_WRITER 0x1000
 #define NUM_OF_BUCKETS 47 
-
-
-#define FIELD(rw_entry, field) (rw_entry->n##field)
-#define FIELDA(rw_entry, field) (rw_entry.n##field)
 
 typedef struct rw_entry {
   union {
@@ -99,8 +95,8 @@ rw_entry_unset(rw_entry_t *rwe, nodeid_t nodeId)
 INLINED void
 rw_entry_clear(rw_entry_t *rwe)
 {
-    /* rwe->ints[0] = 0; */
-    /* rwe->ints[1] = NO_WRITERI; */
+  /*   rwe->ints[0] = 0; */
+  /*   rwe->ints[1] = NO_WRITERI; */
   rwe->ll = NO_WRITERLL;
 }
 
