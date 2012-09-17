@@ -138,14 +138,15 @@ done:
 
 }
 
-void init_barrier() {
-    //noop
-}
-
 void
 term_system() {
     // noop
 }
+
+void init_barrier() {
+    //noop
+}
+
 
 sys_t_vcharp
 sys_shmalloc(size_t size) {
@@ -196,10 +197,7 @@ sys_dsl_init(void) {
 
   ps_remote = (PS_COMMAND *) malloc(sizeof (PS_COMMAND)); //TODO: free at finalize + check for null
   psc = (PS_COMMAND *) malloc(sizeof (PS_COMMAND)); //TODO: free at finalize + check for null
-
-  if (psc == NULL) {
-    PRINT("malloc ps_command == NULL || ps_remote == NULL || psc == NULL");
-  }
+  assert(ps_remote != NULL && psc != NULL);
 
   BARRIERW
 }
@@ -244,19 +242,21 @@ sys_ps_command_reply(nodeid_t sender,
 
 }
 
-void dsl_communication() {
-  int sender;
-  PS_COMMAND_TYPE command;
-  unsigned int address;
+void 
+dsl_communication()
+{
+  uint32_t dr = 0;
+  nodeid_t sender;
 
   while (1) {
 
-    tmc_udn0_receive_buffer(ps_remote, PS_COMMAND_WORDS);
+    //    tmc_udn0_receive_buffer(ps_remote, PS_COMMAND_WORDS);
+    tmc_udn0_receive_buffer(ps_remote, sizeof(PS_COMMAND)/sizeof(int));
     sender = ps_remote->nodeId;
 
-    /*    PRINT("CMD from %d | type %d | addr %u", 
-	  sender, ps_remote->type, ps_remote->address);
-    */
+    /* PRINT("CMD from %d | type %d | addr %u",  */
+    /* 	  sender, ps_remote->type, ps_remote->address); */
+    
     
     switch (ps_remote->type) {
     case PS_SUBSCRIBE:
@@ -274,7 +274,7 @@ void dsl_communication() {
 			   try_subscribe(sender, ps_remote->address));
 #else
       sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE, 
-			   ps_remote->address, 
+			   (tm_addr_t) ps_remote->address, 
 			   NULL,
 			   try_subscribe(sender, ps_remote->address));
       //sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE, address, NO_CONFLICT);
@@ -290,21 +290,17 @@ void dsl_communication() {
 	CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
 #ifdef PGAS
 	if (conflict == NO_CONFLICT) {
-	  /*
-	    union {
-	    int i;
-	    unsigned short s[2];
-	    } convert;
-	    convert.i = write_value;
-	    PRINT("\t\t\tWriting (val:%d|nxt:%d) to address %d", convert.s[0], convert.s[1], address);
-	  */  
 	  write_set_pgas_insert(PGAS_write_sets[sender],
 				ps_remote->write_value, 
 				ps_remote->address);
 	}
 #endif
+	if (conflict > 4)
+	  {
+	    PRINT("...");
+	  }
 	sys_ps_command_reply(sender, PS_PUBLISH_RESPONSE, 
-			     ps_remote->address,
+			     (tm_addr_t) ps_remote->address,
 			     NULL,
 			     conflict);
 	break;
@@ -380,23 +376,26 @@ void dsl_communication() {
 	  stats_aborts_waw += ps_remote->aborts_waw;
 	}
 	if (++stats_received >= 2*NUM_APP_NODES) {
-	  if (NODE_ID() == 0) {
-	    print_global_stats();
+	  ONCE
+	    {
+	      print_global_stats();
 
-	    print_hashtable_usage();
+	      print_hashtable_usage();
 
-	  }
+	      PRINT("dummy reqs completed %u", dr);
+	    }
 
 #ifdef DEBUG_UTILIZATION
 	  PRINT("*** Completed requests: %d", read_reqs_num + write_reqs_num);
 #endif
 
-	  EXIT(0);
+	  return;
 	}
 	break;
       }
       default:
 	{
+	  dr++;
 	  sys_ps_command_reply(sender, PS_UKNOWN_RESPONSE,
 			       NULL,
 			       NULL,
@@ -421,10 +420,36 @@ srand_core() {
 }
 
 
+inline void
+wait_cycles(uint64_t ncycles)
+{
+  if (ncycles < 10000)
+    {
+      uint32_t cy = (((uint32_t) ncycles) / 8);
+      while(cy--)
+	{
+	  cycle_relax();
+	}
+    }
+  else
+    {
+      ticks __end = getticks() + ncycles;
+      while (getticks() < __end);
+    }
+}
+
 void
-udelay(unsigned int micros) {
-    double __ts_end = wtime() + ((double) micros / 1000000);
-    while (wtime() < __ts_end);
+udelay(uint64_t micros) 
+{
+  ticks in_cycles = REF_SPEED_GHZ * 1000 * micros;
+  wait_cycles(in_cycles);
+}
+
+void 
+ndelay(uint64_t nanos)
+{
+  ticks in_cycles = REF_SPEED_GHZ * nanos;
+  wait_cycles(in_cycles);
 }
 
 /*
