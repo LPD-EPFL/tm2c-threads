@@ -316,7 +316,7 @@ void ps_finish_all(CONFLICT_TYPE conflict) {
  CONFLICT_TYPE
    ps_dummy_msg(nodeid_t node)
  {
-   node = dsl_nodes[node];
+   //   node = dsl_nodes[node];
    ps_sendb(node, PS_UKNOWN, 0);
    CONFLICT_TYPE response = ps_recvb(node);
    return response;

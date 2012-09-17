@@ -70,7 +70,7 @@ MAIN(int argc, char **argv) {
     double _start = wtime();
     ticks _start_ticks = getticks();
 
-    nodeid_t to = (ID - 1)/2;
+    nodeid_t to = (ID - 1);
     PRINT("sending to %d", to);
 
     for (rounds = 0; rounds < steps; rounds++) {
