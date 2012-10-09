@@ -3,13 +3,8 @@
  */
 
 #include <assert.h>
-
 #include "tm.h"
 
-
-#ifndef SSMP
-typedef long long int ticks;
-#endif 
 
 #ifdef PLATFORM_TILERA
 #include <arch/cycle.h>
@@ -51,6 +46,8 @@ MAIN(int argc, char **argv) {
 
   long long int steps = REPS;
 
+  PF_MSG(0, "round-trip messaging latencies");
+
     TM_INIT
 
     if (argc > 1) {
@@ -73,21 +70,19 @@ MAIN(int argc, char **argv) {
     double _start = wtime();
     ticks _start_ticks = getticks();
 
-    int to = (ID - 1)/2;
+    nodeid_t to = (ID - 1);
     PRINT("sending to %d", to);
-    //    steps += ID;
+
     for (rounds = 0; rounds < steps; rounds++) {
+      PF_START(0);
 #ifdef PGAS
       sum += (int) NONTX_LOAD(sm + rounds);
 #else
       //      DUMMY_MSG(rounds % NUM_DSL_NODES);
       DUMMY_MSG(to);
 #endif
+      PF_STOP(0);
     }
-    //    steps -= ID;
-     
-
-    BARRIER;
 
     ticks _end_ticks = getticks();
     double _end = wtime();
@@ -109,5 +104,8 @@ MAIN(int argc, char **argv) {
     PRINT("sum -- %lld", sum);
 
     TM_END
+
+    PF_PRINT;
+
     EXIT(0);
 }

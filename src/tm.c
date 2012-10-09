@@ -57,8 +57,10 @@ const uint8_t dsl_node[] =
 #define DSL_BY_MOD
 #define DSLPERNODE 3
 
-int is_app_core(int id) {
-    //return 0 if dsl node, 1 otherwise
+int
+is_app_core(int id)
+{
+  //return 0 if dsl node, 1 otherwise
 #if defined(DSL_BY_MOD)
   return (id % DSLPERNODE) != 0;
 #elif defined(HEX_ASSIGNEMENT)
@@ -67,6 +69,13 @@ int is_app_core(int id) {
   return !dsl_node[id];
 #endif
 }
+
+int
+is_dsl_core(int id)
+{
+  return !is_app_core(id);
+}
+
 
 void tm_init() {
     sys_tm_init();

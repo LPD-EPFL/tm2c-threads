@@ -180,7 +180,7 @@ INLINED CONFLICT_TYPE bucket_insert_w(bucket_t * bu, ssht_log_set_t *log, uint32
 	  return WRITE_AFTER_WRITE;
 #endif	/* NOCM */
 	}
-	else {
+          else if (e->nr > 1 || e->reader[id] == 0) {
 #ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
 	  if (contention_manager_war(id, e->reader, WRITE_AFTER_READ)) {
 	    e->writer = id;

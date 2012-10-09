@@ -4,6 +4,7 @@
  * Data structures to be used for the DS locking
  */
 
+
 #ifndef RW_ENTRY_H
 #define	RW_ENTRY_H
 
@@ -22,13 +23,9 @@ extern "C" {
 */
 
 #define NO_WRITERI 0x10000000
-#define NO_WRITERLL 0x1000000000000000
+#define NO_WRITERLL 0x100000000000000ULL
 #define NO_WRITER 0x1000
 #define NUM_OF_BUCKETS 47 
-
-
-#define FIELD(rw_entry, field) (rw_entry->n##field)
-#define FIELDA(rw_entry, field) (rw_entry.n##field)
 
 typedef struct rw_entry {
   union {
@@ -98,8 +95,8 @@ rw_entry_unset(rw_entry_t *rwe, nodeid_t nodeId)
 INLINED void
 rw_entry_clear(rw_entry_t *rwe)
 {
-    /* rwe->ints[0] = 0; */
-    /* rwe->ints[1] = NO_WRITERI; */
+  /*   rwe->ints[0] = 0; */
+  /*   rwe->ints[1] = NO_WRITERI; */
   rwe->ll = NO_WRITERLL;
 }
 
@@ -205,10 +202,10 @@ rw_entry_new()
 #endif	/* NOCM */
             } 
             else if (!rw_entry_is_empty(rw_entry)) { /*Possible WRITE AFTER READ*/
-                /* /\*if the only writer is the one that "asks"*\/ */
-                /* if (rw_entry_is_unique_reader(rw_entry, nodeId)) { */
-                /*     return NO_CONFLICT; */
-                /* }  */
+              /*if the only writer is the one that "asks"*/
+                if (rw_entry_is_unique_reader(rw_entry, nodeId)) {
+                    return NO_CONFLICT;
+                }
                 /* else {  */
 		  /*WRITE AFTER READ conflict*/
                     // here the logic for READ -> WRITE

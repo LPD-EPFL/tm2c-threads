@@ -8,30 +8,43 @@
 #ifndef SYS_SCC_SSMP_H;
 #define	SYS_SCC_SSMP_H
 
+#ifdef	__cplusplus
+extern "C" {
+#endif
+
 #include <ssmp.h>
 
 #include "common.h"
 #include "messaging.h"
+#include "tm_sys.h"
 #include "RCCE.h"
 #ifdef PGAS
 /*
  * Under PGAS we're using fakemem allocator, to have fake allocations, that
  * mimic those of RCCE_shmalloc
  */
-#include "fakemem.h"
+#  include "fakemem.h"
 #endif
 
 #define BARRIER  ssmp_barrier_wait(1);
 #define BARRIERW ssmp_barrier_wait(0);
 
-#ifdef	__cplusplus
-extern "C" {
-#endif
 
-extern tm_addr_t shmem_start_address;
-extern nodeid_t *dsl_nodes;
+  extern tm_addr_t shmem_start_address;
+  extern nodeid_t *dsl_nodes;
   extern nodeid_t MY_NODE_ID;
   extern nodeid_t MY_TOTAL_NODES;
+
+#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+  extern ssmp_mpb_line_t *abort_reason_mine;
+  extern ssmp_mpb_line_t **abort_reasons;
+  extern volatile ssmp_mpb_line_t *persisting_mine;
+  extern volatile ssmp_mpb_line_t **persisting;
+  extern t_vcharp *cm_abort_flags;
+  extern t_vcharp cm_abort_flag_mine;
+  extern t_vcharp virtual_lockaddress[48];
+#endif /* CM_H */
+
 
 #define PS_BUFFER_SIZE 32
     
@@ -101,6 +114,79 @@ wtime(void)
 	return RCCE_wtime();
 }
 
+
+#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+
+/* 
+   using the TST as follows:
+     - tst set = tx is running
+     - tst not set = tx not running (aborted, persisting, comitted)
+*/
+
+
+INLINED void
+mpb_write_line(volatile ssmp_mpb_line_t *line, uint32_t val)
+{
+  uint32_t w;
+  for (w = 0; w < 8; w++)	/* flushing Write Combine Buffer */
+    {
+      line->words[w] = val;
+    }
+}
+
+INLINED void
+abort_node(nodeid_t node, CONFLICT_TYPE reason) {
+  mpb_write_line(abort_reasons[node], reason);
+  
+  *cm_abort_flags[node] = 0;
+  
+  MPB_INV();
+  uint32_t was_persisting = 0;
+  while (persisting[node]->words[0] == 1)
+    {
+      was_persisting = 1;
+      MPB_INV();
+      wait_cycles(80);
+    }
+  
+  if (!was_persisting) 
+    {
+      *cm_abort_flags[node] = 0;
+    }
+}
+
+INLINED CONFLICT_TYPE
+check_aborted() {
+  return *cm_abort_flag_mine;
+}
+
+INLINED CONFLICT_TYPE
+get_abort_reason() {
+  MPB_INV();
+  return abort_reason_mine->words[0];
+}
+
+INLINED void
+set_tx_running() {
+  *cm_abort_flag_mine & 0x1; 	/* set the flag */
+}
+
+INLINED void
+set_tx_committed() {
+  mpb_write_line(persisting_mine, 0);
+}
+
+INLINED CONFLICT_TYPE
+set_tx_persisting() {
+  mpb_write_line(persisting_mine, 1);
+  if (*cm_abort_flag_mine) { 	/* was aborted */
+    mpb_write_line(persisting_mine, 0);
+    return 0;
+  }
+
+  return 1;
+}
+#endif	/* NOCM */
 
 #ifdef	__cplusplus
 }

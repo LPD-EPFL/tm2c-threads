@@ -37,7 +37,7 @@
 #define LOAD_STORE
 
 
-#ifdef PLATFORM_iRCCE
+#if defined(SCC)
 /*take advante all 4 MCs*/
 #define MC 
 #endif
@@ -89,64 +89,77 @@ typedef struct bank {
 } bank_t;
 
 int transfer(account_t *src, account_t *dst, int amount) {
-    // PRINT("in transfer");
+  //PRINT("in transfer");
 
-    int i, j;
+  int i, j;
 
-    /* Allow overdrafts */
-    TX_START
+  PF_START(2);
+
+  /* Allow overdrafts */
+  TX_START;
 
 #ifdef LOAD_STORE
-            //TODO: test and use the TX_LOAD_STORE
-	TX_LOAD_STORE(&src->balance, -, amount, TYPE_INT);
-    TX_LOAD_STORE(&dst->balance, +, amount, TYPE_INT);
-
-    TX_COMMIT_NO_PUB;
+  //TODO: test and use the TX_LOAD_STORE
+  PF_START(0);
+  TX_LOAD_STORE(&src->balance, -, amount, TYPE_INT);
+  PF_STOP(0);
+  PF_START(1);
+  TX_LOAD_STORE(&dst->balance, +, amount, TYPE_INT);
+  PF_STOP(1);
+    
+  TX_COMMIT_NO_PUB;
 #else
-	i = *(int *) TX_LOAD(&src->balance);
-    i -= amount;
-    TX_STORE(&src->balance, &i, TYPE_INT); //NEED TX_STOREI
-    j = *(int *) TX_LOAD(&dst->balance);
-    j += amount;
-    TX_STORE(&dst->balance, &j, TYPE_INT);
-    TX_COMMIT
+  i = *(int *) TX_LOAD(&src->balance);
+  i -= amount;
+  TX_STORE(&src->balance, &i, TYPE_INT); //NEED TX_STOREI
+  j = *(int *) TX_LOAD(&dst->balance);
+  j += amount;
+  TX_STORE(&dst->balance, &j, TYPE_INT);
+  TX_COMMIT;
 #endif
-            return amount;
+
+  PF_STOP(2);
+  return amount;
 }
 
 int total(bank_t *bank, int transactional) {
-    int i, total;
+  int i, total;
 
-    if (!transactional) {
-        total = 0;
-        for (i = 0; i < bank->size; i++) {
+  if (!transactional) {
+    total = 0;
+    for (i = 0; i < bank->size; i++) {
 #ifndef PLATFORM_CLUSTER
-            total += bank->accounts[I(i)].balance;
+      total += bank->accounts[I(i)].balance;
 #else
-            total += NONTX_LOAD(&bank->accounts[i].balance);
+      total += NONTX_LOAD(&bank->accounts[i].balance);
 #endif
 
-        }
     }
-    else {
-        TX_START
-        total = 0;
-        for (i = 0; i < bank->size; i++) {
-            //PRINTN("(l %d)", i);
+  }
+  else {
+    PF_START(3);
+    TX_START;
+    total = 0;
+    for (i = 0; i < bank->size; i++)
+      {
 #ifndef PGAS
-            total += *(int*) TX_LOAD(&bank->accounts[I(i)].balance);
+	PF_START(4);
+	int *bal = (int*) TX_LOAD(&bank->accounts[I(i)].balance); 
+	PF_STOP(4)
+	total += *bal;
 #else
-            total += TX_LOAD(&bank->accounts[i].balance);
+	total += TX_LOAD(&bank->accounts[i].balance);
 #endif
-        }
-        TX_COMMIT
-    }
+      }
+    TX_COMMIT;
+    PF_STOP(3);
+  }
 
-    if (total != 0) {
-      PRINT("Got a bank total of: %d", total);
-    }
+  if (total != 0) {
+    PRINT("Got a bank total of: %d", total);
+  }
 
-    return total;
+  return total;
 }
 
 void reset(bank_t *bank) {
@@ -184,145 +197,149 @@ typedef struct thread_data {
 } thread_data_t;
 
 bank_t * test(void *data, double duration, int nb_accounts) {
-    int src, dst, nb;
-    int rand_max, rand_min;
-    thread_data_t *d = (thread_data_t *) data;
-    bank_t * bank;
+  int src, dst, nb;
+  int rand_max, rand_min;
+  thread_data_t *d = (thread_data_t *) data;
+  bank_t * bank;
 
 
-    /* Initialize seed (use rand48 as rand is poor) */
-    srand_core();
-    BARRIER
+  /* Initialize seed (use rand48 as rand is poor) */
+  srand_core();
+  BARRIER
 
 
     /* Prepare for disjoint access */
     if (d->disjoint) {
-        rand_max = nb_accounts / d->nb_app_cores;
-        rand_min = rand_max * d->id;
-        if (rand_max <= 2) {
-            fprintf(stderr, "can't have disjoint account accesses");
-            return NULL;
-        }
+      rand_max = nb_accounts / d->nb_app_cores;
+      rand_min = rand_max * d->id;
+      if (rand_max <= 2) {
+	fprintf(stderr, "can't have disjoint account accesses");
+	return NULL;
+      }
     }
     else {
-        rand_max = nb_accounts;
-        rand_min = 0;
+      rand_max = nb_accounts;
+      rand_min = 0;
     }
 
-    bank = (bank_t *) malloc(sizeof (bank_t));
-    if (bank == NULL) {
-        PRINT("malloc bank");
-        EXIT(1);
-    }
+  bank = (bank_t *) malloc(sizeof (bank_t));
+  if (bank == NULL) {
+    PRINT("malloc bank");
+    EXIT(1);
+  }
 
 #ifdef MC
-    bank->accounts = (account_t *) sys_shmalloc(64 * 1024 * 1024);
+  bank->accounts = (account_t *) sys_shmalloc(64 * 1024 * 1024);
 #else
-    bank->accounts = (account_t *) sys_shmalloc(nb_accounts * sizeof (account_t));
+  bank->accounts = (account_t *) sys_shmalloc(nb_accounts * sizeof (account_t));
 #endif
 
-    if (bank->accounts == NULL) {
-        PRINT("malloc bank->accounts");
-        EXIT(1);
-    }
+  if (bank->accounts == NULL) {
+    PRINT("malloc bank->accounts");
+    EXIT(1);
+  }
 
-    bank->size = nb_accounts;
+  bank->size = nb_accounts;
 
-    ONCE
+  ONCE
     {
-        int i;
-        for (i = 0; i < bank->size; i++) {
-            //       PRINTN("(s %d)", i);
-			NONTX_STORE(&bank->accounts[i].number, i, TYPE_INT);
-			NONTX_STORE(&bank->accounts[i].balance, 0, TYPE_INT);
-        }
+      int i;
+      for (i = 0; i < bank->size; i++) {
+	//       PRINTN("(s %d)", i);
+	NONTX_STORE(&bank->accounts[i].number, i, TYPE_INT);
+	NONTX_STORE(&bank->accounts[i].balance, 0, TYPE_INT);
+      }
     }
 
-    ONCE
+  ONCE
     {
-        PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\tBank total (before): %d\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
-                total(bank, 0));
+      PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\tBank total (before): %d\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+	    total(bank, 0));
     }
 
-    /* Wait on barrier */
-    BARRIER
+  /* Wait on barrier */
+  BARRIER;
 
-    // PRINT("chk %d", chk++); //0
+  // PRINT("chk %d", chk++); //0
 
-      TX_START
-    /*   TX_LOAD(&bank->accounts[0].balance); */
-    /* int lol = 0; */
-    /* TX_STORE(&bank->accounts[1].balance, &lol, TYPE_INT); */
-    TX_COMMIT_NO_STATS
-      total(bank, 0);
+  TX_START;
+  /*   TX_LOAD(&bank->accounts[0].balance); */
+  /* int lol = 0; */
+  /* TX_STORE(&bank->accounts[1].balance, &lol, TYPE_INT); */
+  TX_COMMIT_NO_STATS;
+  total(bank, 0);
 
-    BARRIER
+  BARRIER;
 
-      FOR(duration) {
+  FOR(duration) {
 
-      if (d->id < d->read_cores) {
+    if (d->id < d->read_cores) {
+      /* Read all */
+      //  PRINT("READ ALL1");
+      total(bank, 1);
+      d->nb_read_all++;
+    }
+    else if (d->id < d->read_cores + d->write_cores) {
+      /* Write all */
+      reset(bank);
+      d->nb_write_all++;
+    }
+    else {
+      nb = (int) (rand_range(100) - 1);
+      if (nb < d->read_all) {
+	//     PRINT("READ ALL2");
 	/* Read all */
-	//  PRINT("READ ALL1");
 	total(bank, 1);
 	d->nb_read_all++;
       }
-      else if (d->id < d->read_cores + d->write_cores) {
+      else if (nb < d->read_all + d->write_all) {
 	/* Write all */
+	//     PRINT("WRITE ALL");
 	reset(bank);
 	d->nb_write_all++;
       }
       else {
-	nb = (int) (rand_range(100) - 1);
-	if (nb < d->read_all) {
-	  //     PRINT("READ ALL2");
-	  /* Read all */
-	  total(bank, 1);
-	  d->nb_read_all++;
-	}
-	else if (nb < d->read_all + d->write_all) {
-	  /* Write all */
-	  //     PRINT("WRITE ALL");
-	  reset(bank);
-	  d->nb_write_all++;
-	}
-	else {
-	  /* Choose random accounts */
-	  src = (int) (rand_range(rand_max) - 1) + rand_min;
-	  //assert(src < (rand_max + rand_min));
-	  //assert(src >= 0);
-	  dst = (int) (rand_range(rand_max) - 1) + rand_min;
-	  //assert(dst < (rand_max + rand_min));
-	  //assert(dst >= 0);
-	  if (dst == src)
-	    dst = ((src + 1) % rand_max) + rand_min;
+	/* Choose random accounts */
+	src = (int) (rand_range(rand_max) - 1) + rand_min;
+	//assert(src < (rand_max + rand_min));
+	//assert(src >= 0);
+	dst = (int) (rand_range(rand_max) - 1) + rand_min;
+	//assert(dst < (rand_max + rand_min));
+	//assert(dst >= 0);
+	if (dst == src)
+	  dst = ((src + 1) % rand_max) + rand_min;
 
 #ifndef PLATFORM_CLUSTER
-	  transfer(&bank->accounts[I(src)], &bank->accounts[I(dst)], 1);
+	transfer(&bank->accounts[I(src)], &bank->accounts[I(dst)], 1);
 #else
 
-	  transfer(&bank->accounts[src], &bank->accounts[dst], 1);
+	transfer(&bank->accounts[src], &bank->accounts[dst], 1);
 #endif
 
-	  d->nb_transfer++;
-	}
+	d->nb_transfer++;
       }
+    }
 
-      if (delay) {
-	//	PRINT("delaying %u us", delay);
-	udelay(rand_range(delay));
-      }
-    } END_FOR;
+    if (delay) {
+      //	PRINT("delaying %u us", delay);
+      udelay(rand_range(delay));
+    }
+  } END_FOR;
 
-    //reset(bank);
+  //reset(bank);
 
-    PF_PRINT
-    BARRIER
+  PF_PRINT;
+  BARRIER
 
     return bank;
 }
 
 TASKMAIN(int argc, char **argv) {
     dup2(STDOUT_FILENO, STDERR_FILENO);
+
+    PF_MSG(0, "1st TX_LOAD_STORE (transfer)");
+    PF_MSG(1, "2nd TX_LOAD_STORE (transfer)");
+    PF_MSG(2, "the whole transfer");
 
     TM_INIT
 

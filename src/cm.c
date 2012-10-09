@@ -13,7 +13,7 @@ extern ps_hashtable_t ps_hashtable;
 
 static int32_t * cm_init();
 
-BOOLEAN 
+inline BOOLEAN 
 contention_manager(nodeid_t attacker, unsigned short *defenders, CONFLICT_TYPE conflict) {
      switch (conflict) {
         case READ_AFTER_WRITE:
@@ -70,7 +70,7 @@ contention_manager(nodeid_t attacker, unsigned short *defenders, CONFLICT_TYPE c
         return FALSE;
 }
 
-BOOLEAN 
+inline BOOLEAN 
 contention_manager_raw_waw(nodeid_t attacker, unsigned short defender, CONFLICT_TYPE conflict) {
   if (cm_metadata_core[attacker].timestamp < cm_metadata_core[defender].timestamp ||
       (cm_metadata_core[attacker].timestamp == cm_metadata_core[defender].timestamp && attacker < defender)) {
@@ -87,7 +87,7 @@ contention_manager_raw_waw(nodeid_t attacker, unsigned short defender, CONFLICT_
   return FALSE;
 }
 
-BOOLEAN 
+inline BOOLEAN 
 contention_manager_war(nodeid_t attacker, uint8_t *defenders, CONFLICT_TYPE conflict) {
   uint32_t i;
   for (i = 0; i < NUM_UES; i++) {
@@ -106,8 +106,7 @@ contention_manager_war(nodeid_t attacker, uint8_t *defenders, CONFLICT_TYPE conf
   //attacker won all readers
   //TODO: handle the aborting
   for (i = 0; i < NUM_UES; i++) {
-    if (defenders[i]) {
-      //      defenders[i] = 0;
+    if (defenders[i] && i != attacker) {
       abort_node((unsigned int) i, conflict);
       ps_hashtable_delete_node(ps_hashtable, i);
     }

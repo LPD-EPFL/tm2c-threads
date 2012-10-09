@@ -19,6 +19,6 @@ shift;
 echo "#nue\tThroughput CRate  Latency";
 
 for nue in $(seq $N 1 $M); do
-    echo -n "$nue\t";
+    echo -e -n "$nue\t";
     ./run $nue $app $@ | grep ")))" | sed 's/)//g' | cut -d"(" -f1
 done

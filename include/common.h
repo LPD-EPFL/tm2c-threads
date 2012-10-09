@@ -8,6 +8,10 @@
 #ifndef COMMON_H
 #define	COMMON_H
 
+#ifdef	__cplusplus
+extern "C" {
+#endif
+
 //#define PGAS
 
 #include <stdlib.h>
@@ -15,6 +19,7 @@
 #include <string.h>
 #include <stddef.h>
 #include <unistd.h>
+#include <inttypes.h>
 #include <libconfig.h>
 
 #ifndef INLINED
@@ -42,15 +47,10 @@
 #  endif
 #endif
 
-#include "measurements.h"
 #include "tm_types.h"
 
 #ifdef PGAS
 #  define EAGER_WRITE_ACQ         /*ENABLE eager write lock acquisition*/
-#endif
-
-#ifdef	__cplusplus
-extern "C" {
 #endif
 
 #define MAX_NODES 256 /* Maximum expected number of nodes */
@@ -60,7 +60,7 @@ extern "C" {
 
 #if defined(PLATFORM_MCORE)
 #  define REF_SPEED_GHZ           2.1
-#elif defined(PLATFORM_iRCCE) || defined(PLATFORM_SCC_SSMP)
+#elif defined(SCC)
 #  define REF_SPEED_GHZ           0.533
 #elif defined(PLATFORM_TILERA)
 #  define REF_SPEED_GHZ           0.7
@@ -142,6 +142,26 @@ extern "C" {
     return i;
   }
 
+  /*
+    returns the posisition of the core id in the seq of dsl cores
+    e.g., having 6 cores total and core 2 and 4 are dsl, then
+    the call to this function with node=2=>0, with node=4=>1
+   */
+  INLINED nodeid_t
+  dsl_id_seq(nodeid_t node) 
+  {
+    uint32_t i, seq = 0;
+    for (i = 0; i < node; i++)
+      {
+	if (!is_app_core(i))
+	  {
+	    seq++;
+	  }
+      }
+    return seq;
+  }
+
+
   INLINED nodeid_t
   min_app_id() 
   {
@@ -162,7 +182,7 @@ extern "C" {
       NUM_UES == 1)
 
 
-
+#include "measurements.h"
 
 /*  ------- Plug platform related things here BEGIN ------- */
 #if defined(PLATFORM_iRCCE) || defined(PLATFORM_SCC_SSMP)
@@ -226,6 +246,7 @@ EXINLINED int zmq_s_send(void *socket, char *string);
 #  include <tmc/spin.h>
 #  include <tmc/sync.h>
 #  include <tmc/cmem.h>
+#  include <arch/cycle.h> 
 
 #  include "sys_TILERA.h"
 

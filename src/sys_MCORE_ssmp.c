@@ -17,7 +17,6 @@
 #include <assert.h>
 #include <limits.h>
 #include <ssmp.h>
-#include <ssmp_send.h>
 #ifdef PLATFORM_NUMA
 #include <numa.h>
 #endif /* PLATFORM_NUMA */

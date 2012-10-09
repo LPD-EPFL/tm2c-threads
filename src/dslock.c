@@ -136,7 +136,7 @@ void print_global_stats() {
     printf("NA| Aborts RAW  \t: %lu\t/s\n", stats_aborts_raw);
     printf("NA| Aborts WAW  \t: %lu\t/s\n", stats_aborts_waw);
     printf(":: Collect data ----------------------------------------------\n");
-    printf("))) %-10lu%-7.2f%-.3f\t(Throughput, Commit Rate, Latency)\n", stats_commits_total, commit_rate * 100, tx_latency);
+    printf("))) %-10lu%-7.2f%-.3f%5d\t(Throughput, Commit Rate, Latency)\n", stats_commits_total, commit_rate * 100, tx_latency, NUM_DSL_NODES);
     printf("||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\n");
 
     fflush(stdout);

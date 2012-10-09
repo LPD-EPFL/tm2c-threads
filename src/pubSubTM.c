@@ -377,35 +377,36 @@ void ps_finish_all(CONFLICT_TYPE conflict) {
 
 }
 
-void ps_send_stats(stm_tx_node_t* stats, double duration) {
-    psc->type = PS_STATS;
+ void
+   ps_send_stats(stm_tx_node_t* stats, double duration)
+ {
+   psc->type = PS_STATS;
 
-    psc->aborts = stats->tx_aborted;
-    psc->commits = stats->tx_commited;
-    psc->max_retries = stats->max_retries;
-    psc->tx_duration = duration;
+   psc->aborts = stats->tx_aborted;
+   psc->commits = stats->tx_commited;
+   psc->max_retries = stats->max_retries;
+   psc->tx_duration = duration;
 
-    sys_sendcmd_all(psc, sizeof (PS_COMMAND));
+   sys_sendcmd_all(psc, sizeof (PS_COMMAND));
 
-    psc->aborts_raw = stats->aborts_raw;
-    psc->aborts_war = stats->aborts_war;
-    psc->aborts_waw = stats->aborts_waw;
-    psc->tx_duration = 0;
+   psc->aborts_raw = stats->aborts_raw;
+   psc->aborts_war = stats->aborts_war;
+   psc->aborts_waw = stats->aborts_waw;
+   psc->tx_duration = 0;
     
-    sys_sendcmd_all(psc, sizeof (PS_COMMAND));
+   sys_sendcmd_all(psc, sizeof (PS_COMMAND));
 
-    BARRIERW
-}
+   BARRIERW;
+ }
 
- CONFLICT_TYPE ps_dummy_msg(nodeid_t node) {
-   node = dsl_nodes[node];
-   ps_sendb(node, PS_UKNOWN, *(int *)NULL);
-    CONFLICT_TYPE response = ps_recvb(node);
-    return response;
-}
+ CONFLICT_TYPE
+   ps_dummy_msg(nodeid_t node)
+ {
+   ps_sendb(node, PS_UKNOWN, 0);
+   CONFLICT_TYPE response = ps_recvb(node);
+   return response;
+ }
 
-
- uint32_t p = 1;
 
 static inline nodeid_t
 get_responsible_node(tm_intern_addr_t addr) {
@@ -416,7 +417,7 @@ get_responsible_node(tm_intern_addr_t addr) {
 ///    return dsl_nodes[hash_val % NUM_DSL_NODES];
     /* shift right by RESP_NODE_MASK, thus making 2^RESP_NODE_MASK continuous
         address handled by the same node*/
-    
+
     return dsl_nodes[((addr) >> RESP_NODE_MASK) % NUM_DSL_NODES];
 #endif
 }
