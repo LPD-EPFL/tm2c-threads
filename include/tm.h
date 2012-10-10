@@ -63,7 +63,7 @@ extern "C" {
     else, in case of a conflict the transaction is not aborted, but backsoff and retries to acquire the same address BACKOFF_MAX time beforee aborting
   */
 #  define BACKOFF_MAX                     3
-#  define BACKOFF_DELAY                   200
+#  define BACKOFF_DELAY                   2000
 #endif
 
   extern stm_tx_t *stm_tx;
@@ -248,7 +248,8 @@ extern "C" {
 
 #define TM_END					\
   PRINTD("|| FAKE: TM ends");			\
-  ps_send_stats(stm_tx_node, duration__);}
+  ps_send_stats(stm_tx_node, duration__);	\
+  TM_TERM;}
 
   /*
     tx_metadata_free(&stm_tx);                                          \
@@ -415,7 +416,8 @@ extern "C" {
 	  if ((conflict = ps_subscribe(addr)) != NO_CONFLICT) {
 #ifndef BACKOFF_RETRY
 	    if (num_delays++ < BACKOFF_MAX) {
-	      ndelay(rand_range(delay));
+	      ndelay(delay);
+	      /* ndelay(rand_range(delay)); */
 	      delay *= 2;
 	      goto retry;
 	    }
@@ -458,7 +460,8 @@ extern "C" {
 #endif
 #ifndef BACKOFF_RETRY
             if (num_delays++ < BACKOFF_MAX) {
-	      ndelay(rand_range(delay));
+	      ndelay(delay);		      
+	      /* ndelay(rand_range(delay)); */
 	      delay *= 2;
 	      goto retry;
             }
@@ -514,6 +517,7 @@ extern "C" {
 #ifndef BACKOFF_RETRY
 		if (num_delays++ < BACKOFF_MAX) {
 		  ndelay(delay);
+		  /* ndelay(rand_range(delay)); */
 		  delay *= 2;
 		  goto retry;
 		}
@@ -522,8 +526,8 @@ extern "C" {
 	      }
 	    }
 
-uint32_t tx_cas(tm_addr_t addr, uint32_t oldval, uint32_t newval);
-extern inline uint32_t tx_casi(tm_addr_t addr, uint32_t oldval, uint32_t newval);
+	    uint32_t tx_cas(tm_addr_t addr, uint32_t oldval, uint32_t newval);
+	    extern inline uint32_t tx_casi(tm_addr_t addr, uint32_t oldval, uint32_t newval);
 
 
 #define taskudelay udelay
