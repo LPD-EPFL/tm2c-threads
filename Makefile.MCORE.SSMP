@@ -5,6 +5,7 @@ PLATFORM_LDFLAGS =
 PLATFORM_LIBS = -lssmp -lrt
 
 PLATFORM_DEFINES = -DPLATFORM_MCORE \
+		   -DPLATFORM_MCORE_SSMP \
                    -UPGAS \
                    -DREAD_BUF_OFF \
                    -ULIBTASK \
@@ -13,7 +14,7 @@ PLATFORM_DEFINES = -DPLATFORM_MCORE \
                    -UDEBUG_UTILIZATION \
 		   -UDO_TIMINGS \
 		   -DSSMP \
-		   -DFAIRCM
+		   -DNOCM
 
 ifeq ($(PLATFORM_NUMA),1)
 PLATFORM_LIBS += -lnuma

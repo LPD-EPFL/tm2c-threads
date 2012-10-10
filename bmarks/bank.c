@@ -328,10 +328,9 @@ bank_t * test(void *data, double duration, int nb_accounts) {
 
   //reset(bank);
 
-  PF_PRINT;
-  BARRIER
+  BARRIER;
 
-    return bank;
+  return bank;
 }
 
 TASKMAIN(int argc, char **argv) {
@@ -527,8 +526,8 @@ TASKMAIN(int argc, char **argv) {
 
     free(data);
 
-    TM_END
-      TM_TERM
+    TM_END;
+
 
     EXIT(0);
 }

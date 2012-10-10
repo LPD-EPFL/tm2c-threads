@@ -13,22 +13,73 @@ MAIN(int argc, char **argv) {
 
     TM_INIT
 
-  int *shmall = (int *) sys_shmalloc(4 * sizeof(int));
-    int *shm = shmall + NODE_ID();
+    uint32_t *shmall = (uint32_t *) sys_shmalloc(2 * TOTAL_NODES() * sizeof(uint32_t));
+
+    uint32_t i = 0;
+    while (((((intptr_t) (shmall + i)) >> 3) % NUM_DSL_NODES) > 0) i++;
+    uint32_t *shm = shmall + i;
+
+    uint32_t c = 0;
+    i = 0;
+    while (i++ < NODE_ID()) 
+      {
+	if (is_app_core(i))
+	  {
+	    c++;
+	  }
+      }
+    c--;
+
+    BARRIER;
+    //    shm += 2*c;
+
   uint32_t res[] = {0, 0};
   uint32_t r;
 
 
+  ONCE {
+      uint32_t w;
+      for (w = 0; w < TOTAL_NODES(); w++)
+	{
+	  shm[w] = 0;
+	}
+  }
+
+  BARRIER;
+
+
             short j = 0;
-    long long int ll = 10000000;
+	    long long int ll = 100000;
+
+	    uint32_t cnt = 0;
 
     while (ll--) {
-        PF_START(j);
-	r = TX_CAS(shm, ll%2, 1);
-        PF_STOP(j);
-	res[r]++;
+      uint32_t w;
+      for (w = 0; w < 16; w++)
+	{
+	  PF_START(j);
+	  r = TX_CASI(shm + w, cnt, cnt+1);
+          /* r = TX_CAS(shm, ll%2, 1); */
+	  /* r = __sync_bool_compare_and_swap(shm + w, cnt, cnt+1); */
+	  PF_STOP(j);
+	  res[r]++;
+	}
+      cnt++;
     }
 
+    BARRIER;
+
+    ONCE {
+      uint32_t w;
+      for (w = 0; w < TOTAL_NODES(); w++)
+	{
+	  printf("w# %02d, val %u\n", w, shm[w]);
+	}
+    }
+    FLUSH;
+    BARRIER;
+    PRINT("res[f] = %u, res[t] = %u", res[0], res[1]);
+    BARRIER;
 
     /* j++; */
     /* ll = 1000000; */
@@ -39,7 +90,7 @@ MAIN(int argc, char **argv) {
     /* 	res[r]++; */
     /* } */
 
-    PRINT("res[f] = %u, res[t] = %u", res[0], res[1]);
+
 
     /* j++; */
     /* ll = 100000; */
