@@ -397,13 +397,28 @@ void ps_finish_all(CONFLICT_TYPE conflict) {
    sys_sendcmd_all(psc, sizeof (PS_COMMAND));
 
    BARRIERW;
- }
+}
+
+ /* CONFLICT_TYPE */
+ /*   ps_dummy_msg(nodeid_t node)  */
+ /* { */
+ /*   node = dsl_nodes[node]; */
+ /*   ps_sendb(node, PS_UKNOWN, 0); */
+
+ /*   CONFLICT_TYPE response = ps_recvb(node); */
+ /*   return response; */
+ /* } */
 
  CONFLICT_TYPE
    ps_dummy_msg(nodeid_t node)
  {
+   node = dsl_nodes[node];
+   PF_START(1);
    ps_sendb(node, PS_UKNOWN, 0);
+   PF_STOP(1);
+   PF_START(2);
    CONFLICT_TYPE response = ps_recvb(node);
+   PF_STOP(2);
    return response;
  }
 
