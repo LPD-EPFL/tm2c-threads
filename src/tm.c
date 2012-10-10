@@ -131,20 +131,46 @@ init_system(int* argc, char** argv[])
 void
 tm_term()
 {
-    if (!is_app_core(ID)) {
-        // DSL node
-        // common stuff
 
-        // platform specific stuff
-        sys_dsl_term();
-    }
-    else { 
-    	//app node
-        // common stuff
+  if (!is_app_core(ID)) {
+    // DSL node
+    // common stuff
+    uint32_t c;
+    for (c = 0; c < TOTAL_NODES(); c++)
+      {
+	if (NODE_ID() == c)
+	  {
+#ifdef DO_TIMINGS
+	    printf("(( %02d ))", c);
+#endif
+	    PF_PRINT;
+	  }
+	BARRIER_DSL;
+      }
 
-        // plaftom specific stuff
-        sys_ps_term();
-    }
+    BARRIERW;
+    // platform specific stuff
+    sys_dsl_term();
+  }
+  else { 
+    //app node
+    // common stuff
+    BARRIERW;
+    uint32_t c;
+    for (c = 0; c < TOTAL_NODES(); c++)
+      {
+	if (NODE_ID() == c)
+	  {
+#ifdef DO_TIMINGS
+	    printf("(( %02d ))", c);
+#endif
+	    PF_PRINT;
+	  }
+	BARRIER;
+      }
+    // plaftom specific stuff
+    sys_ps_term();
+  }
 }
 
 void handle_abort(stm_tx_t *stm_tx, CONFLICT_TYPE reason) {
@@ -229,7 +255,7 @@ retry:
             //ps_publish_finish_all(locked);
 #ifndef BACKOFF_RETRY
             if (num_delays++ < BACKOFF_MAX) {
-	      ndelay(rand_range(delay));
+	      ndelay(delay);		      /* ndelay(rand_range(delay)); */
 	      delay *= 2;
 	      goto retry;
             }
