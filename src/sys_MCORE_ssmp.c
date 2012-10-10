@@ -211,13 +211,13 @@ sys_dsl_init(void)
 void
 sys_dsl_term(void)
 {
-
+  BARRIERW;
 }
 
 void
 sys_ps_term(void)
 {
-
+  BARRIERW;
 }
 
 // If value == NULL, we just return the address.
@@ -277,7 +277,10 @@ dsl_communication()
 
   while (1) {
 
+    //    PF_START(2);
     last_recv_from = ssmp_recv_color_start(cbuf, msg, last_recv_from) + 1;
+    //    PF_STOP(2);
+
     sender = msg->sender;
 
     ps_remote = (PS_COMMAND *) msg;
@@ -466,10 +469,12 @@ dsl_communication()
       }
       default:
 	{
+	  PF_START(1);
 	  sys_ps_command_reply(sender, PS_UKNOWN_RESPONSE,
 			       NULL,
 			       NULL,
 			       NO_CONFLICT);
+	  PF_STOP(1);
 	}
     }
   }
@@ -505,6 +510,7 @@ void
 init_barrier()
 {
   ssmp_barrier_init(1, 0, is_app_core);
+  ssmp_barrier_init(14, 0, is_dsl_core);
 
   BARRIERW;
 }
