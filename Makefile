@@ -1,7 +1,7 @@
 # Main Makefile for DSTM
 
 # For platform, choose one out of: iRCCE, SCC.SSMP, MCORE, MCORE.SSMP,CLUSTER,TILERA
-PLATFORM = MCORE
+PLATFORM = MCORE.SSMP
 # USE_HASHTABLE_KHASH:  khash.h from <http://www.freewebs.com/attractivechaos/khash.h>
 # USE_HASHTABLE_UTHASH: uthash.h from <http://uthash.sourceforge.net/>
 # USE_HASHTABLE_SDD:   Sunrise Data Dictionary <>
@@ -28,7 +28,7 @@ LIBS := -L$(TOP)/external/lib \
 # EXTRA_DEFINES are passed through the command line
 DEFINES := $(PLATFORM_DEFINES) $(EXTRA_DEFINES)
 
-DEBUG_FLAGS := -g -ggdb -fno-inline#-DDEBUG 
+DEBUG_FLAGS := #-g -ggdb -fno-inline#-DDEBUG 
 
 ## Archive ##
 ARCHIVE_SRCS_PURE:= pubSubTM.c tm.c log.c lock_log.c array_log.c dslock.c \
@@ -165,7 +165,7 @@ $(ARCHIVE):
 endif
 
 
-$(DSTM_ARCHIVE): $(ARCHIVE) $(ARCHIVE_OBJS)
+$(DSTM_ARCHIVE): $(ARCHIVE) $(ARCHIVE_OBJS) Makefile.$(PLATFORM)
 	@echo Archive name = $(DSTM_ARCHIVE) 
 ifeq ($(PLATFORM),iRCCE)
 	@rm -rf .ar-lib
