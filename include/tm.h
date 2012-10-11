@@ -100,8 +100,9 @@ extern "C" {
    *______________________________________________________________________________________________________|
    */
 
+  //  init_configuration(&argc, &argv);		\
+
 #define TM_INIT					\
-  init_configuration(&argc, &argv);		\
   init_system(&argc, &argv);			\
   {						\
   tm_init();
@@ -456,6 +457,7 @@ extern "C" {
 #ifdef PGAS
         if ((conflict = ps_publish(address, value)) != NO_CONFLICT) {
 #else      
+	  PRINT("bf ps_publish");
 	  if ((conflict = ps_publish(address)) != NO_CONFLICT) {
 #endif
 #ifndef BACKOFF_RETRY

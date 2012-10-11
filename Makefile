@@ -1,7 +1,7 @@
 # Main Makefile for DSTM
 
 # For platform, choose one out of: iRCCE, SCC.SSMP, MCORE, MCORE.SSMP,CLUSTER,TILERA
-PLATFORM = MCORE.SSMP
+PLATFORM = MCORE
 # USE_HASHTABLE_KHASH:  khash.h from <http://www.freewebs.com/attractivechaos/khash.h>
 # USE_HASHTABLE_UTHASH: uthash.h from <http://uthash.sourceforge.net/>
 # USE_HASHTABLE_SDD:   Sunrise Data Dictionary <>
@@ -23,17 +23,16 @@ MAININCLUDE := $(TOP)/include
 INCLUDES := -I$(MAININCLUDE) -I$(TOP)/external/include
 LIBS := -L$(TOP)/external/lib \
 		-lm \
-		-lconfig \
 		$(PLATFORM_LIBS)
 
 # EXTRA_DEFINES are passed through the command line
 DEFINES := $(PLATFORM_DEFINES) $(EXTRA_DEFINES)
 
-DEBUG_FLAGS := #-g -ggdb -fno-inline#-DDEBUG 
+DEBUG_FLAGS := -g -ggdb -fno-inline#-DDEBUG 
 
 ## Archive ##
 ARCHIVE_SRCS_PURE:= pubSubTM.c tm.c log.c lock_log.c array_log.c dslock.c \
-			measurements.c pgas.c config.c fakemem.c ps_hashtable.c cm.c
+			measurements.c pgas.c fakemem.c ps_hashtable.c cm.c
 
 # Include the platform specific Makefile
 # This file has the modifications related to the current platform

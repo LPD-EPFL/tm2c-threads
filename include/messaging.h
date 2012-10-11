@@ -38,7 +38,7 @@ extern "C" {
   //A command to the pub-sub
   typedef struct ALIGNED(64) ps_command_struct {
     unsigned int type; //PS_COMMAND_TYPE
-#if defined(PLATFORM_CLUSTER) || defined(PLATFORM_TILERA)
+#if defined(PLATFORM_CLUSTER) || defined(PLATFORM_TILERA) || defined(PLATFORM_MCORE_SHRIMP)
     nodeid_t nodeId;	/* we need IDs on networked systems */
 #else
     uint32_t oldval;

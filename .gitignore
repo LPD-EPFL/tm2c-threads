@@ -3,6 +3,7 @@
 *.d
 *.o
 *~
+/.#runconf
 /TODO
 /apps/tm10
 /apps/tm[0-9]

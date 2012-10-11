@@ -75,7 +75,7 @@ static inline void
 ps_sendb(nodeid_t target, PS_COMMAND_TYPE command,
          tm_intern_addr_t address)
 {
-#if defined(PLATFORM_CLUSTER) || defined(PLATFORM_TILERA)
+#if defined(PLATFORM_CLUSTER) || defined(PLATFORM_TILERA) || defined(PLATFORM_MCORE_SHRIMP)
 	psc->nodeId = ID;
 #endif
     psc->type = command;
@@ -97,7 +97,7 @@ static inline void
 ps_sendbr(nodeid_t target, PS_COMMAND_TYPE command,
          tm_intern_addr_t address, CONFLICT_TYPE response)
 {
-#if defined(PLATFORM_CLUSTER) || defined(PLATFORM_TILERA)
+#if defined(PLATFORM_CLUSTER) || defined(PLATFORM_TILERA) || defined(PLATFORM_MCORE_SHRIMP)
 	psc->nodeId = ID;
 #endif
     psc->type = command;
@@ -112,7 +112,7 @@ ps_sendbv(nodeid_t target, PS_COMMAND_TYPE command,
          tm_intern_addr_t address, uint32_t value,
          CONFLICT_TYPE response)
 {
-#if defined(PLATFORM_CLUSTER) || defined(PLATFORM_TILERA)
+#if defined(PLATFORM_CLUSTER) || defined(PLATFORM_TILERA) || defined(PLATFORM_MCORE_SHRIMP)
 	psc->nodeId = ID;
 #endif
     psc->type = command;
@@ -129,28 +129,28 @@ ps_sendbv(nodeid_t target, PS_COMMAND_TYPE command,
 
 }
 
-static inline void
-ps_send_cas(nodeid_t target, PS_COMMAND_TYPE command, tm_intern_addr_t address,
-	    uint32_t oldval, uint32_t newval)
-{
-#if defined(PLATFORM_CLUSTER) || defined(PLATFORM_TILERA)
-	psc->nodeId = ID;
-#endif
-    psc->type = command;
-    psc->oldval = oldval;
-    psc->address = address;
-    psc->write_value = newval;
+/* static inline void */
+/* ps_send_cas(nodeid_t target, PS_COMMAND_TYPE command, tm_intern_addr_t address, */
+/* 	    uint32_t oldval, uint32_t newval) */
+/* { */
+/* #if defined(PLATFORM_CLUSTER) || defined(PLATFORM_TILERA) */
+/*   psc->nodeId = ID; */
+/* #endif */
+/*   psc->type = command; */
+/*   psc->oldval = oldval; */
+/*   psc->address = address; */
+/*   psc->write_value = newval; */
 
-#if defined(WHOLLY)
-    psc->tx_metadata = stm_tx_node->tx_commited;
-#elif defined(FAIRCM)
-    psc->tx_metadata = stm_tx_node->tx_duration;
-#elif defined(GREEDY)
-    psc->tx_metadata = getticks() - stm_tx->start_ts;
-#endif
-    sys_sendcmd(psc, sizeof (PS_COMMAND), target);
+/* #if defined(WHOLLY) */
+/*   psc->tx_metadata = stm_tx_node->tx_commited; */
+/* #elif defined(FAIRCM) */
+/*   psc->tx_metadata = stm_tx_node->tx_duration; */
+/* #elif defined(GREEDY) */
+/*   psc->tx_metadata = getticks() - stm_tx->start_ts; */
+/* #endif */
+/*   sys_sendcmd(psc, sizeof (PS_COMMAND), target); */
 
-}
+/* } */
 
 
 static inline CONFLICT_TYPE
@@ -211,11 +211,12 @@ CONFLICT_TYPE ps_publish(tm_addr_t address) {
 #ifdef PGAS
     ps_sendbv(responsible_node, PS_PUBLISH, intern_addr, value, NO_CONFLICT);
 #else
+    PRINT("bf send");
     ps_sendb(responsible_node, PS_PUBLISH, intern_addr); //make sync
 #endif
-
+    PRINT("after send");
     CONFLICT_TYPE response = ps_recvb(responsible_node);
-    
+    PRINT("after recv (%d)", response);
     return response;
 }
 
@@ -233,67 +234,67 @@ CONFLICT_TYPE ps_store_inc(tm_addr_t address, int increment) {
 }
 #endif
 
-inline uint32_t 
-tx_casi(tm_addr_t addr, uint32_t oldval, uint32_t newval)
-{
-  CONFLICT_TYPE response;
-  //  stm_tx->retries = 0;
-  //  CM_METADATA_INIT_ON_FIRST_START;
-  do
-    {
-      //      CM_METADATA_INIT_ON_START;
-      //      stm_tx->retries++;
+/* inline uint32_t  */
+/* tx_casi(tm_addr_t addr, uint32_t oldval, uint32_t newval) */
+/* { */
+/*   CONFLICT_TYPE response; */
+/*   //  stm_tx->retries = 0; */
+/*   //  CM_METADATA_INIT_ON_FIRST_START; */
+/*   do */
+/*     { */
+/*       //      CM_METADATA_INIT_ON_START; */
+/*       //      stm_tx->retries++; */
       
-      tm_intern_addr_t intern_addr = to_intern_addr(addr);
-      nodeid_t responsible_node = get_responsible_node(intern_addr);
+/*       tm_intern_addr_t intern_addr = to_intern_addr(addr); */
+/*       nodeid_t responsible_node = get_responsible_node(intern_addr); */
 
-      ps_send_cas(responsible_node, PS_CAS, intern_addr, oldval, newval);
-      response = ps_recvb(responsible_node);
-      if (response == NO_CONFLICT || response == CAS_SUCCESS)
-	{
-	  break;
-	}
+/*       ps_send_cas(responsible_node, PS_CAS, intern_addr, oldval, newval); */
+/*       response = ps_recvb(responsible_node); */
+/*       if (response == NO_CONFLICT || response == CAS_SUCCESS) */
+/* 	{ */
+/* 	  break; */
+/* 	} */
       
-      /* /\* aborted *\/ */
-      /* stm_tx->aborts++; */
+/*       /\* /\\* aborted *\\/ *\/ */
+/*       /\* stm_tx->aborts++; *\/ */
 
-      /* switch (response) */
-      /* 	{ */
-      /* 	case READ_AFTER_WRITE: */
-      /* 	  stm_tx->aborts_raw++; */
-      /* 	  break; */
-      /* 	case WRITE_AFTER_READ: */
-      /* 	  stm_tx->aborts_war++; */
-      /* 	  break; */
-      /* 	case WRITE_AFTER_WRITE: */
-      /* 	  stm_tx->aborts_waw++; */
-      /* 	  break; */
-      /* 	default: */
-      /* 	  ; */
-      /* 	  /\* nothing *\/ */
-      /* 	} */
+/*       /\* switch (response) *\/ */
+/*       /\* 	{ *\/ */
+/*       /\* 	case READ_AFTER_WRITE: *\/ */
+/*       /\* 	  stm_tx->aborts_raw++; *\/ */
+/*       /\* 	  break; *\/ */
+/*       /\* 	case WRITE_AFTER_READ: *\/ */
+/*       /\* 	  stm_tx->aborts_war++; *\/ */
+/*       /\* 	  break; *\/ */
+/*       /\* 	case WRITE_AFTER_WRITE: *\/ */
+/*       /\* 	  stm_tx->aborts_waw++; *\/ */
+/*       /\* 	  break; *\/ */
+/*       /\* 	default: *\/ */
+/*       /\* 	  ; *\/ */
+/*       /\* 	  /\\* nothing *\\/ *\/ */
+/*       /\* 	} *\/ */
 
-      /* wait_cycles(150 * stm_tx->retries); */
-    }
-  while (1);
+/*       /\* wait_cycles(150 * stm_tx->retries); *\/ */
+/*     } */
+/*   while (1); */
 
   
-  //  CM_METADATA_UPDATE_ON_COMMIT;
-  /* stm_tx_node->tx_starts += stm_tx->retries;                           */
-  /* stm_tx_node->tx_commited++;                                          */
-  /* stm_tx_node->tx_aborted += stm_tx->aborts;                           */
-  /* stm_tx_node->max_retries =                                           */
-  /*   (stm_tx->retries < stm_tx_node->max_retries)                       */
-  /*   ? stm_tx_node->max_retries  */
-  /*   : stm_tx->retries;                                           */
-  /* stm_tx_node->aborts_war += stm_tx->aborts_war;                       */
-  /* stm_tx_node->aborts_raw += stm_tx->aborts_raw;                       */
-  /* stm_tx_node->aborts_waw += stm_tx->aborts_waw;                       */
+/*   //  CM_METADATA_UPDATE_ON_COMMIT; */
+/*   /\* stm_tx_node->tx_starts += stm_tx->retries;                           *\/ */
+/*   /\* stm_tx_node->tx_commited++;                                          *\/ */
+/*   /\* stm_tx_node->tx_aborted += stm_tx->aborts;                           *\/ */
+/*   /\* stm_tx_node->max_retries =                                           *\/ */
+/*   /\*   (stm_tx->retries < stm_tx_node->max_retries)                       *\/ */
+/*   /\*   ? stm_tx_node->max_retries  *\/ */
+/*   /\*   : stm_tx->retries;                                           *\/ */
+/*   /\* stm_tx_node->aborts_war += stm_tx->aborts_war;                       *\/ */
+/*   /\* stm_tx_node->aborts_raw += stm_tx->aborts_raw;                       *\/ */
+/*   /\* stm_tx_node->aborts_waw += stm_tx->aborts_waw;                       *\/ */
 
-  /* stm_tx = tx_metadata_empty(stm_tx); */
+/*   /\* stm_tx = tx_metadata_empty(stm_tx); *\/ */
 
-  return (response == CAS_SUCCESS);
-}
+/*   return (response == CAS_SUCCESS); */
+/* } */
 
 uint32_t
 ps_load(tm_addr_t address) {

@@ -36,7 +36,6 @@ EXINLINED ticks getticks(void) {
 
 #define REPS 1000000
 #if defined(PLATFORM_MCORE) && !defined(SSMP)
-typedef long long int ticks;
 inline ticks getticks(void)
   {
     unsigned hi, lo;
