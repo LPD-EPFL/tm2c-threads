@@ -36,7 +36,7 @@ extern "C" {
 
   //TODO: make it union with address normal int..
   //A command to the pub-sub
-  typedef struct ALIGNED(64) ps_command_struct {
+  typedef struct ps_command_struct {
     unsigned int type; //PS_COMMAND_TYPE
 #if defined(PLATFORM_CLUSTER) || defined(PLATFORM_TILERA) || defined(PLATFORM_MCORE_SHRIMP)
     nodeid_t nodeId;	/* we need IDs on networked systems */
@@ -68,9 +68,13 @@ extern "C" {
       double tx_duration;
       uint64_t tx_metadata;
     };
+
+#if defined(PLATFORM_MCORE_SSMP)
+    uint8_t padding[32];
+#endif
   } PS_COMMAND;
 
-  typedef ALIGNED(64) struct {
+  typedef struct ps_reply_struct {
     unsigned int type; //PS_REPLY_TYPE
 #if defined(PLATFORM_CLUSTER) || defined(PLATFORM_MCORE)
     // we need IDs on networked systems

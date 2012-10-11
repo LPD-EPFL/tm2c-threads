@@ -61,6 +61,7 @@
 /prun
 /run_sim.sh
 /run_sim.sh
+/runconf
 /runcrash
 /rundebug
 /runrt

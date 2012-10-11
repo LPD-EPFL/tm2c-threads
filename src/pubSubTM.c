@@ -211,12 +211,9 @@ CONFLICT_TYPE ps_publish(tm_addr_t address) {
 #ifdef PGAS
     ps_sendbv(responsible_node, PS_PUBLISH, intern_addr, value, NO_CONFLICT);
 #else
-    PRINT("bf send");
     ps_sendb(responsible_node, PS_PUBLISH, intern_addr); //make sync
 #endif
-    PRINT("after send");
     CONFLICT_TYPE response = ps_recvb(responsible_node);
-    PRINT("after recv (%d)", response);
     return response;
 }
 

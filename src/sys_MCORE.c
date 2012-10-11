@@ -307,7 +307,7 @@ INLINED void
 process_message(PS_COMMAND* ps_remote, int fd)
 {
   nodeid_t sender = ps_remote->nodeId;
-  PRINT("process_message: got message %d from %u for addr %u", ps_remote->type, sender, ps_remote->address);
+  PRINTD("process_message: got message %d from %u for addr %u", ps_remote->type, sender, ps_remote->address);
 
   switch (ps_remote->type) {
   case PS_SUBSCRIBE:
@@ -722,7 +722,7 @@ dsl_recvtask(void* cfd)
 	while (1) {
 		size_t ret = fdread(remotefd, ps_remote, sizeof(PS_COMMAND));
 		if (ret >= sizeof(PS_COMMAND)) {
-			PRINT("dsl_recvtask(): one message (size %d) received on the socket fd=%d\n",
+			PRINTD("dsl_recvtask(): one message (size %u) received on the socket fd=%d\n",
 				   ret, remotefd);
 			//DS_ITimer::handle_timeouts();
 #ifdef DEBUG_MSG
@@ -744,7 +744,8 @@ dsl_recvtask(void* cfd)
 				PRINTD("dsl_recvtask(): exiting\n");
 				taskexit(0);
 			}
-			PRINT("dsl_recvtask(): [ERROR] fdread ret=%d\n", ret);
+			PRINT("dsl_recvtask(): [ERROR] fdread ret=%u\n", ret);
+			EXIT(0);
 		}
 	}
 }
@@ -800,7 +801,7 @@ app_recvtask(void* cfd)
 	while (1) {
 		size_t ret = fdread(remotefd, ps_remote, sizeof(PS_REPLY));
 		if (ret >= sizeof(PS_REPLY)) {
-			PRINTD("app_recvtask(): one message (size %d) received on the socket fd=%d\n",
+			PRINTD("app_recvtask(): one message (size %u) received on the socket fd=%d\n",
 				   ret, remotefd);
 			//DS_ITimer::handle_timeouts();
 #ifdef DEBUG_MSG

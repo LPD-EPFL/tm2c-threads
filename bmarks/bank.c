@@ -89,7 +89,7 @@ typedef struct bank {
 } bank_t;
 
 int transfer(account_t *src, account_t *dst, int amount) {
-  PRINT("in transfer");
+  /* PRINT("in transfer"); */
 
   int i, j;
 
@@ -101,11 +101,9 @@ int transfer(account_t *src, account_t *dst, int amount) {
 #ifdef LOAD_STORE
   //TODO: test and use the TX_LOAD_STORE
   PF_START(0);
-  PRINT("t 1 (accnt: %d)", src->number);
   TX_LOAD_STORE(&src->balance, -, amount, TYPE_INT);
   PF_STOP(0);
   PF_START(1);
-  PRINT("t 2 (accnt: %d)", dst->number);
   TX_LOAD_STORE(&dst->balance, +, amount, TYPE_INT);
   PF_STOP(1);
     
