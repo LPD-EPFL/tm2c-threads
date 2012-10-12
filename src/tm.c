@@ -35,7 +35,7 @@ const unsigned short buf[8] = {0xAAAA,0xAAAA,0xAAAA,0xAAAA,0xAAAA,0xAAAA,0xAAAA,
 /* set to 1 if dsl node */
 const uint8_t dsl_node[] =
   {
-    1, 0, 0, 0, 0, 0,		/* 6 */
+    1, 1, 1, 1, 1, 0,		/* 6 */
     0, 0, 0, 0, 0, 0,		/* 12 */
     0, 0, 0, 0, 0, 0,		/* 18 */
     0, 0, 1, 0, 0, 0,		/* 24 */
