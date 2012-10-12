@@ -19,10 +19,10 @@ extern "C" {
 #include "tm_sys.h"
 #include "RCCE.h"
 #ifdef PGAS
-/*
- * Under PGAS we're using fakemem allocator, to have fake allocations, that
- * mimic those of RCCE_shmalloc
- */
+  /*
+   * Under PGAS we're using fakemem allocator, to have fake allocations, that
+   * mimic those of RCCE_shmalloc
+   */
 #  include "fakemem.h"
 #endif
 
@@ -48,144 +48,144 @@ extern "C" {
 
 #define PS_BUFFER_SIZE 32
     
-EXINLINED nodeid_t
-NODE_ID(void)
-{
-  return MY_NODE_ID;
-}
-
-INLINED nodeid_t
-TOTAL_NODES(void)
-{
-  return MY_TOTAL_NODES;
-}
-
-INLINED tm_intern_addr_t
-to_intern_addr(tm_addr_t addr)
-{
-#ifdef PGAS
-	return fakemem_offset((void*)addr);
-#else
-	return ((tm_intern_addr_t)((uintptr_t)addr - (uintptr_t)shmem_start_address));
-#endif
-}
-
-
-EXINLINED tm_addr_t
-to_addr(tm_intern_addr_t i_addr)
-{
-#ifdef PGAS
-	return fakemem_addr_from_offset(i_addr);
-#else
-	return (tm_addr_t)((uintptr_t)shmem_start_address + i_addr);
-#endif
-}
-
-INLINED int
-sys_sendcmd(void* data, size_t len, nodeid_t to)
-{
-  //  ssmp_sendl(to, (ssmp_msg_t *) data, len/sizeof(int));
-  ssmp_send(to, (ssmp_msg_t *) data);
-  return 1;
-}
-
-INLINED int
-sys_sendcmd_all(void* data, size_t len)
-{
-  int target;
-  for (target = 0; target < NUM_DSL_NODES; target++) {
-    //    ssmp_sendl(dsl_nodes[target], (ssmp_msg_t *) data, len/sizeof(int));
-    //    PRINT("sending stats to %d", dsl_nodes[target]);
-    ssmp_send(dsl_nodes[target], (ssmp_msg_t *) data);
+  EXINLINED nodeid_t
+  NODE_ID(void)
+  {
+    return MY_NODE_ID;
   }
-  return 1;
-}
 
-INLINED int
-sys_recvcmd(void* data, size_t len, nodeid_t from)
-{
-  ssmp_recv_from(from, (ssmp_msg_t *) data, len/sizeof(int));
-  return 1;
-}
+  INLINED nodeid_t
+  TOTAL_NODES(void)
+  {
+    return MY_TOTAL_NODES;
+  }
 
-INLINED double
-wtime(void)
-{
-	return RCCE_wtime();
-}
+  INLINED tm_intern_addr_t
+  to_intern_addr(tm_addr_t addr)
+  {
+#ifdef PGAS
+    return fakemem_offset((void*)addr);
+#else
+    return ((tm_intern_addr_t)((uintptr_t)addr - (uintptr_t)shmem_start_address));
+#endif
+  }
+
+
+  EXINLINED tm_addr_t
+  to_addr(tm_intern_addr_t i_addr)
+  {
+#ifdef PGAS
+    return fakemem_addr_from_offset(i_addr);
+#else
+    return (tm_addr_t)((uintptr_t)shmem_start_address + i_addr);
+#endif
+  }
+
+  INLINED int
+  sys_sendcmd(void* data, size_t len, nodeid_t to)
+  {
+    //  ssmp_sendl(to, (ssmp_msg_t *) data, len/sizeof(int));
+    ssmp_send(to, (ssmp_msg_t *) data);
+    return 1;
+  }
+
+  INLINED int
+  sys_sendcmd_all(void* data, size_t len)
+  {
+    int target;
+    for (target = 0; target < NUM_DSL_NODES; target++) {
+      //    ssmp_sendl(dsl_nodes[target], (ssmp_msg_t *) data, len/sizeof(int));
+      //    PRINT("sending stats to %d", dsl_nodes[target]);
+      ssmp_send(dsl_nodes[target], (ssmp_msg_t *) data);
+    }
+    return 1;
+  }
+
+  INLINED int
+  sys_recvcmd(void* data, size_t len, nodeid_t from)
+  {
+    ssmp_recv_from(from, (ssmp_msg_t *) data, len/sizeof(int));
+    return 1;
+  }
+
+  INLINED double
+  wtime(void)
+  {
+    return RCCE_wtime();
+  }
 
 
 #ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
 
-/* 
-   using the TST as follows:
+  /* 
+     using the TST as follows:
      - tst set = tx is running
      - tst not set = tx not running (aborted, persisting, comitted)
-*/
+  */
 
 
-INLINED void
-mpb_write_line(volatile ssmp_mpb_line_t *line, uint32_t val)
-{
-  uint32_t w;
-  for (w = 0; w < 8; w++)	/* flushing Write Combine Buffer */
-    {
-      line->words[w] = val;
-    }
-}
-
-INLINED void
-abort_node(nodeid_t node, CONFLICT_TYPE reason) {
-  mpb_write_line(abort_reasons[node], reason);
-  
-  *cm_abort_flags[node] = 0;
-  
-  MPB_INV();
-  uint32_t was_persisting = 0;
-  while (persisting[node]->words[0] == 1)
-    {
-      was_persisting = 1;
-      MPB_INV();
-      wait_cycles(80);
-    }
-  
-  if (!was_persisting) 
-    {
-      *cm_abort_flags[node] = 0;
-    }
-}
-
-INLINED CONFLICT_TYPE
-check_aborted() {
-  return *cm_abort_flag_mine;
-}
-
-INLINED CONFLICT_TYPE
-get_abort_reason() {
-  MPB_INV();
-  return abort_reason_mine->words[0];
-}
-
-INLINED void
-set_tx_running() {
-  *cm_abort_flag_mine & 0x1; 	/* set the flag */
-}
-
-INLINED void
-set_tx_committed() {
-  mpb_write_line(persisting_mine, 0);
-}
-
-INLINED CONFLICT_TYPE
-set_tx_persisting() {
-  mpb_write_line(persisting_mine, 1);
-  if (*cm_abort_flag_mine) { 	/* was aborted */
-    mpb_write_line(persisting_mine, 0);
-    return 0;
+  INLINED void
+  mpb_write_line(volatile ssmp_mpb_line_t *line, uint32_t val)
+  {
+    uint32_t w;
+    for (w = 0; w < 8; w++)	/* flushing Write Combine Buffer */
+      {
+	line->words[w] = val;
+      }
   }
 
-  return 1;
-}
+  INLINED void
+  abort_node(nodeid_t node, CONFLICT_TYPE reason) {
+    mpb_write_line(abort_reasons[node], reason);
+  
+    *cm_abort_flags[node] = 0;
+  
+    MPB_INV();
+    uint32_t was_persisting = 0;
+    while (persisting[node]->words[0] == 1)
+      {
+	was_persisting = 1;
+	MPB_INV();
+	wait_cycles(80);
+      }
+  
+    if (!was_persisting) 
+      {
+	*cm_abort_flags[node] = 0;
+      }
+  }
+
+  INLINED CONFLICT_TYPE
+  check_aborted() {
+    return *cm_abort_flag_mine;
+  }
+
+  INLINED CONFLICT_TYPE
+  get_abort_reason() {
+    MPB_INV();
+    return abort_reason_mine->words[0];
+  }
+
+  INLINED void
+  set_tx_running() {
+    *cm_abort_flag_mine & 0x1; 	/* set the flag */
+  }
+
+  INLINED void
+  set_tx_committed() {
+    mpb_write_line(persisting_mine, 0);
+  }
+
+  INLINED CONFLICT_TYPE
+  set_tx_persisting() {
+    mpb_write_line(persisting_mine, 1);
+    if (*cm_abort_flag_mine) { 	/* was aborted */
+      mpb_write_line(persisting_mine, 0);
+      return 0;
+    }
+
+    return 1;
+  }
 #endif	/* NOCM */
 
 #ifdef	__cplusplus

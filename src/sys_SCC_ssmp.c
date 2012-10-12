@@ -321,41 +321,43 @@ dsl_communication()
       break;
     case PS_STATS:
       {
-	if (ps_remote->tx_duration) {
-	  stats_aborts += ps_remote->aborts;
-	  stats_commits += ps_remote->commits;
-	  stats_duration += ps_remote->tx_duration;
-	  stats_max_retries = stats_max_retries < ps_remote->max_retries ? ps_remote->max_retries : stats_max_retries;
-	  stats_total += ps_remote->commits + ps_remote->aborts;
-	}
-	else {
-	  stats_aborts_raw += ps_remote->aborts_raw;
-	  stats_aborts_war += ps_remote->aborts_war;
-	  stats_aborts_waw += ps_remote->aborts_waw;
-	}
-	if (++stats_received >= 2*NUM_APP_NODES) {
-	  ONCE {
-	    print_global_stats();
-
-	    print_hashtable_usage();
-
+	if (ps_remote->tx_duration)
+	  {
+	    stats_aborts += ps_remote->aborts;
+	    stats_commits += ps_remote->commits;
+	    stats_duration += ps_remote->tx_duration;
+	    stats_max_retries = stats_max_retries < ps_remote->max_retries ? ps_remote->max_retries : stats_max_retries;
+	    stats_total += ps_remote->commits + ps_remote->aborts;
 	  }
+	else
+	  {
+	    stats_aborts_raw += ps_remote->aborts_raw;
+	    stats_aborts_war += ps_remote->aborts_war;
+	    stats_aborts_waw += ps_remote->aborts_waw;
+	  }
+	if (++stats_received >= 2*NUM_APP_NODES)
+	  {
+	    ONCE
+	      {
+		print_global_stats();
+		print_hashtable_usage();
+	      }
 
 #ifdef DEBUG_UTILIZATION
-	  PRINT("*** Completed requests: %llu", (long long unsigned int) read_reqs_num + write_reqs_num);
+	    PRINT("*** Completed requests: %llu", (long long unsigned int) read_reqs_num + write_reqs_num);
 #endif
 
-	  return;
-	}
+	    return;
+	  }
 	break;
       }
-      default:
-	{
-	  sys_ps_command_reply(sender, PS_UKNOWN_RESPONSE,
-			       NULL,
-			       NULL,
-			       NO_CONFLICT);
-	}
+    default:
+      {
+	sys_ps_command_reply(sender, PS_UKNOWN_RESPONSE,
+			     NULL,
+			     NULL,
+			     NO_CONFLICT);
+      }
     }
   }
 }

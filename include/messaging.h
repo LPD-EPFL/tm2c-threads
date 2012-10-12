@@ -36,28 +36,35 @@ extern "C" {
 
   //TODO: make it union with address normal int..
   //A command to the pub-sub
-  typedef struct ps_command_struct {
+  typedef struct ps_command_struct
+  {
     unsigned int type; //PS_COMMAND_TYPE
 #if defined(PLATFORM_CLUSTER) || defined(PLATFORM_TILERA) || defined(PLATFORM_MCORE_SHRIMP)
     nodeid_t nodeId;	/* we need IDs on networked systems */
 #else
-    uint32_t oldval;
+				//    uint32_t oldval; //::to be used with CAS
 #endif
-    union {
-      struct {
-	union {
+    union
+    {
+      struct
+      {
+	union
+	{
 	  int response; /* used in PS_REMOVE_NODE with PGAS to say persist or not */
 	  int write_value;
 	};
 	tm_intern_addr_t address; /* addr of the data, internal representation */
       };
-      union {			/* stats collecting */
-	struct {
+      union
+      {			/* stats collecting */
+	struct
+	{
 	  unsigned int commits;
 	  unsigned int aborts;
 	  unsigned int max_retries;
 	};
-	struct {
+	struct
+	{
 	  unsigned int aborts_war;
 	  unsigned int aborts_raw;
 	  unsigned int aborts_waw;
@@ -71,6 +78,8 @@ extern "C" {
 
 #if defined(PLATFORM_MCORE_SSMP)
     uint8_t padding[32];
+#elif defined(PLATFORM_SCC_SSMP)
+    uint8_t padding[8];
 #endif
   } PS_COMMAND;
 
