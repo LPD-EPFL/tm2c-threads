@@ -23,9 +23,9 @@ extern "C" {
 #endif  /* REF_SPEED_GHZ */
 
   /* 
-     #   DO_TIMINGS_TICKS
-     #   DO_TIMINGS_TICKS_SIMPLE
-     #   DO_TIMINGS_STD
+     #DO_TIMINGS_TICKS
+     #DO_TIMINGS_TICKS_SIMPLE
+     #DO_TIMINGS_STD
  */
 #define DO_TIMINGS_TICKS_SIMPLE
 
@@ -56,7 +56,7 @@ extern "C" {
 #  ifndef DO_TIMINGS_STD
 #    ifndef DO_TIMINGS_TICKS
 #      ifndef DO_TIMINGS_TICKS_SIMPLE
-#      error Define either DO_TIMINGS_STD or DO_TIMINGS_TICKS
+#        error Define either DO_TIMINGS_STD or DO_TIMINGS_TICKS
 #      endif
 #    endif
 #  endif
