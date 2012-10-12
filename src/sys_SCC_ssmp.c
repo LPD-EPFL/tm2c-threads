@@ -219,7 +219,6 @@ dsl_communication()
     
     ps_remote = (PS_COMMAND *) msg;
 
-
 #if defined(WHOLLY) || defined(FAIRCM)
     cm_metadata_core[sender].timestamp = (ticks) ps_remote->tx_metadata;
 #elif defined(GREEDY)
@@ -264,6 +263,7 @@ dsl_communication()
 				ps_remote->address);
 	}
 #endif
+
 	sys_ps_command_reply(sender, PS_PUBLISH_RESPONSE, 
 			     (tm_addr_t) ps_remote->address,
 			     NULL,
@@ -414,6 +414,7 @@ void
 init_barrier()
 {
   ssmp_barrier_init(1, 0, is_app_core);
+  ssmp_barrier_init(3, 0, is_dsl_core);
 
-  BARRIERW
+  BARRIERW;
 }

@@ -52,20 +52,6 @@ extern "C" {
     duration__ = __end - __start;
 
 
-#ifdef BACKOFF_RETRY
-  /*
-    if BACKOFF_RETRY is set, the BACKOFF-RETRY contention management scheme is used. This is similar to the TCP-IP exponentional increasing backoff and retry. When BACKOFF_MAX = infinitiy -> then every tx is expected to terminate whp.
-  */
-#  define BACKOFF_MAX                     0
-#  define BACKOFF_DELAY                   20000
-#else
-  /*
-    else, in case of a conflict the transaction is not aborted, but backsoff and retries to acquire the same address BACKOFF_MAX time beforee aborting
-  */
-#  define BACKOFF_MAX                     3
-#  define BACKOFF_DELAY                   200
-#endif
-
   extern stm_tx_t *stm_tx;
   extern stm_tx_node_t *stm_tx_node;
   extern double duration__;
@@ -100,8 +86,9 @@ extern "C" {
    *______________________________________________________________________________________________________|
    */
 
+  //  init_configuration(&argc, &argv);		\
+
 #define TM_INIT					\
-  init_configuration(&argc, &argv);		\
   init_system(&argc, &argv);			\
   {						\
   tm_init();
@@ -248,7 +235,8 @@ extern "C" {
 
 #define TM_END					\
   PRINTD("|| FAKE: TM ends");			\
-  ps_send_stats(stm_tx_node, duration__);}
+  ps_send_stats(stm_tx_node, duration__);	\
+  TM_TERM;}
 
   /*
     tx_metadata_free(&stm_tx);                                          \
@@ -314,6 +302,9 @@ extern "C" {
 
 #define TX_CAS(addr, oldval, newval)		\
   tx_cas(addr, oldval, newval);
+
+#define TX_CASI(addr, oldval, newval)		\
+  tx_casi(addr, oldval, newval);
 
 
 #if defined(PLATFORM_CLUSTER) || defined(PGAS)
@@ -412,7 +403,8 @@ extern "C" {
 	  if ((conflict = ps_subscribe(addr)) != NO_CONFLICT) {
 #ifndef BACKOFF_RETRY
 	    if (num_delays++ < BACKOFF_MAX) {
-	      ndelay(rand_range(delay));
+	      ndelay(delay);
+	      /* ndelay(rand_range(delay)); */
 	      delay *= 2;
 	      goto retry;
 	    }
@@ -455,7 +447,8 @@ extern "C" {
 #endif
 #ifndef BACKOFF_RETRY
             if (num_delays++ < BACKOFF_MAX) {
-	      ndelay(rand_range(delay));
+	      ndelay(delay);		      
+	      /* ndelay(rand_range(delay)); */
 	      delay *= 2;
 	      goto retry;
             }
@@ -511,6 +504,7 @@ extern "C" {
 #ifndef BACKOFF_RETRY
 		if (num_delays++ < BACKOFF_MAX) {
 		  ndelay(delay);
+		  /* ndelay(rand_range(delay)); */
 		  delay *= 2;
 		  goto retry;
 		}
@@ -519,7 +513,8 @@ extern "C" {
 	      }
 	    }
 
-uint32_t tx_cas(tm_addr_t addr, uint32_t oldval, uint32_t newval);
+	    uint32_t tx_cas(tm_addr_t addr, uint32_t oldval, uint32_t newval);
+	    extern inline uint32_t tx_casi(tm_addr_t addr, uint32_t oldval, uint32_t newval);
 
 
 #define taskudelay udelay

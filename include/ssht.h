@@ -161,6 +161,7 @@ INLINED uint32_t ssht_rw_entry_has_readers(ssht_rw_entry_t * entry) {
 INLINED CONFLICT_TYPE bucket_insert_w(bucket_t * bu, ssht_log_set_t *log, uint32_t id, uintptr_t addr) {
   uint32_t i;
   bucket_t *btmp = bu;
+
   do {
     for (i = 0; i < ADDR_PER_CL; i++) {
       if (btmp->addr[i] == addr) {
@@ -201,6 +202,7 @@ INLINED CONFLICT_TYPE bucket_insert_w(bucket_t * bu, ssht_log_set_t *log, uint32
     btmp = btmp->next;
   } while (btmp != NULL);
 
+
   btmp = bu;
   do {
     for (i = 0; i < ADDR_PER_CL; i++) {
@@ -233,6 +235,53 @@ INLINED CONFLICT_TYPE ssht_insert(ssht_hashtable_t ht, uint32_t bu, ssht_log_set
 
   return ct;
 }
+
+INLINED CONFLICT_TYPE 
+ssht_insert_w_test(ssht_hashtable_t ht, uint32_t id, uintptr_t addr)
+{
+  uint32_t bu = hash_tw((addr>>2) % UINT_MAX);
+  bucket_t *btmp = ht + (bu % NUM_OF_BUCKETS);
+
+  uint32_t i;
+  do {
+    for (i = 0; i < ADDR_PER_CL; i++) {
+      if (btmp->addr[i] == addr) {
+	  ssht_rw_entry_t *e = btmp->entry + i;
+	  if (e->writer != SSHT_NO_WRITER) {
+#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+	  if (contention_manager_raw_waw(id, e->writer, WRITE_AFTER_WRITE)) {
+	    btmp->addr[i] = 0;
+	    return NO_CONFLICT;
+	  }
+	  else {
+	    return WRITE_AFTER_WRITE;
+	  }
+#else
+	  return WRITE_AFTER_WRITE;
+#endif	/* NOCM */
+	}
+	else {
+#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+	  if (contention_manager_war(id, e->reader, WRITE_AFTER_READ)) {
+	    btmp->addr[i] = 0;
+	    return NO_CONFLICT;
+	  }
+	  else {
+	    return WRITE_AFTER_READ;
+	  }
+#else
+	  return WRITE_AFTER_READ;
+#endif	/* NOCM */
+	}
+      }
+    }
+    
+    btmp = btmp->next;
+  } while (btmp != NULL);
+
+  return NO_CONFLICT;
+}
+
 
 
 INLINED uint32_t ssht_bucket_remove_index(addr_t *addr, uint32_t id, ssht_rw_entry_t *entry) {

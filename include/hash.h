@@ -4,7 +4,7 @@
 #include "common.h"
 
 /* Thomas Wang's 32 bit Mix Function */
-EXINLINED uint32_t 
+INLINED uint32_t 
 hash_tw(uint32_t key)
 {
   key += ~(key << 15);

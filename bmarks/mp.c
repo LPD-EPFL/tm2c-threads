@@ -3,18 +3,16 @@
  */
 
 #include <assert.h>
-
 #include "tm.h"
 
-
-#ifndef SSMP
-typedef long long int ticks;
-#endif 
+#ifndef DO_TIMINGS
+#  warning **** mp needs DO_TIMINGS defined
+#endif
 
 #ifdef PLATFORM_TILERA
-#include <arch/cycle.h>
-#include <tmc/cpus.h>
-#define getticks get_cycle_count
+#  include <arch/cycle.h>
+#  include <tmc/cpus.h>
+#  define getticks get_cycle_count
 #elif defined(PLATFORM_iRCCE)
 typedef long long int ticks;
   EXINLINED ticks getticks(void) {
@@ -38,7 +36,6 @@ EXINLINED ticks getticks(void) {
 
 #define REPS 1000000
 #if defined(PLATFORM_MCORE) && !defined(SSMP)
-typedef long long int ticks;
 inline ticks getticks(void)
   {
     unsigned hi, lo;
@@ -47,9 +44,14 @@ inline ticks getticks(void)
   }
 #endif
 
+
 MAIN(int argc, char **argv) {
 
+  PF_MSG(0, "roundtrip message");
+
   long long int steps = REPS;
+
+  PF_MSG(0, "round-trip messaging latencies");
 
     TM_INIT
 
@@ -73,41 +75,45 @@ MAIN(int argc, char **argv) {
     double _start = wtime();
     ticks _start_ticks = getticks();
 
-    int to = (ID - 1)/2;
+    nodeid_t to = 0;
     PRINT("sending to %d", to);
-    //    steps += ID;
+
+    PF_MSG(3, "Overall time");
+
+
+    PF_START(3);
     for (rounds = 0; rounds < steps; rounds++) {
+      PF_START(0);
 #ifdef PGAS
       sum += (int) NONTX_LOAD(sm + rounds);
 #else
-      //      DUMMY_MSG(rounds % NUM_DSL_NODES);
       DUMMY_MSG(to);
 #endif
+      PF_STOP(0);
+
+      if (++to == NUM_DSL_NODES)
+	{
+	  to = 0;
+	}
     }
-    //    steps -= ID;
-     
-
-    BARRIER;
-
-    ticks _end_ticks = getticks();
-    double _end = wtime();
-
-    double _time = _end - _start;
-    ticks _ticks = _end_ticks - _start_ticks;
-    ticks _ticksm =(ticks) ((double)_ticks / steps);
-    double lat = (double) (1000*1000*1000*_time) / steps;
-    printf("sent %lld msgs\n\t"
-	   "in %f secs\n\t"
-	   "%.2f msgs/us\n\t"
-	   "%f ns latency\n"
-	   "in ticks:\n\t"
-	   "in %llu ticks\n\t"
-	   "%llu ticks/msg\n", steps, _time, ((double)steps/(1000*1000*_time)), lat,
-	   (long long unsigned int) _ticks, (long long unsigned int) _ticksm);
-
+    PF_STOP(3);
 
     PRINT("sum -- %lld", sum);
 
-    TM_END
+    TM_END;
+
+    BARRIER;
+
+    uint32_t c;
+    for (c = 0; c < TOTAL_NODES(); c++)
+      {
+	if (NODE_ID() == c)
+	  {
+	    printf("(( %02d ))", c);
+	    PF_PRINT;
+	  }
+	BARRIER;
+      }
+
     EXIT(0);
 }

@@ -94,7 +94,6 @@ MAIN(int argc, char **argv) {
 
     fprintf(stderr, "%d", sum);
 
-    TM_TERM
     EXIT(0);
 }
 

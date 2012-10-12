@@ -19,6 +19,7 @@ extern "C" {
 #include <string.h>
 #include <stddef.h>
 #include <unistd.h>
+#include <inttypes.h>
 #include <libconfig.h>
 
 #ifndef INLINED
@@ -46,7 +47,6 @@ extern "C" {
 #  endif
 #endif
 
-#include "measurements.h"
 #include "tm_types.h"
 
 #ifdef PGAS
@@ -107,8 +107,9 @@ extern "C" {
         WRITE_AFTER_WRITE,
 #ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
 	PERSISTING_WRITES, 	/* used for contention management */
-	TX_COMMITED		/* used for contention management */
+	TX_COMMITED,		/* used for contention management */
 #endif 				/* NOCM */
+	CAS_SUCCESS
     } CONFLICT_TYPE;
 
     /* read or write request
@@ -141,6 +142,26 @@ extern "C" {
     return i;
   }
 
+  /*
+    returns the posisition of the core id in the seq of dsl cores
+    e.g., having 6 cores total and core 2 and 4 are dsl, then
+    the call to this function with node=2=>0, with node=4=>1
+   */
+  INLINED nodeid_t
+  dsl_id_seq(nodeid_t node) 
+  {
+    uint32_t i, seq = 0;
+    for (i = 0; i < node; i++)
+      {
+	if (!is_app_core(i))
+	  {
+	    seq++;
+	  }
+      }
+    return seq;
+  }
+
+
   INLINED nodeid_t
   min_app_id() 
   {
@@ -161,7 +182,7 @@ extern "C" {
       NUM_UES == 1)
 
 
-
+#include "measurements.h"
 
 /*  ------- Plug platform related things here BEGIN ------- */
 #if defined(PLATFORM_iRCCE) || defined(PLATFORM_SCC_SSMP)
@@ -175,7 +196,7 @@ extern "C" {
   extern RCCE_COMM RCCE_COMM_APP;
 #    define BARRIER RCCE_barrier(&RCCE_COMM_APP);
 #    define BARRIERW RCCE_barrier(&RCCE_COMM_WORLD);
-
+#    define BARRIER_DSL ; 	/* XXX: to implement */
 #  endif
 
 #endif 
@@ -225,6 +246,7 @@ EXINLINED int zmq_s_send(void *socket, char *string);
 #  include <tmc/spin.h>
 #  include <tmc/sync.h>
 #  include <tmc/cmem.h>
+#  include <arch/cycle.h> 
 
 #  include "sys_TILERA.h"
 

@@ -26,9 +26,9 @@ extern "C" {
 #  include "fakemem.h"
 #endif
 
-#define BARRIER  ssmp_barrier_wait(1);
-#define BARRIERW ssmp_barrier_wait(0);
-
+#define BARRIER     ssmp_barrier_wait(1);
+#define BARRIERW    ssmp_barrier_wait(0);
+#define BARRIER_DSL ssmp_barrier_wait(3);
 
   extern tm_addr_t shmem_start_address;
   extern nodeid_t *dsl_nodes;
