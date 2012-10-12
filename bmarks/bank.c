@@ -37,7 +37,7 @@
 #define LOAD_STORE
 
 
-#ifdef PLATFORM_iRCCE
+#if defined(SCC)
 /*take advante all 4 MCs*/
 #define MC 
 #endif
