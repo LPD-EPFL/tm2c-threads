@@ -30,19 +30,22 @@ const char *conflict_reasons[4] = {
 };
 
 
+#define DSL_BY_MOD
+#define DSLPERNODE 3
+
 //custom assignment
 const unsigned short buf[8] = {0xAAAA,0xAAAA,0xAAAA,0xAAAA,0xAAAA,0xAAAA,0xAAAA,0xAAAA};
 /* set to 1 if dsl node */
 const uint8_t dsl_node[] =
   {
-    1, 1, 1, 1, 1, 0,		/* 6 */
-    0, 0, 0, 0, 0, 0,		/* 12 */
-    0, 0, 0, 0, 0, 0,		/* 18 */
-    0, 0, 1, 0, 0, 0,		/* 24 */
-    0, 0, 0, 1, 0, 0,		/* 30 */
-    0, 0, 0, 0, 0, 0,		/* 36 */
-    0, 0, 0, 0, 0, 0,		/* 42 */
-    0, 0, 0, 0, 0, 1,		/* 48 */
+    1, 0, 0, 1, 0, 0,		/* 6 */
+    1, 0, 0, 1, 0, 0,		/* 12 */
+    1, 0, 0, 1, 0, 0,		/* 18 */
+    1, 0, 0, 1, 0, 0,		/* 24 */
+    1, 0, 1, 1, 0, 0,		/* 30 */
+    1, 0, 0, 1, 0, 0,		/* 36 */
+    1, 0, 0, 1, 0, 0,		/* 42 */
+    1, 0, 0, 1, 0, 0,		/* 48 */
     0, 0, 0, 0, 0, 0,		/* ... */
     0, 0, 0, 0, 0, 0,		/*  */
     0, 0, 0, 0, 0, 0,		/*  */
@@ -53,9 +56,6 @@ const uint8_t dsl_node[] =
  * TM Interface                                                                                         |
  *______________________________________________________________________________________________________|
  */
-
-#define DSL_BY_MOD
-#define DSLPERNODE 3
 
 int
 is_app_core(int id)
@@ -78,6 +78,9 @@ is_dsl_core(int id)
 
 
 void tm_init() {
+  PF_MSG(9, "receiving");
+  PF_MSG(10, "sending");
+
     sys_tm_init();
     if (!is_app_core(ID)) {
         //dsl node
