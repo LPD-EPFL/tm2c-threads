@@ -47,10 +47,9 @@ TOTAL_NODES(void)
 INLINED int
 sys_sendcmd(void* data, size_t len, nodeid_t to)
 {
-  ssmp_send(to, (ssmp_msg_t *) data, len);
-  //  ssmp_msg_t *msg = (ssmp_msg_t *) data;
-  //  ssmp_send_inline(to, msg);
-  //  ssmp_sendm(to, msg);
+  /* PF_START(10); */
+  ssmp_send(to, (ssmp_msg_t *) data);
+  /* PF_STOP(10); */
 }
 
 INLINED int
@@ -58,7 +57,7 @@ sys_sendcmd_all(void* data, size_t len)
 {
   int target;
   for (target = 0; target < NUM_DSL_NODES; target++) {
-    ssmp_send(dsl_nodes[target], (ssmp_msg_t *) data, len);
+    ssmp_send(dsl_nodes[target], (ssmp_msg_t *) data);
   }
   return 1;
 }
@@ -66,10 +65,9 @@ sys_sendcmd_all(void* data, size_t len)
 INLINED int
 sys_recvcmd(void* data, size_t len, nodeid_t from)
 {
-  ssmp_recv_from(from, (ssmp_msg_t *) data, len);
-  //ssmp_recv_from_inline(from, (ssmp_msg_t *) data);
-  //ssmp_msg_t *msg = (ssmp_msg_t *) data;
-  //  ssmp_recv_fromm(from, msg);
+  /* PF_START(9); */
+  ssmp_recv_from(from, (ssmp_msg_t *) data);
+  /* PF_STOP(9); */
 }
 
 INLINED tm_intern_addr_t
