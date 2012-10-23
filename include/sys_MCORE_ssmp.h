@@ -62,9 +62,14 @@ sys_sendcmd_all(void* data, size_t len)
   return 1;
 }
 
+static const uint32_t wait_after_send[4] = {880, 880, 880, 880};
+
 INLINED int
 sys_recvcmd(void* data, size_t len, nodeid_t from)
 {
+  uint32_t hops = get_num_hops(NODE_ID(), from);
+  wait_cycles(wait_after_send[hops]);
+
   /* PF_START(9); */
   ssmp_recv_from(from, (ssmp_msg_t *) data);
   /* PF_STOP(9); */

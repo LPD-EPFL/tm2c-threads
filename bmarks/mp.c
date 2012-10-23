@@ -53,67 +53,70 @@ MAIN(int argc, char **argv) {
 
   PF_MSG(0, "round-trip messaging latencies");
 
-    TM_INIT
+  TM_INIT
 
     if (argc > 1) {
-        steps = atoll(argv[1]);
+      steps = atoll(argv[1]);
     }
 
 
 #ifdef PGAS
-    int *sm = (int *) sys_shmalloc(steps * sizeof (int));
+  int *sm = (int *) sys_shmalloc(steps * sizeof (int));
 #endif
 
-    ONCE {
-      PRINT("## sending %lld messages", steps);
-    }
+  ONCE {
+    PRINT("## sending %lld messages", steps);
+  }
 
-    BARRIER
+  BARRIER
 
-      long long int rounds, sum = 0;
+    long long int rounds, sum = 0;
 
-    double _start = wtime();
-    ticks _start_ticks = getticks();
+  double _start = wtime();
+  ticks _start_ticks = getticks();
 
-    nodeid_t to = 0;
-    PRINT("sending to %d", to);
+  nodeid_t to = 0;
+  /* PRINT("sending to %d", to);  */
 
-    PF_MSG(3, "Overall time");
+  PF_MSG(3, "Overall time");
 
 
-    PF_START(3);
-    for (rounds = 0; rounds < steps; rounds++) {
-      PF_START(0);
+  PF_START(3);
+  for (rounds = 0; rounds < steps; rounds++) {
+    PF_START(0);
 #ifdef PGAS
-      sum += (int) NONTX_LOAD(sm + rounds);
+    sum += (int) NONTX_LOAD(sm + rounds);
 #else
-      DUMMY_MSG(to);
+    DUMMY_MSG(to);
 #endif
-      PF_STOP(0);
+    PF_STOP(0);
 
-      if (++to == NUM_DSL_NODES)
-	{
-	  to = 0;
-	}
-    }
-    PF_STOP(3);
-
-    PRINT("sum -- %lld", sum);
-
-    TM_END;
-
-    BARRIER;
-
-    uint32_t c;
-    for (c = 0; c < TOTAL_NODES(); c++)
+    if (++to == NUM_DSL_NODES)
       {
-	if (NODE_ID() == c)
-	  {
-	    printf("(( %02d ))", c);
-	    PF_PRINT;
-	  }
-	BARRIER;
+	to = 0;
       }
+  }
+  PF_STOP(3);
 
-    EXIT(0);
+  if (sum > 0)
+    {
+      PRINT("sum -- %lld", sum);
+    }
+
+  TM_END;
+
+  BARRIER;
+
+  /* uint32_t c; */
+  /* for (c = 0; c < TOTAL_NODES(); c++) */
+  /*   { */
+  /* 	if (NODE_ID() == c) */
+  /* 	  { */
+  /* 	    printf("(( %02d ))", c); */
+  /* 	    PF_PRINT; */
+  /* 	  } */
+  /* 	BARRIER; */
+  /*   } */
+
+  EXIT(0);
 }

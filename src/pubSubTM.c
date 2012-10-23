@@ -191,15 +191,13 @@ ps_subscribe(tm_addr_t address) {
 #endif
 
     CONFLICT_TYPE response = ps_recvb(responsible_node);
-
     return response;
 }
 
-#ifdef PGAS
 
+#ifdef PGAS
 CONFLICT_TYPE ps_publish(tm_addr_t address, int value) {
 #else
-
 CONFLICT_TYPE ps_publish(tm_addr_t address) {
 #endif
 
@@ -213,6 +211,7 @@ CONFLICT_TYPE ps_publish(tm_addr_t address) {
 #else
     ps_sendb(responsible_node, PS_PUBLISH, intern_addr); //make sync
 #endif
+
     CONFLICT_TYPE response = ps_recvb(responsible_node);
     return response;
 }
@@ -397,26 +396,16 @@ void ps_finish_all(CONFLICT_TYPE conflict) {
    BARRIERW;
 }
 
- /* CONFLICT_TYPE */
- /*   ps_dummy_msg(nodeid_t node)  */
- /* { */
- /*   node = dsl_nodes[node]; */
- /*   ps_sendb(node, PS_UKNOWN, 0); */
-
- /*   CONFLICT_TYPE response = ps_recvb(node); */
- /*   return response; */
- /* } */
-
  CONFLICT_TYPE
    ps_dummy_msg(nodeid_t node)
  {
    node = dsl_nodes[node];
-   PF_START(1);
+   /* PF_START(1); */
    ps_sendb(node, PS_UKNOWN, 0);
-   PF_STOP(1);
-   PF_START(2);
+   /* PF_STOP(1); */
+   /* PF_START(2); */
    CONFLICT_TYPE response = ps_recvb(node);
-   PF_STOP(2);
+   /* PF_STOP(2); */
    return response;
  }
 

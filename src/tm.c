@@ -134,7 +134,6 @@ init_system(int* argc, char** argv[])
 void
 tm_term()
 {
-
   if (!is_app_core(ID)) {
     // DSL node
     // common stuff
