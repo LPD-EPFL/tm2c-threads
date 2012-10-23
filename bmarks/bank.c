@@ -93,19 +93,19 @@ int transfer(account_t *src, account_t *dst, int amount) {
 
   int i, j;
 
-  PF_START(2);
+  /* PF_START(2); */
 
   /* Allow overdrafts */
   TX_START;
 
 #ifdef LOAD_STORE
   //TODO: test and use the TX_LOAD_STORE
-  PF_START(0);
+  /* PF_START(0); */
   TX_LOAD_STORE(&src->balance, -, amount, TYPE_INT);
-  PF_STOP(0);
-  PF_START(1);
+  /* PF_STOP(0); */
+  /* PF_START(1); */
   TX_LOAD_STORE(&dst->balance, +, amount, TYPE_INT);
-  PF_STOP(1);
+  /* PF_STOP(1); */
     
   TX_COMMIT_NO_PUB;
 #else
@@ -118,7 +118,7 @@ int transfer(account_t *src, account_t *dst, int amount) {
   TX_COMMIT;
 #endif
 
-  PF_STOP(2);
+  /* PF_STOP(2); */
   return amount;
 }
 
@@ -137,22 +137,22 @@ int total(bank_t *bank, int transactional) {
     }
   }
   else {
-    PF_START(3);
+    /* PF_START(3); */
     TX_START;
     total = 0;
     for (i = 0; i < bank->size; i++)
       {
 #ifndef PGAS
-	PF_START(4);
+	/* PF_START(4); */
 	int *bal = (int*) TX_LOAD(&bank->accounts[I(i)].balance); 
-	PF_STOP(4)
+	/* PF_STOP(4) */
 	total += *bal;
 #else
 	total += TX_LOAD(&bank->accounts[i].balance);
 #endif
       }
     TX_COMMIT;
-    PF_STOP(3);
+    /* PF_STOP(3); */
   }
 
   if (total != 0) {
@@ -320,10 +320,11 @@ bank_t * test(void *data, double duration, int nb_accounts) {
       }
     }
 
-    if (delay) {
-      //	PRINT("delaying %u us", delay);
-      udelay(rand_range(delay));
-    }
+    if (delay) 
+      {
+	//	PRINT("delaying %u us", delay);
+	udelay(rand_range(delay));
+      }
   } END_FOR;
 
   //reset(bank);
