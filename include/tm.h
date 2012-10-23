@@ -37,8 +37,6 @@ extern "C" {
     duration__ = __duration_ticks / __ticks_per_sec;
 
 
-
-
 #define FOR_SEC(seconds)			\
   double __start = wtime();			\
   double __end = __start + (seconds);		\
@@ -200,6 +198,7 @@ extern "C" {
   ps_finish_all(NO_CONFLICT);			\
   CM_METADATA_UPDATE_ON_COMMIT;			\
   mem_info_on_commit(stm_tx->mem_info);		\
+  stm_tx_node->tx_commited++;			\
   stm_tx = tx_metadata_empty(stm_tx);}
 
 #define TX_COMMIT_NO_PUB_NO_STATS		\
