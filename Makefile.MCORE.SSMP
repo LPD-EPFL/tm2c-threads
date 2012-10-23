@@ -8,7 +8,7 @@ PLATFORM_LIBS = -lssmp -lrt
 PLATFORM_DEFINES =	-DBACKOFF_RETRY \
 		       	-DBACKOFF_MAX="0" \
 		       	-DBACKOFF_DELAY="5000" \
-		       	-DDO_TIMINGS \
+		       	-UDO_TIMINGS \
 		       	-DNOCM
 
 ## fixed defines
