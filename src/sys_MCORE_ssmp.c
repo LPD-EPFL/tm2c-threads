@@ -246,7 +246,13 @@ sys_ps_command_reply(nodeid_t sender,
 #endif
 
   ssmp_msg_t *msg = (ssmp_msg_t *) &reply;
-  ssmp_send(sender, msg, 24);
+
+  /* PF_STOP(11); */
+
+  PF_START(10);
+  ssmp_send(sender, msg);
+  PF_STOP(10);
+
   //  ssmp_sendm(sender, msg);
   //ssmp_send_inline(sender, msg);
 }
@@ -259,8 +265,7 @@ unsigned int usages[NB];
 void
 dsl_communication()
 {
-  nodeid_t sender, last_recv_from = 0;
-  PS_COMMAND_TYPE command;
+  nodeid_t sender;
 
   ssmp_msg_t *msg;
   msg = (ssmp_msg_t *) malloc(sizeof(ssmp_msg_t));
@@ -277,10 +282,11 @@ dsl_communication()
 
   while (1) {
 
-    //    PF_START(2);
-    last_recv_from = ssmp_recv_color_start(cbuf, msg, last_recv_from) + 1;
-    //    PF_STOP(2);
+    /* PF_START(9); */
+    ssmp_recv_color_start(cbuf, msg);
+    /* PF_STOP(9); */
 
+    /* PF_START(11); */
     sender = msg->sender;
 
     ps_remote = (PS_COMMAND *) msg;
@@ -289,46 +295,58 @@ dsl_communication()
 
     
 #if defined(WHOLLY) || defined(FAIRCM)
-        cm_metadata_core[sender].timestamp = (ticks) ps_remote->tx_metadata;
+    cm_metadata_core[sender].timestamp = (ticks) ps_remote->tx_metadata;
 #elif defined(GREEDY)
-	if (cm_metadata_core[sender].timestamp == 0) {
-	  cm_metadata_core[sender].timestamp = getticks() - (ticks) ps_remote->tx_metadata;
-	}
+    if (cm_metadata_core[sender].timestamp == 0)
+      {
+	cm_metadata_core[sender].timestamp = getticks() - (ticks) ps_remote->tx_metadata;
+      }
 #endif
     
+	
+
     switch (ps_remote->type) {
     case PS_SUBSCRIBE:
+      {
+
+	/* PREFETCHW(ssmp_send_buf[sender]); */
 
 #ifdef DEBUG_UTILIZATION
-      read_reqs_num++;
+	read_reqs_num++;
 #endif
 
+	CONFLICT_TYPE conflict = try_subscribe(sender, ps_remote->address);
+	/* PF_STOP(11); */
 #ifdef PGAS
-      /*
-	PRINT("RL addr: %3d, val: %d", address, PGAS_read(address));
-      */
+	/*
+	  PRINT("RL addr: %3d, val: %d", address, PGAS_read(address));
+	*/
       
-      sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE,
-			   (tm_addr_t) ps_remote->address, 
-			   PGAS_read(ps_remote->address),
-			   try_subscribe(sender, ps_remote->address));
+	sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE,
+			     (tm_addr_t) ps_remote->address, 
+			     PGAS_read(ps_remote->address),
+			     conflict);
 #else
-      /* if (NODE_ID() == 0) { */
-      /* 	if (sender == 1) { */
-      /* 	  printf("[%3d] addr %p \tdiff %d\n", req_num++, ps_remote->address, addr_prev - ps_remote->address); */
-      /* 	  addr_prev = ps_remote->address; */
-      /* 	} */
-      /* } */
+	/* if (NODE_ID() == 0) { */
+	/* 	if (sender == 1) { */
+	/* 	  printf("[%3d] addr %p \tdiff %d\n", req_num++, ps_remote->address, addr_prev - ps_remote->address); */
+	/* 	  addr_prev = ps_remote->address; */
+	/* 	} */
+	/* } */
       
-      sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE, 
-			   (tm_addr_t) ps_remote->address, 
-			   NULL,
-			   try_subscribe(sender, ps_remote->address));
-      //sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE, address, NO_CONFLICT);
+	sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE, 
+			     (tm_addr_t) ps_remote->address, 
+			     NULL,
+			     conflict);
+	//sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE, address, NO_CONFLICT);
 #endif
-      break;
+	break;
+      }
     case PS_PUBLISH:
       {
+
+	/* PREFETCHW(ssmp_send_buf[sender]); */
+
 #ifdef DEBUG_UTILIZATION
 	write_reqs_num++;
 #endif
@@ -341,36 +359,37 @@ dsl_communication()
 				ps_remote->address);
 	}
 #endif
+
 	sys_ps_command_reply(sender, PS_PUBLISH_RESPONSE, 
 			     (tm_addr_t) ps_remote->address,
 			     NULL,
 			     conflict);
 	break;
       }
-/*     case PS_CAS: */
-/*       { */
-/* #ifdef DEBUG_UTILIZATION */
-/* 	write_reqs_num++; */
-/* #endif */
-/* 	CONFLICT_TYPE conflict = ssht_insert_w_test(ps_hashtable, sender, ps_remote->address); */
+      /*     case PS_CAS: */
+      /*       { */
+      /* #ifdef DEBUG_UTILIZATION */
+      /* 	write_reqs_num++; */
+      /* #endif */
+      /* 	CONFLICT_TYPE conflict = ssht_insert_w_test(ps_hashtable, sender, ps_remote->address); */
 
-/* 	if (conflict == NO_CONFLICT) */
-/* 	  { */
-/* 	    uint32_t *addr = (uint32_t *) ps_remote->address; */
-/* 	    if (*addr == ps_remote->oldval) */
-/* 	      { */
-/* 		*addr = ps_remote->write_value; */
-/* 		conflict = CAS_SUCCESS; */
-/* 	      } */
-/* 	  } */
+      /* 	if (conflict == NO_CONFLICT) */
+      /* 	  { */
+      /* 	    uint32_t *addr = (uint32_t *) ps_remote->address; */
+      /* 	    if (*addr == ps_remote->oldval) */
+      /* 	      { */
+      /* 		*addr = ps_remote->write_value; */
+      /* 		conflict = CAS_SUCCESS; */
+      /* 	      } */
+      /* 	  } */
 
-/* 	sys_ps_command_reply(sender, PS_CAS_RESPONSE, */
-/* 			     (tm_addr_t) ps_remote->address, */
-/* 			     NULL, */
-/* 			     conflict); */
+      /* 	sys_ps_command_reply(sender, PS_CAS_RESPONSE, */
+      /* 			     (tm_addr_t) ps_remote->address, */
+      /* 			     NULL, */
+      /* 			     conflict); */
 
-/* 	break; */
-/*       } */
+      /* 	break; */
+      /*       } */
 #ifdef PGAS
     case PS_WRITE_INC:
       {
@@ -467,15 +486,15 @@ dsl_communication()
 	}
 	break;
       }
-      default:
-	{
-	  PF_START(1);
-	  sys_ps_command_reply(sender, PS_UKNOWN_RESPONSE,
-			       NULL,
-			       NULL,
-			       NO_CONFLICT);
-	  PF_STOP(1);
-	}
+    default:
+      {
+	/* PF_START(1); */
+	sys_ps_command_reply(sender, PS_UKNOWN_RESPONSE,
+			     NULL,
+			     NULL,
+			     NO_CONFLICT);
+	/* PF_STOP(1); */
+      }
     }
   }
 }
