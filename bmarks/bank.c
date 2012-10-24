@@ -47,7 +47,7 @@
 #define DEFAULT_NB_ACCOUNTS             1024
 #define DEFAULT_NB_THREADS              1
 #define DEFAULT_READ_ALL                0
-#define DEFAULT_CHECK                   20
+#define DEFAULT_CHECK                   0
 #define DEFAULT_WRITE_ALL               0
 #define DEFAULT_READ_THREADS            0
 #define DEFAULT_WRITE_THREADS           0
@@ -202,11 +202,12 @@ typedef struct thread_data {
   uint64_t nb_write_all;
   int32_t id;
   int32_t read_cores;
+  int32_t write_cores;
   int32_t read_all;
+  int32_t write_all;
   int32_t check;
   int32_t disjoint;
   int32_t nb_app_cores;
-  int32_t padding[2];
 } thread_data_t;
 
 bank_t * 
@@ -276,76 +277,60 @@ test(void *data, double duration, int nb_accounts)
   /* Wait on barrier */
   BARRIER;
 
-  // PRINT("chk %d", chk++); //0
-
+  /* warming up */
   TX_START;
-  /*   TX_LOAD(&bank->accounts[0].balance); */
-  /* int lol = 0; */
-  /* TX_STORE(&bank->accounts[1].balance, &lol, TYPE_INT); */
   TX_COMMIT_NO_STATS;
   total(bank, 0);
 
   BARRIER;
 
-  FOR(duration) {
-
-    if (d->id < d->read_cores) 
+  FOR(duration) 
+  {
+    if (d->read_cores && d->id < d->read_cores) 
       {
 	/* Read all */
 	//  PRINT("READ ALL1");
 	total(bank, 1);
 	d->nb_read_all++;
+	continue;
+      }
+
+    int nb = (int) (rand_range(100) - 1);
+    if (nb < d->read_all) 
+      {
+	/* Read all */
+	total(bank, 1);
+	d->nb_read_all++;
       }
     else 
       {
-	int nb = (int) (rand_range(100) - 1);
-	if (nb < d->read_all) 
+	/* Choose random accounts */
+	int src = (int) (rand_range(rand_max) - 1) + rand_min;
+	int dst = (int) (rand_range(rand_max) - 1) + rand_min;
+	if (dst == src)
 	  {
-	    //     PRINT("READ ALL2");
-	    /* Read all */
-	    total(bank, 1);
-	    d->nb_read_all++;
+	    dst = ((src + 1) % rand_max) + rand_min;
 	  }
-	else if (nb < d->check) 
-	  {
-	    /* Choose random accounts */
-	    int src = (int) (rand_range(rand_max) - 1) + rand_min;
-	    int dst = (int) (rand_range(rand_max) - 1) + rand_min;
-	    if (dst == src)
-	      {
-		dst = ((src + 1) % rand_max) + rand_min;
-	      }
-	    check_accs(&bank->accounts[src], &bank->accounts[dst]);
 
+	if (nb < d->check) 
+	  {
+	    check_accs(&bank->accounts[src], &bank->accounts[dst]);
 	    d->nb_checks++;
 	  }
 	else 
 	  {
-	    /* Choose random accounts */
-	    int src = (int) (rand_range(rand_max) - 1) + rand_min;
-	    int dst = (int) (rand_range(rand_max) - 1) + rand_min;
-	    if (dst == src)
-	      {
-		dst = ((src + 1) % rand_max) + rand_min;
-	      }
-
-#ifndef PLATFORM_CLUSTER
 	    transfer(&bank->accounts[I(src)], &bank->accounts[I(dst)], 1);
-#else
-	    transfer(&bank->accounts[src], &bank->accounts[dst], 1);
-#endif
-
 	    d->nb_transfer++;
 	  }
       }
 
-    if (delay) 
-      {
-	udelay(rand_range(delay));
-      }
-  } END_FOR;
 
-  //reset(bank);
+    /* if (delay) */
+    /*   { */
+    /* 	ndelay(rand_range(delay)); */
+    /*   } */
+  } 
+  END_FOR;
 
   BARRIER;
 
@@ -384,10 +369,10 @@ TASKMAIN(int argc, char **argv) {
   double duration = DEFAULT_DURATION;
   int nb_accounts = DEFAULT_NB_ACCOUNTS;
   int nb_app_cores = NUM_APP_NODES;
-  int check = DEFAULT_CHECK;
   int read_all = DEFAULT_READ_ALL;
   int read_cores = DEFAULT_READ_THREADS;
-  int write_all = DEFAULT_WRITE_ALL;
+  int write_all = DEFAULT_READ_ALL + DEFAULT_WRITE_ALL;
+  int check = write_all + DEFAULT_CHECK;
   int write_cores = DEFAULT_WRITE_THREADS;
   int disjoint = DEFAULT_DISJOINT;
 
@@ -422,7 +407,7 @@ TASKMAIN(int argc, char **argv) {
 		"  -d, --duration <double>\n"
 		"        Test duration in seconds (0=infinite, default=" XSTR(DEFAULT_DURATION) ")\n"
 		"  -d, --delay <int>\n"
-		"        Delay after succesfull request. Used to understress the system, default=" XSTR(DEFAULT_DELAY) ")\n"
+		"        Delay ns after succesfull request. Used to understress the system, default=" XSTR(DEFAULT_DELAY) ")\n"
 		"  -c, --check <int>\n"
 		"        Percentage of check transactions transactions (default=" XSTR(DEFAULT_CHECK) ")\n"
 		"  -r, --read-all-rate <int>\n"
@@ -456,9 +441,11 @@ TASKMAIN(int argc, char **argv) {
       break;
     case 'w':
       write_all = atoi(optarg);
+      PRINT("*** warning: write all has been disabled");
       break;
     case 'W':
       write_cores = atoi(optarg);
+      PRINT("*** warning: write all cores have been disabled");
       break;
     case 'j':
       disjoint = 1;
@@ -476,11 +463,17 @@ TASKMAIN(int argc, char **argv) {
   }
 
 
+  write_all = 0;
+  write_cores = 0;
+
+  write_all += read_all;
+  check += write_all;
+
   assert(duration >= 0);
   assert(nb_accounts >= 2);
   assert(nb_app_cores > 0);
   assert(read_all >= 0 && write_all >= 0 && read_all + write_all <= 100);
-  assert(read_all >= 0 && write_all >= 0 && check >= 0 && read_all + write_all + check <= 100);
+  assert(read_all >= 0 && write_all >= 0 && check >= 0 && check <= 100);
   assert(read_cores + write_cores <= nb_app_cores);
 
   ONCE
@@ -488,11 +481,11 @@ TASKMAIN(int argc, char **argv) {
       PRINTN("Nb accounts    : %d\n", nb_accounts);
       PRINTN("Duration       : %fs\n", duration);
       PRINTN("Nb cores       : %d\n", nb_app_cores);
-      PRINTN("Check acc rate : %d\n", check);
-      PRINTN("Transfer rate  : %d\n", 100 - check - read_all - write_all);
+      PRINTN("Check acc rate : %d\n", check - write_all);
+      PRINTN("Transfer rate  : %d\n", 100 - check);
       PRINTN("Read-all rate  : %d\n", read_all);
       PRINTN("Read cores     : %d\n", read_cores);
-      PRINTN("Write-all rate : %d\n", write_all);
+      PRINTN("Write-all rate : %d\n", write_all - read_all);
       PRINTN("Write cores    : %d\n", write_cores);
 
       PRINT("sizeof(..) = %lu", sizeof(thread_data_t));
@@ -509,9 +502,11 @@ TASKMAIN(int argc, char **argv) {
   BARRIER;
 
   data->id = app_id_seq(NODE_ID());
-  data->check = read_all + check;
+  data->check = check;
   data->read_all = read_all;
+  data->write_all = write_all;
   data->read_cores = read_cores;
+  data->write_cores = write_cores;
   data->disjoint = disjoint;
   data->nb_app_cores = nb_app_cores;
   data->nb_transfer = 0;
