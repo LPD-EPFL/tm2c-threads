@@ -134,6 +134,11 @@ check_accs(account_t *acc1, account_t *acc2)
   i = *(int *) TX_LOAD(&acc1->balance);
   j = *(int *) TX_LOAD(&acc2->balance);
   TX_COMMIT;
+
+  if (i + j == 123000)
+    {
+      PRINT("just disallowing the compiler to do dead-code elimination");
+    }
 }
 
 
