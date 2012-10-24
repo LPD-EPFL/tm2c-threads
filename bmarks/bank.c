@@ -327,7 +327,8 @@ test(void *data, double duration, int nb_accounts)
 
     /* if (delay) */
     /*   { */
-    /* 	ndelay(rand_range(delay)); */
+    /* 	/\* ndelay(rand_range(delay)); *\/ */
+    /* 	ndelay(delay); */
     /*   } */
   } 
   END_FOR;
@@ -472,7 +473,6 @@ TASKMAIN(int argc, char **argv) {
   assert(duration >= 0);
   assert(nb_accounts >= 2);
   assert(nb_app_cores > 0);
-  assert(read_all >= 0 && write_all >= 0 && read_all + write_all <= 100);
   assert(read_all >= 0 && write_all >= 0 && check >= 0 && check <= 100);
   assert(read_cores + write_cores <= nb_app_cores);
 
