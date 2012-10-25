@@ -2,8 +2,6 @@
 
 ssht_hashtable_t 
 ssht_new() {
-  PRINT("here");
-
   ssht_hashtable_t hashtable;
   if (posix_memalign((void**) &hashtable, CACHE_LINE_SIZE, NUM_BUCKETS * sizeof(bucket_t)) != 0)
     {
@@ -11,8 +9,6 @@ ssht_new() {
       EXIT(-1);
     }
 
-  PRINT("here 2");
-  /* hashtable = (ssht_hashtable_t) calloc(NUM_BUCKETS, sizeof(bucket_t)); */
   assert(hashtable != NULL);
   assert((intptr_t) hashtable % CACHE_LINE_SIZE == 0);
   assert(sizeof(ssht_rw_entry_t) % CACHE_LINE_SIZE == 0);
