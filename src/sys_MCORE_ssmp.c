@@ -316,30 +316,30 @@ dsl_communication()
 #endif
 
 	CONFLICT_TYPE conflict = try_subscribe(sender, ps_remote->address);
+
 	/* PF_STOP(11); */
 #ifdef PGAS
-	/*
-	  PRINT("RL addr: %3d, val: %d", address, PGAS_read(address));
-	*/
-      
 	sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE,
 			     (tm_addr_t) ps_remote->address, 
 			     PGAS_read(ps_remote->address),
 			     conflict);
 #else
-	/* if (NODE_ID() == 0) { */
-	/* 	if (sender == 1) { */
-	/* 	  printf("[%3d] addr %p \tdiff %d\n", req_num++, ps_remote->address, addr_prev - ps_remote->address); */
-	/* 	  addr_prev = ps_remote->address; */
-	/* 	} */
-	/* } */
-      
 	sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE, 
 			     (tm_addr_t) ps_remote->address, 
 			     NULL,
 			     conflict);
 	//sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE, address, NO_CONFLICT);
 #endif
+
+	if (conflict != NO_CONFLICT)
+	  {
+	    ps_hashtable_delete_node(ps_hashtable, sender);
+
+#if defined(GREEDY)
+	    cm_metadata_core[sender].timestamp = 0;
+#endif
+	  }
+
 	break;
       }
     case PS_PUBLISH:
@@ -364,6 +364,16 @@ dsl_communication()
 			     (tm_addr_t) ps_remote->address,
 			     NULL,
 			     conflict);
+
+	if (conflict != NO_CONFLICT)
+	  {
+	    ps_hashtable_delete_node(ps_hashtable, sender);
+
+#if defined(GREEDY)
+	    cm_metadata_core[sender].timestamp = 0;
+#endif
+	  }
+
 	break;
       }
       /*     case PS_CAS: */
