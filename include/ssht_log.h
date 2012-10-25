@@ -1,6 +1,8 @@
 #ifndef SSHT_LOG_H
 #define	SSHT_LOG_H
 
+#include <stdio.h>
+#include <stdlib.h>
 #include "ssht.h"
 
 #ifdef	__cplusplus

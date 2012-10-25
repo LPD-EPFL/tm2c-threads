@@ -34,6 +34,11 @@ DEBUG_FLAGS := #-g -ggdb -fno-inline#-DDEBUG
 ARCHIVE_SRCS_PURE:= pubSubTM.c tm.c log.c lock_log.c array_log.c dslock.c \
 			measurements.c pgas.c fakemem.c ps_hashtable.c cm.c
 
+
+ifeq ($(HASHTABLE),USE_HASHTABLE_SSHT)
+ARCHIVE_SRCS_PURE += ssht.c
+endif
+
 # Include the platform specific Makefile
 # This file has the modifications related to the current platform
 -include Makefile.$(PLATFORM)
