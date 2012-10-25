@@ -57,13 +57,15 @@ typedef struct ALIGNED(64) bucket {          /* SCC */
 
 
 
-typedef bucket_t * ssht_hashtable_t;
+typedef bucket_t* ssht_hashtable_t;
 
-INLINED ssht_hashtable_t ssht_new() {
+INLINED ssht_hashtable_t 
+ssht_new() {
   ssht_hashtable_t hashtable;
   hashtable = (ssht_hashtable_t) calloc(NUM_BUCKETS, sizeof(bucket_t));
   assert(hashtable != NULL);
 
+  assert((intptr_t) hashtable % CACHE_LINE_SIZE == 0);
   assert(sizeof(ssht_rw_entry_t) % CACHE_LINE_SIZE == 0);
   assert(sizeof(bucket_t) % CACHE_LINE_SIZE == 0);
 
@@ -78,7 +80,8 @@ INLINED ssht_hashtable_t ssht_new() {
   return hashtable;
 }
 
-INLINED bucket_t * ssht_bucket_new() {
+INLINED bucket_t* 
+ssht_bucket_new() {
   bucket_t * bu = (bucket_t *) calloc(1, sizeof(bucket_t));
   assert(bu != NULL);
 

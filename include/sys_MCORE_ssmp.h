@@ -63,8 +63,8 @@ sys_sendcmd_all(void* data, size_t len)
 }
 
 static const uint32_t wait_after_send[4] = {825, 830, 830, 840};
-//#define vv 825
-//static const uint32_t wait_after_send[4] = {vv, vv, vv, vv};
+/* #define vv 800 */
+/* static const uint32_t wait_after_send[4] = {vv, vv, vv, vv}; */
 
 INLINED int
 sys_recvcmd(void* data, size_t len, nodeid_t from)
