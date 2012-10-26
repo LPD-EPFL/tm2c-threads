@@ -19,7 +19,6 @@ PLATFORM_DEFINES +=    -DPLATFORM_MCORE \
 
 ## not commonly changed defines
 PLATFORM_DEFINES +=    -UPGAS \
-                       -DREAD_BUF_OFF \
 		       -UFINISH_ALL_PARALLEL \
                        -UDEBUG_UTILIZATION
 

@@ -157,7 +157,6 @@ extern "C" {
   if ((reason = sigsetjmp(stm_tx->env, 0)) != 0) {		\
     PRINTD("|| restarting due to %d", reason);			\
     stm_tx->write_set = WSET_EMPTY(stm_tx->write_set);		\
-    stm_tx->read_set = read_set_empty(stm_tx->read_set);	\
   }								\
   stm_tx->retries++;						\
   TXRUNNING();							\
@@ -258,7 +257,7 @@ extern "C" {
    * addr is the local address
    */
 #define TX_LOAD(addr)					\
-  tx_load(stm_tx->write_set, stm_tx->read_set, (addr))
+  tx_load(stm_tx->write_set, (addr)) /* XXX: if using read_buff -> erro */
 
 #define TX_LOAD_T(addr,type) (type)TX_LOAD(addr)
 
@@ -367,10 +366,10 @@ extern "C" {
 #ifdef PGAS
 
   INLINED int 
-  tx_load(write_set_pgas_t *ws, read_set_t *rs, tm_addr_t addr)
+  tx_load(write_set_pgas_t *ws, tm_addr_t addr)
 #else
     INLINED tm_addr_t 
-    tx_load(write_set_t *ws, read_set_t *rs, tm_addr_t addr)
+    tx_load(write_set_t *ws, tm_addr_t addr)
 #endif
   {
     tm_intern_addr_t intern_addr = to_intern_addr(addr);
@@ -386,15 +385,11 @@ extern "C" {
 #else
     write_entry_t *we;
     if ((we = write_set_contains(ws, intern_addr)) != NULL) {
-      //read_set_update(rs, addr);
       return (void *) &we->i;
     }
 #endif
 
     else {
-#ifndef READ_BUF_OFF
-      if (!read_set_update(rs, intern_addr)) {
-#endif
 	//the node is NOT already subscribed for the address
 	CONFLICT_TYPE conflict;
 #ifndef BACKOFF_RETRY
@@ -415,9 +410,6 @@ extern "C" {
 #endif
 	  TX_ABORT(conflict);
 	}
-#ifndef READ_BUF_OFF
-      }
-#endif
 #ifdef PGAS
       return read_value;
 #else

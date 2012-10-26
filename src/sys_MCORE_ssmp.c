@@ -34,7 +34,6 @@ unsigned int read_reqs_num = 0, write_reqs_num = 0;
 #endif
 
 PS_REPLY* ps_remote_msg; // holds the received msg
-static PS_COMMAND *ps_remote;
 
 INLINED nodeid_t min_dsl_id();
 
@@ -177,12 +176,12 @@ sys_ps_init_(void)
 
   MCORE_shmalloc_init(1024*1024*1024); //1GB
 
-  BARRIERW
+  BARRIERW;
 
   ps_remote_msg = NULL;
   PRINTD("sys_ps_init: done");
 
-  BARRIERW
+  BARRIERW;
 }
 
 void
@@ -190,21 +189,24 @@ sys_dsl_init(void)
 {
   MCORE_shmalloc_init(1024*1024*1024); //1GB
 
-  BARRIERW
+  BARRIERW;
 
 #ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
   cm_abort_flags = (int32_t **) malloc(TOTAL_NODES() * sizeof(int32_t *));
   assert(cm_abort_flags != NULL);
 
   uint32_t i;
-  for (i = 0; i < TOTAL_NODES(); i++) {
-    //TODO: make it open only for app nodes
-    cm_abort_flags[i] = cm_init(i);    
-  }
+  for (i = 0; i < TOTAL_NODES(); i++) 
+    {
+      //TODO: make it open only for app nodes
+      if (is_app_core(i))
+	{
+	  cm_abort_flags[i] = cm_init(i);    
+	}
+    }
 #endif
 
-  ps_remote = (PS_COMMAND *) malloc(sizeof (PS_COMMAND)); //TODO: free at finalize + check for null
-  BARRIERW
+  BARRIERW;
 
 }
 
@@ -268,17 +270,32 @@ dsl_communication()
   nodeid_t sender;
 
   ssmp_msg_t *msg;
-  msg = (ssmp_msg_t *) malloc(sizeof(ssmp_msg_t));
-
   ssmp_color_buf_t *cbuf;
-  cbuf = (ssmp_color_buf_t *) malloc(sizeof(ssmp_color_buf_t));
+  static PS_COMMAND *ps_remote;
+
+  if (posix_memalign((void**) &msg, CACHE_LINE_SIZE, sizeof(ssmp_msg_t)) != 0
+      ||
+      posix_memalign((void**) &cbuf, CACHE_LINE_SIZE, sizeof(ssmp_color_buf_t)) != 0
+      ||
+      posix_memalign((void**) &ps_remote, CACHE_LINE_SIZE, sizeof(PS_COMMAND)) != 0)
+    {
+      perror("mem_align\n");
+      EXIT(-1);
+    }
   assert(msg != NULL && cbuf != NULL);
+  assert((uintptr_t) msg % CACHE_LINE_SIZE == 0);
+  assert((uintptr_t) cbuf % CACHE_LINE_SIZE == 0);
+  assert((uintptr_t) ps_remote % CACHE_LINE_SIZE == 0);
+
 
   ssmp_color_buf_init(cbuf, is_app_core);
 
   
-  int j;
-  for (j = 0; j < NB; j++) usages[j] = 0;
+  uint32_t j;
+  for (j = 0; j < NB; j++) 
+    {
+      usages[j] = 0;
+    }
 
   while (1) {
 

@@ -252,128 +252,17 @@ inline void write_set_persist(write_set_t *write_set) {
 }
 
 inline write_entry_t * write_set_contains(write_set_t *write_set, tm_intern_addr_t address) {
-    unsigned int i;
-    for (i = write_set->nb_entries; i-- > 0; ) {
-        if (write_set->write_entries[i].address == address) {
-            return &write_set->write_entries[i];
-        }
+  uint32_t i;
+  for (i = 0; i < write_set->nb_entries; i++)
+    {
+      write_entry_t* wes = write_set->write_entries;
+      if (wes[i].address == address) 
+	{
+	  return &wes[i];
+	}
     }
 
-    return NULL;
-}
-
-/*______________________________________________________________________________________________________
- * READ SET                                                                                             |
- *______________________________________________________________________________________________________|
- */
-
-
-inline read_set_t * read_set_new() {
-    read_set_t *read_set;
-
-    if ((read_set = (read_set_t *) malloc(sizeof (read_set_t))) == NULL) {
-        PRINTD("Could not initialize the read set");
-        return NULL;
-    }
-
-    if ((read_set->read_entries = (read_entry_l_t *) malloc(READ_SET_SIZE * sizeof (read_entry_l_t))) == NULL) {
-        free(read_set);
-        PRINTD("Could not initialize the read set");
-        return NULL;
-    }
-
-    read_set->nb_entries = 0;
-    read_set->size = READ_SET_SIZE;
-
-    return read_set;
-}
-
-inline void read_set_free(read_set_t *read_set) {
-    free(read_set->read_entries);
-    free(read_set);
-}
-
-inline read_set_t * read_set_empty(read_set_t *read_set) {
-
-    if (read_set->size > READ_SET_SIZE) {
-        read_entry_l_t * temp;
-        if ((temp = (read_entry_l_t *) realloc(read_set->read_entries, READ_SET_SIZE * sizeof (read_entry_l_t))) == NULL) {
-            free(read_set->read_entries);
-            PRINT("realloc @ read_set_empty failed");
-            read_set->read_entries = (read_entry_l_t *) malloc(READ_SET_SIZE * sizeof (read_entry_l_t));
-            if (read_set->read_entries == NULL) {
-                PRINT("malloc read_set->read_entries @ read_set_empty");
-                return NULL;
-            }
-        }
-    }
-    read_set->size = READ_SET_SIZE;
-    read_set->nb_entries = 0;
-    return read_set;
-}
-
-inline read_entry_l_t * read_set_entry(read_set_t *read_set) {
-    if (read_set->nb_entries == read_set->size) {
-        unsigned int new_size = 2 * read_set->size;
-        //PRINTD("READ set max sized (%d)", read_set->size);
-        read_entry_l_t *temp;
-        if ((temp = (read_entry_l_t *) realloc(read_set->read_entries, new_size * sizeof (read_entry_l_t))) == NULL) {
-            PRINTD("Could not resize the write set");
-            read_set_free(read_set);
-            return NULL;
-        }
-
-        read_set->read_entries = temp;
-        read_set->size = new_size;
-    }
-
-    return &read_set->read_entries[read_set->nb_entries++];
-}
-
-#ifdef READDATATYPE
-
-inline void read_set_insert(read_set_t *read_set, DATATYPE datatype, tm_intern_addr_t address) {
-#else
-
-inline void read_set_insert(read_set_t *read_set, tm_intern_addr_t address) {
-#endif
-    read_entry_l_t *re = read_set_entry(read_set);
-#ifdef READDATATYPE
-    re->datatype = datatype;
-#endif
-    re->address = address;
-}
-
-#ifdef READDATATYPE
-
-inline BOOLEAN read_set_update(read_set_t *read_set, DATATYPE datatype, tm_intern_addr_t address) {
-#else
-
-inline BOOLEAN read_set_update(read_set_t *read_set, tm_intern_addr_t address) {
-#endif
-    unsigned int i;
-    for (i = 0; i < read_set->nb_entries; i++) {
-        if (read_set->read_entries[i].address == address) {
-            return TRUE;
-        }
-    }
-#ifdef READDATATYPE
-    read_set_insert(read_set, datatype, address);
-#else
-    read_set_insert(read_set, address);
-#endif
-    return FALSE;
-}
-
-inline read_entry_l_t * read_set_contains(read_set_t *read_set, tm_intern_addr_t address) {
-    unsigned int i;
-    for (i = read_set->nb_entries; i-- > 0;) {
-        if (read_set->read_entries[i].address == address) {
-            return &read_set->read_entries[i];
-        }
-    }
-
-    return NULL;
+  return NULL;
 }
 
 

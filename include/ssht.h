@@ -38,7 +38,7 @@
 
 typedef uintptr_t addr_t;
 
-typedef struct ssht_rw_entry {
+typedef struct ALIGNED(64) ssht_rw_entry {
   uint8_t nr;
   uint8_t reader[MAX_READERS];
   uint8_t writer;
@@ -46,7 +46,7 @@ typedef struct ssht_rw_entry {
 
 typedef struct ALIGNED(64) bucket {          /* SCC */
   addr_t addr[ADDR_PER_CL];	             /* 4 * 7   28 */
-  struct bucket * next;			     /* 4       32 */
+  struct bucket* next;			     /* 4       32 */
   uint8_t padding[PADDING_BYTES];
   ssht_rw_entry_t entry[ENTRY_PER_CL];
 } bucket_t;
@@ -66,7 +66,7 @@ extern CONFLICT_TYPE ssht_insert_w_test(ssht_hashtable_t ht, uint32_t id, uintpt
 
 INLINED bucket_t* 
 ssht_bucket_new() {
-  bucket_t * bu = (bucket_t *) calloc(1, sizeof(bucket_t));
+  bucket_t* bu = (bucket_t *) calloc(1, sizeof(bucket_t));
   assert(bu != NULL);
 
   uint32_t i;

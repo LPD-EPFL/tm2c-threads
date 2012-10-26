@@ -118,58 +118,6 @@ extern "C" {
 
     extern write_entry_t * write_set_contains(write_set_t *write_set, tm_intern_addr_t address);
 
-
-    /*______________________________________________________________________________________________________
-     * READ SET                                                                                             |
-     *______________________________________________________________________________________________________|
-     */
-
-#define READ_SET_SIZE 1024
-
-    typedef struct read_entry_l {
-#ifdef READDATATYPE
-        DATATYPE datatype;
-#endif
-        tm_intern_addr_t address;
-    } read_entry_l_t;
-
-    typedef struct read_set {
-        read_entry_l_t *read_entries;
-        unsigned int nb_entries;
-        unsigned int size;
-    } read_set_t;
-
-    extern read_set_t * read_set_new();
-
-    extern void read_set_free(read_set_t *read_set);
-
-    extern read_set_t * read_set_empty(read_set_t *read_set);
-
-    inline read_entry_l_t * read_set_entry(read_set_t *read_set);
-
-#ifdef READDATATYPE
-
-    extern void read_set_insert(read_set_t *read_set, DATATYPE datatype, tm_intern_addr_t address);
-#else
-
-    extern void read_set_insert(read_set_t *read_set, tm_intern_addr_t address);
-#endif
-
-#ifdef READDATATYPE
-
-    extern BOOLEAN read_set_update(read_set_t *read_set, DATATYPE datatype, tm_intern_addr_t address);
-#else
-
-    extern BOOLEAN read_set_update(read_set_t *read_set, tm_intern_addr_t address);
-#endif
-
-    extern read_entry_l_t * read_set_contains(read_set_t *read_set, tm_intern_addr_t address);
-
-#ifdef	__cplusplus
-}
-#endif
-
-
 #ifdef PGAS
 
 /*______________________________________________________________________________________________________

@@ -89,7 +89,7 @@ void tm_init() {
     else { //app node
         ps_init_();
         stm_tx_node = tx_metadata_node_new();
-        stm_tx = tx_metadata_new(IDLE);
+        stm_tx = tx_metadata_new();
         if (stm_tx == NULL || stm_tx_node == NULL) {
             PRINTD("Could not alloc tx metadata @ TM_INIT");
             EXIT(-1);
@@ -199,7 +199,6 @@ void handle_abort(stm_tx_t *stm_tx, CONFLICT_TYPE reason) {
 #else
     write_set_empty(stm_tx->write_set);
 #endif
-    read_set_empty(stm_tx->read_set);
     mem_info_on_abort(stm_tx->mem_info);
     
 #ifdef BACKOFF_RETRY
@@ -268,13 +267,6 @@ retry:
     }
 }
 
-void ps_unsubscribe_all() {
-    read_entry_l_t *read_entries = stm_tx->read_set->read_entries;
-    unsigned int i;
-    for (i = 0; i < stm_tx->read_set->nb_entries; i++) {
-        ps_unsubscribe(to_addr(read_entries[i].address));
-    }
-}
 
 uint32_t		/* boolean */
 tx_cas(tm_addr_t addr, uint32_t oldval, uint32_t newval)
