@@ -190,7 +190,7 @@ void reset(bank_t *bank) {
 #ifdef PGAS
         TX_STORE(&bank->accounts[i].balance, j, TYPE_INT);
 #else
-        TX_STORE(&bank->accounts[I(i)].balance, &j, TYPE_INT);
+        TX_STORE(&bank->accounts[I(i)].balance, j, TYPE_INT);
 #endif
     }
     TX_COMMIT
