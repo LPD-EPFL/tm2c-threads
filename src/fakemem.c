@@ -269,14 +269,14 @@ fakemem_free(void* ptr)
 #endif
 }
 
-size_t
+inline size_t
 fakemem_offset(void* ptr)
 {
 	return (size_t)((uintptr_t)ptr -
 	                (uintptr_t)FAKEMEM_ALLOC_STATE->base_vaddr);
 }
 
-void*
+inline void*
 fakemem_addr_from_offset(size_t offset)
 {
 	return (void*)((uintptr_t)FAKEMEM_ALLOC_STATE->base_vaddr +
