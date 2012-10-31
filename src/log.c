@@ -250,7 +250,7 @@ inline void write_entry_pgas_persist(write_entry_pgas_t *we) {
 }
 
 inline void write_entry_pgas_print(write_entry_pgas_t *we) {
-    PRINTSME("[%5d :  %d]", (we->address), we->value);
+  PRINTSME("[%5d :  %d]", (int) (we->address), we->value);
 }
 
 inline void write_set_pgas_print(write_set_pgas_t *write_set_pgas) {

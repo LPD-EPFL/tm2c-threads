@@ -426,10 +426,8 @@ dsl_communication()
 	CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
 	if (conflict == NO_CONFLICT) {
 	  //		      PRINT("wval for %d is %d", address, write_value);
-	  /*
-	    PRINT("PS_WRITE_INC from %2d for %3d, old: %3d, new: %d", sender, address, PGAS_read(address),
-	    PGAS_read(address) + write_value);
-	  */
+	  
+	  /* PRINT("PS_WRITE_INC from %2d for %3d, old: %3d, new: %d", sender, ps_remote->address, *PGAS_read(ps_remote->address), *PGAS_read(ps_remote->address) + ps_remote->write_value); */
 	  write_set_pgas_insert(PGAS_write_sets[sender], 
 				*(int *) PGAS_read(ps_remote->address) + ps_remote->write_value,
                                 ps_remote->address);
@@ -438,13 +436,21 @@ dsl_communication()
 			     (tm_addr_t) ps_remote->address,
 			     NULL,
 			     conflict);
+
+	if (conflict != NO_CONFLICT)
+	  {
+	    ps_hashtable_delete_node(ps_hashtable, sender);
+	    PGAS_write_sets[sender] = write_set_pgas_empty(PGAS_write_sets[sender]);
+	    /* PRINT("conflict on %d (aborting %d)", ps_remote->address, sender); */
+	  }
+
 	break;
       }
     case PS_LOAD_NONTX:
       {
 	//		PRINT("((non-tx ld: from %d, addr %d (val: %d)))", sender, address, (*PGAS_read(address)));
 	sys_ps_command_reply(sender, PS_LOAD_NONTX_RESPONSE,
-			     ps_remote->address,
+			     (tm_addr_t) ps_remote->address,
 			     PGAS_read(ps_remote->address),
 			     NO_CONFLICT);
 		
@@ -503,6 +509,7 @@ dsl_communication()
 	    for (j = 0; j < NB; j++) {
 	      //	      printf("usages[%02d] = %0.2f [%d]\n", j, 100*(usages[j]/(double)sumh), usages[j]);
 	    }
+
 	  }
 
 #ifdef DEBUG_UTILIZATION

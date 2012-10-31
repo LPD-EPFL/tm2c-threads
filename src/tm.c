@@ -204,9 +204,10 @@ void handle_abort(stm_tx_t *stm_tx, CONFLICT_TYPE reason) {
 #ifdef BACKOFF_RETRY
     /*BACKOFF and RETRY*/
     if (BACKOFF_MAX > 0)  {
-      unsigned int wait_max = pow(2, (stm_tx->retries < BACKOFF_MAX ? stm_tx->retries : BACKOFF_MAX)) * BACKOFF_DELAY;
-      unsigned int wait = rand_range(wait_max);
-      //PRINT("\t\t\t\t\t\t... backoff for %5d micros (retries: %3d | max: %d)", wait, stm_tx->retries, wait_max);
+      uint32_t wait_max = (stm_tx->retries < BACKOFF_MAX ? stm_tx->retries : BACKOFF_MAX) * BACKOFF_DELAY;
+/* pow(2, (stm_tx->retries < BACKOFF_MAX ? stm_tx->retries : BACKOFF_MAX)) * BACKOFF_DELAY; */
+      uint32_t wait = rand_range(wait_max);
+      /* PRINT("\t\t\t\t\t\t... backoff for %5d nanos (retries: %3d | max: %d)", wait, stm_tx->retries, wait_max); */
       ndelay(wait);
     }
     else {
@@ -268,24 +269,24 @@ retry:
 }
 
 
-uint32_t		/* boolean */
-tx_cas(tm_addr_t addr, uint32_t oldval, uint32_t newval)
-{
-  uint32_t ret = 0;
+/* uint32_t		/\* boolean *\/ */
+/* tx_cas(tm_addr_t addr, uint32_t oldval, uint32_t newval) */
+/* { */
+/*   uint32_t ret = 0; */
 
-  TX_START
-    {
-      tx_wlock(addr);
-      uint32_t *addr_ui = (uint32_t *) addr;
-      if (*addr_ui == oldval)
-	{
-	  *addr_ui = newval;
-	  ret = 1;
-	}
-    }
-  TX_COMMIT_NO_PUB_NO_STATS;
+/*   TX_START */
+/*     { */
+/*       tx_wlock(addr); */
+/*       uint32_t *addr_ui = (uint32_t *) addr; */
+/*       if (*addr_ui == oldval) */
+/* 	{ */
+/* 	  *addr_ui = newval; */
+/* 	  ret = 1; */
+/* 	} */
+/*     } */
+/*   TX_COMMIT_NO_PUB_NO_STATS; */
   
-  return ret;    
-}
+/*   return ret;     */
+/* } */
 
 
