@@ -350,9 +350,9 @@ TASKMAIN(int argc, char **argv) {
   PF_MSG(1, "2nd TX_LOAD_STORE (transfer)");
   PF_MSG(2, "the whole transfer");
 
-  TM_INIT
+  TM_INIT;
 
-    struct option long_options[] = {
+  struct option long_options[] = {
     // These options don't set a flag
     {"help", no_argument, NULL, 'h'},
     {"accounts", required_argument, NULL, 'a'},
