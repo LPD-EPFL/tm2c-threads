@@ -18,7 +18,7 @@ PLATFORM_DEFINES +=    -DPLATFORM_MCORE \
                        -ULIBTASK 
 
 ## not commonly changed defines
-PLATFORM_DEFINES +=    -UPGAS \
+PLATFORM_DEFINES +=    -DPGAS \
 		       -UFINISH_ALL_PARALLEL \
                        -UDEBUG_UTILIZATION
 
