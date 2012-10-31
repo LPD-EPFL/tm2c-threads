@@ -126,7 +126,7 @@ void print_global_stats() {
     stats_total /= NUM_UES;
 
     double commit_rate = (stats_total - stats_aborts) / (double) stats_total;
-    double tx_latency = (1 / (double) stats_commits_app) * 1000; //micros
+    double tx_latency = (1 / (double) stats_commits_app) * 1000 * 1000; //micros
 
     printf(":: PER SECOND PER NODE AVG -----------------------------------\n");
     printf("NA| Starts      \t: %lu\t/s\n", stats_total);
