@@ -9,7 +9,6 @@
  * Under PGAS we're using fakemem allocator, to have fake allocations, that
  * mimic those of RCCE_shmalloc
  */
-#include "fakemem.h"
 #endif
 
 nodeid_t MY_NODE_ID;
@@ -259,9 +258,7 @@ dsl_communication()
 	CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
 #ifdef PGAS
 	if (conflict == NO_CONFLICT) {
-	  write_set_pgas_insert(PGAS_write_sets[sender],
-				ps_remote->write_value, 
-				ps_remote->address);
+	  write_set_pgas_insert(PGAS_write_sets[sender], ps_remote->write_value, ps_remote->address);
 	}
 #endif
 	sys_ps_command_reply(sender, PS_PUBLISH_RESPONSE, 
