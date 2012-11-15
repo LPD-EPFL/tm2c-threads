@@ -121,33 +121,32 @@ bucket_insert_w(bucket_t* bu, ssht_log_set_t* log, uint32_t id, uintptr_t addr)
     {
       for (i = 0; i < ADDR_PER_CL; i++) 
 	{
-	  if (btmp->addr[i] == addr) 
+	  if (btmp->addr[i] == addr)                               /* there is an entry for this addr */
 	    {
 	      ssht_rw_entry_t* e = btmp->entry + i;
-	      if (e->writer != SSHT_NO_WRITER) {
-#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
-		if (contention_manager_raw_waw(id, e->writer, WRITE_AFTER_WRITE)) 
-		  {
-		    e->writer = id;
-		    btmp->addr[i] = addr;
-		    ssht_log_set_insert(log, btmp->addr + i, e);
-		    return NO_CONFLICT;
-		  }
-		else 
-		  {
-		    return WRITE_AFTER_WRITE;
-		  }
-#else
-		return WRITE_AFTER_WRITE;
+	      if (e->writer != SSHT_NO_WRITER)                    /* there is a writer for this entry */
+		{
+#ifndef NOCM 			                                  /* if any other CM (greedy, wholly, faircm) */
+		  if (contention_manager_raw_waw(id, e->writer, WRITE_AFTER_WRITE)) 
+		    {
+		      e->writer = id;
+		      ssht_log_set_insert(log, btmp->addr + i, e);
+		      return NO_CONFLICT;
+		    }
+		  else 
+		    {
+		      return WRITE_AFTER_WRITE;
+		    }
+#else   /* NOCM */
+		  return WRITE_AFTER_WRITE;
 #endif	/* NOCM */
-	      }
+		}
 	      else if (e->nr > 1 || e->reader[id] == 0) 
 		{
 #ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
 		  if (contention_manager_war(id, e->reader, WRITE_AFTER_READ))
 		    {
 		      e->writer = id;
-		      btmp->addr[i] = addr;
 		      ssht_log_set_insert(log, btmp->addr + i, e);
 		      return NO_CONFLICT;
 		    }
@@ -158,6 +157,12 @@ bucket_insert_w(bucket_t* bu, ssht_log_set_t* log, uint32_t id, uintptr_t addr)
 #else
 		  return WRITE_AFTER_READ;
 #endif	/* NOCM */
+		}
+	      else		/* 1 reader and this reader is node id */
+		{
+		  e->writer = id;
+		  ssht_log_set_insert(log, btmp->addr + i, e);
+		  return NO_CONFLICT;
 		}
 	    }
 	}
