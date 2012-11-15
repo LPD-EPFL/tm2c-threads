@@ -64,7 +64,7 @@ extern "C" {
 
   INLINED ssht_log_entry_t * ssht_log_set_entry(ssht_log_set_t *ssht_log_set) {
     if (ssht_log_set->nb_entries == ssht_log_set->size) {
-      printf("LOCK set max sized (%d)\n", ssht_log_set->size);
+      PRINT("LOCK set max sized (%d)", ssht_log_set->size);
       unsigned int new_size = 2 * ssht_log_set->size;
       ssht_log_entry_t *temp;
       if ((temp = (ssht_log_entry_t *) realloc(ssht_log_set->log_entries, new_size * sizeof (ssht_log_entry_t))) == NULL) {

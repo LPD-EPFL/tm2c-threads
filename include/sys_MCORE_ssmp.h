@@ -10,7 +10,11 @@
 #include "common.h"
 #include "messaging.h"
 #include "mcore_malloc.h"
-#include "fakemem.h"
+
+#ifdef PGAS
+#  include "pgas_app.h"
+#  include "pgas_dsl.h"
+#endif
 
 
 #define BARRIER  ssmp_barrier_wait(1);
@@ -27,6 +31,8 @@ extern nodeid_t *dsl_nodes;
 extern int32_t **cm_abort_flags;
 extern int32_t *cm_abort_flag_mine;
 #endif /* CM_H */
+
+extern size_t pgas_app_addr_offs(void* addr);
 
 /* --- inlined methods --- */
 INLINED nodeid_t
@@ -62,8 +68,9 @@ sys_sendcmd_all(void* data, size_t len)
   return 1;
 }
 
-static const uint32_t wait_after_send[4] = {825, 830, 830, 840};
-/* #define vv 800 */
+/* static const uint32_t wait_after_send[4] = {825, 830, 830, 840}; */
+static const uint32_t wait_after_send[4] = {665, 720, 750, 800};
+/* #define vv 00 */
 /* static const uint32_t wait_after_send[4] = {vv, vv, vv, vv}; */
 
 INLINED int
@@ -81,7 +88,8 @@ INLINED tm_intern_addr_t
 to_intern_addr(tm_addr_t addr)
 {
 #ifdef PGAS
-  return fakemem_offset((void*) addr);
+  //  return fakemem_offset((void*) addr);
+  return pgas_app_addr_offs((void*) addr);
 #else
   return (tm_intern_addr_t)addr;
 #endif
