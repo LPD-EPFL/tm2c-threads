@@ -17,7 +17,7 @@ typedef enum {
 	TRUE //1
 } BOOLEAN;
 
-typedef unsigned int nodeid_t;
+typedef uint32_t nodeid_t;
 typedef void* tm_addr_t;
 
 /*
