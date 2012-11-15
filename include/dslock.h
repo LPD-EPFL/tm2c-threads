@@ -9,7 +9,6 @@
 #endif
 
 #ifdef PGAS
-#include "pgas.h"
 extern write_set_pgas_t **PGAS_write_sets;
 #endif
 

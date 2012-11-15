@@ -58,6 +58,8 @@ extern "C" {
 #define DSLNDPERNODES   2 /* 1 dedicated DS-Locking core per DSLNDPERNODES cores*/
 
 
+#  define CACHE_LINE_SIZE 64
+
 #if defined(PLATFORM_MCORE)
 #  define REF_SPEED_GHZ           2.1
 #elif defined(SCC)

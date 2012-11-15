@@ -14,7 +14,6 @@
 #  include "cm.h"
 #endif 
 
-#define CACHE_LINE_SIZE 64
 #define SIZE_ENTRY 4
 #define ADDR_PER_CL 7
 #define ENTRY_PER_CL ADDR_PER_CL
@@ -79,7 +78,6 @@ ssht_bucket_new() {
 
 
 #define ssht_rw_entry_has_readers(entry) (entry)->nr
-
 
 INLINED CONFLICT_TYPE 
 ssht_insert(ssht_hashtable_t ht, uint32_t bu, ssht_log_set_t* log, uint32_t id, uintptr_t addr, RW rw) {
