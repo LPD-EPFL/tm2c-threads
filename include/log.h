@@ -24,9 +24,6 @@ extern "C" {
 #endif
 
 #include "common.h"
-#ifdef PGAS
-#include "pgas.h"
-#endif
 
 #define CAST_INT(addr) *(addr)
 
@@ -89,11 +86,12 @@ extern "C" {
    */
 
 
-#define WRITE_SET_PGAS_SIZE     384
+#define WRITE_SET_PGAS_SIZE     4
 
-  typedef struct write_entry_pgas {
+  typedef struct write_entry_pgas 
+  {
     tm_intern_addr_t address;
-    int value;
+    int64_t value;
   } write_entry_pgas_t;
 
   typedef struct write_set_pgas {
@@ -110,9 +108,9 @@ extern "C" {
 
   inline write_entry_pgas_t * write_set_pgas_entry(write_set_pgas_t *write_set_pgas);
 
-  extern void write_set_pgas_insert(write_set_pgas_t *write_set_pgas, int value, tm_intern_addr_t address);
+  extern void write_set_pgas_insert(write_set_pgas_t *write_set_pgas, int64_t value, tm_intern_addr_t address);
 
-  extern void write_set_pgas_update(write_set_pgas_t *write_set_pgas, int value, tm_intern_addr_t address);
+  extern void write_set_pgas_update(write_set_pgas_t *write_set_pgas, int64_t value, tm_intern_addr_t address);
 
   inline void write_entry_pgas_persist(write_entry_pgas_t *we);
 
@@ -120,7 +118,7 @@ extern "C" {
 
   extern void write_set_pgas_print(write_set_pgas_t *write_set_pgas);
 
-  extern void write_set_pgas_persist(write_set_pgas_t *write_set_pgas);
+  extern uint32_t write_set_pgas_persist(write_set_pgas_t *write_set_pgas);
 
   extern write_entry_pgas_t * write_set_pgas_contains(write_set_pgas_t *write_set_pgas, tm_intern_addr_t address);
 
