@@ -551,7 +551,11 @@ extern "C" {
   ps_hashtable_insert(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
 		      tm_intern_addr_t address, RW rw)
   {
+#ifdef PGAS
     uint32_t bu = ps_get_hash(address) % NUM_OF_BUCKETS;
+#else  /* !PGAS */
+    uint32_t bu = address % NUM_OF_BUCKETS;
+#endif	/* PGAS */
 
     CONFLICT_TYPE conflict = ssht_insert(ps_hashtable, bu, logs[nodeId], nodeId,  address, rw);
     return conflict;

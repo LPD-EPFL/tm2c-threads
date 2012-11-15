@@ -23,7 +23,6 @@ extern "C" {
  * Under PGAS we're using fakemem allocator, to have fake allocations, that
  * mimic those of RCCE_shmalloc
  */
-#  include "fakemem.h"
 #endif
 
 #define BARRIER  ssmp_barrier_wait(1);
