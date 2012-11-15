@@ -33,15 +33,6 @@
  * stm_get_env() and only call sigsetjmp() if it is not null.
  */
 
-/*use TX_LOAD_STORE*/
-#define LOAD_STORE
-
-
-#if defined(SCC)
-/*take advante all 4 MCs*/
-#define MC 
-#endif
-
 #define DEFAULT_DURATION                10
 #define DEFAULT_DELAY                   0
 #define DEFAULT_NB_ACCOUNTS             1024
@@ -54,7 +45,6 @@
 #define DEFAULT_DISJOINT                0
 
 int delay = DEFAULT_DELAY;
-
 
 #define XSTR(s)                         STR(s)
 #define STR(s)                          #s
@@ -79,58 +69,43 @@ int delay = DEFAULT_DELAY;
  * BANK ACCOUNTS
  * ################################################################### */
 
-/*for better perf with PGAS use a balance only account*/
-typedef struct account {
-    uint32_t balance;
+typedef struct account
+{
+  uint32_t balance;
+  uint32_t number;
 } account_t;
 
-typedef struct bank {
-    account_t *accounts;
-    int size;
+typedef struct bank
+{
+  account_t** accounts;
+  int size;
 } bank_t;
 
-int transfer(account_t *src, account_t *dst, int amount) {
+int 
+transfer(account_t* src, account_t* dst, int amount) 
+{
   /* PRINT("in transfer"); */
-
   int i, j;
-
-  /* PF_START(2); */
 
   /* Allow overdrafts */
   TX_START;
 
-#ifdef LOAD_STORE
-  //TODO: test and use the TX_LOAD_STORE
-  /* PF_START(0); */
-  TX_LOAD_STORE(&src->balance, -, amount, TYPE_INT);
-  /* PF_STOP(0); */
-  /* PF_START(1); */
-  TX_LOAD_STORE(&dst->balance, +, amount, TYPE_INT);
-  /* PF_STOP(1); */
-    
+  TX_LOAD_STORE(src, -, amount, TYPE_INT);
+  TX_LOAD_STORE(dst, +, amount, TYPE_INT);
   TX_COMMIT_NO_PUB;
-#else
-  i = *(int *) TX_LOAD(&src->balance);
-  i -= amount;
-  TX_STORE(&src->balance, &i, TYPE_INT); //NEED TX_STOREI
-  j = *(int *) TX_LOAD(&dst->balance);
-  j += amount;
-  TX_STORE(&dst->balance, &j, TYPE_INT);
-  TX_COMMIT;
-#endif
 
   /* PF_STOP(2); */
   return amount;
 }
 
 void
-check_accs(account_t *acc1, account_t *acc2) 
+check_accs(account_t* acc1, account_t* acc2) 
 {
   int i, j;
   
   TX_START;
-  i = TX_LOAD(&acc1->balance);
-  j = TX_LOAD(&acc2->balance);
+  i = TX_LOAD(acc1, 1);
+  j = TX_LOAD(acc2, 1);
   TX_COMMIT;
 
   if (i + j == 123000)
@@ -139,40 +114,63 @@ check_accs(account_t *acc1, account_t *acc2)
     }
 }
 
+int
+total(bank_t* bank, int transactional) 
+{
+  int i, total;
 
-int total(bank_t *bank, int transactional) {
-    int i, total;
-
-    if (!transactional) {
-        total = 0;
-        for (i = 0; i < bank->size; i++) {
-	  int bal = NONTX_LOAD(&bank->accounts[i].balance);
+  if (!transactional) 
+    {
+      total = 0;
+      for (i = 0; i < bank->size; i++) 
+	{
+	  int bal = NONTX_LOAD(bank->accounts[i], 1);
 	  total += bal;
-	  //            PRINT("ld acc %03d, val: %d", i, bal);
-        }
+	}
     }
-    else {
-        TX_START
-        total = 0;
-        for (i = 0; i < bank->size; i++) {
-            //PRINTN("(l %d)", i);
-            total += TX_LOAD(&bank->accounts[i].balance);
-        }
-        TX_COMMIT
+  else 
+    {
+      TX_START;
+      total = 0;
+      for (i = 0; i < bank->size; i++) {
+	int val = TX_LOAD(bank->accounts[i], 1);
+	total += val;
+      }
+      TX_COMMIT;
     }
 
-    return total;
+  return total;
 }
 
-void reset(bank_t *bank) {
-    int i;
+void
+reset(bank_t *bank, int transactional) 
+{
+  int i;
 
-    TX_START
-    for (i = 0; i < bank->size; i++) {
-        TX_STORE(&bank->accounts[i].balance, 0, TYPE_INT);
+  if (transactional)
+    {
+      TX_START;
+      for (i = 0; i < bank->size; i++) 
+	{
+	  account_t a;
+	  a.balance = 0;
+	  a.number = i;
+	  TX_STORE(bank->accounts[i], *(int64_t*) &a, TYPE_INT);
+	}
+      TX_COMMIT;
     }
-    TX_COMMIT
+  else
+    {
+      for (i = 0; i < bank->size; i++) 
+	{
+	  account_t a;
+	  a.balance = 0;
+	  a.number = i;
+	  NONTX_STORE(bank->accounts[i], *(int64_t*) &a, TYPE_INT);
+	}
+    }
 }
+
 
 /* ################################################################### *
  * STRESS TEST
@@ -193,13 +191,11 @@ typedef struct thread_data {
   int32_t nb_app_cores;
 } thread_data_t;
 
-bank_t * 
+bank_t* 
 test(void *data, double duration, int nb_accounts) 
 {
   int rand_max, rand_min;
   thread_data_t *d = (thread_data_t *) data;
-  bank_t * bank;
-
 
   /* Initialize seed (use rand48 as rand is poor) */
   srand_core();
@@ -221,25 +217,23 @@ test(void *data, double duration, int nb_accounts)
       rand_min = 0;
     }
 
-  bank = (bank_t *) malloc(sizeof (bank_t));
-  if (bank == NULL) {
-    PRINT("malloc bank");
-    EXIT(1);
-  }
-
-  sys_shmalloc(sizeof (account_t));
+  bank_t* bank = (bank_t *) malloc(sizeof(bank_t));
+  if (bank == NULL)
+    {
+      PRINT("malloc bank");
+      EXIT(1);
+    }
 
   bank->size = nb_accounts;
-  bank->accounts = (account_t *) sys_shmalloc(nb_accounts * sizeof (account_t));
-  PRINT("allocated %p for bank->accounts", bank->accounts);
+  bank->accounts = (account_t**) pgas_app_alloc_rr(nb_accounts, sizeof(account_t));
 
   ONCE
     {
+      reset(bank, 0);
       PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\tBank total (before): %d\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
 	    total(bank, 0));
     }
 
-  /* Wait on barrier */
   BARRIER;
 
   /* warming up */
@@ -279,16 +273,15 @@ test(void *data, double duration, int nb_accounts)
 
 	if (nb < d->check) 
 	  {
-	    check_accs(&bank->accounts[src], &bank->accounts[dst]);
+	    check_accs(bank->accounts[src], bank->accounts[dst]);
 	    d->nb_checks++;
 	  }
 	else 
 	  {
-	    transfer(&bank->accounts[I(src)], &bank->accounts[I(dst)], 1);
+	    transfer(bank->accounts[src], bank->accounts[dst], 1);
 	    d->nb_transfer++;
 	  }
       }
-
 
     /* if (delay) */
     /*   { */
@@ -297,6 +290,7 @@ test(void *data, double duration, int nb_accounts)
     /*   } */
   } 
   END_FOR;
+
 
   BARRIER;
 
@@ -329,9 +323,9 @@ TASKMAIN(int argc, char **argv)
     {NULL, 0, NULL, 0}
   };
 
-  bank_t *bank;
+  bank_t* bank;
   int i, c;
-  thread_data_t *data;
+  thread_data_t* data;
 
   double duration = DEFAULT_DURATION;
   int nb_accounts = DEFAULT_NB_ACCOUNTS;
@@ -344,90 +338,91 @@ TASKMAIN(int argc, char **argv)
   int disjoint = DEFAULT_DISJOINT;
 
 
-  while (1) {
-    i = 0;
-    c = getopt_long(argc, argv, "h:a:d:D:r:c:R:w:W:j", long_options, &i);
+  while (1) 
+    {
+      i = 0;
+      c = getopt_long(argc, argv, "h:a:d:D:r:c:R:w:W:j", long_options, &i);
 
-    if (c == -1)
-      break;
+      if (c == -1)
+	break;
 
-    if (c == 0 && long_options[i].flag == 0)
-      c = long_options[i].val;
+      if (c == 0 && long_options[i].flag == 0)
+	c = long_options[i].val;
 
-    switch (c) {
-    case 0:
-      /* Flag is automatically set */
-      break;
-    case 'h':
-      ONCE
+      switch (c) 
 	{
-	  PRINT("bank -- STM stress test\n"
-		"\n"
-		"Usage:\n"
-		"  bank [options...]\n"
-		"\n"
-		"Options:\n"
-		"  -h, --help\n"
-		"        Print this message\n"
-		"  -a, --accounts <int>\n"
-		"        Number of accounts in the bank (default=" XSTR(DEFAULT_NB_ACCOUNTS) ")\n"
-		"  -d, --duration <double>\n"
-		"        Test duration in seconds (0=infinite, default=" XSTR(DEFAULT_DURATION) ")\n"
-		"  -d, --delay <int>\n"
-		"        Delay ns after succesfull request. Used to understress the system, default=" XSTR(DEFAULT_DELAY) ")\n"
-		"  -c, --check <int>\n"
-		"        Percentage of check transactions transactions (default=" XSTR(DEFAULT_CHECK) ")\n"
-		"  -r, --read-all-rate <int>\n"
-		"        Percentage of read-all transactions (default=" XSTR(DEFAULT_READ_ALL) ")\n"
-		"  -R, --read-threads <int>\n"
-		"        Number of threads issuing only read-all transactions (default=" XSTR(DEFAULT_READ_THREADS) ")\n"
-		"  -w, --write-all-rate <int>\n"
-		"        Percentage of write-all transactions (default=" XSTR(DEFAULT_WRITE_ALL) ")\n"
-		"  -W, --write-threads <int>\n"
-		"        Number of threads issuing only write-all transactions (default=" XSTR(DEFAULT_WRITE_THREADS) ")\n"
-		);
+	case 0:
+	  /* Flag is automatically set */
+	  break;
+	case 'h':
+	  ONCE
+	    {
+	      PRINT("bank -- STM stress test\n"
+		    "\n"
+		    "Usage:\n"
+		    "  bank [options...]\n"
+		    "\n"
+		    "Options:\n"
+		    "  -h, --help\n"
+		    "        Print this message\n"
+		    "  -a, --accounts <int>\n"
+		    "        Number of accounts in the bank (default=" XSTR(DEFAULT_NB_ACCOUNTS) ")\n"
+		    "  -d, --duration <double>\n"
+		    "        Test duration in seconds (0=infinite, default=" XSTR(DEFAULT_DURATION) ")\n"
+		    "  -d, --delay <int>\n"
+		    "        Delay ns after succesfull request. Used to understress the system, default=" XSTR(DEFAULT_DELAY) ")\n"
+		    "  -c, --check <int>\n"
+		    "        Percentage of check transactions transactions (default=" XSTR(DEFAULT_CHECK) ")\n"
+		    "  -r, --read-all-rate <int>\n"
+		    "        Percentage of read-all transactions (default=" XSTR(DEFAULT_READ_ALL) ")\n"
+		    "  -R, --read-threads <int>\n"
+		    "        Number of threads issuing only read-all transactions (default=" XSTR(DEFAULT_READ_THREADS) ")\n"
+		    "  -w, --write-all-rate <int>\n"
+		    "        Percentage of write-all transactions (default=" XSTR(DEFAULT_WRITE_ALL) ")\n"
+		    "  -W, --write-threads <int>\n"
+		    "        Number of threads issuing only write-all transactions (default=" XSTR(DEFAULT_WRITE_THREADS) ")\n"
+		    );
+	    }
+	  exit(0);
+	case 'a':
+	  nb_accounts = atoi(optarg);
+	  break;
+	case 'd':
+	  duration = atof(optarg);
+	  break;
+	case 'D':
+	  delay = atoi(optarg);
+	  break;
+	case 'c':
+	  check = atoi(optarg);
+	  break;
+	case 'r':
+	  read_all = atoi(optarg);
+	  break;
+	case 'R':
+	  read_cores = atoi(optarg);
+	  break;
+	case 'w':
+	  write_all = atoi(optarg);
+	  PRINT("*** warning: write all has been disabled");
+	  break;
+	case 'W':
+	  write_cores = atoi(optarg);
+	  PRINT("*** warning: write all cores have been disabled");
+	  break;
+	case 'j':
+	  disjoint = 1;
+	  break;
+	case '?':
+	  ONCE
+	    {
+	      PRINT("Use -h or --help for help\n");
+	    }
+	  exit(0);
+	default:
+	  exit(1);
 	}
-      exit(0);
-    case 'a':
-      nb_accounts = atoi(optarg);
-      break;
-    case 'd':
-      duration = atof(optarg);
-      break;
-    case 'D':
-      delay = atoi(optarg);
-      break;
-    case 'c':
-      check = atoi(optarg);
-      break;
-    case 'r':
-      read_all = atoi(optarg);
-      break;
-    case 'R':
-      read_cores = atoi(optarg);
-      break;
-    case 'w':
-      write_all = atoi(optarg);
-      PRINT("*** warning: write all has been disabled");
-      break;
-    case 'W':
-      write_cores = atoi(optarg);
-      PRINT("*** warning: write all cores have been disabled");
-      break;
-    case 'j':
-      disjoint = 1;
-      break;
-    case '?':
-      ONCE
-	{
-	  PRINT("Use -h or --help for help\n");
-	}
-
-      exit(0);
-    default:
-      exit(1);
     }
-  }
 
 
   write_all = 0;
@@ -453,8 +448,6 @@ TASKMAIN(int argc, char **argv)
       PRINTN("Read cores     : %d\n", read_cores);
       PRINTN("Write-all rate : %d\n", write_all - read_all);
       PRINTN("Write cores    : %d\n", write_cores);
-
-      PRINT("sizeof(..) = %lu", sizeof(thread_data_t));
     }
 
   
@@ -485,28 +478,25 @@ TASKMAIN(int argc, char **argv)
 
   /* End it */
 
-  BARRIER
+  BARRIER;
 
-    uint32_t nd;
-  for (nd = 0; nd < TOTAL_NODES(); nd++) {
-    if (NODE_ID() == nd) {
+  APP_EXEC_ORDER
+    {
       printf("---Core %d\n  #transfer   : %lu\n  #checks     : %lu\n  #read-all   : %lu\n  #write-all  : %lu\n", 
 	     NODE_ID(), data->nb_transfer, data->nb_checks, data->nb_read_all, data->nb_write_all);
       FLUSH;
+    } APP_EXEC_ORDER_END;
+
+
+  BARRIER;
+
+  ONCE
+    {
+      PRINT("\t\t\t~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+	    "\t\t\t\tBank total (after): %d\n"
+	    "\t\t\t~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+	    total(bank, 0));
     }
-    BARRIER;
-  }
-
-
-  BARRIER
-
-    ONCE
-  {
-    PRINT("\t\t\t~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-	  "\t\t\t\tBank total (after): %d\n"
-	  "\t\t\t~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
-	  total(bank, 0));
-  }
 
   /* Delete bank and accounts */
 

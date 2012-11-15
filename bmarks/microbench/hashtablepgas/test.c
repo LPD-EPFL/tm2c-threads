@@ -93,6 +93,30 @@ void *test(void *data, double duration) {
 
   FOR(duration) 
   {
+    if (NODE_ID() == 2)
+      /* if (NODE_ID() == 1 || NODE_ID() == 2) */
+      {
+    	long int	val = rand_range_re(&d->seed, d->range);
+    	if (ht_add(d->set, val, TRANSACTIONAL)) {
+    	  d->nb_added++;
+    	  last = val;
+    	}
+    	d->nb_add++;
+    	continue;
+      }
+    else if (NODE_ID() == 1)
+      {
+	long int 
+	  val = rand_range_re(&d->seed, d->range);
+    	if (ht_remove(d->set, val, TRANSACTIONAL)) {
+    	  d->nb_removed++;
+    	  /* Repeat until successful, to avoid size variations */
+    	}
+    	d->nb_remove++;
+    	continue;
+      }
+
+
     if (unext) { // update
       if (mnext) { // move
 	if (last == -1) val = rand_range_re(&d->seed, d->range);
@@ -106,7 +130,6 @@ void *test(void *data, double duration) {
 
       }
       else if (last < 0) { // add
-
 	val = rand_range_re(&d->seed, d->range);
 	if (ht_add(d->set, val, TRANSACTIONAL)) {
 	  d->nb_added++;
@@ -216,6 +239,7 @@ void *test2(void *data, double duration) {
 
   FOR(duration) 
   {
+
     if (val < d->update) {
       if (val >= d->move) { /* update without move */
 	if (flag) {
@@ -280,18 +304,18 @@ void *test2(void *data, double duration) {
 
 void print_set(intset_t* set) {
 
-  printf("min -> ");
+  /* printf("min -> "); */
 
-  node_t node;
-  LOAD_NODE_NXT(node, set->head);
-  LOAD_NODE(node, node.next);
-    if (node.nextp == NULL) {
-        goto null;
-    }
-    while (node.nextp != NULL) {
-      printf("%d -> ", (int) node.val);
-      LOAD_NODE(node, node.next);
-    }
+  /* node_t node; */
+  /* LOAD_NODE_NXT(node, set->head); */
+  /* LOAD_NODE(node, node.next); */
+  /*   if (node.nextp == NULL) { */
+  /*       goto null; */
+  /*   } */
+  /*   while (node.nextp != NULL) { */
+  /*     printf("%d -> ", (int) node.val); */
+  /*     LOAD_NODE(node, node.next); */
+  /*   } */
 
 null:
     PRINTSF("max -> NULL\n");
@@ -307,21 +331,23 @@ void print_ht(ht_intset_t *set) {
     }
 }
 
-TASKMAIN(int argc, char **argv) {
-  TM_INIT
+TASKMAIN(int argc, char** argv) 
+{
+  TM_INIT;
 
-    struct option long_options[] = {
-    // These options don't set a flag
-    {"help", no_argument, NULL, 'h'},
-    {"duration", required_argument, NULL, 'd'},
-    {"initial-size", required_argument, NULL, 'i'},
-    {"range", required_argument, NULL, 'r'},
-    {"update-rate", required_argument, NULL, 'u'},
-    {"move-rate", required_argument, NULL, 'm'},
-    {"snapshot-rate", required_argument, NULL, 'a'},
-    {"elasticity", required_argument, NULL, 'x'},
-    {NULL, 0, NULL, 0}
-  };
+  struct option long_options[] = 
+    {
+      // These options don't set a flag
+      {"help", no_argument, NULL, 'h'},
+      {"duration", required_argument, NULL, 'd'},
+      {"initial-size", required_argument, NULL, 'i'},
+      {"range", required_argument, NULL, 'r'},
+      {"update-rate", required_argument, NULL, 'u'},
+      {"move-rate", required_argument, NULL, 'm'},
+      {"snapshot-rate", required_argument, NULL, 'a'},
+      {"elasticity", required_argument, NULL, 'x'},
+      {NULL, 0, NULL, 0}
+    };
 
   ht_intset_t *set;
   int i, c, size;
@@ -342,106 +368,107 @@ TASKMAIN(int argc, char **argv) {
   int effective = DEFAULT_EFFECTIVE;
   unsigned int seed = 0;
 
-  while (1) {
-    i = 0;
-    c = getopt_long(argc, argv, "hAf:d:i:n:r:s:u:m:a:l:x:", long_options, &i);
+  while (1) 
+    {
+      i = 0;
+      c = getopt_long(argc, argv, "hAf:d:i:n:r:s:u:m:a:l:x:", long_options, &i);
 
-    if (c == -1)
-      break;
+      if (c == -1)
+	break;
 
-    if (c == 0 && long_options[i].flag == 0)
-      c = long_options[i].val;
+      if (c == 0 && long_options[i].flag == 0)
+	c = long_options[i].val;
 
-    switch (c) {
-    case 0:
-      // Flag is automatically set 
-      break;
-    case 'h':
-      ONCE
-	{
-	  printf("intset -- STM stress test "
-		 "(hash table)\n"
-		 "\n"
-		 "Usage:\n"
-		 "  intset [options...]\n"
-		 "\n"
-		 "Options:\n"
-		 "  -h, --help\n"
-		 "        Print this message\n"
-		 "  -A, --Alternate\n"
-		 "        Consecutive insert/remove target the same value\n"
-		 "  -f, --effective <int>\n"
-		 "        update txs must effectively write (0=trial, 1=effective, default=" XSTR(DEFAULT_EFFECTIVE) ")\n"
-		 "  -d, --duration <double>\n"
-		 "        Test duration in seconds (0=infinite, default=" XSTR(DEFAULT_DURATION) ")\n"
-		 "  -i, --initial-size <int>\n"
-		 "        Number of elements to insert before test (default=" XSTR(DEFAULT_INITIAL) ")\n"
-		 "  -n, --num-threads <int>\n"
-		 "        Number of threads (default=" XSTR(DEFAULT_NB_THREADS) ")\n"
-		 "  -r, --range <int>\n"
-		 "        Range of integer values inserted in set (default=" XSTR(DEFAULT_RANGE) ")\n"
-		 "  -u, --update-rate <int>\n"
-		 "        Percentage of update transactions (default=" XSTR(DEFAULT_UPDATE) ")\n"
-		 "  -m , --move-rate <int>\n"
-		 "        Percentage of move transactions (default=" XSTR(DEFAULT_MOVE) ")\n"
-		 "  -a , --snapshot-rate <int>\n"
-		 "        Percentage of snapshot transactions (default=" XSTR(DEFAULT_SNAPSHOT) ")\n"
-		 "  -l , --load-factor <int>\n"
-		 "        Ratio of keys over buckets (default=" XSTR(DEFAULT_LOAD) ")\n"
-		 "  -x, --elasticity (default=4)\n"
-		 "        Use elastic transactions\n"
-		 "        0 = non-protected,\n"
-		 "        1 = normal transaction,\n"
-		 "        2 = read elastic-tx,\n"
-		 "        3 = read/add elastic-tx,\n"
-		 "        4 = read/add/rem elastic-tx,\n"
-		 "        5 = elastic-tx w/ optimized move.\n"
-		 );
-	}
-      exit(0);
-    case 'A':
-      alternate = 1;
-      break;
-    case 'f':
-      effective = atoi(optarg);
-      break;
-    case 'd':
-      duration = atof(optarg);
-      break;
-    case 'i':
-      initial = atoi(optarg);
-      break;
-    case 'n':
-      nb_app_cores = atoi(optarg);
-      break;
-    case 'r':
-      range = atol(optarg);
-      break;
-    case 'u':
-      update = atoi(optarg);
-      break;
-    case 'm':
-      move = atoi(optarg);
-      break;
-    case 'a':
-      snapshot = atoi(optarg);
-      break;
-    case 'l':
-      load_factor = atoi(optarg);
-      break;
-    case 'x':
-      unit_tx = atoi(optarg);
-      break;
-    case '?':
-      ONCE
-	{
-	  printf("Use -h or --help for help\n");
-	}
-      exit(0);
-    default:
-      exit(1);
+      switch (c) {
+      case 0:
+	// Flag is automatically set 
+	break;
+      case 'h':
+	ONCE
+	  {
+	    printf("intset -- STM stress test "
+		   "(hash table)\n"
+		   "\n"
+		   "Usage:\n"
+		   "  intset [options...]\n"
+		   "\n"
+		   "Options:\n"
+		   "  -h, --help\n"
+		   "        Print this message\n"
+		   "  -A, --Alternate\n"
+		   "        Consecutive insert/remove target the same value\n"
+		   "  -f, --effective <int>\n"
+		   "        update txs must effectively write (0=trial, 1=effective, default=" XSTR(DEFAULT_EFFECTIVE) ")\n"
+		   "  -d, --duration <double>\n"
+		   "        Test duration in seconds (0=infinite, default=" XSTR(DEFAULT_DURATION) ")\n"
+		   "  -i, --initial-size <int>\n"
+		   "        Number of elements to insert before test (default=" XSTR(DEFAULT_INITIAL) ")\n"
+		   "  -n, --num-threads <int>\n"
+		   "        Number of threads (default=" XSTR(DEFAULT_NB_THREADS) ")\n"
+		   "  -r, --range <int>\n"
+		   "        Range of integer values inserted in set (default=" XSTR(DEFAULT_RANGE) ")\n"
+		   "  -u, --update-rate <int>\n"
+		   "        Percentage of update transactions (default=" XSTR(DEFAULT_UPDATE) ")\n"
+		   "  -m , --move-rate <int>\n"
+		   "        Percentage of move transactions (default=" XSTR(DEFAULT_MOVE) ")\n"
+		   "  -a , --snapshot-rate <int>\n"
+		   "        Percentage of snapshot transactions (default=" XSTR(DEFAULT_SNAPSHOT) ")\n"
+		   "  -l , --load-factor <int>\n"
+		   "        Ratio of keys over buckets (default=" XSTR(DEFAULT_LOAD) ")\n"
+		   "  -x, --elasticity (default=4)\n"
+		   "        Use elastic transactions\n"
+		   "        0 = non-protected,\n"
+		   "        1 = normal transaction,\n"
+		   "        2 = read elastic-tx,\n"
+		   "        3 = read/add elastic-tx,\n"
+		   "        4 = read/add/rem elastic-tx,\n"
+		   "        5 = elastic-tx w/ optimized move.\n"
+		   );
+	  }
+	exit(0);
+      case 'A':
+	alternate = 1;
+	break;
+      case 'f':
+	effective = atoi(optarg);
+	break;
+      case 'd':
+	duration = atof(optarg);
+	break;
+      case 'i':
+	initial = atoi(optarg);
+	break;
+      case 'n':
+	nb_app_cores = atoi(optarg);
+	break;
+      case 'r':
+	range = atol(optarg);
+	break;
+      case 'u':
+	update = atoi(optarg);
+	break;
+      case 'm':
+	move = atoi(optarg);
+	break;
+      case 'a':
+	snapshot = atoi(optarg);
+	break;
+      case 'l':
+	load_factor = atoi(optarg);
+	break;
+      case 'x':
+	unit_tx = atoi(optarg);
+	break;
+      case '?':
+	ONCE
+	  {
+	    printf("Use -h or --help for help\n");
+	  }
+	exit(0);
+      default:
+	exit(1);
+      }
     }
-  }
 
   if (seed == 0) {
     srand_core();
@@ -485,84 +512,50 @@ TASKMAIN(int argc, char **argv) {
   maxhtlength = (unsigned int) initial / load_factor;
 
 
-  BARRIER
+  BARRIER;
 
-    shmem_init(8);      //allow NULL to be 0
-  set = ht_new();
+  APP_EXEC_ORDER
+    {
+      set = ht_new();
+    } APP_EXEC_ORDER_END;
+
+  BARRIER;
+  srand_core();
+  udelay(rand_range(123));
+  srand_core();
+
+  uint32_t my_app_seq_id = app_id_seq(NODE_ID());
+  printf("Adding %d entries to set (%2d)\n", initial, my_app_seq_id);
+
+  int round;
+  for (round = 0; round < initial; round++)
+    {
+      BARRIER;
+      if (round % NUM_APP_NODES == my_app_seq_id)
+	{
+	  uint32_t was_added = 0;
+	  do
+	    {
+	      val = rand_range(range);
+	      was_added = ht_add(set, val, 0);
+	    } while (!was_added);
+	  udelay(23);
+	}
+      BARRIER;
+    }
+
+
 
   ONCE
     {
-      srand_core();
-      udelay(rand_range(123));
-      srand_core();
-
-      char *buf = (char *) calloc(range, sizeof (char));
-
-      i = 0;
-      maxhtlength = (int) (initial / load_factor);
-      while (i < initial) {
-	do {
-	  val = rand_range(range);
-	} while (buf[val]);
-	buf[val] = 1;
-	if (ht_add(set, val, 0)) {
-	  last = val;
-	  i++;
-	}
-      }
-        
-      free(buf);
-        
       size = ht_size(set);
       printf("Set size     : %d\n", size);
       printf("Bucket amount: %d\n", maxhtlength);
       printf("Load         : %d\n", load_factor);
-      FLUSH
+      FLUSH;
 
-	}
+    }
     
-#if defined(STM) && !defined(SEQUENTIAL) && defined(PLATFORM_iRCCE)
-  int off, id2use;
-  if (ID < 6) {
-    off = 0;
-    id2use = ID;
-  }
-  else if (ID < 12) {
-    off = 1;
-    id2use = ID - 6;
-  }
-  else if (ID < 18) {
-    off = 0;
-    id2use = ID - 6;
-  }
-  else if (ID < 24) {
-    off = 1;
-    id2use = ID - 12;
-  }
-  else if (ID < 30) {
-    off = 2;
-    id2use = ID - 24;
-  }
-  else if (ID < 36) {
-    off = 3;
-    id2use = ID - 30;
-  }
-  else if (ID < 42) {
-    off = 2;
-    id2use = ID - 30;
-  }
-  else if (ID < 48) {
-    off = 3;
-    id2use = ID - 36;
-  }
-
-  shmem_init(((off * 16) * 1024 * 1024) + ((id2use) * 1024 * 1024));
-  PRINT("shmem from %d MB", (off * 16) + id2use);
-#else
-  shmem_init(1024 * 100 * (NODE_ID()-1) * sizeof (node_t) + ((initial + 2) * sizeof (node_t)));
-#endif
-
-      
   data->first = last;
   data->range = range;
   data->update = update;
@@ -585,34 +578,27 @@ TASKMAIN(int argc, char **argv) {
   data->set = set;
   data->seed = seed;
 
-  BARRIER
+  BARRIER;
 
-    test(data, duration);
+  test(data, duration);
 
   BARRIER;
 
-  printf("---------------------------Thread %d\n", NODE_ID());
-  printf("  #add        : %lu\n", data->nb_add);
-  printf("    #added    : %lu\n", data->nb_added);
-  printf("  #remove     : %lu\n", data->nb_remove);
-  printf("    #removed  : %lu\n", data->nb_removed);
-  printf("  #contains   : %lu\n", data->nb_contains);
-  printf("    #found    : %lu\n", data->nb_found);
-  //    printf("  #move       : %lu\n", data->nb_move);
-  //    printf("  #moved      : %lu\n", data->nb_moved);
-  //    printf("  #snapshot   : %lu\n", data->nb_snapshot);
-  //    printf("  #snapshoted : %lu\n", data->nb_snapshoted);
-#ifdef SEQUENTIAL
-  int total_ops = data->nb_add + data->nb_contains + data->nb_remove + data->nb_move + data->nb_snapshot;
-  printf("#Ops          : %d\n", total_ops);
-  /*
-    printf("#Ops/s        : %d\n", (int) (total_ops / duration__));
-    printf("#Latency      : %f\n", duration__ / total_ops);
-  */
-  printf("))) %d\t100\t%.3f\t(Throughput, Commit Rate, Latency)", (int) (total_ops / duration__), 1000 * duration__ / total_ops);
-#endif
-  FLUSH;
-
+  APP_EXEC_ORDER
+    {
+      printf("---------------------------Thread %d\n", NODE_ID());
+      printf("  #add        : %lu\n", data->nb_add);
+      printf("    #added    : %lu\n", data->nb_added);
+      printf("  #remove     : %lu\n", data->nb_remove);
+      printf("    #removed  : %lu\n", data->nb_removed);
+      printf("  #contains   : %lu\n", data->nb_contains);
+      printf("    #found    : %lu\n", data->nb_found);
+      //    printf("  #move       : %lu\n", data->nb_move);
+      //    printf("  #moved      : %lu\n", data->nb_moved);
+      //    printf("  #snapshot   : %lu\n", data->nb_snapshot);
+      //    printf("  #snapshoted : %lu\n", data->nb_snapshoted);
+      FLUSH;
+    } APP_EXEC_ORDER_END;
   // Delete set 
   /*
     ht_delete(set);

@@ -75,22 +75,64 @@ int floor_log_2(unsigned int n) {
     return ((n == 0) ? (-1) : pos);
 }
 
-ht_intset_t *ht_new() {
-    ht_intset_t *set;
-    int i;
 
-    if ((set = (ht_intset_t *) malloc(sizeof (ht_intset_t))) == NULL) {
-        perror("malloc");
-        exit(1);
+static void
+write_node(node_t* node, val_t val, nxt_t next, int transactional) 
+{
+  node_t nd;
+  nd.val = val;
+  nd.next = next;
+  if (transactional)
+    {
+      TX_STORE(node, nd.to_int64, TYPE_INT);
     }
-    if ((set->buckets = (void *) malloc((maxhtlength + 1) * sizeof (intset_t *))) == NULL) {
-        perror("malloc");
-        exit(1);
+  else
+    {
+      NONTX_STORE(node, nd.to_int64, TYPE_INT);
+    }
+}
+
+static intset_t*
+set_new1() 
+{
+  intset_t *set;
+  node_t *min, *max;
+
+  if ((set = (intset_t *) malloc(sizeof (intset_t))) == NULL) 
+    {
+      perror("malloc");
+      EXIT(1);
     }
 
-    for (i = 0; i < maxhtlength; i++) {
-        set->buckets[i] = set_new();
-    }
-    FLUSH;
-    return set;
+  node_t** nodes = (node_t**) pgas_app_alloc_rr(1, 2 * sizeof(node_t));
+  min = nodes[0];
+  max = (void*) nodes[0] + sizeof(node_t);
+  write_node(max, VAL_MAX, 0, 0);
+  write_node(min, VAL_MIN, OF(max), 0);
+
+  set->head = min;
+  return set;
+}
+
+
+ht_intset_t*
+ht_new() 
+{
+  ht_intset_t* set;
+  int i;
+
+  if ((set = (ht_intset_t *) malloc(sizeof (ht_intset_t))) == NULL) {
+    perror("malloc");
+    exit(1);
+  }
+  if ((set->buckets = (void *) malloc((maxhtlength + 1) * sizeof (intset_t *))) == NULL) {
+    perror("malloc");
+    exit(1);
+  }
+
+  for (i = 0; i < maxhtlength; i++) {
+    set->buckets[i] = set_new1();
+  }
+  FLUSH;
+  return set;
 }

@@ -81,11 +81,35 @@ void *test(void *data, double duration) {
 
   FOR(duration) 
   {
+
+    /* if (NODE_ID() == 2) */
+    /*   /\* if (NODE_ID() == 1 || NODE_ID() == 2) *\/ */
+    /*   { */
+    /* 	long int val = rand_range_re(&d->seed, d->range); */
+    /* 	if (set_add(d->set, val, TRANSACTIONAL)) { */
+    /* 	  d->nb_added++; */
+    /* 	  last = val; */
+    /* 	} */
+    /* 	d->nb_add++; */
+    /* 	continue; */
+    /*   } */
+    /* else if (NODE_ID() == 1) */
+    /*   { */
+    /* 	long int  */
+    /* 	  val = rand_range_re(&d->seed, d->range); */
+    /* 	if (set_remove(d->set, val, TRANSACTIONAL)) { */
+    /* 	  d->nb_removed++; */
+    /* 	  /\* Repeat until successful, to avoid size variations *\/ */
+    /* 	} */
+    /* 	d->nb_remove++; */
+    /* 	continue; */
+    /*   } */
+
     if (unext) { // update
 
       if (last < 0) { // add
 
-	val = rand_range_re(&d->seed, d->range);
+	val = rand_range(d->range);
 	if (set_add(d->set, val, TRANSACTIONAL)) {
 	  d->nb_added++;
 	  last = val;
@@ -105,7 +129,9 @@ void *test(void *data, double duration) {
 	  /* Random computation only in non-alternated cases */
 	  val = rand_range_re(&d->seed, d->range);
 	  /* Remove one random value */
+	  /* goto not_rem; */
 	  if (set_remove(d->set, val, TRANSACTIONAL)) {
+	  not_rem:
 	    d->nb_removed++;
 	    /* Repeat until successful, to avoid size variations */
 	    last = -1;
@@ -160,291 +186,261 @@ void *test(void *data, double duration) {
 }
 
 TASKMAIN(int argc, char **argv) {
-    dup2(STDOUT_FILENO, STDERR_FILENO);
+  dup2(STDOUT_FILENO, STDERR_FILENO);
 #ifndef SEQUENTIAL
-    TM_INIT
+  TM_INIT;
 #else
-    RCCE_init(&argc, &argv);
-    iRCCE_init();
+  RCCE_init(&argc, &argv);
+  iRCCE_init();
 #endif
 
-    struct option long_options[] = {
-        // These options don't set a flag
-        {"help", no_argument, NULL, 'h'},
-        {"duration", required_argument, NULL, 'd'},
-        {"initial-size", required_argument, NULL, 'i'},
-        {"range", required_argument, NULL, 'r'},
-        {"update-rate", required_argument, NULL, 'u'},
-        {"elasticity", required_argument, NULL, 'x'},
-        {"effective", required_argument, NULL, 'f'},
-        {NULL, 0, NULL, 0}
-    };
+  struct option long_options[] = {
+    // These options don't set a flag
+    {"help", no_argument, NULL, 'h'},
+    {"duration", required_argument, NULL, 'd'},
+    {"initial-size", required_argument, NULL, 'i'},
+    {"range", required_argument, NULL, 'r'},
+    {"update-rate", required_argument, NULL, 'u'},
+    {"elasticity", required_argument, NULL, 'x'},
+    {"effective", required_argument, NULL, 'f'},
+    {NULL, 0, NULL, 0}
+  };
 
-    intset_t *set;
-    int i, c, size;
-    val_t last = 0;
-    val_t val = 0;
-    thread_data_t *data;
-    double duration = DEFAULT_DURATION;
-    int initial = DEFAULT_INITIAL;
-    int nb_app_cores = NUM_APP_NODES;
-    long range = DEFAULT_RANGE;
-    int update = DEFAULT_UPDATE;
-    int unit_tx = DEFAULT_ELASTICITY;
-    int alternate = DEFAULT_ALTERNATE;
-    int effective = DEFAULT_EFFECTIVE;
-    unsigned int seed = 0;
+  intset_t *set;
+  int i, c, size;
+  val_t last = 0;
+  val_t val = 0;
+  thread_data_t *data;
+  double duration = DEFAULT_DURATION;
+  int initial = DEFAULT_INITIAL;
+  int nb_app_cores = NUM_APP_NODES;
+  long range = DEFAULT_RANGE;
+  int update = DEFAULT_UPDATE;
+  int unit_tx = DEFAULT_ELASTICITY;
+  int alternate = DEFAULT_ALTERNATE;
+  int effective = DEFAULT_EFFECTIVE;
+  unsigned int seed = 0;
 
-    while (1) {
-        i = 0;
-        c = getopt_long(argc, argv, "hAf:d:i:r:u:x:", long_options, &i);
+  while (1) {
+    i = 0;
+    c = getopt_long(argc, argv, "hAf:d:i:r:u:x:", long_options, &i);
 
-        if (c == -1)
-            break;
+    if (c == -1)
+      break;
 
-        if (c == 0 && long_options[i].flag == 0)
-            c = long_options[i].val;
+    if (c == 0 && long_options[i].flag == 0)
+      c = long_options[i].val;
 
-        switch (c) {
-            case 0:
-                /* Flag is automatically set */
-                break;
-            case 'h':
-                ONCE
-            {
-                printf("intset -- STM stress test "
-                        "(linked list)\n"
-                        "\n"
-                        "Usage:\n"
-                        "  intset [options...]\n"
-                        "\n"
-                        "Options:\n"
-                        "  -h, --help\n"
-                        "        Print this message\n"
-                        "  -A, --alternate (default="XSTR(DEFAULT_ALTERNATE)")\n"
-                        "        Consecutive insert/remove target the same value\n"
-                        "  -f, --effective <int>\n"
-                        "        update txs must effectively write (0=trial, 1=effective, default=" XSTR(DEFAULT_EFFECTIVE) ")\n"
-                        "  -d, --duration secs<double>\n"
-                        "        Test duration in milliseconds (0=infinite, default=" XSTR(DEFAULT_DURATION) ")\n"
-                        "  -i, --initial-size <int>\n"
-                        "        Number of elements to insert before test (default=" XSTR(DEFAULT_INITIAL) ")\n"
-                        "  -r, --range <int>\n"
-                        "        Range of integer values inserted in set (default=" XSTR(DEFAULT_RANGE) ")\n"
-                        "  -u, --update-rate <int>\n"
-                        "        Percentage of update transactions (default=" XSTR(DEFAULT_UPDATE) ")\n"
-                        "  -x, --elasticity (default=4)\n"
-                        "        Use elastic transactions\n"
-                        "        0 = non-protected,\n"
-                        "        1 = normal transaction,\n"
-                        "        2 = read elastic-tx,\n"
-                        "        3 = read/add elastic-tx,\n"
-                        "        4 = read/add/rem elastic-tx,\n"
-                        "        5 = all recursive elastic-tx,\n"
-                        "        6 = harris lock-free\n"
-                        );
-            }
-                exit(0);
-            case 'A':
-                alternate = 1;
-                break;
-            case 'f':
-                effective = atoi(optarg);
-                break;
-            case 'd':
-                duration = atof(optarg);
-                break;
-            case 'i':
-                initial = atoi(optarg);
-                break;
-            case 'r':
-                range = atol(optarg);
-                break;
-            case 'u':
-                update = atoi(optarg);
-                break;
-            case 'x':
-                unit_tx = atoi(optarg);
-                break;
-            case '?':
-                ONCE
-            {
-                printf("Use -h or --help for help\n");
-            }
-                exit(0);
-            default:
-                exit(1);
-        }
+    switch (c) {
+    case 0:
+      /* Flag is automatically set */
+      break;
+    case 'h':
+      ONCE
+	{
+	  printf("intset -- STM stress test "
+		 "(linked list)\n"
+		 "\n"
+		 "Usage:\n"
+		 "  intset [options...]\n"
+		 "\n"
+		 "Options:\n"
+		 "  -h, --help\n"
+		 "        Print this message\n"
+		 "  -A, --alternate (default="XSTR(DEFAULT_ALTERNATE)")\n"
+		 "        Consecutive insert/remove target the same value\n"
+		 "  -f, --effective <int>\n"
+		 "        update txs must effectively write (0=trial, 1=effective, default=" XSTR(DEFAULT_EFFECTIVE) ")\n"
+		 "  -d, --duration secs<double>\n"
+		 "        Test duration in milliseconds (0=infinite, default=" XSTR(DEFAULT_DURATION) ")\n"
+		 "  -i, --initial-size <int>\n"
+		 "        Number of elements to insert before test (default=" XSTR(DEFAULT_INITIAL) ")\n"
+		 "  -r, --range <int>\n"
+		 "        Range of integer values inserted in set (default=" XSTR(DEFAULT_RANGE) ")\n"
+		 "  -u, --update-rate <int>\n"
+		 "        Percentage of update transactions (default=" XSTR(DEFAULT_UPDATE) ")\n"
+		 "  -x, --elasticity (default=4)\n"
+		 "        Use elastic transactions\n"
+		 "        0 = non-protected,\n"
+		 "        1 = normal transaction,\n"
+		 "        2 = read elastic-tx,\n"
+		 "        3 = read/add elastic-tx,\n"
+		 "        4 = read/add/rem elastic-tx,\n"
+		 "        5 = all recursive elastic-tx,\n"
+		 "        6 = harris lock-free\n"
+		 );
+	}
+      exit(0);
+    case 'A':
+      alternate = 1;
+      break;
+    case 'f':
+      effective = atoi(optarg);
+      break;
+    case 'd':
+      duration = atof(optarg);
+      break;
+    case 'i':
+      initial = atoi(optarg);
+      break;
+    case 'r':
+      range = atol(optarg);
+      break;
+    case 'u':
+      update = atoi(optarg);
+      break;
+    case 'x':
+      unit_tx = atoi(optarg);
+      break;
+    case '?':
+      ONCE
+	{
+	  printf("Use -h or --help for help\n");
+	}
+      exit(0);
+    default:
+      exit(1);
     }
+  }
 
-    if (seed == 0) {
-        srand_core();
-        seed = rand_range((ID + 17) * 123);
-        srand(seed);
-    }
-    else
-        srand(seed);
+  if (seed == 0) {
+    srand_core();
+    seed = rand_range((ID + 17) * 123);
+    srand(seed);
+  }
+  else
+    srand(seed);
 
-    assert(duration >= 0);
-    assert(initial >= 0);
-    assert(nb_app_cores > 0);
-    assert(range > 0 && range >= initial);
-    assert(update >= 0 && update <= 100);
+  assert(duration >= 0);
+  assert(initial >= 0);
+  assert(nb_app_cores > 0);
+  assert(range > 0 && range >= initial);
+  assert(update >= 0 && update <= 100);
 
-    ONCE
+  ONCE
     {
-        printf("Bench type   : linked list PGAS\n");
+      printf("Bench type   : linked list PGAS\n");
 #ifdef SEQUENTIAL
-        printf("                sequential\n");
+      printf("                sequential\n");
 #elif defined(EARLY_RELEASE )
-        printf("                using early-release\n");
+      printf("                using early-release\n");
 #elif defined(READ_VALIDATION)
-        printf("                using read-validation\n");
+      printf("                using read-validation\n");
 #endif
 #ifdef LOCKS
-        printf("                  with locks\n");
+      printf("                  with locks\n");
 #endif
-        printf("Duration     : %f\n", duration);
-        printf("Initial size : %d\n", initial);
-        printf("Nb cores     : %d\n", nb_app_cores);
-        printf("Value range  : %ld\n", range);
-        printf("Update rate  : %d\n", update);
-        printf("Elasticity   : %d\n", unit_tx);
-        printf("Alternate    : %d\n", alternate);
-        printf("Effective    : %d\n", effective);
-        FLUSH
+      printf("Duration     : %f\n", duration);
+      printf("Initial size : %d\n", initial);
+      printf("Nb cores     : %d\n", nb_app_cores);
+      printf("Value range  : %ld\n", range);
+      printf("Update rate  : %d\n", update);
+      printf("Elasticity   : %d\n", unit_tx);
+      printf("Alternate    : %d\n", alternate);
+      printf("Effective    : %d\n", effective);
+      FLUSH;
     }
 
-    if ((data = (thread_data_t *) malloc(sizeof (thread_data_t))) == NULL) {
-        perror("malloc");
-        exit(1);
-    }
+  if ((data = (thread_data_t *) malloc(sizeof (thread_data_t))) == NULL) {
+    perror("malloc");
+    exit(1);
+  }
 
-    shmem_init(8);      //allow NULL to be 0
-    set = set_new();
-
-    BARRIER;
-
-    ONCE
+  APP_EXEC_ORDER
     {
-        /* Populate set */
-        printf("Adding %d entries to set\n", initial);
-        i = 0;
-        while (i < initial) {
-            val = rand_range(range);
-            if (set_add(set, val, 0)) {
-                last = val;
-                i++;
-            }
-        }
-        size = set_size(set);
-        printf("Set size     : %d\n", size);
+      set = set_new();
+    }
+  APP_EXEC_ORDER_END;
 
-/*
-        set_print(set);
-*/
+  BARRIER;
 
-        assert(size == initial);
-        FLUSH
-    }
-    
-    
-#if defined(PLATFORM_iRCCE)
-    int off, id2use;
-    if (ID < 6) {
-        off = 0;
-        id2use = ID;
-    }
-    else if (ID < 12) {
-        off = 1;
-        id2use = ID - 6;
-    }
-    else if (ID < 18) {
-        off = 0;
-        id2use = ID - 6;
-    }
-    else if (ID < 24) {
-        off = 1;
-        id2use = ID - 12;
-    }
-    else if (ID < 30) {
-        off = 2;
-        id2use = ID - 24;
-    }
-    else if (ID < 36) {
-        off = 3;
-        id2use = ID - 30;
-    }
-    else if (ID < 42) {
-        off = 2;
-        id2use = ID - 30;
-    }
-    else if (ID < 48) {
-        off = 3;
-        id2use = ID - 36;
+  uint32_t my_app_seq_id = app_id_seq(NODE_ID());
+  printf("Adding %d entries to set (%2d)\n", initial, my_app_seq_id);
+
+  int round;
+  for (round = 0; round < initial; round++)
+    {
+      BARRIER;
+      if (round % NUM_APP_NODES == my_app_seq_id)
+	{
+	  uint32_t was_added = 0;
+	  do
+	    {
+	      val = rand_range(range);
+	      was_added = set_add(set, val, 0);
+	    } while (!was_added);
+	  udelay(23);
+	}
+      BARRIER;
     }
 
-    shmem_init(((off * 16) * 1024 * 1024) + ((id2use / 2) * 1024 * 1024));
-    PRINT("shmem from %d MB", (off * 16) + id2use / 2);
+  BARRIER;
 
-#else
-    shmem_init(1024 * 100 * (NODE_ID()-1) * sizeof (node_t) + ((initial + 2) * sizeof (node_t)));
-#endif
+  ONCE
+    {
+      size = set_size(set);
+      /* set_print(set); */
+      printf("Set size     : %d\n", size);
+      assert(size == initial);
+      FLUSH;
+    }
 
-    /* Access set from all threads */
-    data->first = last;
-    data->range = range;
-    data->update = update;
-    data->unit_tx = unit_tx;
-    data->alternate = alternate;
-    data->effective = effective;
-    data->nb_add = 0;
-    data->nb_added = 0;
-    data->nb_remove = 0;
-    data->nb_removed = 0;
-    data->nb_contains = 0;
-    data->nb_found = 0;
-    data->set = set;
-    data->seed = seed;
+  /* Access set from all threads */
+  data->first = last;
+  data->range = range;
+  data->update = update;
+  data->unit_tx = unit_tx;
+  data->alternate = alternate;
+  data->effective = effective;
+  data->nb_add = 0;
+  data->nb_added = 0;
+  data->nb_remove = 0;
+  data->nb_removed = 0;
+  data->nb_contains = 0;
+  data->nb_found = 0;
+  data->set = set;
+  data->seed = seed;
 
-    BARRIER
-    /* Start */
+  BARRIER;
+  /* Start */
             
-    test(data, duration);
+  test(data, duration);
 
-    printf("-- Core %d\n", NODE_ID());
-    printf("  #add        : %lu\n", data->nb_add);
-    printf("    #added    : %lu\n", data->nb_added);
-    printf("  #remove     : %lu\n", data->nb_remove);
-    printf("    #removed  : %lu\n", data->nb_removed);
-    printf("  #contains   : %lu\n", data->nb_contains);
-    printf("    #found    : %lu\n", data->nb_found);
-    printf("---------------------------------------------------");
-    FLUSH;
-    /* Delete set */
-
-
-    BARRIER
-
+  APP_EXEC_ORDER
+    {
+      printf("-- Core %d\n", NODE_ID());
+      printf("  #add        : %lu\n", data->nb_add);
+      printf("    #added    : %lu\n", data->nb_added);
+      printf("  #remove     : %lu\n", data->nb_remove);
+      printf("    #removed  : %lu\n", data->nb_removed);
+      printf("  #contains   : %lu\n", data->nb_contains);
+      printf("    #found    : %lu\n", data->nb_found);
+      printf("---------------------------------------------------");
+      /* tx_metadata_node_print(stm_tx_node); */
+      FLUSH;
+      /* Delete set */
+    } 
+  APP_EXEC_ORDER_END;
+  BARRIER;
+  
 #ifdef SEQUENTIAL
-    int total_ops = data->nb_add + data->nb_contains + data->nb_remove;
-    printf("#Ops          : %d\n", total_ops);
-    printf("#Ops/s        : %d\n", (int) (total_ops / duration__));
-    printf("#Latency      : %f\n", duration__ / total_ops);
-    FLUSH
+  int total_ops = data->nb_add + data->nb_contains + data->nb_remove;
+  printf("#Ops          : %d\n", total_ops);
+  printf("#Ops/s        : %d\n", (int) (total_ops / duration__));
+  printf("#Latency      : %f\n", duration__ / total_ops);
+  FLUSH;
 #endif
 
-    //set_delete(set);
+  //set_delete(set);
 
-    /* Cleanup STM */
+  /* Cleanup STM */
 
-    free(data);
-
-    BARRIER
+  free(data);
+  BARRIER;
 
 #ifdef STM
-      TM_END
+  TM_END;
 #endif
 
-    EXIT(0);
+  EXIT(0);
 }
