@@ -32,7 +32,7 @@ DEBUG_FLAGS := #-g -ggdb -fno-inline#-DDEBUG
 
 ## Archive ##
 ARCHIVE_SRCS_PURE:= pubSubTM.c tm.c log.c lock_log.c array_log.c dslock.c \
-			measurements.c pgas.c fakemem.c ps_hashtable.c cm.c
+			measurements.c ps_hashtable.c cm.c
 
 
 ifeq ($(HASHTABLE),USE_HASHTABLE_SSHT)
@@ -48,6 +48,8 @@ APPS_DIR := apps
 # add the non PGAS applications only if PGAS is not defined
 ifeq (,$(findstring DPGAS,$(PLATFORM_DEFINES)))
 APPS = tm11 #tm1 tm2 tm3 tm4 tm5 tm6 tm7 tm8 tm9 tm10
+else
+ARCHIVE_SRCS_PURE += pgas_dsl.c pgas_app.c
 endif
 
 # apps that need tasklib in order to compile
@@ -94,7 +96,7 @@ endif
 
 
 ifneq (,$(findstring DPGAS,$(PLATFORM_DEFINES)))
-ALL_BMARKS = bankpgas mbllpgas mbhtpgas mp
+ALL_BMARKS = bankpgas mbllpgas mbhtpgas # mp
 endif
 
 # define the compiler now, if platform makefile exported something through
