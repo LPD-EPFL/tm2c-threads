@@ -177,7 +177,7 @@ extern "C" {
     /*
      * Called upon transaction commit.
      */
-    INLINED void mem_info_on_commit(mem_info_t *stm_mem_info) {
+  INLINED void mem_info_on_commit(mem_info_t *stm_mem_info) {
         mem_block_t *mb, *next;
 
         /* Keep memory allocated during transaction */
