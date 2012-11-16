@@ -416,8 +416,7 @@ extern "C" {
   INLINED tm_addr_t 
   tx_load(write_set_t *ws, tm_addr_t addr)
   {
-    uint32_t words = 0;
-
+    tm_intern_addr_t intern_addr = to_intern_addr(addr);
     PREFETCH(intern_addr);
     write_entry_t *we;
     if ((we = write_set_contains(ws, intern_addr)) != NULL) 
@@ -435,7 +434,7 @@ extern "C" {
       retry:
 #  endif
 	TXCHKABORTED();
-	if ((conflict = ps_subscribe(addr, words)) != NO_CONFLICT) 
+	if ((conflict = ps_subscribe(addr, 0)) != NO_CONFLICT) /* 0 for the #words used in PGAS */
 	  {
 #  ifndef BACKOFF_RETRY
 	    if (num_delays++ < BACKOFF_MAX) 

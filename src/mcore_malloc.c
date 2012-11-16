@@ -66,7 +66,6 @@ MCORE_shmalloc_init(size_t size)
 
   // create one block containing all memory for truly dynamic memory allocator
   mcore_app_mem = (void*) mem;
-  printf("...\n"); fflush(stdout);
 }
 
 //--------------------------------------------------------------------------------------

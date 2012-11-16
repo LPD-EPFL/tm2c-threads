@@ -522,10 +522,12 @@ extern "C" {
 
   ssht_log_set_t **logs;
 
-  inline uint32_t
+  static inline uint32_t
   ps_get_hash(uintptr_t address)
   {
-    return hash_tw((address>>2) % UINT_MAX);
+    /* return hash_tw((address>>2) % UINT_MAX); */
+    /* return hash_tw((address)); */
+    return hash_32((unsigned long)(address), 32);
   }
 
 
@@ -552,9 +554,11 @@ extern "C" {
 		      tm_intern_addr_t address, RW rw)
   {
 #ifdef PGAS
-    uint32_t bu = ps_get_hash(address) % NUM_OF_BUCKETS;
+    /* uint32_t bu = ps_get_hash(address) % NUM_OF_BUCKETS; */
+    uint32_t bu = (address) % NUM_OF_BUCKETS;
 #else  /* !PGAS */
-    uint32_t bu = address % NUM_OF_BUCKETS;
+    uint32_t bu = ps_get_hash(address) % NUM_OF_BUCKETS;
+    /* uint32_t bu = address % NUM_OF_BUCKETS; */
 #endif	/* PGAS */
 
     CONFLICT_TYPE conflict = ssht_insert(ps_hashtable, bu, logs[nodeId], nodeId,  address, rw);
