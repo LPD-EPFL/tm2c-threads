@@ -198,9 +198,7 @@ handle_abort(stm_tx_t* stm_tx, CONFLICT_TYPE reason)
       break;
     }
 
-#ifdef PGAS
-  write_set_pgas_empty(stm_tx->write_set);
-#else
+#if !defined(PGAS)
   write_set_empty(stm_tx->write_set);
 #endif
   mem_info_on_abort(stm_tx->mem_info);
@@ -223,10 +221,7 @@ handle_abort(stm_tx_t* stm_tx, CONFLICT_TYPE reason)
 
 void ps_publish_finish_all(unsigned int locked) 
 {
-  locked = (locked != 0) ? locked : stm_tx->write_set->nb_entries;
-#ifdef PGAS
-  write_entry_pgas_t *we_current = stm_tx->write_set->write_entries;
-#else
+#if !defined(PGAS)
   write_entry_t *we_current = stm_tx->write_set->write_entries;
 #endif
   while (locked-- > 0) {
@@ -241,12 +236,10 @@ void ps_publish_finish_all(unsigned int locked)
 void ps_publish_all() 
 {
   unsigned int locked = 0;
-#ifdef PGAS
-  write_entry_pgas_t *write_entries = stm_tx->write_set->write_entries;
-#else
+  uint32_t nb_entries = 0;
+#if !defined(PGAS)
   write_entry_t *write_entries = stm_tx->write_set->write_entries;
-#endif
-  unsigned int nb_entries = stm_tx->write_set->nb_entries;
+  nb_entries = stm_tx->write_set->nb_entries;
   while (locked < nb_entries) 
     {
       CONFLICT_TYPE conflict;
@@ -274,6 +267,9 @@ void ps_publish_all()
 	}
 	locked++;
       }
+#else
+      PRINT(" *** warning : using ps_publish_all with PGAS");
+#endif
     }
 
 

@@ -31,9 +31,7 @@ extern "C" {
     ticks start_ts;
 #endif
     sigjmp_buf env;		/* Environment for setjmp/longjmp */
-#ifdef PGAS
-    write_set_pgas_t *write_set; /* Write set */
-#else
+#if !defined(PGAS)		/* in PGAS only the DSLs hold a write_set */
     write_set_t *write_set;	/* Write set */
 #endif
     uint64_t retries;	  /* Number of consecutive aborts (retries) */
@@ -121,9 +119,7 @@ extern "C" {
 	return NULL;
       }
 
-#ifdef PGAS
-    stm_tx_temp->write_set = write_set_pgas_new();
-#else
+#if !defined(PGAS) 
     stm_tx_temp->write_set = write_set_new();
 #endif
     stm_tx_temp->mem_info = mem_info_new();
@@ -144,9 +140,7 @@ extern "C" {
 
   INLINED stm_tx_t * tx_metadata_empty(stm_tx_t *stm_tx_temp) {
 
-#ifdef PGAS
-    stm_tx_temp->write_set = write_set_pgas_empty(stm_tx_temp->write_set);
-#else
+#if !defined(PGAS)
     stm_tx_temp->write_set = write_set_empty(stm_tx_temp->write_set);
 #endif
     //stm_tx_temp->mem_info = mem_info_new();
@@ -164,9 +158,7 @@ extern "C" {
   INLINED void tx_metadata_free(stm_tx_t **stm_tx) {
     //TODO: "clear" insted of freeing the stm_tx
 
-#ifdef PGAS
-    write_set_pgas_free((*stm_tx)->write_set);
-#else
+#if !defined(PGAS)
     write_set_free((*stm_tx)->write_set);
 #endif
     mem_info_free((*stm_tx)->mem_info);

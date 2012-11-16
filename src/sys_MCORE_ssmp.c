@@ -599,7 +599,7 @@ global_barrier()
 
 }
 
-#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+#if !defined(NOCM)	/* if any other CM (greedy, wholly, faircm) */
 static int32_t *
 cm_init(nodeid_t node) {
    char keyF[50];

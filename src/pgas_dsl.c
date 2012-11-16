@@ -20,22 +20,12 @@ pgas_dsl_term()
 inline int64_t
 pgas_dsl_read(uint64_t offset)
 {
-  if (offset >= PGAS_DSL_SIZE_NODE)
-    {
-      PRINT(" *** PGAS : read on mem out of bounds: %lu", offset);
-      return 0;
-    }
   return *(int64_t*) (pgas_dsl_mem + offset);
 }
 
 inline int64_t*
 pgas_dsl_readp(uint64_t offset)
 {
-  if (offset >= PGAS_DSL_SIZE_NODE)
-    {
-      PRINT(" *** PGAS : read on mem out of bounds: %lu", offset);
-      return 0;
-    }
   return (int64_t*) (pgas_dsl_mem + offset);
 }
 
@@ -43,12 +33,6 @@ pgas_dsl_readp(uint64_t offset)
 inline int32_t
 pgas_dsl_read32(uint64_t offset)
 {
-  if (offset >= PGAS_DSL_SIZE_NODE)
-    {
-      PRINT(" *** PGAS : read32 on mem out of bounds: %lu", offset);
-      return 0;
-    }
-
   return *(int32_t*) (pgas_dsl_mem + offset);
 }
 
@@ -56,21 +40,11 @@ pgas_dsl_read32(uint64_t offset)
 inline void
 pgas_dsl_write(uint64_t offset, int64_t val)
 {
-  if (offset >= PGAS_DSL_SIZE_NODE)
-    {
-      PRINT(" *** PGAS : write on mem out of bounds: %lu", offset);
-      return;
-    }
   *(int64_t*) (pgas_dsl_mem + offset) = val;
 }
 
 inline void
 pgas_dsl_write32(uint64_t offset, int32_t val)
 {
-  if (offset >= PGAS_DSL_SIZE_NODE)
-    {
-      PRINT(" *** PGAS : write32 on mem out of bounds: %lu", offset);
-      return;
-    }
   *(uint32_t*) (pgas_dsl_mem + offset) = val;
 }

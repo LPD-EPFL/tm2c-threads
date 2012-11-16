@@ -94,10 +94,11 @@ extern "C" {
     int64_t value;
   } write_entry_pgas_t;
 
-  typedef struct write_set_pgas {
+  typedef struct write_set_pgas 
+  {
     write_entry_pgas_t *write_entries;
-    unsigned int nb_entries;
-    unsigned int size;
+    uint32_t nb_entries;
+    uint32_t size;
   } write_set_pgas_t;
 
   extern write_set_pgas_t * write_set_pgas_new();
