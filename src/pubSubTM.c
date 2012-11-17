@@ -89,7 +89,11 @@ ps_sendb(nodeid_t target, PS_COMMAND_TYPE command,
 #elif defined(FAIRCM)
     psc->tx_metadata = stm_tx_node->tx_duration;
 #elif defined(GREEDY)
+#  ifdef GREEDY_GLOBAL_TS
+    psc->tx_metadata = stm_tx->start_ts;
+#  else
     psc->tx_metadata = getticks() - stm_tx->start_ts;
+#  endif
 #endif
     sys_sendcmd(psc, sizeof (PS_COMMAND), target);
 
@@ -414,6 +418,8 @@ CONFLICT_TYPE ps_publish(tm_addr_t address, int64_t value) {
 
 #  ifndef PGAS
     return dsl_nodes[((addr) >> RESP_NODE_MASK) % NUM_DSL_NODES];
+    /* return dsl_nodes[(hash_tw(addr) >> RESP_NODE_MASK) % NUM_DSL_NODES]; */
+    /* return dsl_nodes[(hash_tw(addr)) % NUM_DSL_NODES]; */
 #  else	 /* PGAS */
     /* return dsl_nodes[addr / pgas_dsl_size_node]; */
     return dsl_nodes[addr >> PGAS_DSL_MASK_BITS];

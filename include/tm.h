@@ -158,7 +158,11 @@ extern "C" {
 #  define CM_METADATA_UPDATE_ON_COMMIT         stm_tx_node->tx_duration += (getticks() - stm_tx->start_ts);
 #elif defined(GREEDY)
 #  define CM_METADATA_INIT_ON_START            ;
-#  define CM_METADATA_INIT_ON_FIRST_START      stm_tx->start_ts = getticks();
+#  ifdef GREEDY_GLOBAL_TS	/* use fetch and increment */
+#    define CM_METADATA_INIT_ON_FIRST_START      stm_tx->start_ts = greedy_get_global_ts();
+#  else
+#    define CM_METADATA_INIT_ON_FIRST_START      stm_tx->start_ts = getticks();
+#  endif
 #  define CM_METADATA_UPDATE_ON_COMMIT         ;
 #else  /* no cm defined */
 #  error "One of the contention managers should be selected"

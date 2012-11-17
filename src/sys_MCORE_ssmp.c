@@ -50,6 +50,9 @@ nodeid_t MY_TOTAL_NODES;
 #ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
 int32_t **cm_abort_flags;
 int32_t *cm_abort_flag_mine;
+#if defined(GREEDY) && defined(GREEDY_GLOBAL_TS)
+ticks* greedy_global_ts;
+#endif
 #endif /* NOCM */
 
 
@@ -175,6 +178,11 @@ sys_ps_init_(void)
 #ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
   cm_abort_flag_mine = cm_init(NODE_ID());
   *cm_abort_flag_mine = NO_CONFLICT;
+
+#if defined(GREEDY) && defined(GREEDY_GLOBAL_TS)
+  greedy_global_ts = cm_greedy_global_ts_init();
+#endif
+
 #endif
 
   BARRIERW;
@@ -297,7 +305,11 @@ dsl_communication()
 #elif defined(GREEDY)
       if (cm_metadata_core[sender].timestamp == 0)
 	{
+#  ifdef GREEDY_GLOBAL_TS
+	  cm_metadata_core[sender].timestamp = (ticks) ps_remote->tx_metadata;
+#  else
 	  cm_metadata_core[sender].timestamp = getticks() - (ticks) ps_remote->tx_metadata;
+#  endif
 	}
 #endif
     
@@ -531,6 +543,17 @@ dsl_communication()
 
 	    if (++stats_received >= 2*NUM_APP_NODES) 
 	      {
+		uint32_t n;
+		for (n = 0; n < TOTAL_NODES(); n++)
+		  {
+		    BARRIER_DSL;
+		    if (n == NODE_ID())
+		      {
+			ssht_stats_print(ps_hashtable, 0);
+		      }
+		  }
+
+		BARRIER_DSL;
 		if (NODE_ID() == min_dsl_id()) 
 		  {
 		    print_global_stats();
@@ -636,8 +659,55 @@ cm_init(nodeid_t node) {
    int32_t *tmp = (int32_t *) mmap(NULL, 64, PROT_READ | PROT_WRITE, MAP_SHARED, abrtfd, 0);
    assert(tmp != NULL);
    
-   //   PRINT("-- opened %s @ %p for CM of %d", keyF, tmp, node);
-
    return tmp;
 }
+
+#if defined(GREEDY) && defined(GREEDY_GLOBAL_TS)
+static ticks* 
+cm_greedy_global_ts_init()
+{
+   char keyF[50];
+   sprintf(keyF,"/cm_greedy_global_ts");
+
+   size_t cache_line = 64;
+
+   int abrtfd = shm_open(keyF, O_CREAT | O_EXCL | O_RDWR, S_IRWXU | S_IRWXG);
+   if (abrtfd<0)
+   {
+      if (errno != EEXIST)
+      {
+         perror("In shm_open");
+         exit(1);
+      }
+
+      //this time it is ok if it already exists                                                    
+      abrtfd = shm_open(keyF, O_CREAT | O_RDWR, S_IRWXU | S_IRWXG);
+      if (abrtfd<0)
+      {
+         perror("In shm_open");
+         exit(1);
+      }
+   }
+   else
+   {
+      //only if it is just created                                                                 
+     if(ftruncate(abrtfd, cache_line))
+       {
+	 printf("ftruncate");
+       }
+   }
+
+   ticks* tmp = (ticks*) mmap(NULL, 64, PROT_READ | PROT_WRITE, MAP_SHARED, abrtfd, 0);
+   assert(tmp != NULL);
+   
+   return tmp;
+}
+
+inline ticks
+greedy_get_global_ts()
+{
+  return __sync_add_and_fetch (greedy_global_ts, 1);
+}
+#endif
+
 #endif	/* NOCM */
