@@ -53,6 +53,17 @@
 /oprof
 /oprof
 /out
+/out.bank.checks
+/out.bank.transfers
+/out.bank.transfers.checks
+/out.ht.i256.u100
+/out.ht.i512.u100
+/out.ht.u0
+/out.ht.u10
+/out.ht.u100
+/out.ht.u50
+/out.ll.u0
+/out.ll.u10
 /outp
 /pgas.changes
 /pgas.changes
@@ -60,6 +71,7 @@
 /profile
 /profile_samples
 /prun
+/rscript.sh
 /run_sim.sh
 /run_sim.sh
 /runconf

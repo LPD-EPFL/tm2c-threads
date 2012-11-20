@@ -9,7 +9,8 @@ PLATFORM_DEFINES =	-DBACKOFF_RETRY \
 		       	-DBACKOFF_MAX="0" \
 		       	-DBACKOFF_DELAY="5000" \
 		       	-UDO_TIMINGS \
-		       	-DNOCM
+		       	-DNOCM \
+			-UGREEDY_GLOBAL_TS
 
 ## fixed defines
 PLATFORM_DEFINES +=    -DPLATFORM_MCORE \

@@ -93,30 +93,6 @@ void *test(void *data, double duration) {
 
   FOR(duration) 
   {
-    if (NODE_ID() == 2)
-      /* if (NODE_ID() == 1 || NODE_ID() == 2) */
-      {
-    	long int	val = rand_range_re(&d->seed, d->range);
-    	if (ht_add(d->set, val, TRANSACTIONAL)) {
-    	  d->nb_added++;
-    	  last = val;
-    	}
-    	d->nb_add++;
-    	continue;
-      }
-    else if (NODE_ID() == 1)
-      {
-	long int 
-	  val = rand_range_re(&d->seed, d->range);
-    	if (ht_remove(d->set, val, TRANSACTIONAL)) {
-    	  d->nb_removed++;
-    	  /* Repeat until successful, to avoid size variations */
-    	}
-    	d->nb_remove++;
-    	continue;
-      }
-
-
     if (unext) { // update
       if (mnext) { // move
 	if (last == -1) val = rand_range_re(&d->seed, d->range);

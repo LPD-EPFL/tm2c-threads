@@ -51,12 +51,20 @@ typedef struct ALIGNED(64) bucket {          /* SCC */
 } bucket_t;
 
 
+#if defined(SSHT_DBG_UTILIZATION)
+extern uint32_t ssht_dbg_bu_expansions;
+extern uint32_t ssht_dbg_usages;
+extern uint32_t ssht_dbg_bu_usages[NUM_BUCKETS];
+extern uint32_t ssht_dbg_bu_usages_w[NUM_BUCKETS];
+extern uint32_t ssht_dbg_bu_usages_r[NUM_BUCKETS];
+#endif	/* SSHT_DBG_UTILIZATION */
 
 typedef bucket_t* ssht_hashtable_t;
 
 extern ssht_hashtable_t ssht_new();
 
 extern void bucket_print(bucket_t* bu);
+extern void ssht_stats_print(ssht_hashtable_t ht, uint32_t details);
 
 extern CONFLICT_TYPE bucket_insert_r(bucket_t* bu, ssht_log_set_t* log, uint32_t id, uintptr_t addr); 
 extern CONFLICT_TYPE bucket_insert_w(bucket_t* bu, ssht_log_set_t* log, uint32_t id, uintptr_t addr);
@@ -64,14 +72,19 @@ extern CONFLICT_TYPE ssht_insert_w_test(ssht_hashtable_t ht, uint32_t id, uintpt
 
 
 INLINED bucket_t* 
-ssht_bucket_new() {
+ssht_bucket_new() 
+{
+#if defined(SSHT_DBG_UTILIZATION)
+  ssht_dbg_bu_expansions++;
+#endif	/* SSHT_DBG_UTILIZATION */
   bucket_t* bu = (bucket_t *) calloc(1, sizeof(bucket_t));
   assert(bu != NULL);
 
   uint32_t i;
-  for (i = 0; i < ENTRY_PER_CL; i++) {
-    bu->entry[i].writer = SSHT_NO_WRITER;
-  }
+  for (i = 0; i < ENTRY_PER_CL; i++) 
+    {
+      bu->entry[i].writer = SSHT_NO_WRITER;
+    }
 
   return bu;
 }
@@ -80,14 +93,27 @@ ssht_bucket_new() {
 #define ssht_rw_entry_has_readers(entry) (entry)->nr
 
 INLINED CONFLICT_TYPE 
-ssht_insert(ssht_hashtable_t ht, uint32_t bu, ssht_log_set_t* log, uint32_t id, uintptr_t addr, RW rw) {
+ssht_insert(ssht_hashtable_t ht, uint32_t bu, ssht_log_set_t* log, uint32_t id, uintptr_t addr, RW rw) 
+{
+#if defined(SSHT_DBG_UTILIZATION)
+  ssht_dbg_usages++;
+  ssht_dbg_bu_usages[bu]++;
+#endif	/* SSHT_DBG_UTILIZATION */
   CONFLICT_TYPE ct;
-  if (rw == READ) {
-    ct = bucket_insert_r(ht + bu, log, id, addr);
-  }
-  else {
-    ct = bucket_insert_w(ht + bu, log, id, addr);
-  }
+  if (rw == READ) 
+    {
+#if defined(SSHT_DBG_UTILIZATION)
+      ssht_dbg_bu_usages_r[bu]++;
+#endif	/* SSHT_DBG_UTILIZATION */
+      ct = bucket_insert_r(ht + bu, log, id, addr);
+    }
+  else 
+    {
+#if defined(SSHT_DBG_UTILIZATION)
+      ssht_dbg_bu_usages_w[bu]++;
+#endif	/* SSHT_DBG_UTILIZATION */
+      ct = bucket_insert_w(ht + bu, log, id, addr);
+    }
 
   return ct;
 }

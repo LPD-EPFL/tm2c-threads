@@ -37,10 +37,11 @@ hash_tw(uint32_t key)
 #define GOLDEN_RATIO_PRIME GOLDEN_RATIO_PRIME_32
 #define hash_long(val, bits) hash_32(val, bits)
 
-static inline unsigned int hash_32(unsigned int val, unsigned int bits)
+INLINED uint32_t 
+hash_32(uint32_t val, uint32_t bits)
 {
   /* On some cpus multiply is faster, on others gcc will do shifts */
-  unsigned int hash = val * GOLDEN_RATIO_PRIME_32;
+  uint32_t hash = val * GOLDEN_RATIO_PRIME_32;
 
   /* High bits are more random, so use them. */
   return hash >> (32 - bits);
