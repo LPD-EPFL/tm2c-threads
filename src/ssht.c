@@ -1,7 +1,16 @@
 #include "ssht.h"
 
+#if defined(SSHT_DBG_UTILIZATION)
+uint32_t ssht_dbg_usages = 0;
+uint32_t ssht_dbg_bu_usages[NUM_BUCKETS] = {0};
+uint32_t ssht_dbg_bu_expansions = 0;
+uint32_t ssht_dbg_bu_usages_w[NUM_BUCKETS] = {0};
+uint32_t ssht_dbg_bu_usages_r[NUM_BUCKETS] = {0};
+#endif	/* SSHT_DBG_UTILIZATION */
+
 ssht_hashtable_t 
-ssht_new() {
+ssht_new() 
+{
   ssht_hashtable_t hashtable;
   if (posix_memalign((void**) &hashtable, CACHE_LINE_SIZE, NUM_BUCKETS * sizeof(bucket_t)) != 0)
     {
@@ -126,9 +135,10 @@ bucket_insert_w(bucket_t* bu, ssht_log_set_t* log, uint32_t id, uintptr_t addr)
 	      ssht_rw_entry_t* e = btmp->entry + i;
 	      if (e->writer != SSHT_NO_WRITER)                    /* there is a writer for this entry */
 		{
-#ifndef NOCM 			                                  /* if any other CM (greedy, wholly, faircm) */
+#if !defined(NOCM)		                                  /* any other CM (greedy, wholly, faircm) */
 		  if (contention_manager_raw_waw(id, e->writer, WRITE_AFTER_WRITE)) 
 		    {
+		      btmp->addr[i] = addr;
 		      e->writer = id;
 		      ssht_log_set_insert(log, btmp->addr + i, e);
 		      return NO_CONFLICT;
@@ -248,4 +258,25 @@ ssht_insert_w_test(ssht_hashtable_t ht, uint32_t id, uintptr_t addr)
   while (btmp != NULL);
 
   return NO_CONFLICT;
+}
+
+
+void 
+ssht_stats_print(ssht_hashtable_t ht, uint32_t details)
+{
+#if defined(SSHT_DBG_UTILIZATION)
+  printf("SSHT usage stats for Core %02d ______________________________________________________\n", NODE_ID());
+  printf(" total insertions: %-14u num expansions  : %u\n", ssht_dbg_usages, ssht_dbg_bu_expansions);
+  if (details)
+    {
+      printf(" per bucket:\n");
+      uint32_t b;
+      for (b = 0; b < NUM_BUCKETS; b++)
+	{
+	  double usage_perc = 100 * ((double) ssht_dbg_bu_usages[b] / ssht_dbg_usages);
+	  printf("# %3u :: usages: %8u  = %5.2f%%  (reads: %8u | writes: %8u)\n",
+		 b, ssht_dbg_bu_usages[b], usage_perc, ssht_dbg_bu_usages_r[b], ssht_dbg_bu_usages_w[b]);
+	}
+    }
+#endif	/* SSHT_DBG_UTILIZATION */
 }
