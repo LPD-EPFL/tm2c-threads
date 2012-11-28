@@ -24,13 +24,6 @@
 #include "linkedlist.h"
 #include <unistd.h>
 
-#ifdef SEQUENTIAL
-#ifdef BARRIER
-#undef BARRIER
-#define BARRIER BARRIERW
-#endif
-#endif
-
 /* ################################################################### *
  * RANDOM
  * ################################################################### */
@@ -131,7 +124,6 @@ void *test(void *data, double duration) {
 	  /* Remove one random value */
 	  /* goto not_rem; */
 	  if (set_remove(d->set, val, TRANSACTIONAL)) {
-	  not_rem:
 	    d->nb_removed++;
 	    /* Repeat until successful, to avoid size variations */
 	    last = -1;
@@ -355,7 +347,7 @@ TASKMAIN(int argc, char **argv) {
   BARRIER;
 
   uint32_t my_app_seq_id = app_id_seq(NODE_ID());
-  printf("Adding %d entries to set (%2d)\n", initial, my_app_seq_id);
+  PRINT("Adding %d entries to set (%2d)", initial, my_app_seq_id);
 
   int round;
   for (round = 0; round < initial; round++)
@@ -369,13 +361,16 @@ TASKMAIN(int argc, char **argv) {
 	      val = rand_range(range);
 	      was_added = set_add(set, val, 0);
 	    } while (!was_added);
-	  udelay(23);
+	  udelay(123);
 	}
       BARRIER;
     }
 
   BARRIER;
-
+  PRINT("finish insertion!");
+  udelay(10000);
+  BARRIER;
+  
   ONCE
     {
       size = set_size(set);

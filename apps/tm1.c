@@ -7,11 +7,26 @@
 
 #define SIS_SIZE 480
 
+int aborted = 0;
+
+extern volatile ssmp_msg_t **ssmp_recv_buf;
+
+inline int ssmp_recv_from_pick(int from) {
+  
+  MPB_INV();
+  if (ssmp_recv_buf[from]->state) {
+    return 1;
+  }
+  return 0;
+}
+
+extern t_vcharp virtual_lockaddress[48];
 
 MAIN(int argc, char **argv) {
 
 
-    TM_INIT
+  TM_INIT
+    {
 
     uint32_t *shmall = (uint32_t *) sys_shmalloc(2 * TOTAL_NODES() * sizeof(uint32_t));
 
@@ -137,9 +152,6 @@ MAIN(int argc, char **argv) {
     /* } */
 
 
-    PF_PRINT
-
-
-    TM_END
-    EXIT(0);
+	} TM_END;
+  EXIT(0);
 }

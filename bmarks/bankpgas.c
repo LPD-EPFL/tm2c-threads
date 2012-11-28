@@ -482,7 +482,7 @@ TASKMAIN(int argc, char **argv)
 
   APP_EXEC_ORDER
     {
-      printf("---Core %d\n  #transfer   : %lu\n  #checks     : %lu\n  #read-all   : %lu\n  #write-all  : %lu\n", 
+      printf("---Core %d\n  #transfer   : %llu\n  #checks     : %llu\n  #read-all   : %llu\n  #write-all  : %llu\n", 
 	     NODE_ID(), data->nb_transfer, data->nb_checks, data->nb_read_all, data->nb_write_all);
       FLUSH;
     } APP_EXEC_ORDER_END;

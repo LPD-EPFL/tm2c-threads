@@ -76,13 +76,11 @@ typedef struct intset
 
 extern nxt_t offs__;
 
-#define N2O(set, node)                  (nxt_t) ((nxt_t) (node) - (nxt_t) (set))
-#define O2N(set, offset)                ((void *) (offs__ = offset) == NULL ? NULL : (node_t *) ((nxt_t) (set) + (offs__)))
-#define SET                             set
 #define ND(offs)                        pgas_app_addr_from_offs(offs)
 #define OF(node)                        pgas_app_addr_offs(node)
 #define LOAD_NODE(nd, addr)                     \
   nd.to_int64 = NONTX_LOAD(addr, 2)
+
 #define LOAD_NODE_NXT(nd, addr)                 \
   ;//nd.next = (nxt_t) NONTX_LOAD((tm_addr_t)((size_t)addr + sizeof(sys_t_vcharp)))
 

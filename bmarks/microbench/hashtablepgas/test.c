@@ -286,15 +286,15 @@ void print_set(intset_t* set) {
   /* LOAD_NODE_NXT(node, set->head); */
   /* LOAD_NODE(node, node.next); */
   /*   if (node.nextp == NULL) { */
-  /*       goto null; */
+  goto null;
   /*   } */
   /*   while (node.nextp != NULL) { */
   /*     printf("%d -> ", (int) node.val); */
   /*     LOAD_NODE(node, node.next); */
   /*   } */
 
-null:
-    PRINTSF("max -> NULL\n");
+ null:
+  PRINTSF("max -> NULL\n");
 
 }
 
@@ -502,6 +502,7 @@ TASKMAIN(int argc, char** argv)
 
   uint32_t my_app_seq_id = app_id_seq(NODE_ID());
   printf("Adding %d entries to set (%2d)\n", initial, my_app_seq_id);
+  FLUSH;
 
   int round;
   for (round = 0; round < initial; round++)
@@ -515,12 +516,15 @@ TASKMAIN(int argc, char** argv)
 	      val = rand_range(range);
 	      was_added = ht_add(set, val, 0);
 	    } while (!was_added);
-	  udelay(23);
+	  udelay(123);
 	}
       BARRIER;
     }
 
-
+  BARRIER;
+  PRINT("finsished insertion!");
+  udelay(10000);
+  BARRIER;
 
   ONCE
     {

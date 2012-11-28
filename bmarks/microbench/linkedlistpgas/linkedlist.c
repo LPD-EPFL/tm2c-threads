@@ -96,18 +96,19 @@ void set_delete(intset_t *set) {
 int
 set_size(intset_t* set) 
 {
-    int size = 0;
-    node_t node, head;
+  int size = 0;
+  node_t node, head;
 
-    /* We have at least 2 elements */
-    LOAD_NODE(head, set->head);
-    LOAD_NODE(node, ND(head.next));
-    while (node.next != 0) {
-        size++;
-        LOAD_NODE(node, ND(node.next));
+  /* We have at least 2 elements */
+  LOAD_NODE(head, set->head);
+  LOAD_NODE(node, ND(head.next));
+  while (node.next != 0)
+    {
+       size++;
+      LOAD_NODE(node, ND(node.next));
     }
 
-    return size;
+  return size;
 }
 
 /*
@@ -154,7 +155,7 @@ set_contains(intset_t *set, val_t val, int transactional)
   val_t v = 0;
 
   TX_START;
-  LOAD_NODE(prev, set->head);
+  TX_LOAD_NODE(prev, set->head);
   TX_LOAD_NODE(next, ND(prev.next));
   while (next.val < val) 
     {
@@ -323,31 +324,44 @@ set_add(intset_t* set, val_t val, int transactional)
   return result;
 }
 
+
 static int 
 set_seq_add(intset_t* set, val_t val) 
 {
   int result;
-  node_t prev, next;
+  node_t prev, nnext;
 #ifdef LOCKS
   global_lock();
 #endif
+
   nxt_t to_store = OF(set->head);
 
-  LOAD_NODE(prev, set->head);
-  LOAD_NODE(next, ND(prev.next));
-  while (next.val < val) 
+  /* int seq = 0; */
+  node_t* hd = set->head;
+  LOAD_NODE(prev, hd);
+
+  /* PRINT("%3d   LOAD: head: %10lu   val: %10ld   %d", seq++, to_store, prev.val, prev.next); */
+  node_t* nd = ND(prev.next);
+  LOAD_NODE(nnext, nd);
+  /* PRINT("%3d   LOAD: addr: %10d   val: %10ld   %d", seq++, prev.next, nnext.val, nnext.next); */
+
+  while (nnext.val < val) 
     {
       to_store = prev.next;
-      prev.val = next.val;
-      prev.next = next.next;
-      LOAD_NODE(next, ND(prev.next));
+      prev.val = nnext.val;
+      prev.next = nnext.next;
+      node_t* nd = ND(prev.next);
+      LOAD_NODE(nnext, nd);
+      /* PRINT("%3d   LOAD: addr: %10lu   val: %10ld   %d", seq++, prev.next, nnext.val, nnext.next); */
     }
-  result = (next.val != val);
+  result = (nnext.val != val);
   if (result) 
     {
       node_t *nn = new_node(val, prev.next, 0);
       prev.next = OF(nn);
-      NONTX_STORE(ND(to_store), prev.to_int64, TYPE_INT);
+      node_t* nd = ND(to_store);
+      NONTX_STORE(nd, prev.to_int64, TYPE_INT);
+      /* PRINT("%3d  STORE: addr: %10lu   val: %10ld   %d", seq++, to_store, prev.val, prev.next); */
     }
 
 #ifdef LOCKS
@@ -525,7 +539,7 @@ set_remove(intset_t* set, val_t val, int transactional)
   result = (next.val == val);
   if (result) 
     {
-      /* TX_SHFREE(ND(prev.next)); */
+      TX_SHFREE(ND(prev.next));
       prev.next = next.next;
       TX_STORE(ND(to_store), prev.to_int64, TYPE_INT);
     }

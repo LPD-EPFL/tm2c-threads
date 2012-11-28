@@ -39,7 +39,7 @@
 
 #if defined(SCC)
 /*take advante all 4 MCs*/
-#define MC 
+#define MC__
 #endif
 
 #define DEFAULT_DURATION                10
@@ -100,7 +100,6 @@ int transfer(account_t *src, account_t *dst, int amount) {
   TX_START;
 
 #ifdef LOAD_STORE
-  //TODO: test and use the TX_LOAD_STORE
   /* PF_START(0); */
   TX_LOAD_STORE(&src->balance, -, amount, TYPE_INT);
   /* PF_STOP(0); */
@@ -492,8 +491,6 @@ TASKMAIN(int argc, char **argv) {
       PRINTN("Read cores     : %d\n", read_cores);
       PRINTN("Write-all rate : %d\n", write_all - read_all);
       PRINTN("Write cores    : %d\n", write_cores);
-
-      PRINT("sizeof(..) = %lu", sizeof(thread_data_t));
     }
 
   
@@ -524,12 +521,12 @@ TASKMAIN(int argc, char **argv) {
 
   /* End it */
 
-  BARRIER
+  BARRIER;
 
-    uint32_t nd;
+  uint32_t nd;
   for (nd = 0; nd < TOTAL_NODES(); nd++) {
     if (NODE_ID() == nd) {
-      printf("---Core %d\n  #transfer   : %lu\n  #checks     : %lu\n  #read-all   : %lu\n  #write-all  : %lu\n", 
+      printf("---Core %d\n  #transfer   : %llu\n  #checks     : %llu\n  #read-all   : %llu\n  #write-all  : %llu\n", 
 	     NODE_ID(), data->nb_transfer, data->nb_checks, data->nb_read_all, data->nb_write_all);
       FLUSH;
     }
@@ -537,15 +534,15 @@ TASKMAIN(int argc, char **argv) {
   }
 
 
-  BARRIER
+  BARRIER;
 
-    ONCE
-  {
-    PRINT("\t\t\t~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-	  "\t\t\t\tBank total (after): %d\n"
-	  "\t\t\t~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
-	  total(bank, 0));
-  }
+  ONCE
+    {
+      PRINT("\t\t\t~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+	    "\t\t\t\tBank total (after): %d\n"
+	    "\t\t\t~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+	    total(bank, 0));
+    }
 
   /* Delete bank and accounts */
 

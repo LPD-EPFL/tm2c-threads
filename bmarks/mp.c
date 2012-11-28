@@ -6,7 +6,7 @@
 #include "tm.h"
 
 #ifndef DO_TIMINGS
-#  error mp needs DO_TIMINGS defined
+#  warning **** mp needs DO_TIMINGS defined
 #endif
 
 #ifdef PLATFORM_TILERA
