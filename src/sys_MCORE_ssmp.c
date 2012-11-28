@@ -236,8 +236,7 @@ sys_ps_term(void)
   BARRIERW;
 }
 
-// If value == NULL, we just return the address.
-// Otherwise, we return the value.
+
 INLINED void 
 sys_ps_command_reply(nodeid_t sender, PS_REPLY_TYPE cmd, tm_addr_t addr, int64_t value, CONFLICT_TYPE response)
 {
@@ -285,8 +284,6 @@ dsl_communication()
 
 
   ssmp_color_buf_init(cbuf, is_app_core);
-
-  int32_t pdt = 100;
 
   while (1) 
     {
@@ -360,14 +357,6 @@ dsl_communication()
 	    if (conflict == NO_CONFLICT) 
 	      {
 		write_set_pgas_insert(PGAS_write_sets[sender], ps_remote->write_value, ps_remote->address);
-		/* union */
-		/* { */
-		/*   int64_t i64; */
-		/*   int32_t i32[2]; */
-		/* } c; */
-		/* c.i64 = ps_remote->write_value; */
-		/* PRINT("TX_STORE from %2d @ %d :; %d : %d", sender, ps_remote->address, c.i32[0], c.i32[1]); */
-
 	      }
 #endif	/* PGAS */
 
@@ -441,18 +430,6 @@ dsl_communication()
 	  }
 	case PS_LOAD_NONTX:
 	  {
-	    /* union */
-	    /* { */
-	    /*   int64_t	i64; */
-	    /*   struct */
-	    /*   { */
-	    /* 	int32_t i32[2]; */
-	    /*   }; */
-	    /* } ct; */
-	    /* ct.i64 = pgas_dsl_read(ps_remote->address); */
-	    /* PRINT("((addr: %10d | val64: %14lld | val32ms: %10d | val32ls: %10d))", */
-	    /* 	  ps_remote->address, ct.i64, ct.i32[1], ct.i32[0]); */
-
 	    int64_t val;
 	    if (ps_remote->num_words == 1)
 	      {
@@ -463,19 +440,6 @@ dsl_communication()
 		val = pgas_dsl_read(ps_remote->address);
 	      }
 
-	    /* union */
-	    /* { */
-	    /*   int64_t	i64; */
-	    /*   struct */
-	    /*   { */
-	    /* 	int32_t i32[2]; */
-	    /*   }; */
-	    /* } convert; */
-	    /* convert.i64 = val; */
-
-	    /* PRINT("((non-tx ld: from %d, addr %d, words: %u (val: %lld [%d | %d])))", */
-	    /* 	  sender, ps_remote->address, ps_remote->num_words, val, convert.i32[0], convert.i32[1]); */
-
 	    sys_ps_command_reply(sender, PS_LOAD_NONTX_RESPONSE,
 				 (tm_addr_t) ps_remote->address,
 				 val,
@@ -485,19 +449,6 @@ dsl_communication()
 	  }
 	case PS_STORE_NONTX:
 	  {
-	    /* union */
-	    /* { */
-	    /*   int64_t	i64; */
-	    /*   struct */
-	    /*   { */
-	    /* 	int32_t i32[2]; */
-	    /*   }; */
-	    /* } convert; */
-	    /* convert.i64 = ps_remote->write_value; */
-
-	    /* PRINT("((non-tx st: from %02d, addr %10lu (val: %lld [%d | %d])))", */
-	    /* 	  sender, ps_remote->address, */
-	    /* 	  (long long int) ps_remote->write_value, convert.i32[0], convert.i32[1]); */
 	    pgas_dsl_write(ps_remote->address, ps_remote->write_value);
 	    break;
 	  }

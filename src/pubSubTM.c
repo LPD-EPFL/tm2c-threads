@@ -14,9 +14,10 @@
 
 #include <limits.h>
 #include "hash.h"
-/* #ifdef PGAS */
-/* #include "pgas_app.h" */
-/* #endif */
+#ifdef PGAS
+#include "pgas_app.h"
+#include "pgas_dsl.h"
+#endif
 
 
 //#define LOG_LATENCIES
@@ -123,7 +124,7 @@ ps_sendbv(nodeid_t target, PS_COMMAND_TYPE command,
     psc->address = address;
     psc->write_value = value;
 
-    sys_sendcmd(psc, sizeof (PS_COMMAND), target);
+    sys_sendcmd(psc, sizeof(PS_COMMAND), target);
 #ifdef LOG_LATENCIES
    gettimeofday(&after,NULL);
    double t2 = (double) after.tv_sec + after.tv_usec / 1e6f;
@@ -157,18 +158,19 @@ ps_sendbv(nodeid_t target, PS_COMMAND_TYPE command,
 
 
 static inline CONFLICT_TYPE
-ps_recvb(nodeid_t from) {
-#if defined(PLATFORM_MCORE) || defined(PLATFORM_TILERA)
-    PS_REPLY cmd;
-    sys_recvcmd(&cmd, sizeof (PS_REPLY), from);
+ps_recvb(nodeid_t from)
+{
+#if defined(PLATFORM_MCORE) || defined(PLATFORM_TILERA) || defined(PLATFORM_SCC_SSMP)
+  PS_REPLY cmd;
+  sys_recvcmd(&cmd, sizeof (PS_REPLY), from);
 #else
-    PS_COMMAND cmd;
-    sys_recvcmd(&cmd, sizeof (PS_COMMAND), from);
+  PS_COMMAND cmd;
+  sys_recvcmd(&cmd, sizeof (PS_COMMAND), from);
 #endif
 #ifdef PGAS
-    read_value = cmd.value;
+  read_value = cmd.value;
 #endif
-	return cmd.response;
+  return cmd.response;
 }
 
 /*
@@ -206,7 +208,7 @@ ps_subscribe(tm_addr_t address, int words)
 #ifdef PGAS
 CONFLICT_TYPE ps_publish(tm_addr_t address, int64_t value) {
 #else
-  CONFLICT_TYPE ps_publish(tm_addr_t address) {
+CONFLICT_TYPE ps_publish(tm_addr_t address) {
 #endif
 
     tm_intern_addr_t intern_addr = to_intern_addr(address);
@@ -280,7 +282,7 @@ CONFLICT_TYPE ps_publish(tm_addr_t address, int64_t value) {
   /* } */
 
   uint64_t
-    ps_load(tm_addr_t address, int words) 
+  ps_load(tm_addr_t address, int words) 
   {
     tm_intern_addr_t intern_addr = to_intern_addr(address);
     nodeid_t responsible_node = get_responsible_node(intern_addr);
@@ -384,7 +386,7 @@ CONFLICT_TYPE ps_publish(tm_addr_t address, int64_t value) {
     stats_cmd->aborts_waw = stats->aborts_waw;
     stats_cmd->tx_duration = 0;
     
-    sys_sendcmd_all(stats_cmd, sizeof (PS_STATS_CMD_T));
+    sys_sendcmd_all(stats_cmd, sizeof(PS_STATS_CMD_T));
 
     free(stats_cmd);
 
@@ -406,7 +408,7 @@ CONFLICT_TYPE ps_publish(tm_addr_t address, int64_t value) {
 
 
   static inline nodeid_t
-    get_responsible_node(tm_intern_addr_t addr) 
+  get_responsible_node(tm_intern_addr_t addr) 
   {
 #ifdef USE_ARRAY
     return dsl_nodes[((addr) >> 4) % NUM_DSL_NODES];
