@@ -218,7 +218,7 @@ extern "C" {
   extern RCCE_COMM RCCE_COMM_APP;
 #    define BARRIER RCCE_barrier(&RCCE_COMM_APP);
 #    define BARRIERW RCCE_barrier(&RCCE_COMM_WORLD);
-
+#    define BARRIER_DSL ; 	/* XXX: to implement */
 #  endif
 
 #endif 

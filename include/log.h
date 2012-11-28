@@ -58,19 +58,19 @@ extern "C" {
 
   extern void write_set_free(write_set_t* write_set);
 
-  inline write_set_t* write_set_empty(write_set_t* write_set);
+  extern write_set_t* write_set_empty(write_set_t* write_set);
 
   inline write_entry_t* write_set_entry(write_set_t* write_set);
 
   inline void write_entry_set_value(write_entry_t* we, int32_t value);
 
-  inline void write_set_insert(write_set_t* write_set, DATATYPE datatype, int32_t value, tm_intern_addr_t address);
+  extern void write_set_insert(write_set_t* write_set, DATATYPE datatype, int32_t value, tm_intern_addr_t address);
 
-  inline void write_set_update(write_set_t* write_set, DATATYPE datatype, int32_t value, tm_intern_addr_t address);
+  extern void write_set_update(write_set_t* write_set, DATATYPE datatype, int32_t value, tm_intern_addr_t address);
 
-  inline void write_entry_persist(write_entry_t* we);
+  extern void write_entry_persist(write_entry_t* we);
 
-  inline void write_entry_print(write_entry_t* we);
+  extern void write_entry_print(write_entry_t* we);
 
   extern void write_set_print(write_set_t* write_set);
 
@@ -79,6 +79,9 @@ extern "C" {
   extern write_entry_t* write_set_contains(write_set_t* write_set, tm_intern_addr_t address);
 
 #ifdef PGAS
+
+#  include "pgas_dsl.h"
+
 
   /*______________________________________________________________________________________________________
    * WRITE SET PGAS                                                                                       |
