@@ -34,23 +34,27 @@ extern "C" {
     PS_UKNOWN_RESPONSE
   } PS_REPLY_TYPE;
 
-  //A command to the pub-sub
+  /* A command to the DSL service */
   typedef struct ps_command_struct 
   {
-    int32_t type; //PS_COMMAND_TYPE
-    nodeid_t  nodeId;	/* we need IDs on networked systems */
+    int32_t type;	      /* PS_COMMAND_TYPE */
+    nodeid_t nodeId;	      /* we need IDs on networked systems */
     /* 8 */
     tm_intern_addr_t address; /* addr of the data, internal representation */
+#if defined(SCC)
+    int32_t dummy[1];		/* tm_inter_add = size_t = size 4 on the SCC */
+#endif
     /* 8 */
     union 
     {
-      int64_t response; /* used in PS_REMOVE_NODE with PGAS to say persist or not */
+      int64_t response;       /* used in PS_REMOVE_NODE with PGAS to say persist or not */
       int64_t write_value;
       uint64_t num_words;
     };
     /* 8 */
     uint64_t tx_metadata;
 
+    /* SSMP[.SCC] uses the last word as a flag, hence it should be not used for data */
 #if defined(PLATFORM_MCORE_SSMP)
     uint8_t padding[32];
 #endif
@@ -62,7 +66,6 @@ extern "C" {
     int32_t type; //PS_COMMAND_TYPE
     nodeid_t  nodeId;	/* we need IDs on networked systems */
     /* 8 */
-
     /* stats collecting --------------------*/
     struct
     {
@@ -81,8 +84,15 @@ extern "C" {
 	  uint32_t aborts_waw;
 	};
       };
+
+    /* SSMP[.SCC] uses the last word as a flag, hence it should be not used for data */
+#if defined(SCC)
+      double tx_duration;
+      uint32_t mpb_flag;	/* on the SCC, we have CL (MPB) line of 32 bytes */
+#else
       uint32_t dummy;
       double tx_duration;
+#endif      
     };
 
 #if defined(PLATFORM_MCORE_SSMP)
@@ -96,10 +106,13 @@ extern "C" {
     int32_t type; //PS_REPLY_TYPE
     nodeid_t nodeId;
     tm_intern_addr_t address; /* address of the data, internal representation */
+#if defined(SCC)
+    int32_t dummy[1];		/* tm_inter_add = size_t = size 4 on the SCC */
+#endif
+    int64_t value;
     int32_t response; //BOOLEAN
     int32_t resp_size;
-    int64_t value;
-
+    /* SSMP[.SCC] uses the last word as a flag, hence it should be not used for data */
 #if defined(PLATFORM_MCORE_SSMP)
     uint8_t padding[32];
 #endif
