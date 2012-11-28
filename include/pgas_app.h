@@ -18,12 +18,12 @@ extern size_t pgas_dsl_size_node;
 
 extern void pgas_app_init();
 
-extern inline size_t pgas_app_addr_offs(void* addr);
-extern inline void* pgas_app_addr_from_offs(size_t offs);
+extern size_t pgas_app_addr_offs(void* addr);
+extern void* pgas_app_addr_from_offs(size_t offs);
 
 
-extern inline void* pgas_app_alloc(size_t size);
+extern void* pgas_app_alloc(size_t size);
 extern void** pgas_app_alloc_rr(size_t num_elems, size_t size_elem);
-extern inline void* pgas_app_free(void* addr);
+extern void pgas_app_free(void* addr);
 
 #endif	/* PGAS_APP_H */

@@ -64,25 +64,25 @@ extern "C" {
 
   INLINED void tx_metadata_node_print(stm_tx_node_t * stm_tx_node) {
     printf("TXs Statistics for node --------------------------------------\n");
-    printf("Starts      \t: %lu\n", stm_tx_node->tx_starts);
-    printf("Commits     \t: %lu\n", stm_tx_node->tx_commited);
-    printf("Aborts      \t: %lu\n", stm_tx_node->tx_aborted);
-    printf("Max Retries \t: %lu\n", stm_tx_node->max_retries);
-    printf("Aborts WAR  \t: %lu\n", stm_tx_node->aborts_war);
-    printf("Aborts RAW  \t: %lu\n", stm_tx_node->aborts_raw);
-    printf("Aborts WAW  \t: %lu\n", stm_tx_node->aborts_waw);
+    printf("Starts      \t: %llu\n", stm_tx_node->tx_starts);
+    printf("Commits     \t: %llu\n", stm_tx_node->tx_commited);
+    printf("Aborts      \t: %llu\n", stm_tx_node->tx_aborted);
+    printf("Max Retries \t: %llu\n", stm_tx_node->max_retries);
+    printf("Aborts WAR  \t: %llu\n", stm_tx_node->aborts_war);
+    printf("Aborts RAW  \t: %llu\n", stm_tx_node->aborts_raw);
+    printf("Aborts WAW  \t: %llu\n", stm_tx_node->aborts_waw);
     printf("--------------------------------------------------------------\n");
     fflush(stdout);
   }
 
   INLINED void tx_metadata_print(stm_tx_t * stm_tx) {
     printf("TX Statistics ------------------------------------------------\n");
-    printf("Retries     \t: %lu\n", stm_tx->retries);
-    printf("Aborts      \t: %lu\n", stm_tx->aborts);
-    printf("Max Retries \t: %lu\n", stm_tx->max_retries);
-    printf("Aborts WAR  \t: %lu\n", stm_tx->aborts_war);
-    printf("Aborts RAW  \t: %lu\n", stm_tx->aborts_raw);
-    printf("Aborts WAW  \t: %lu\n", stm_tx->aborts_waw);
+    printf("Retries     \t: %llu\n", stm_tx->retries);
+    printf("Aborts      \t: %llu\n", stm_tx->aborts);
+    printf("Max Retries \t: %llu\n", stm_tx->max_retries);
+    printf("Aborts WAR  \t: %llu\n", stm_tx->aborts_war);
+    printf("Aborts RAW  \t: %llu\n", stm_tx->aborts_raw);
+    printf("Aborts WAW  \t: %llu\n", stm_tx->aborts_waw);
     printf("--------------------------------------------------------------\n");
     fflush(stdout);
   }

@@ -10,20 +10,28 @@
 #define	PGAS_DSL_H
 
 #include "common.h"
+#include <assert.h>
 
-#define PGAS_DSL_MASK_BITS 28
-#define PGAS_DSL_ADDR_MASK 0x000000000FFFFFFF
-#define PGAS_DSL_GLOBAL_ADDR_MASK 0x0000000FFFFFFFFF
+#define PGAS_DSL_MASK_BITS 25
+#  if __WORDSIZE == 32
+#warning "32 word"
+#define PGAS_DSL_ADDR_MASK        0x01FFFFFF
+#define PGAS_DSL_GLOBAL_ADDR_MASK 0xFFFFFFFF
+#define PGAS_DSL_SIZE_NODE (0x1<<PGAS_DSL_MASK_BITS)
+#else  /* !SCC */
+#define PGAS_DSL_ADDR_MASK        0x0000000001FFFFFF
+#define PGAS_DSL_GLOBAL_ADDR_MASK 0x00000001FFFFFFFF
 #define PGAS_DSL_SIZE_NODE (0x1LL<<PGAS_DSL_MASK_BITS)
+#endif	/* SCC */
 
 extern void pgas_dsl_init();
 
-extern inline int64_t pgas_dsl_read(uint64_t offset);
+extern int64_t pgas_dsl_read(uint64_t offset);
 inline int64_t* pgas_dsl_readp(uint64_t offset);
-extern inline int32_t pgas_dsl_read32(uint64_t offset);
+extern int32_t pgas_dsl_read32(uint64_t offset);
 
-extern inline void pgas_dsl_write(uint64_t offset, int64_t val);
-extern inline void pgas_dsl_write32(uint64_t offset, int32_t val);
+extern void pgas_dsl_write(uint64_t offset, int64_t val);
+extern void pgas_dsl_write32(uint64_t offset, int32_t val);
 
 #endif	/* PGAS_DSL_H */
 
