@@ -16,6 +16,9 @@
 #include "dslock.h"
 #include "stm.h"
 #include "mem.h"
+#ifdef PGAS
+#  include "pgas_app.h"
+#endif
 
 #ifdef	__cplusplus
 extern "C" {
@@ -421,7 +424,9 @@ extern "C" {
   tx_load(write_set_t *ws, tm_addr_t addr)
   {
     tm_intern_addr_t intern_addr = to_intern_addr(addr);
+#  if defined(PLATFORM_MCORE) || defined(PLATFORM_MCORE_SSMP)
     PREFETCH(intern_addr);
+#  endif
     write_entry_t *we;
     if ((we = write_set_contains(ws, intern_addr)) != NULL) 
       {
@@ -497,9 +502,11 @@ extern "C" {
 
       INLINED int64_t nontx_load(tm_addr_t addr, unsigned int words) 
       {
-	return ps_load(addr, words);
+	tm_addr_t ab = addr;
+	int64_t v = ps_load(addr, words);
+	return v;
       }
-#else /* PGAS */
+#else /* !PGAS */
 
       INLINED tm_addr_t nontx_load(tm_addr_t addr) {
 	// There is no non-PGAS cluster

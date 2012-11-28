@@ -88,7 +88,6 @@ INLINED tm_intern_addr_t
 to_intern_addr(tm_addr_t addr)
 {
 #ifdef PGAS
-  //  return fakemem_offset((void*) addr);
   return pgas_app_addr_offs((void*) addr);
 #else
   return (tm_intern_addr_t)addr;
