@@ -4,15 +4,28 @@ nodeid_t  pgas_app_my_resp_node;
 nodeid_t  pgas_app_my_resp_node_real;
 size_t  pgas_dsl_size_node;
 
-static void* pgas_app_mem;
 static void* pgas_app_mem_mine;
 static size_t pgas_mem_size;
 static size_t alloc_next;
 static size_t* pgas_allocs;
 static nodeid_t pgas_alloc_rr_next = 0;
+
+#if defined(SCC)		
+void* pgas_app_mem;
+void* pgas_free_list[256] = {0};
+uint8_t pgas_free_cur = 0;
+uint8_t pgas_free_num = 0;
+/* to avoid void ptr arithmetic warning */
+#  define PTR_ADD(ptr, plus) ((void*)  ((uint32_t) (ptr) + (plus)))
+#  define PTR_SUB(ptr, plus) ((size_t) ((uint32_t) (ptr) - (uint32_t) (plus)))
+#else  /* !SCC ---------------------------------------------------------------*/
+static
 static void* pgas_free_list[256] = {0};
 static uint8_t pgas_free_cur = 0;
 static uint8_t pgas_free_num = 0;
+#  define PTR_ADD(ptr, plus) ((ptr) + (plus))
+#  define PTR_SUB(ptr, plus) ((ptr) - (plus))
+#endif	/* SCC */
 
 void 
 pgas_app_init()
@@ -66,7 +79,7 @@ pgas_app_init()
 
   size_t my_offset = (pgas_dsl_size_node / num_app_sharing) * my_seq_sharing;
   size_t node_offset = pgas_app_my_resp_node * pgas_dsl_size_node;
-  pgas_app_mem_mine = pgas_app_mem + node_offset + my_offset;
+  pgas_app_mem_mine = (void*)((uintptr_t) pgas_app_mem + node_offset + my_offset);
   PRINT(" **  Sending to %3d (realid: %02d) :: off: %10lu :: shared by %2d (my seq %d)", 
 	pgas_app_my_resp_node, real_id, pgas_app_addr_offs(pgas_app_mem_mine), 
 	num_app_sharing, my_seq_sharing);
@@ -83,14 +96,9 @@ pgas_app_alloc(size_t size)
       /* PRINT("spot %u", pgas_free_cur - pgas_free_num); */
       pgas_free_num--;
     }
-  /* void* ret = pgas_free_list[pgas_free_cur]; */
-  /* if (ret != NULL) */
-  /*   { */
-  /*     pgas_free_list[pgas_free_cur--] = NULL; */
-  /*   } */
   else
     {
-      ret = pgas_app_mem_mine + alloc_next;
+      ret = PTR_ADD(pgas_app_mem_mine, alloc_next);
       alloc_next += size;
     }
 
@@ -99,7 +107,7 @@ pgas_app_alloc(size_t size)
   return ret;
 }
 
-inline void*
+inline void
 pgas_app_free(void* addr)
 {
   //  pgas_free_list[++pgas_free_cur] = addr;
@@ -122,7 +130,7 @@ pgas_app_alloc_rr(size_t num_elems, size_t size_elem)
     {
       /* PRINT("allocating from %d", n); */
 
-      mem_rr[i] = pgas_app_mem + pgas_allocs[n];
+      mem_rr[i] = PTR_ADD(pgas_app_mem, pgas_allocs[n]);
       pgas_allocs[n] += size_elem;
       if (n == pgas_app_my_resp_node)
 	{
@@ -140,12 +148,12 @@ pgas_app_alloc_rr(size_t num_elems, size_t size_elem)
 inline size_t
 pgas_app_addr_offs(void* addr)
 {
-  return (addr - pgas_app_mem);
+  return PTR_SUB(addr, pgas_app_mem);
 }
 
 inline void*
 pgas_app_addr_from_offs(size_t offs)
 {
-  return (pgas_app_mem + offs);
+  return PTR_ADD(pgas_app_mem, offs);
 }
 

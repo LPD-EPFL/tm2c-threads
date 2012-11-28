@@ -39,6 +39,8 @@ int bucket_current[NUM_OF_BUCKETS];
 int bucket_max[NUM_OF_BUCKETS];
 #endif
 
+extern void tm_term();
+
 void dsl_init(void) {
 #ifdef PGAS
     PGAS_write_sets = (write_set_pgas_t **) malloc(NUM_UES * sizeof (write_set_pgas_t *));
