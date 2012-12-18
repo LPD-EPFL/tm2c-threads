@@ -17,7 +17,7 @@ extern "C" {
 #include <inttypes.h>
 
 #include "common.h"
-#include "fakemem.h"
+
 
 extern const size_t SHMEM_SIZE;       /* size of the shared memory held by node */
 extern const size_t PGAS_GRANULARITY; /* the length of consecutive data stored

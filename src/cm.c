@@ -11,7 +11,7 @@ extern ps_hashtable_t ps_hashtable;
 
 #ifndef NOCM 			/* any CM: wholly, greedy, faircm */
 
-static int32_t * cm_init();
+static int32_t* cm_init();
 
 inline BOOLEAN 
 contention_manager(nodeid_t attacker, unsigned short *defenders, CONFLICT_TYPE conflict) {
@@ -71,18 +71,21 @@ contention_manager(nodeid_t attacker, unsigned short *defenders, CONFLICT_TYPE c
 }
 
 inline BOOLEAN 
-contention_manager_raw_waw(nodeid_t attacker, unsigned short defender, CONFLICT_TYPE conflict) {
+contention_manager_raw_waw(nodeid_t attacker, uint16_t defender, CONFLICT_TYPE conflict) 
+{
   if (cm_metadata_core[attacker].timestamp < cm_metadata_core[defender].timestamp ||
-      (cm_metadata_core[attacker].timestamp == cm_metadata_core[defender].timestamp && attacker < defender)) {
-    //new TX - attacker won
-    abort_node((unsigned int) defender, conflict);
-    ps_hashtable_delete_node(ps_hashtable, defender);
-    //it was running and the current node aborted it
-    return TRUE;
-  } 
-  else { //existing TX won
-    return FALSE;
-  }
+      (cm_metadata_core[attacker].timestamp == cm_metadata_core[defender].timestamp && attacker < defender)) 
+    {
+      //new TX - attacker won
+      abort_node((uint32_t) defender, conflict);
+      ps_hashtable_delete_node(ps_hashtable, defender);
+      //it was running and the current node aborted it
+      return TRUE;
+    } 
+  else 				/* existing TX won */
+    { 
+      return FALSE;
+    }
 
   return FALSE;
 }

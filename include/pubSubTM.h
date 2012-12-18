@@ -31,7 +31,7 @@ extern "C" {
     //pub-sub request types
 
     //TODO: remove ? have them at .c file
-    extern int read_value;
+    extern int64_t read_value;
     extern nodeid_t* dsl_nodes;
 
 
@@ -46,26 +46,26 @@ extern "C" {
 
     /* Try to subscribe the TX for reading the address
      */
-    CONFLICT_TYPE ps_subscribe(tm_addr_t address);
+  CONFLICT_TYPE ps_subscribe(tm_addr_t address, int words);
 
     /* Try to publish a write on the address
      * XXX: try to unify the interface
      */
 #ifdef PGAS
-    CONFLICT_TYPE ps_publish(tm_addr_t address, int value);
+    CONFLICT_TYPE ps_publish(tm_addr_t address, int64_t value);
 
     /*  Try to increment by increment and store (so, write) address
      */
-    CONFLICT_TYPE ps_store_inc(tm_addr_t address, int increment);
+    CONFLICT_TYPE ps_store_inc(tm_addr_t address, int64_t increment);
 #else
     CONFLICT_TYPE ps_publish(tm_addr_t address);
 #endif
 
-    /* Non-transactional read of an address */
-    uint32_t ps_load(tm_addr_t address);
+    /* Non-transactional read of 1 or 2 words from an address */
+  uint64_t ps_load(tm_addr_t address, int words);
 
     /* Non-transactional write to an address */
-    void ps_store(tm_addr_t address, uint32_t value);
+    void ps_store(tm_addr_t address, int64_t value);
 
     /* Unsubscribes the TX from the address
      */

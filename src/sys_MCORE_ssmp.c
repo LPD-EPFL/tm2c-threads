@@ -18,30 +18,23 @@
 #include <limits.h>
 #include <ssmp.h>
 #ifdef PLATFORM_NUMA
-#include <numa.h>
+#  include <numa.h>
 #endif /* PLATFORM_NUMA */
 #include "common.h"
 #include "pubSubTM.h"
 #include "dslock.h"
-#include "pgas.h"
 #include "mcore_malloc.h"
 
 #include "hash.h"
 
-//#define DEBUG_UTILIZATION
-#ifdef  DEBUG_UTILIZATION
-unsigned int read_reqs_num = 0, write_reqs_num = 0;
-#endif
-
 PS_REPLY* ps_remote_msg; // holds the received msg
-static PS_COMMAND *ps_remote;
 
 INLINED nodeid_t min_dsl_id();
 
 INLINED void sys_ps_command_reply(nodeid_t sender,
                     PS_REPLY_TYPE command,
                     tm_addr_t address,
-                    uint32_t* value,
+                    int64_t value,
                     CONFLICT_TYPE response);
 /*
  * For cluster conf, we need a different kind of command line parameters.
@@ -57,6 +50,9 @@ nodeid_t MY_TOTAL_NODES;
 #ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
 int32_t **cm_abort_flags;
 int32_t *cm_abort_flag_mine;
+#if defined(GREEDY) && defined(GREEDY_GLOBAL_TS)
+ticks* greedy_global_ts;
+#endif
 #endif /* NOCM */
 
 
@@ -148,7 +144,7 @@ sys_t_vcharp
 sys_shmalloc(size_t size)
 {
 #ifdef PGAS
-	return fakemem_malloc(size);
+  return pgas_app_alloc(size);
 #else
 	return MCORE_shmalloc(size);
 #endif
@@ -157,7 +153,11 @@ sys_shmalloc(size_t size)
 void
 sys_shfree(sys_t_vcharp ptr)
 {
-	MCORE_shfree(ptr);
+#ifdef PGAS
+  pgas_app_free((void*) ptr);
+#else
+  MCORE_shfree(ptr);
+#endif
 }
 
 void
@@ -169,42 +169,58 @@ sys_tm_init()
 void
 sys_ps_init_(void)
 {
+#if defined(PGAS)
+  pgas_app_init();
+#else  /* PGAS */
+  MCORE_shmalloc_init(1024*1024*1024); //1GB
+#endif /* PGAS */
 
 #ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
   cm_abort_flag_mine = cm_init(NODE_ID());
   *cm_abort_flag_mine = NO_CONFLICT;
+
+#if defined(GREEDY) && defined(GREEDY_GLOBAL_TS)
+  greedy_global_ts = cm_greedy_global_ts_init();
 #endif
 
-  MCORE_shmalloc_init(1024*1024*1024); //1GB
+#endif
 
-  BARRIERW
+  BARRIERW;
 
   ps_remote_msg = NULL;
   PRINTD("sys_ps_init: done");
 
-  BARRIERW
+  BARRIERW;
 }
 
 void
 sys_dsl_init(void)
 {
-  MCORE_shmalloc_init(1024*1024*1024); //1GB
 
-  BARRIERW
+#if defined(PGAS)
+  pgas_dsl_init();
+#else  /* PGAS */
+  MCORE_shmalloc_init(1024*1024*1024); 
+#endif	/* PGAS */
+
+  BARRIERW;
 
 #ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
   cm_abort_flags = (int32_t **) malloc(TOTAL_NODES() * sizeof(int32_t *));
   assert(cm_abort_flags != NULL);
 
   uint32_t i;
-  for (i = 0; i < TOTAL_NODES(); i++) {
-    //TODO: make it open only for app nodes
-    cm_abort_flags[i] = cm_init(i);    
-  }
+  for (i = 0; i < TOTAL_NODES(); i++) 
+    {
+      //TODO: make it open only for app nodes
+      if (is_app_core(i))
+	{
+	  cm_abort_flags[i] = cm_init(i);    
+	}
+    }
 #endif
 
-  ps_remote = (PS_COMMAND *) malloc(sizeof (PS_COMMAND)); //TODO: free at finalize + check for null
-  BARRIERW
+  BARRIERW;
 
 }
 
@@ -220,264 +236,295 @@ sys_ps_term(void)
   BARRIERW;
 }
 
-// If value == NULL, we just return the address.
-// Otherwise, we return the value.
+
 INLINED void 
-sys_ps_command_reply(nodeid_t sender,
-		     PS_REPLY_TYPE command,
-		     tm_addr_t address,
-		     uint32_t* value,
-		     CONFLICT_TYPE response)
+sys_ps_command_reply(nodeid_t sender, PS_REPLY_TYPE cmd, tm_addr_t addr, int64_t value, CONFLICT_TYPE response)
 {
   PS_REPLY reply;
-  reply.type = command;
+  reply.type = cmd;
+  reply.address = (uintptr_t) addr;
   reply.response = response;
 
   PRINTD("sys_ps_command_reply: src=%u target=%d", reply.nodeId, sender);
 #ifdef PGAS
-  if (value != NULL) {
-    reply.value = *value;
-    PRINTD("sys_ps_command_reply: read value %u\n", reply.value);
-  } else {
-    reply.address = (uintptr_t) address;
-  }
-#else
-  reply.address = (uintptr_t) address;
+  reply.value = value;
 #endif
 
   ssmp_msg_t *msg = (ssmp_msg_t *) &reply;
-  ssmp_send(sender, msg, 24);
-  //  ssmp_sendm(sender, msg);
-  //ssmp_send_inline(sender, msg);
+
+  /* PF_STOP(11); */
+  /* PF_START(10); */
+  ssmp_send(sender, msg);
+  /* PF_STOP(10); */
 }
 
-
-#define NB 48
-#define BITS 0
-unsigned int usages[NB];
 
 void
 dsl_communication()
 {
-  nodeid_t sender, last_recv_from = 0;
-  PS_COMMAND_TYPE command;
+  nodeid_t sender;
 
   ssmp_msg_t *msg;
-  msg = (ssmp_msg_t *) malloc(sizeof(ssmp_msg_t));
-
   ssmp_color_buf_t *cbuf;
-  cbuf = (ssmp_color_buf_t *) malloc(sizeof(ssmp_color_buf_t));
+  static PS_COMMAND *ps_remote;
+
+  if (posix_memalign((void**) &msg, CACHE_LINE_SIZE, sizeof(ssmp_msg_t)) != 0
+      ||
+      posix_memalign((void**) &cbuf, CACHE_LINE_SIZE, sizeof(ssmp_color_buf_t)) != 0
+      ||
+      posix_memalign((void**) &ps_remote, CACHE_LINE_SIZE, sizeof(PS_COMMAND)) != 0)
+    {
+      perror("mem_align\n");
+      EXIT(-1);
+    }
   assert(msg != NULL && cbuf != NULL);
+  assert((uintptr_t) msg % CACHE_LINE_SIZE == 0);
+  assert((uintptr_t) cbuf % CACHE_LINE_SIZE == 0);
+  assert((uintptr_t) ps_remote % CACHE_LINE_SIZE == 0);
+
 
   ssmp_color_buf_init(cbuf, is_app_core);
 
-  
-  int j;
-  for (j = 0; j < NB; j++) usages[j] = 0;
+  while (1) 
+    {
+      /* PF_START(9); */
+      ssmp_recv_color_start(cbuf, msg);
+      /* PF_STOP(9); */
+      /* PF_START(11); */
+      sender = msg->sender;
 
-  while (1) {
+      ps_remote = (PS_COMMAND *) msg;
+ 
+      /* PRINT(" XXX cmd %2d from %d for %lu", msg->w0, sender, ps_remote->address); */
 
-    //    PF_START(2);
-    last_recv_from = ssmp_recv_color_start(cbuf, msg, last_recv_from) + 1;
-    //    PF_STOP(2);
-
-    sender = msg->sender;
-
-    ps_remote = (PS_COMMAND *) msg;
-
-    //    usages[hash_tw(ps_remote->address) % NB]++;
-
-    
 #if defined(WHOLLY) || defined(FAIRCM)
-        cm_metadata_core[sender].timestamp = (ticks) ps_remote->tx_metadata;
+      cm_metadata_core[sender].timestamp = (ticks) ps_remote->tx_metadata;
 #elif defined(GREEDY)
-	if (cm_metadata_core[sender].timestamp == 0) {
+      if (cm_metadata_core[sender].timestamp == 0)
+	{
+#  ifdef GREEDY_GLOBAL_TS
+	  cm_metadata_core[sender].timestamp = (ticks) ps_remote->tx_metadata;
+#  else
 	  cm_metadata_core[sender].timestamp = getticks() - (ticks) ps_remote->tx_metadata;
+#  endif
 	}
 #endif
     
-    switch (ps_remote->type) {
-    case PS_SUBSCRIBE:
 
-#ifdef DEBUG_UTILIZATION
-      read_reqs_num++;
-#endif
-
+      switch (ps_remote->type) 
+	{
+	case PS_SUBSCRIBE:
+	  {
+	    CONFLICT_TYPE conflict = try_subscribe(sender, ps_remote->address);
+	    /* PF_STOP(11); */
 #ifdef PGAS
-      /*
-	PRINT("RL addr: %3d, val: %d", address, PGAS_read(address));
-      */
-      
-      sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE,
-			   (tm_addr_t) ps_remote->address, 
-			   PGAS_read(ps_remote->address),
-			   try_subscribe(sender, ps_remote->address));
-#else
-      /* if (NODE_ID() == 0) { */
-      /* 	if (sender == 1) { */
-      /* 	  printf("[%3d] addr %p \tdiff %d\n", req_num++, ps_remote->address, addr_prev - ps_remote->address); */
-      /* 	  addr_prev = ps_remote->address; */
-      /* 	} */
-      /* } */
-      
-      sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE, 
-			   (tm_addr_t) ps_remote->address, 
-			   NULL,
-			   try_subscribe(sender, ps_remote->address));
-      //sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE, address, NO_CONFLICT);
-#endif
-      break;
-    case PS_PUBLISH:
-      {
-#ifdef DEBUG_UTILIZATION
-	write_reqs_num++;
-#endif
+	    uint64_t val;
+	    if (ps_remote->num_words == 1)
+	      {
+		val = pgas_dsl_read32(ps_remote->address);
+	      }
+	    else
+	      {
+		val = pgas_dsl_read(ps_remote->address);
+	      }
 
-	CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
+	    sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE,
+				 (tm_addr_t) ps_remote->address, val, conflict);
+#else  /* !PGAS */
+	    sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE, 
+				 (tm_addr_t) ps_remote->address, 
+				 0,
+				 conflict);
+#endif	/* PGAS */
+	    if (conflict != NO_CONFLICT)
+	      {
+		ps_hashtable_delete_node(ps_hashtable, sender);
+#if defined(GREEDY)
+		cm_metadata_core[sender].timestamp = 0;
+#endif
 #ifdef PGAS
-	if (conflict == NO_CONFLICT) {
-	  write_set_pgas_insert(PGAS_write_sets[sender],
-				ps_remote->write_value, 
-				ps_remote->address);
-	}
-#endif
-	sys_ps_command_reply(sender, PS_PUBLISH_RESPONSE, 
-			     (tm_addr_t) ps_remote->address,
-			     NULL,
-			     conflict);
-	break;
-      }
-/*     case PS_CAS: */
-/*       { */
-/* #ifdef DEBUG_UTILIZATION */
-/* 	write_reqs_num++; */
-/* #endif */
-/* 	CONFLICT_TYPE conflict = ssht_insert_w_test(ps_hashtable, sender, ps_remote->address); */
+		PGAS_write_sets[sender] = write_set_pgas_empty(PGAS_write_sets[sender]);
+#endif	/* PGAS */
+	      }
 
-/* 	if (conflict == NO_CONFLICT) */
-/* 	  { */
-/* 	    uint32_t *addr = (uint32_t *) ps_remote->address; */
-/* 	    if (*addr == ps_remote->oldval) */
-/* 	      { */
-/* 		*addr = ps_remote->write_value; */
-/* 		conflict = CAS_SUCCESS; */
-/* 	      } */
-/* 	  } */
-
-/* 	sys_ps_command_reply(sender, PS_CAS_RESPONSE, */
-/* 			     (tm_addr_t) ps_remote->address, */
-/* 			     NULL, */
-/* 			     conflict); */
-
-/* 	break; */
-/*       } */
+	    break;
+	  }
+	case PS_PUBLISH:
+	  {
+	    CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
 #ifdef PGAS
-    case PS_WRITE_INC:
-      {
-#ifdef DEBUG_UTILIZATION
-	write_reqs_num++;
-#endif
-	CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
-	if (conflict == NO_CONFLICT) {
-	  //		      PRINT("wval for %d is %d", address, write_value);
-	  /*
-	    PRINT("PS_WRITE_INC from %2d for %3d, old: %3d, new: %d", sender, address, PGAS_read(address),
-	    PGAS_read(address) + write_value);
-	  */
-	  write_set_pgas_insert(PGAS_write_sets[sender], 
-				*(int *) PGAS_read(ps_remote->address) + ps_remote->write_value,
-                                ps_remote->address);
-	}
-	sys_ps_command_reply(sender, PS_PUBLISH_RESPONSE,
-			     (tm_addr_t) ps_remote->address,
-			     NULL,
-			     conflict);
-	break;
-      }
-    case PS_LOAD_NONTX:
-      {
-	//		PRINT("((non-tx ld: from %d, addr %d (val: %d)))", sender, address, (*PGAS_read(address)));
-	sys_ps_command_reply(sender, PS_LOAD_NONTX_RESPONSE,
-			     ps_remote->address,
-			     PGAS_read(ps_remote->address),
-			     NO_CONFLICT);
-		
-	break;
-      }
-    case PS_STORE_NONTX:
-      {
-	//		PRINT("((non-tx st: from %d, addr %d (val: %d)))", sender, address, (write_value));
-	PGAS_write(ps_remote->address, (int) ps_remote->write_value);
-	break;
-      }
-#endif
-    case PS_REMOVE_NODE:
-#ifdef PGAS
-      if (ps_remote->response == NO_CONFLICT) {
-	write_set_pgas_persist(PGAS_write_sets[sender]);
-      }
-      PGAS_write_sets[sender] = write_set_pgas_empty(PGAS_write_sets[sender]);
-#endif
-      ps_hashtable_delete_node(ps_hashtable, sender);
+
+	    if (conflict == NO_CONFLICT) 
+	      {
+		write_set_pgas_insert(PGAS_write_sets[sender], ps_remote->write_value, ps_remote->address);
+	      }
+#endif	/* PGAS */
+
+	    sys_ps_command_reply(sender, PS_PUBLISH_RESPONSE, 
+				 (tm_addr_t) ps_remote->address, 0, conflict);
+
+	    if (conflict != NO_CONFLICT)
+	      {
+		ps_hashtable_delete_node(ps_hashtable, sender);
 
 #if defined(GREEDY)
-      cm_metadata_core[sender].timestamp = 0;
+		cm_metadata_core[sender].timestamp = 0;
 #endif
-      break;
-    case PS_UNSUBSCRIBE:
-      ps_hashtable_delete(ps_hashtable, sender, ps_remote->address, READ);
-      break;
-    case PS_PUBLISH_FINISH:
-      ps_hashtable_delete(ps_hashtable, sender, ps_remote->address, WRITE);
-      break;
-    case PS_STATS:
-      {
-	if (ps_remote->tx_duration) {
-	  stats_aborts += ps_remote->aborts;
-	  stats_commits += ps_remote->commits;
-	  stats_duration += ps_remote->tx_duration;
-	  stats_max_retries = stats_max_retries < ps_remote->max_retries ? ps_remote->max_retries : stats_max_retries;
-	  stats_total += ps_remote->commits + ps_remote->aborts;
-	}
-	else {
-	  stats_aborts_raw += ps_remote->aborts_raw;
-	  stats_aborts_war += ps_remote->aborts_war;
-	  stats_aborts_waw += ps_remote->aborts_waw;
-	}
+#ifdef PGAS
+		PGAS_write_sets[sender] = write_set_pgas_empty(PGAS_write_sets[sender]);
+#endif	/* PGAS */
+	      }
 
-	if (++stats_received >= 2*NUM_APP_NODES) {
-	  if (NODE_ID() == min_dsl_id()) {
-	    print_global_stats();
-
-	    print_hashtable_usage();
-
-	    int j;
-	    unsigned long long sumh = 0;
-	    for (j = 0; j < NB; j++) sumh+=usages[j];
-	    for (j = 0; j < NB; j++) {
-	      //	      printf("usages[%02d] = %0.2f [%d]\n", j, 100*(usages[j]/(double)sumh), usages[j]);
-	    }
+	    break;
 	  }
+	  /*     case PS_CAS: */
+	  /*       { */
+	  /* 	CONFLICT_TYPE conflict = ssht_insert_w_test(ps_hashtable, sender, ps_remote->address); */
 
-#ifdef DEBUG_UTILIZATION
-	  PRINT("*** Completed requests: %d", read_reqs_num + write_reqs_num);
+	  /* 	if (conflict == NO_CONFLICT) */
+	  /* 	  { */
+	  /* 	    uint32_t *addr = (uint32_t *) ps_remote->address; */
+	  /* 	    if (*addr == ps_remote->oldval) */
+	  /* 	      { */
+	  /* 		*addr = ps_remote->write_value; */
+	  /* 		conflict = CAS_SUCCESS; */
+	  /* 	      } */
+	  /* 	  } */
+
+	  /* 	sys_ps_command_reply(sender, PS_CAS_RESPONSE, */
+	  /* 			     (tm_addr_t) ps_remote->address, */
+	  /* 			     NULL, */
+	  /* 			     conflict); */
+
+	  /* 	break; */
+	  /*       } */
+#ifdef PGAS
+	case PS_WRITE_INC:
+	  {
+	    CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
+
+	    if (conflict == NO_CONFLICT) 
+	      {
+		int64_t val = pgas_dsl_read(ps_remote->address) + ps_remote->write_value;
+
+		/* PRINT("PS_WRITE_INC from %2d for %3d, off: %lld, old: %3lld, new: %lld", sender,  */
+		/*       ps_remote->address, ps_remote->write_value, */
+		/*       pgas_dsl_read(ps_remote->address), val); */
+
+		write_set_pgas_insert(PGAS_write_sets[sender], val, ps_remote->address);
+	      }
+
+	    sys_ps_command_reply(sender, PS_PUBLISH_RESPONSE,
+				 (tm_addr_t) ps_remote->address,
+				 0,
+				 conflict);
+
+	    if (conflict != NO_CONFLICT)
+	      {
+		ps_hashtable_delete_node(ps_hashtable, sender);
+		PGAS_write_sets[sender] = write_set_pgas_empty(PGAS_write_sets[sender]);
+		/* PRINT("conflict on %d (aborting %d)", ps_remote->address, sender); */
+	      }
+
+	    break;
+	  }
+	case PS_LOAD_NONTX:
+	  {
+	    int64_t val;
+	    if (ps_remote->num_words == 1)
+	      {
+		val = (int64_t) pgas_dsl_read32(ps_remote->address);
+	      }
+	    else
+	      {
+		val = pgas_dsl_read(ps_remote->address);
+	      }
+
+	    sys_ps_command_reply(sender, PS_LOAD_NONTX_RESPONSE,
+				 (tm_addr_t) ps_remote->address,
+				 val,
+				 NO_CONFLICT);
+		
+	    break;
+	  }
+	case PS_STORE_NONTX:
+	  {
+	    pgas_dsl_write(ps_remote->address, ps_remote->write_value);
+	    break;
+	  }
 #endif
+	case PS_REMOVE_NODE:
+	  {
+#ifdef PGAS
+	    if (ps_remote->response == NO_CONFLICT) 
+	      {
+		write_set_pgas_persist(PGAS_write_sets[sender]);
+	      }
+	    PGAS_write_sets[sender] = write_set_pgas_empty(PGAS_write_sets[sender]);
+#endif
+	    ps_hashtable_delete_node(ps_hashtable, sender);
 
-	  return;
-	}
-	break;
-      }
-      default:
-	{
-	  PF_START(1);
-	  sys_ps_command_reply(sender, PS_UKNOWN_RESPONSE,
-			       NULL,
-			       NULL,
-			       NO_CONFLICT);
-	  PF_STOP(1);
+#if defined(GREEDY)
+	    cm_metadata_core[sender].timestamp = 0;
+#endif
+	    break;
+	  }
+	case PS_UNSUBSCRIBE:
+	  ps_hashtable_delete(ps_hashtable, sender, ps_remote->address, READ);
+	  break;
+	case PS_PUBLISH_FINISH:
+	  ps_hashtable_delete(ps_hashtable, sender, ps_remote->address, WRITE);
+	  break;
+	case PS_STATS:
+	  {
+	    PS_STATS_CMD_T* ps_rem_stats = (PS_STATS_CMD_T*) ps_remote;
+
+	    if (ps_rem_stats->tx_duration) {
+	      stats_aborts += ps_rem_stats->aborts;
+	      stats_commits += ps_rem_stats->commits;
+	      stats_duration += ps_rem_stats->tx_duration;
+	      stats_max_retries = stats_max_retries < ps_rem_stats->max_retries ? ps_rem_stats->max_retries : stats_max_retries;
+	      stats_total += ps_rem_stats->commits + ps_rem_stats->aborts;
+	    }
+	    else {
+	      stats_aborts_raw += ps_rem_stats->aborts_raw;
+	      stats_aborts_war += ps_rem_stats->aborts_war;
+	      stats_aborts_waw += ps_rem_stats->aborts_waw;
+	    }
+
+	    if (++stats_received >= 2*NUM_APP_NODES) 
+	      {
+		uint32_t n;
+		for (n = 0; n < TOTAL_NODES(); n++)
+		  {
+		    BARRIER_DSL;
+		    if (n == NODE_ID())
+		      {
+			ssht_stats_print(ps_hashtable, 0);
+		      }
+		    BARRIER_DSL;
+		  }
+
+		BARRIER_DSL;
+		if (NODE_ID() == min_dsl_id()) 
+		  {
+		    print_global_stats();
+		  }
+		return;
+	      }
+	    break;
+	  }
+	default:
+	  {
+	    /* PF_START(1); */
+	    sys_ps_command_reply(sender, PS_UKNOWN_RESPONSE,
+				 NULL,
+				 0,
+				 NO_CONFLICT);
+	    /* PF_STOP(1); */
+	  }
 	}
     }
-  }
 }
 
 /*
@@ -527,7 +574,7 @@ global_barrier()
 
 }
 
-#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+#if !defined(NOCM)	/* if any other CM (greedy, wholly, faircm) */
 static int32_t *
 cm_init(nodeid_t node) {
    char keyF[50];
@@ -564,8 +611,55 @@ cm_init(nodeid_t node) {
    int32_t *tmp = (int32_t *) mmap(NULL, 64, PROT_READ | PROT_WRITE, MAP_SHARED, abrtfd, 0);
    assert(tmp != NULL);
    
-   //   PRINT("-- opened %s @ %p for CM of %d", keyF, tmp, node);
-
    return tmp;
 }
+
+#if defined(GREEDY) && defined(GREEDY_GLOBAL_TS)
+static ticks* 
+cm_greedy_global_ts_init()
+{
+   char keyF[50];
+   sprintf(keyF,"/cm_greedy_global_ts");
+
+   size_t cache_line = 64;
+
+   int abrtfd = shm_open(keyF, O_CREAT | O_EXCL | O_RDWR, S_IRWXU | S_IRWXG);
+   if (abrtfd<0)
+   {
+      if (errno != EEXIST)
+      {
+         perror("In shm_open");
+         exit(1);
+      }
+
+      //this time it is ok if it already exists                                                    
+      abrtfd = shm_open(keyF, O_CREAT | O_RDWR, S_IRWXU | S_IRWXG);
+      if (abrtfd<0)
+      {
+         perror("In shm_open");
+         exit(1);
+      }
+   }
+   else
+   {
+      //only if it is just created                                                                 
+     if(ftruncate(abrtfd, cache_line))
+       {
+	 printf("ftruncate");
+       }
+   }
+
+   ticks* tmp = (ticks*) mmap(NULL, 64, PROT_READ | PROT_WRITE, MAP_SHARED, abrtfd, 0);
+   assert(tmp != NULL);
+   
+   return tmp;
+}
+
+inline ticks
+greedy_get_global_ts()
+{
+  return __sync_add_and_fetch (greedy_global_ts, 1);
+}
+#endif
+
 #endif	/* NOCM */

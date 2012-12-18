@@ -8,7 +8,6 @@ PLATFORM_LIBS = -ltaskplus -lshrimp -lrt -lconfig
 PLATFORM_DEFINES = -DPLATFORM_MCORE \
 		   -DPLATFORM_MCORE_SHRIMP  \
 		   -UPGAS \
-                   -DREAD_BUF_OFF \
                    -DLIBTASK \
                    -DBACKOFF_RETRY \
 		   -DBACKOFF_MAX="3" \

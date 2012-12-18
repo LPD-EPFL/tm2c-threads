@@ -48,52 +48,46 @@
 #define XSTR(s)                         STR(s)
 #define STR(s)                          #s
 
-#define TRANSACTIONAL                   d->unit_tx
-
-typedef intptr_t val_t;
-typedef size_t nxt_t;
+#define TRANSACTIONAL                   1
 
 #define VAL_MIN                         INT_MIN
 #define VAL_MAX                         INT_MAX
 
-typedef struct node {
-    val_t val;
+typedef uint32_t val_t;
+typedef uint32_t nxt_t;
 
-    union {
-        struct node *nextp;
-        nxt_t next;
+typedef struct node 
+{
+  union
+  {
+    struct
+    {
+      val_t val;
+      nxt_t next;
     };
+    int64_t to_int64;
+  };
 } node_t;
 
-typedef struct intset {
-
-    union {
-        nxt_t head;
-        node_t *headp;
-    };
-
+typedef struct intset 
+{
+  node_t* head;
 } intset_t;
 
 extern nxt_t offs__;
 
-#define N2O(set, node)                  (nxt_t) ((nxt_t) (node) - (nxt_t) (set))
-#define O2N(set, offset)                ((void *) (offs__ = offset) == NULL ? NULL : (node_t *) ((nxt_t) (set) + (offs__)))
-#define SET                             set
-#define ND(offs)                        O2N(SET, (offs))
-#define OF(node)                        N2O(SET, (node))
+#define ND(offs)                        pgas_app_addr_from_offs(offs)
+#define OF(node)                        pgas_app_addr_offs(node)
 #define LOAD_NODE(nd, addr)                     \
-  nd.val = (val_t) NONTX_LOAD((tm_addr_t)addr);		\
-  nd.next = (nxt_t) NONTX_LOAD((tm_addr_t)((size_t)addr + sizeof(sys_t_vcharp)))
+  nd.to_int64 = NONTX_LOAD(addr, 2)
+
 #define LOAD_NODE_NXT(nd, addr)                 \
-  nd.next = (nxt_t) NONTX_LOAD((tm_addr_t)((size_t)addr + sizeof(sys_t_vcharp)))
+  ;//nd.next = (nxt_t) NONTX_LOAD((tm_addr_t)((size_t)addr + sizeof(sys_t_vcharp)))
 
 #define TX_LOAD_NODE(nd, addr)                  \
-  nd.val = (val_t) TX_LOAD((tm_addr_t)addr);		\
-  nd.next = (nxt_t) TX_LOAD((tm_addr_t)((size_t)addr + sizeof(sys_t_vcharp)))
+  nd.to_int64 = TX_LOAD(addr, 2); //PRINT("       load: %-13u = %-13u -> %u", OF(addr), nd.val, nd.next);
 #define TX_LOAD_NODE_NXT(nd, addr)              \
-  nd.next = (nxt_t) TX_LOAD((tm_addr_t)((size_t)addr + sizeof(sys_t_vcharp)))
-
-void *shmem_init(size_t offset);
+  ;/* nd.next = (nxt_t) TX_LOAD((tm_addr_t)((size_t)addr + sizeof(sys_t_vcharp))) */
 
 node_t *new_node(val_t val, nxt_t next, int transactional);
 intset_t *set_new();

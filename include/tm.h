@@ -16,6 +16,9 @@
 #include "dslock.h"
 #include "stm.h"
 #include "mem.h"
+#ifdef PGAS
+#  include "pgas_app.h"
+#endif
 
 #ifdef	__cplusplus
 extern "C" {
@@ -37,8 +40,6 @@ extern "C" {
     duration__ = __duration_ticks / __ticks_per_sec;
 
 
-
-
 #define FOR_SEC(seconds)			\
   double __start = wtime();			\
   double __end = __start + (seconds);		\
@@ -50,6 +51,19 @@ extern "C" {
   }}						\
     __end = wtime();				\
     duration__ = __end - __start;
+
+
+#define APP_EXEC_ORDER				\
+  {						\
+  int i;					\
+  for (i = 0; i < TOTAL_NODES(); i++)		\
+    {						\
+  if (i == NODE_ID())				\
+    {						
+  
+#define APP_EXEC_ORDER_END			\
+  }						\
+    BARRIER;}}
 
 
   extern stm_tx_t *stm_tx;
@@ -98,10 +112,12 @@ extern "C" {
   tm_init();
 
 #ifdef PGAS
-#  define WSET_EMPTY           write_set_pgas_empty
+#  define WSET                  NULL
+#  define WSET_EMPTY
 #  define WSET_PERSIST(stm_tx)
 #else
-#  define WSET_EMPTY           write_set_empty
+#  define WSET                  stm_tx->write_set
+#  define WSET_EMPTY           WSET = write_set_empty(WSET)
 #  define WSET_PERSIST(stm_tx) write_set_persist(stm_tx)
 #endif
 
@@ -145,24 +161,27 @@ extern "C" {
 #  define CM_METADATA_UPDATE_ON_COMMIT         stm_tx_node->tx_duration += (getticks() - stm_tx->start_ts);
 #elif defined(GREEDY)
 #  define CM_METADATA_INIT_ON_START            ;
-#  define CM_METADATA_INIT_ON_FIRST_START      stm_tx->start_ts = getticks();
+#  ifdef GREEDY_GLOBAL_TS	/* use fetch and increment */
+#    define CM_METADATA_INIT_ON_FIRST_START      stm_tx->start_ts = greedy_get_global_ts();
+#  else
+#    define CM_METADATA_INIT_ON_FIRST_START      stm_tx->start_ts = getticks();
+#  endif
 #  define CM_METADATA_UPDATE_ON_COMMIT         ;
 #else  /* no cm defined */
 #  error "One of the contention managers should be selected"
 #endif
 
 
-#define TX_START						\
-  { PRINTD("|| Starting new tx");				\
-  CM_METADATA_INIT_ON_FIRST_START;				\
-  short int reason;						\
-  if ((reason = sigsetjmp(stm_tx->env, 0)) != 0) {		\
-    PRINTD("|| restarting due to %d", reason);			\
-    stm_tx->write_set = WSET_EMPTY(stm_tx->write_set);		\
-    stm_tx->read_set = read_set_empty(stm_tx->read_set);	\
-  }								\
-  stm_tx->retries++;						\
-  TXRUNNING();							\
+#define TX_START					\
+  { PRINTD("|| Starting new tx");			\
+  CM_METADATA_INIT_ON_FIRST_START;			\
+  short int reason;					\
+  if ((reason = sigsetjmp(stm_tx->env, 0)) != 0) {	\
+    PRINTD("|| restarting due to %d", reason);		\
+    WSET_EMPTY;						\
+  }							\
+  stm_tx->retries++;					\
+  TXRUNNING();						\
   CM_METADATA_INIT_ON_START;
 
 #define TX_ABORT(reason)			\
@@ -178,7 +197,9 @@ extern "C" {
   TXCOMMITTED();					\
   ps_finish_all(NO_CONFLICT);				\
   CM_METADATA_UPDATE_ON_COMMIT;				\
+  PF_START(7);						\
   mem_info_on_commit(stm_tx->mem_info);			\
+  PF_STOP(7);						\
   stm_tx_node->tx_starts += stm_tx->retries;		\
   stm_tx_node->tx_commited++;				\
   stm_tx_node->tx_aborted += stm_tx->aborts;		\
@@ -200,6 +221,7 @@ extern "C" {
   ps_finish_all(NO_CONFLICT);			\
   CM_METADATA_UPDATE_ON_COMMIT;			\
   mem_info_on_commit(stm_tx->mem_info);		\
+  stm_tx_node->tx_commited++;			\
   stm_tx = tx_metadata_empty(stm_tx);}
 
 #define TX_COMMIT_NO_PUB_NO_STATS		\
@@ -258,8 +280,13 @@ extern "C" {
   /*
    * addr is the local address
    */
-#define TX_LOAD(addr)					\
-  tx_load(stm_tx->write_set, stm_tx->read_set, (addr))
+#if defined(PGAS)
+#  define TX_LOAD(addr, words)			\
+  tx_load(WSET, (addr), words) 
+#else
+#  define TX_LOAD(addr)				\
+  tx_load(WSET, (addr)) 
+#endif	/* PGAS */
 
 #define TX_LOAD_T(addr,type) (type)TX_LOAD(addr)
 
@@ -268,35 +295,32 @@ extern "C" {
    * NONTX acts as a regular load on iRCCE w/o PGAS
    * and fetches data from remote on all other systems
    */
-#define NONTX_LOAD(addr)			\
+#if defined(PGAS)
+#  define NONTX_LOAD(addr, words)		\
+  nontx_load(addr, words)
+#else  /* !PGAS */
+#  define NONTX_LOAD(addr)			\
   nontx_load(addr)
+#endif	/* PGAS */
+
 
 #define NONTX_LOAD_T(addr,type) (type)NONTX_LOAD(addr)
 
-#ifdef PGAS
-#  ifdef EAGER_WRITE_ACQ
-#    define TX_STORE(addr, val, datatype)	\
+#if defined(PGAS)
+#  define TX_STORE(addr, val, datatype)		\
   do {						\
     tx_wlock(addr, val);			\
   } while (0)
   //not using a write_set in pgas
   //write_set_pgas_update(stm_tx->write_set, val, addr)
-#  else /* !EAGER_WRITE_ACQ */
-#    define TX_STORE(addr, val, datatype)			\
-  do {								\
-    tm_intern_addr_t intern_addr = to_intern_addr(addr);	\
-    write_set_pgas_update(stm_tx->write_set, val, intern_addr);	\
-  } while (0)
-#  endif /* EAGER_WRITE_ACQ */
-
 #else /* !PGAS */
-#  define TX_STORE(addr, ptr, datatype)				\
+#  define TX_STORE(addr, val, datatype)				\
   do {								\
     TXCHKABORTED();						\
     tm_intern_addr_t intern_addr = to_intern_addr(addr);	\
-    write_set_update(stm_tx->write_set,				\
+    write_set_insert(stm_tx->write_set,				\
 		     datatype,					\
-		     ((void *)(ptr)), intern_addr);		\
+		     val, intern_addr);				\
   } while (0)
 #endif
 
@@ -324,7 +348,7 @@ extern "C" {
     tx_wlock(addr);							\
     int temp__ = (*(int *) (addr)) op (value);				\
     tm_intern_addr_t intern_addr = to_intern_addr((tm_addr_t)addr);	\
-    write_set_update(stm_tx->write_set, TYPE_INT, &temp__, intern_addr); \
+    write_set_insert(stm_tx->write_set, TYPE_INT, temp__, intern_addr); \
   } while (0)
 #endif
 
@@ -365,33 +389,146 @@ extern "C" {
    * accepts the machine-local address, which must be translated to the appropriate
    * internal address
    */
-#ifdef PGAS
+#if defined(PGAS)
+  INLINED int64_t
+  tx_load(write_set_pgas_t *ws, tm_addr_t addr, int words)
+  {
+    tm_intern_addr_t intern_addr = to_intern_addr(addr);
+    CONFLICT_TYPE conflict;
+#  ifndef BACKOFF_RETRY
+    unsigned int num_delays = 0;
+    unsigned int delay = BACKOFF_DELAY;
 
-  INLINED int tx_load(write_set_pgas_t *ws, read_set_t *rs, tm_addr_t addr) {
-#else
-
-    INLINED tm_addr_t tx_load(write_set_t *ws, read_set_t *rs, tm_addr_t addr) {
-#endif
-      tm_intern_addr_t intern_addr = to_intern_addr(addr);
-#ifdef PGAS
-      //PRINT("(loading: %d)", addr);
-      write_entry_pgas_t *we;
-      if ((we = write_set_pgas_contains(ws, intern_addr)) != NULL) {
-	return we->value;
+  retry:
+#  endif
+    TXCHKABORTED();
+    if ((conflict = ps_subscribe(addr, words)) != NO_CONFLICT) 
+      {
+#  ifndef BACKOFF_RETRY
+	if (num_delays++ < BACKOFF_MAX) 
+	  {
+	    ndelay(delay);
+	    /* ndelay(rand_range(delay)); */
+	    delay *= 2;
+	    goto retry;
+	  }
+#  endif
+	TX_ABORT(conflict);
       }
-#else
-      write_entry_t *we;
-      if ((we = write_set_contains(ws, intern_addr)) != NULL) {
-	//read_set_update(rs, addr);
+
+    return read_value;
+  }
+
+#else  /* !PGAS */
+  INLINED tm_addr_t 
+  tx_load(write_set_t *ws, tm_addr_t addr)
+  {
+    tm_intern_addr_t intern_addr = to_intern_addr(addr);
+#  if defined(PLATFORM_MCORE) || defined(PLATFORM_MCORE_SSMP)
+    PREFETCH(intern_addr);
+#  endif
+    write_entry_t *we;
+    if ((we = write_set_contains(ws, intern_addr)) != NULL) 
+      {
 	return (void *) &we->i;
       }
+    else 
+      {
+	//the node is NOT already subscribed for the address
+	CONFLICT_TYPE conflict;
+#  ifndef BACKOFF_RETRY
+	unsigned int num_delays = 0;
+	unsigned int delay = BACKOFF_DELAY;
+
+      retry:
+#  endif
+	TXCHKABORTED();
+	if ((conflict = ps_subscribe(addr, 0)) != NO_CONFLICT) /* 0 for the #words used in PGAS */
+	  {
+#  ifndef BACKOFF_RETRY
+	    if (num_delays++ < BACKOFF_MAX) 
+	      {
+		ndelay(delay);
+		/* ndelay(rand_range(delay)); */
+		delay *= 2;
+		goto retry;
+	      }
+#  endif
+	    TX_ABORT(conflict);
+	  }
+	return addr;
+      }
+  }
+#endif	/* PGAS */
+  /*  get a tx write lock for address addr
+   */
+#ifdef PGAS
+
+  INLINED void tx_wlock(tm_addr_t address, int64_t value) {
+#else
+
+    INLINED void tx_wlock(tm_addr_t address) {
 #endif
 
-      else {
-#ifndef READ_BUF_OFF
-	if (!read_set_update(rs, intern_addr)) {
+      CONFLICT_TYPE conflict;
+#ifndef BACKOFF_RETRY
+      unsigned int num_delays = 0;
+      unsigned int delay = BACKOFF_DELAY;
+
+    retry:
 #endif
-	  //the node is NOT already subscribed for the address
+      TXCHKABORTED();
+#ifdef PGAS
+      if ((conflict = ps_publish(address, value)) != NO_CONFLICT) {
+#else      
+	if ((conflict = ps_publish(address)) != NO_CONFLICT) {
+#endif
+#ifndef BACKOFF_RETRY
+	  if (num_delays++ < BACKOFF_MAX) {
+	    ndelay(delay);		      
+	    /* ndelay(rand_range(delay)); */
+	    delay *= 2;
+	    goto retry;
+	  }
+#endif
+	  TX_ABORT(conflict);
+	}
+      }
+
+      /*
+       * The non transactional load
+       */
+#ifdef PGAS
+
+      INLINED int64_t nontx_load(tm_addr_t addr, unsigned int words) 
+      {
+	tm_addr_t ab = addr;
+	int64_t v = ps_load(addr, words);
+	return v;
+      }
+#else /* !PGAS */
+
+      INLINED tm_addr_t nontx_load(tm_addr_t addr) {
+	// There is no non-PGAS cluster
+	return addr;
+      }
+#endif /* PGAS */
+
+      /*
+       * The non transactional store, only in PGAS version
+       */
+      INLINED void 
+	nontx_store(tm_addr_t addr, int64_t value) 
+      {
+	return ps_store(addr, value);
+      }
+
+#ifdef PGAS
+      INLINED void tx_store_inc(tm_addr_t address, int64_t value) {
+#else
+	INLINED void tx_store_inc(tm_addr_t address) {
+#endif
+
 	  CONFLICT_TYPE conflict;
 #ifndef BACKOFF_RETRY
 	  unsigned int num_delays = 0;
@@ -400,142 +537,46 @@ extern "C" {
 	retry:
 #endif
 	  TXCHKABORTED();
-	  if ((conflict = ps_subscribe(addr)) != NO_CONFLICT) {
-#ifndef BACKOFF_RETRY
-	    if (num_delays++ < BACKOFF_MAX) {
-	      ndelay(delay);
-	      /* ndelay(rand_range(delay)); */
-	      delay *= 2;
-	      goto retry;
-	    }
-#endif
-	    TX_ABORT(conflict);
-	  }
-#ifndef READ_BUF_OFF
-	}
-#endif
 #ifdef PGAS
-	return read_value;
-#else
-	return addr;
-#endif
-      }
-    }
-
-    /*  get a tx write lock for address addr
-     */
-#ifdef PGAS
-
-    INLINED void tx_wlock(tm_addr_t address, int value) {
-#else
-
-      INLINED void tx_wlock(tm_addr_t address) {
-#endif
-
-        CONFLICT_TYPE conflict;
-#ifndef BACKOFF_RETRY
-        unsigned int num_delays = 0;
-        unsigned int delay = BACKOFF_DELAY;
-
-      retry:
-#endif
-        TXCHKABORTED();
-#ifdef PGAS
-        if ((conflict = ps_publish(address, value)) != NO_CONFLICT) {
+	  if ((conflict = ps_store_inc(address, value)) != NO_CONFLICT) {
 #else      
-	  if ((conflict = ps_publish(address)) != NO_CONFLICT) {
+	    if ((conflict = ps_publish(address)) != NO_CONFLICT) {
 #endif
 #ifndef BACKOFF_RETRY
-            if (num_delays++ < BACKOFF_MAX) {
-	      ndelay(delay);		      
-	      /* ndelay(rand_range(delay)); */
-	      delay *= 2;
-	      goto retry;
-            }
-#endif
-            TX_ABORT(conflict);
-	  }
-	}
-
-	/*
-	 * The non transactional load
-	 */
-#ifdef PGAS
-
-	INLINED uint32_t nontx_load(tm_addr_t addr) {
-	  return ps_load(addr);
-	}
-#else /* PGAS */
-
-	INLINED tm_addr_t nontx_load(tm_addr_t addr) {
-	  // There is no non-PGAS cluster
-	  return addr;
-	}
-#endif /* PGAS */
-
-	/*
-	 * The non transactional store, only in PGAS version
-	 */
-	INLINED void nontx_store(tm_addr_t addr, uint32_t value) {
-	  return ps_store(addr, value);
-	}
-
-#ifdef PGAS
-
-	INLINED void tx_store_inc(tm_addr_t address, int value) {
-#else
-
-	  INLINED void tx_store_inc(tm_addr_t address) {
-#endif
-
-	    CONFLICT_TYPE conflict;
-#ifndef BACKOFF_RETRY
-	    unsigned int num_delays = 0;
-	    unsigned int delay = BACKOFF_DELAY;
-
-	  retry:
-#endif
-	    TXCHKABORTED();
-#ifdef PGAS
-	    if ((conflict = ps_store_inc(address, value)) != NO_CONFLICT) {
-#else      
-	      if ((conflict = ps_publish(address)) != NO_CONFLICT) {
-#endif
-#ifndef BACKOFF_RETRY
-		if (num_delays++ < BACKOFF_MAX) {
-		  ndelay(delay);
-		  /* ndelay(rand_range(delay)); */
-		  delay *= 2;
-		  goto retry;
-		}
-#endif
-		TX_ABORT(conflict);
+	      if (num_delays++ < BACKOFF_MAX) {
+		ndelay(delay);
+		/* ndelay(rand_range(delay)); */
+		delay *= 2;
+		goto retry;
 	      }
+#endif
+	      TX_ABORT(conflict);
 	    }
+	  }
 
-	    uint32_t tx_cas(tm_addr_t addr, uint32_t oldval, uint32_t newval);
-	    extern inline uint32_t tx_casi(tm_addr_t addr, uint32_t oldval, uint32_t newval);
+	  uint32_t tx_cas(tm_addr_t addr, uint32_t oldval, uint32_t newval);
+	  extern inline uint32_t tx_casi(tm_addr_t addr, uint32_t oldval, uint32_t newval);
 
 
 #define taskudelay udelay
 
-	    void ps_unsubscribe_all();
+	  void ps_unsubscribe_all();
 
-	    int is_app_core(int id);
+	  int is_app_core(int id);
 
-	    void init_system(int* argc, char** argv[]);
+	  void init_system(int* argc, char** argv[]);
 
-	    void tm_init();
-	    void tm_term();
+	  void tm_init();
+	  void tm_term();
 
-	    void ps_publish_finish_all(unsigned int locked);
+	  void ps_publish_finish_all(unsigned int locked);
 
-	    void ps_publish_all();
+	  void ps_publish_all();
 
-	    void ps_unsubscribe_all();
+	  void ps_unsubscribe_all();
 
 #ifdef	__cplusplus
-	  }
+	}
 #endif
 
 #endif	/* TM_H */

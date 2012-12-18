@@ -8,16 +8,23 @@
 
 #include "common.h"
 
-typedef struct {
-    union {
-      uint64_t num_txs;
-      ticks timestamp;
-      double duration;
-    };
+typedef struct 
+{
+  union 
+  {
+    uint64_t num_txs;
+    ticks timestamp;
+    double duration;
+  };
 } cm_metadata_t;
 extern cm_metadata_t *cm_metadata_core;
 
-static int32_t * cm_init();
+static int32_t* cm_init();
+#if defined(GREEDY) && defined(GREEDY_GLOBAL_TS)
+static ticks* cm_greedy_global_ts_init();
+inline ticks greedy_get_global_ts();
+#endif
+
 
 extern BOOLEAN 
 contention_manager(nodeid_t attacker, unsigned short *defenders, CONFLICT_TYPE conflict);
