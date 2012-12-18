@@ -502,6 +502,7 @@ dsl_communication()
 		      {
 			ssht_stats_print(ps_hashtable, 0);
 		      }
+		    BARRIER_DSL;
 		  }
 
 		BARRIER_DSL;
