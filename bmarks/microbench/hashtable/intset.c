@@ -132,7 +132,7 @@ int ht_move_naive(ht_intset_t *set, int val1, int val2, int transactional) {
     int v, addr1, addr2;
     node_t *prev, *next, *prev1, *next1;
     ;
-    nxt_t *nxt;
+    nxt_t nxt;
 
     TX_START
     addr1 = val1 % maxhtlength;
@@ -149,8 +149,8 @@ int ht_move_naive(ht_intset_t *set, int val1, int val2, int transactional) {
     }
     if (v == val1) {
         /* Physically removing */
-        nxt = (nxt_t *) TX_LOAD(&next->next);
-        TX_STORE(&prev->next, nxt, TYPE_UINT);
+        nxt = *(nxt_t *) TX_LOAD(&next->next);
+        TX_STORE(&prev->next, nxt, TYPE_INT);
         TX_SHFREE(next);
         /* Inserting */
         addr2 = val2 % maxhtlength;
@@ -168,7 +168,7 @@ int ht_move_naive(ht_intset_t *set, int val1, int val2, int transactional) {
         if (v != val2) {
             nxt_t nxt1 = OF(new_node(val2, OF(next1), transactional));
             //PRINTD("Created node %5d. Value: %d", nxt, val);
-            TX_STORE(&prev1->next, &nxt1, TYPE_UINT);
+            TX_STORE(&prev1->next, nxt1, TYPE_INT);
         }
         /* Even if the key is already in, the operation succeeds */
         result = 1;
@@ -253,10 +253,10 @@ int ht_move(ht_intset_t *set, int val1, int val2, int transactional) {
             result = 1;
 
             /* Physically removing */
-            nxt_t *nxt1 = (nxt_t *) TX_LOAD(&next1->next);
-            TX_STORE(&prev1->next, nxt1, TYPE_UINT);
+            nxt_t nxt1 = *(nxt_t *) TX_LOAD(&next1->next);
+            TX_STORE(&prev1->next, nxt1, TYPE_INT);
             nxt_t nxt2 = OF(new_node(val2, OF(next), transactional));
-            TX_STORE(&prev->next, &nxt2, TYPE_UINT);
+            TX_STORE(&prev->next, nxt2, TYPE_INT);
             TX_SHFREE(next1);
         }
     }
@@ -316,8 +316,8 @@ int ht_move_orrollback(ht_intset_t *set, int val1, int val2, int transactional) 
     next1 = next;
     if (v == val1) {
         /* Physically removing */
-        nxt_t *nxt = (nxt_t *) TX_LOAD(&next->next);
-        TX_STORE(&prev->next, nxt, TYPE_UINT);
+        nxt_t nxt = *(nxt_t *) TX_LOAD(&next->next);
+        TX_STORE(&prev->next, nxt, TYPE_INT);
         /* Inserting */
         addr2 = val2 % maxhtlength;
         OFFSET(set->buckets[addr2]);
@@ -334,12 +334,12 @@ int ht_move_orrollback(ht_intset_t *set, int val1, int val2, int transactional) 
         if (v != val2) {
             nxt_t nxt = OF(new_node(val2, OF(next), transactional));
             //PRINTD("Created node %5d. Value: %d", nxt, val);
-            TX_STORE(&prev->next, &nxt, TYPE_UINT);
+            TX_STORE(&prev->next, nxt, TYPE_INT);
             TX_SHFREE(next1);
         }
         else {
-            nxt_t *nxt = (nxt_t *) TX_LOAD(&next1);
-            TX_STORE(&prev1->next, nxt, TYPE_UINT);
+            nxt_t nxt = *(nxt_t *) TX_LOAD(&next1);
+            TX_STORE(&prev1->next, nxt, TYPE_INT);
         }
         /* Even if the key is already in, the operation succeeds */
         result = 1;

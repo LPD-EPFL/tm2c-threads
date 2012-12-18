@@ -34,78 +34,87 @@ extern "C" {
     PS_UKNOWN_RESPONSE
   } PS_REPLY_TYPE;
 
-  //TODO: make it union with address normal int..
-  //A command to the pub-sub
-  typedef struct ps_command_struct
+  /* A command to the DSL service */
+  typedef struct ps_command_struct 
   {
-    unsigned int type; //PS_COMMAND_TYPE
-#if defined(PLATFORM_CLUSTER) || defined(PLATFORM_TILERA) || defined(PLATFORM_MCORE_SHRIMP)
-    nodeid_t nodeId;	/* we need IDs on networked systems */
-#else
-				//    uint32_t oldval; //::to be used with CAS
+    int32_t type;	      /* PS_COMMAND_TYPE */
+    nodeid_t nodeId;	      /* we need IDs on networked systems */
+    /* 8 */
+    tm_intern_addr_t address; /* addr of the data, internal representation */
+#if defined(SCC)
+    int32_t dummy[1];		/* tm_inter_add = size_t = size 4 on the SCC */
 #endif
-    union
+    /* 8 */
+    union 
     {
-      struct
-      {
-	union
-	{
-	  int response; /* used in PS_REMOVE_NODE with PGAS to say persist or not */
-	  int write_value;
-	};
-	tm_intern_addr_t address; /* addr of the data, internal representation */
-      };
-      union
-      {			/* stats collecting */
-	struct
-	{
-	  unsigned int commits;
-	  unsigned int aborts;
-	  unsigned int max_retries;
-	};
-	struct
-	{
-	  unsigned int aborts_war;
-	  unsigned int aborts_raw;
-	  unsigned int aborts_waw;
-	};
-      };
+      int64_t response;       /* used in PS_REMOVE_NODE with PGAS to say persist or not */
+      int64_t write_value;
+      uint64_t num_words;
     };
-    union { 			/* cm metadata */
+    /* 8 */
+    uint64_t tx_metadata;
+
+    /* SSMP[.SCC] uses the last word as a flag, hence it should be not used for data */
+#if defined(PLATFORM_MCORE_SSMP)
+    uint8_t padding[32];
+#endif
+  } PS_COMMAND;
+
+  //A command to the pub-sub
+  typedef struct ps_stats_cmd_struct 
+  {
+    int32_t type; //PS_COMMAND_TYPE
+    nodeid_t  nodeId;	/* we need IDs on networked systems */
+    /* 8 */
+    /* stats collecting --------------------*/
+    struct
+    {
+      union 
+      {			
+	struct 			/* 12 */
+	{
+	  uint32_t aborts;
+	  uint32_t commits;
+	  uint32_t max_retries;
+	};
+	struct /* 12 */
+	{
+	  uint32_t aborts_war;
+	  uint32_t aborts_raw;
+	  uint32_t aborts_waw;
+	};
+      };
+
+    /* SSMP[.SCC] uses the last word as a flag, hence it should be not used for data */
+#if defined(SCC)
       double tx_duration;
-      uint64_t tx_metadata;
+      uint32_t mpb_flag;	/* on the SCC, we have CL (MPB) line of 32 bytes */
+#else
+      uint32_t dummy;
+      double tx_duration;
+#endif      
     };
 
 #if defined(PLATFORM_MCORE_SSMP)
     uint8_t padding[32];
-#elif defined(PLATFORM_SCC_SSMP)
-    uint8_t padding[8];
 #endif
-  } PS_COMMAND;
+  } PS_STATS_CMD_T;
 
-  typedef struct ps_reply_struct {
-    unsigned int type; //PS_REPLY_TYPE
-#if defined(PLATFORM_CLUSTER) || defined(PLATFORM_MCORE)
-    // we need IDs on networked systems
+
+  typedef struct ps_reply_struct 
+  {
+    int32_t type; //PS_REPLY_TYPE
     nodeid_t nodeId;
+    tm_intern_addr_t address; /* address of the data, internal representation */
+#if defined(SCC)
+    int32_t dummy[1];		/* tm_inter_add = size_t = size 4 on the SCC */
 #endif
-
-    union {
-
-      struct {
-
-	int response; //BOOLEAN
-
-	union {
-	  tm_intern_addr_t address; /* address of the data, internal
-				       representation */
-	  int32_t value;
-	};
-      };
-    };
-
+    int64_t value;
+    int32_t response; //BOOLEAN
+    int32_t resp_size;
+    /* SSMP[.SCC] uses the last word as a flag, hence it should be not used for data */
 #if defined(PLATFORM_MCORE_SSMP)
-    uint8_t padding[40];
+    uint8_t padding[32];
 #endif
   } PS_REPLY;
 

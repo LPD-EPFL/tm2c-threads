@@ -10,7 +10,11 @@
 #include "common.h"
 #include "messaging.h"
 #include "mcore_malloc.h"
-#include "fakemem.h"
+
+#ifdef PGAS
+#  include "pgas_app.h"
+#  include "pgas_dsl.h"
+#endif
 
 
 #define BARRIER  ssmp_barrier_wait(1);
@@ -27,6 +31,8 @@ extern nodeid_t *dsl_nodes;
 extern int32_t **cm_abort_flags;
 extern int32_t *cm_abort_flag_mine;
 #endif /* CM_H */
+
+extern size_t pgas_app_addr_offs(void* addr);
 
 /* --- inlined methods --- */
 INLINED nodeid_t
@@ -47,10 +53,9 @@ TOTAL_NODES(void)
 INLINED int
 sys_sendcmd(void* data, size_t len, nodeid_t to)
 {
-  ssmp_send(to, (ssmp_msg_t *) data, len);
-  //  ssmp_msg_t *msg = (ssmp_msg_t *) data;
-  //  ssmp_send_inline(to, msg);
-  //  ssmp_sendm(to, msg);
+  /* PF_START(10); */
+  ssmp_send(to, (ssmp_msg_t *) data);
+  /* PF_STOP(10); */
 }
 
 INLINED int
@@ -58,25 +63,32 @@ sys_sendcmd_all(void* data, size_t len)
 {
   int target;
   for (target = 0; target < NUM_DSL_NODES; target++) {
-    ssmp_send(dsl_nodes[target], (ssmp_msg_t *) data, len);
+    ssmp_send(dsl_nodes[target], (ssmp_msg_t *) data);
   }
   return 1;
 }
 
+/* static const uint32_t wait_after_send[4] = {825, 830, 830, 840}; */
+static const uint32_t wait_after_send[4] = {665, 720, 750, 800};
+/* #define vv 00 */
+/* static const uint32_t wait_after_send[4] = {vv, vv, vv, vv}; */
+
 INLINED int
 sys_recvcmd(void* data, size_t len, nodeid_t from)
 {
-  ssmp_recv_from(from, (ssmp_msg_t *) data, len);
-  //ssmp_recv_from_inline(from, (ssmp_msg_t *) data);
-  //ssmp_msg_t *msg = (ssmp_msg_t *) data;
-  //  ssmp_recv_fromm(from, msg);
+  uint32_t hops = get_num_hops(NODE_ID(), from);
+  wait_cycles(wait_after_send[hops]);
+
+  /* PF_START(9); */
+  ssmp_recv_from(from, (ssmp_msg_t *) data);
+  /* PF_STOP(9); */
 }
 
 INLINED tm_intern_addr_t
 to_intern_addr(tm_addr_t addr)
 {
 #ifdef PGAS
-  return fakemem_offset((void*) addr);
+  return pgas_app_addr_offs((void*) addr);
 #else
   return (tm_intern_addr_t)addr;
 #endif

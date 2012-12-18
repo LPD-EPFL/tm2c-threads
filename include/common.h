@@ -12,7 +12,7 @@
 extern "C" {
 #endif
 
-//#define PGAS
+  //#define PGAS
 
 #include <stdlib.h>
 #include <stdint.h>
@@ -42,7 +42,7 @@ extern "C" {
 #  if __GNUC__ && !SCC
 #    define ALIGNED(N) __attribute__ ((aligned (N)))
 #  else
-//#    warning "The alignement of elemenets should be explicitly handled"
+  //#    warning "The alignement of elemenets should be explicitly handled"
 #    define ALIGNED(N)
 #  endif
 #endif
@@ -57,6 +57,8 @@ extern "C" {
 
 #define DSLNDPERNODES   2 /* 1 dedicated DS-Locking core per DSLNDPERNODES cores*/
 
+
+#  define CACHE_LINE_SIZE 64
 
 #if defined(PLATFORM_MCORE)
 #  define REF_SPEED_GHZ           2.1
@@ -77,8 +79,8 @@ extern "C" {
 #define PRINTSME(args...)  printf("[%02d] ", NODE_ID()); printf(args);
 
 #define BMSTART(what) {const char *__bchm_target = what; double __start_time = wtime();
-#define BMEND double __end_time = wtime(); ME; printf("[benchmarking] "); printf("%s", __bchm_target);\
-        printf(" | %f secs\n", __end_time - __start_time); fflush(stdout);}
+#define BMEND double __end_time = wtime(); ME; printf("[benchmarking] "); printf("%s", __bchm_target); \
+  printf(" | %f secs\n", __end_time - __start_time); fflush(stdout);}
 
 
 #define FLUSH fflush(stdout);
@@ -100,29 +102,29 @@ extern "C" {
 #  define TS
 #endif
 
-    typedef enum {
-        NO_CONFLICT,
-        READ_AFTER_WRITE,
-        WRITE_AFTER_READ,
-        WRITE_AFTER_WRITE,
+  typedef enum {
+    NO_CONFLICT,
+    READ_AFTER_WRITE,
+    WRITE_AFTER_READ,
+    WRITE_AFTER_WRITE,
 #ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
-	PERSISTING_WRITES, 	/* used for contention management */
-	TX_COMMITED,		/* used for contention management */
+    PERSISTING_WRITES, 	/* used for contention management */
+    TX_COMMITED,		/* used for contention management */
 #endif 				/* NOCM */
-	CAS_SUCCESS
-    } CONFLICT_TYPE;
+    CAS_SUCCESS
+  } CONFLICT_TYPE;
 
-    /* read or write request
-     */
-    typedef enum {
-        READ,
-        WRITE
-    } RW;
+  /* read or write request
+   */
+  typedef enum {
+    READ,
+    WRITE
+  } RW;
 
-	extern nodeid_t ID;
-	extern nodeid_t NUM_UES;
-	extern nodeid_t NUM_APP_NODES;
-	extern nodeid_t NUM_DSL_NODES;
+  extern nodeid_t ID;
+  extern nodeid_t NUM_UES;
+  extern nodeid_t NUM_APP_NODES;
+  extern nodeid_t NUM_DSL_NODES;
     
 
   extern int is_app_core(int);
@@ -146,7 +148,7 @@ extern "C" {
     returns the posisition of the core id in the seq of dsl cores
     e.g., having 6 cores total and core 2 and 4 are dsl, then
     the call to this function with node=2=>0, with node=4=>1
-   */
+  */
   INLINED nodeid_t
   dsl_id_seq(nodeid_t node) 
   {
@@ -160,6 +162,26 @@ extern "C" {
       }
     return seq;
   }
+
+  /*
+    returns the posisition of the core id in the seq of dsl cores
+    e.g., having 6 cores total and core 2 and 4 are dsl, then
+    the call to this function with node=2=>0, with node=4=>1
+  */
+  INLINED nodeid_t
+  app_id_seq(nodeid_t node) 
+  {
+    uint32_t i, seq = 0;
+    for (i = 0; i < node; i++)
+      {
+	if (is_app_core(i))
+	  {
+	    seq++;
+	  }
+      }
+    return seq;
+  }
+
 
 
   INLINED nodeid_t
@@ -176,7 +198,7 @@ extern "C" {
     return i;
   }
 
-#define ONCE							\
+#define ONCE						\
   if (is_app_core(ID) && NODE_ID() == min_app_id() ||	\
       ID == min_dsl_id() ||				\
       NUM_UES == 1)
@@ -184,7 +206,7 @@ extern "C" {
 
 #include "measurements.h"
 
-/*  ------- Plug platform related things here BEGIN ------- */
+  /*  ------- Plug platform related things here BEGIN ------- */
 #if defined(PLATFORM_iRCCE) || defined(PLATFORM_SCC_SSMP)
 
 #  ifdef SSMP
@@ -202,25 +224,25 @@ extern "C" {
 #endif 
 
 #ifdef PLATFORM_CLUSTER
-extern void*  zmq_context;             // here, we keep the context (seems necessary)
-extern void*  the_responder;           // for dsl nodes, it will be the responder socket; for app node, it will be NULL
+  extern void*  zmq_context;             // here, we keep the context (seems necessary)
+  extern void*  the_responder;           // for dsl nodes, it will be the responder socket; for app node, it will be NULL
 
-extern void*  zmq_barrier_subscriber; // socket for the barrier subscriber
-extern void*  zmq_barrier_client;     // socket for applying for the barrier
+  extern void*  zmq_barrier_subscriber; // socket for the barrier subscriber
+  extern void*  zmq_barrier_client;     // socket for applying for the barrier
 
-EXINLINED char *zmq_s_recv(void *socket);
-EXINLINED int zmq_s_send(void *socket, char *string);
-#  define BARRIER_(type)    do {                                               \
-    PRINT("BARRIER %s\n", type);                                             \
-    if ((ID % DSLNDPERNODES == 0) && !strcmp(type,"app")) break;             \
-    PRINT("Waiting at the barrier\n");                                       \
-    zmq_s_send(zmq_barrier_client, type);                                    \
-    char *received = zmq_s_recv(zmq_barrier_client);                         \
-    free(received);                                                          \
-    received = zmq_s_recv(zmq_barrier_subscriber);                           \
-    free(received);                                                          \
-    PRINT("Passed through the barrier\n");                                   \
-} while (0);
+  EXINLINED char *zmq_s_recv(void *socket);
+  EXINLINED int zmq_s_send(void *socket, char *string);
+#  define BARRIER_(type)    do {					\
+    PRINT("BARRIER %s\n", type);					\
+    if ((ID % DSLNDPERNODES == 0) && !strcmp(type,"app")) break;	\
+    PRINT("Waiting at the barrier\n");					\
+    zmq_s_send(zmq_barrier_client, type);				\
+    char *received = zmq_s_recv(zmq_barrier_client);			\
+    free(received);							\
+    received = zmq_s_recv(zmq_barrier_subscriber);			\
+    free(received);							\
+    PRINT("Passed through the barrier\n");				\
+  } while (0);
 
 #  define BARRIER    BARRIER_("app")
 #  define BARRIERW   BARRIER_("all")
@@ -236,9 +258,9 @@ EXINLINED int zmq_s_send(void *socket, char *string);
 #endif
 
 #ifdef PLATFORM_TILERA
-	/*
-	 * TILERA related includes
-	 */
+  /*
+   * TILERA related includes
+   */
 #  include <tmc/alloc.h>
 #  include <tmc/cpus.h>
 #  include <tmc/task.h>
@@ -251,8 +273,8 @@ EXINLINED int zmq_s_send(void *socket, char *string);
 #  include "sys_TILERA.h"
 
 
-extern DynamicHeader *udn_header; //headers for messaging
-extern tmc_sync_barrier_t *barrier_apps, *barrier_all; //BARRIERS
+  extern DynamicHeader *udn_header; //headers for messaging
+  extern tmc_sync_barrier_t *barrier_apps, *barrier_all; //BARRIERS
 
 #  define BARRIER tmc_sync_barrier_wait(barrier_apps); //app cores only
 #  define BARRIERW tmc_sync_barrier_wait(barrier_all); //all cores
@@ -270,7 +292,7 @@ extern tmc_sync_barrier_t *barrier_apps, *barrier_all; //BARRIERS
 
 #endif
 
-/*  ------- Plug platform related things here END   ------- */
+  /*  ------- Plug platform related things here END   ------- */
 
 #define TASKMAIN MAIN
 #ifdef LIBTASK
@@ -281,9 +303,9 @@ extern tmc_sync_barrier_t *barrier_apps, *barrier_all; //BARRIERS
 #define EXIT(reason) exit(reason);
 #define EXITALL(reason) exit((reason))
 
-// configuration...
-extern config_t *the_config;
-void init_configuration(int*argc, char**argv[]);
+  // configuration...
+  extern config_t *the_config;
+  void init_configuration(int*argc, char**argv[]);
 
 #include "tm_sys.h"
 

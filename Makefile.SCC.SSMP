@@ -12,17 +12,24 @@ API          := gory
 PLATFORM_CFLAGS = -O3
 PLATFORM_LDFLAGS = 
 PLATFORM_LIBS = -lssmp
-PLATFORM_DEFINES =	-DPLATFORM_SCC_SSMP \
-		   	-DSSMP \
-                   	-DDSL \
-                   	-UPGAS \
-                   	-DREAD_BUF_OFF \
-                   	-UDEBUG_UTILIZATION \
-                   	-UDO_TIMINGS \
-                   	-DBACKOFF_RETRY \
+
+## commonly changed defines
+PLATFORM_DEFINES =      -DBACKOFF_RETRY \
 		        -DBACKOFF_MAX="0" \
 		        -DBACKOFF_DELAY="5000" \
+			-UDO_TIMINGS \
 		   	-DNOCM		   
+## fixed defines
+PLATFORM_DEFINES +=     -DPLATFORM_SCC_SSMP \
+		   	-DSSMP \
+			-DDSL
+
+## not commonly changed defines
+PLATFORM_DEFINES +=     -UPGAS \
+			-USSHT_DBG_UTILIZATION \
+			-DSSHT_DBG_UTILIZATION_DTL="0"	
+
+
 
 HAS_TASKLIB = no
 

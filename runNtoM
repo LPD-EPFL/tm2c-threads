@@ -1,6 +1,7 @@
 #!/bin/sh
 
 N=2;
+STEP=1;
 M=6;
 
 if [ $# -eq 3 ]; then
@@ -11,14 +12,30 @@ elif [ $# -eq 4 ]; then
     shift;
     M=$1;
     shift;
+elif [ $# -eq 5 ]; then
+    N=$1;
+    shift;
+    STEP=$1;
+    shift;
+    M=$1;
+    shift;
+elif [ $# -eq 2 ]; then
+    N = 2; 			# dummy
+else
+    echo "Usage: $0 [starting_core] [step] [ending_core] program \"parameters\"";
+    echo "       Ex. $0 2 4 48 bmarks/bank \"-d2 -r0\"";
 fi
 
 app=$1;
 shift;
 
-echo "#nue\tThroughput CRate  Latency";
+echo "#nue\tThroughput CRate  Latency Th/nue  Th/dsl";
 
-for nue in $(seq $N 1 $M); do
-    echo -e -n "$nue\t";
-    ./run $nue $app $@ | grep ")))" | sed 's/)//g' | cut -d"(" -f1
+for nue in $(seq $N $STEP $M); do
+    echo -n -e "$nue\t";
+    RES=$(./run $nue $app $@ | grep ")))" | sed 's/)//g' | cut -d"(" -f1 | tr [:blank:] \\t);
+    echo -n $RES;
+    TH=$(echo $RES | cut -d' ' -f1);
+    NUM_DSL=$(echo $RES | cut -d' ' -f4);
+    echo "\t$(($TH/$nue))\t$(($TH/$NUM_DSL))"
 done

@@ -18,13 +18,6 @@ extern "C" {
 #include "messaging.h"
 #include "tm_sys.h"
 #include "RCCE.h"
-#ifdef PGAS
-  /*
-   * Under PGAS we're using fakemem allocator, to have fake allocations, that
-   * mimic those of RCCE_shmalloc
-   */
-#  include "fakemem.h"
-#endif
 
 #define BARRIER     ssmp_barrier_wait(1);
 #define BARRIERW    ssmp_barrier_wait(0);
@@ -45,6 +38,8 @@ extern "C" {
   extern t_vcharp virtual_lockaddress[48];
 #endif /* CM_H */
 
+extern size_t pgas_app_addr_offs(void* addr);
+extern void* pgas_app_addr_from_offs(size_t offs);
 
 #define PS_BUFFER_SIZE 32
     
@@ -64,7 +59,7 @@ extern "C" {
   to_intern_addr(tm_addr_t addr)
   {
 #ifdef PGAS
-    return fakemem_offset((void*)addr);
+  return pgas_app_addr_offs((void*) addr);
 #else
     return ((tm_intern_addr_t)((uintptr_t)addr - (uintptr_t)shmem_start_address));
 #endif
@@ -75,7 +70,7 @@ extern "C" {
   to_addr(tm_intern_addr_t i_addr)
   {
 #ifdef PGAS
-    return fakemem_addr_from_offset(i_addr);
+    return pgas_app_addr_from_offs(i_addr);
 #else
     return (tm_addr_t)((uintptr_t)shmem_start_address + i_addr);
 #endif
@@ -84,7 +79,6 @@ extern "C" {
   INLINED int
   sys_sendcmd(void* data, size_t len, nodeid_t to)
   {
-    //  ssmp_sendl(to, (ssmp_msg_t *) data, len/sizeof(int));
     ssmp_send(to, (ssmp_msg_t *) data);
     return 1;
   }
@@ -93,18 +87,17 @@ extern "C" {
   sys_sendcmd_all(void* data, size_t len)
   {
     int target;
-    for (target = 0; target < NUM_DSL_NODES; target++) {
-      //    ssmp_sendl(dsl_nodes[target], (ssmp_msg_t *) data, len/sizeof(int));
-      //    PRINT("sending stats to %d", dsl_nodes[target]);
-      ssmp_send(dsl_nodes[target], (ssmp_msg_t *) data);
-    }
+    for (target = 0; target < NUM_DSL_NODES; target++)
+      {
+	ssmp_send(dsl_nodes[target], (ssmp_msg_t *) data);
+      }
     return 1;
   }
 
   INLINED int
   sys_recvcmd(void* data, size_t len, nodeid_t from)
   {
-    ssmp_recv_from(from, (ssmp_msg_t *) data, len/sizeof(int));
+    ssmp_recv_from(from, (ssmp_msg_t *) data, 8);
     return 1;
   }
 

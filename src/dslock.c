@@ -39,10 +39,10 @@ int bucket_current[NUM_OF_BUCKETS];
 int bucket_max[NUM_OF_BUCKETS];
 #endif
 
+extern void tm_term();
+
 void dsl_init(void) {
 #ifdef PGAS
-    PGAS_init();
-
     PGAS_write_sets = (write_set_pgas_t **) malloc(NUM_UES * sizeof (write_set_pgas_t *));
     if (PGAS_write_sets == NULL) {
         PRINT("malloc PGAS_write_sets == NULL");
@@ -126,7 +126,7 @@ void print_global_stats() {
     stats_total /= NUM_UES;
 
     double commit_rate = (stats_total - stats_aborts) / (double) stats_total;
-    double tx_latency = (1 / (double) stats_commits_app) * 1000; //micros
+    double tx_latency = (1 / (double) stats_commits_app) * 1000 * 1000; //micros
 
     printf(":: PER SECOND PER NODE AVG -----------------------------------\n");
     printf("NA| Starts      \t: %lu\t/s\n", stats_total);
@@ -142,24 +142,3 @@ void print_global_stats() {
     fflush(stdout);
 }
 
-void print_hashtable_usage() {
-#ifdef DEBUG_UTILIZATION
-    PRINTSME("USAGE ()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()\n");
-
-    printf("read reqs: \t%u\n", read_reqs_num);
-    printf("write reqs: \t%u\n", write_reqs_num);
-    printf("total reqs: \t%u\n--\n", read_reqs_num + write_reqs_num);
-
-
-    long long unsigned total_usages = 0;
-    int i;
-    for (i = 0; i < NUM_OF_BUCKETS; i++) {
-        total_usages += bucket_usages[i];
-    }
-
-    for (i = 0; i < NUM_OF_BUCKETS; i++) {
-        printf("bucket [%02d]\tusages: %d\t percentage: %f%%\tmax size: %d\n", i, bucket_usages[i], (100 * (double) bucket_usages[i]) / total_usages, bucket_max[i]);
-    }
-
-#endif
-}
