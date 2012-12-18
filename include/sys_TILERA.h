@@ -26,6 +26,7 @@ extern "C" {
   extern nodeid_t *dsl_nodes;
 #define PS_BUFFER_SIZE 32
   extern  DynamicHeader *udn_header; //headers for messaging
+  extern uint32_t* demux_tags;
   extern  tmc_sync_barrier_t *barrier_apps, *barrier_all; //BARRIERS
 
 
@@ -60,8 +61,8 @@ extern "C" {
   INLINED int
   sys_sendcmd(void* data, size_t len, nodeid_t to)
   {
-    tmc_udn_send_buffer(udn_header[to], UDN0_DEMUX_TAG,
-			data, len/sizeof(int_reg_t));
+     /* tmc_udn_send_buffer(udn_header[to], UDN0_DEMUX_TAG, data, len/sizeof(int_reg_t)); */
+    tmc_udn_send_buffer(udn_header[to], demux_tags[to], data, len/sizeof(int_reg_t));
   }
 
 
@@ -69,10 +70,12 @@ extern "C" {
   sys_sendcmd_all(void* data, size_t len)
   {
     int target;
-    for (target = 0; target < NUM_DSL_NODES; target++) {
-      tmc_udn_send_buffer(udn_header[dsl_nodes[target]], UDN0_DEMUX_TAG,
-			  data, len/sizeof(int_reg_t));
-    }
+    for (target = 0; target < NUM_DSL_NODES; target++)
+      {
+	/* tmc_udn_send_buffer(udn_header[dsl_nodes[target]], UDN0_DEMUX_TAG, data, len/sizeof(int_reg_t)); */
+	nodeid_t dsl_id = dsl_nodes[target];
+	tmc_udn_send_buffer(udn_header[dsl_id], demux_tags[dsl_id], data, len/sizeof(int_reg_t));
+      }
     return 1;
   
   }
@@ -80,7 +83,22 @@ extern "C" {
   INLINED int
   sys_recvcmd(void* data, size_t len, nodeid_t from)
   {
-    tmc_udn0_receive_buffer(data, len/sizeof(int_reg_t));
+    /* tmc_udn0_receive_buffer(data, len/sizeof(int_reg_t)); */
+    switch (demux_tags[from])
+      {
+      case UDN0_DEMUX_TAG:
+	tmc_udn0_receive_buffer(data, len/sizeof(int_reg_t));
+	break;
+      case UDN1_DEMUX_TAG:
+	tmc_udn1_receive_buffer(data, len/sizeof(int_reg_t));
+	break;
+      case UDN2_DEMUX_TAG:
+	tmc_udn2_receive_buffer(data, len/sizeof(int_reg_t));
+	break;
+      default:			/* 3 */
+	tmc_udn3_receive_buffer(data, len/sizeof(int_reg_t));
+	break;
+      }
   }
 
   INLINED double
