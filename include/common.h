@@ -68,8 +68,6 @@ extern "C" {
 #  error "Need to set REF_SPEED_GHZ for the platform"
 #endif
 
-typedef uint64_t ticks;
-
 #define MED printf("[%02d] ", NODE_ID());
 #define PRINT(args...) printf("[%02d] ", NODE_ID()); printf(args); printf("\n"); fflush(stdout)
 #define PRINTNF(args...) printf("[%02d] ", NODE_ID()); printf(args); printf("\n"); fflush(stdout)
@@ -109,8 +107,9 @@ typedef uint64_t ticks;
         WRITE_AFTER_WRITE,
 #ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
 	PERSISTING_WRITES, 	/* used for contention management */
-	TX_COMMITED		/* used for contention management */
+	TX_COMMITED,		/* used for contention management */
 #endif 				/* NOCM */
+	CAS_SUCCESS
     } CONFLICT_TYPE;
 
     /* read or write request
@@ -197,7 +196,7 @@ typedef uint64_t ticks;
   extern RCCE_COMM RCCE_COMM_APP;
 #    define BARRIER RCCE_barrier(&RCCE_COMM_APP);
 #    define BARRIERW RCCE_barrier(&RCCE_COMM_WORLD);
-
+#    define BARRIER_DSL ; 	/* XXX: to implement */
 #  endif
 
 #endif 

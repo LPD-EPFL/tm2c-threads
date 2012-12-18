@@ -219,7 +219,6 @@ dsl_communication()
     
     ps_remote = (PS_COMMAND *) msg;
 
-
 #if defined(WHOLLY) || defined(FAIRCM)
     cm_metadata_core[sender].timestamp = (ticks) ps_remote->tx_metadata;
 #elif defined(GREEDY)
@@ -264,6 +263,7 @@ dsl_communication()
 				ps_remote->address);
 	}
 #endif
+
 	sys_ps_command_reply(sender, PS_PUBLISH_RESPONSE, 
 			     (tm_addr_t) ps_remote->address,
 			     NULL,
@@ -321,41 +321,43 @@ dsl_communication()
       break;
     case PS_STATS:
       {
-	if (ps_remote->tx_duration) {
-	  stats_aborts += ps_remote->aborts;
-	  stats_commits += ps_remote->commits;
-	  stats_duration += ps_remote->tx_duration;
-	  stats_max_retries = stats_max_retries < ps_remote->max_retries ? ps_remote->max_retries : stats_max_retries;
-	  stats_total += ps_remote->commits + ps_remote->aborts;
-	}
-	else {
-	  stats_aborts_raw += ps_remote->aborts_raw;
-	  stats_aborts_war += ps_remote->aborts_war;
-	  stats_aborts_waw += ps_remote->aborts_waw;
-	}
-	if (++stats_received >= 2*NUM_APP_NODES) {
-	  ONCE {
-	    print_global_stats();
-
-	    print_hashtable_usage();
-
+	if (ps_remote->tx_duration)
+	  {
+	    stats_aborts += ps_remote->aborts;
+	    stats_commits += ps_remote->commits;
+	    stats_duration += ps_remote->tx_duration;
+	    stats_max_retries = stats_max_retries < ps_remote->max_retries ? ps_remote->max_retries : stats_max_retries;
+	    stats_total += ps_remote->commits + ps_remote->aborts;
 	  }
+	else
+	  {
+	    stats_aborts_raw += ps_remote->aborts_raw;
+	    stats_aborts_war += ps_remote->aborts_war;
+	    stats_aborts_waw += ps_remote->aborts_waw;
+	  }
+	if (++stats_received >= 2*NUM_APP_NODES)
+	  {
+	    ONCE
+	      {
+		print_global_stats();
+		print_hashtable_usage();
+	      }
 
 #ifdef DEBUG_UTILIZATION
-	  PRINT("*** Completed requests: %llu", (long long unsigned int) read_reqs_num + write_reqs_num);
+	    PRINT("*** Completed requests: %llu", (long long unsigned int) read_reqs_num + write_reqs_num);
 #endif
 
-	  return;
-	}
+	    return;
+	  }
 	break;
       }
-      default:
-	{
-	  sys_ps_command_reply(sender, PS_UKNOWN_RESPONSE,
-			       NULL,
-			       NULL,
-			       NO_CONFLICT);
-	}
+    default:
+      {
+	sys_ps_command_reply(sender, PS_UKNOWN_RESPONSE,
+			     NULL,
+			     NULL,
+			     NO_CONFLICT);
+      }
     }
   }
 }
@@ -414,6 +416,7 @@ void
 init_barrier()
 {
   ssmp_barrier_init(1, 0, is_app_core);
+  ssmp_barrier_init(3, 0, is_dsl_core);
 
-  BARRIERW
+  BARRIERW;
 }

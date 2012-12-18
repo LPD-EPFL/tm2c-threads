@@ -1,7 +1,7 @@
 # Main Makefile for DSTM
 
 # For platform, choose one out of: iRCCE, SCC.SSMP, MCORE, MCORE.SSMP,CLUSTER,TILERA
-PLATFORM = TILERA
+PLATFORM = SCC.SSMP
 # USE_HASHTABLE_KHASH:  khash.h from <http://www.freewebs.com/attractivechaos/khash.h>
 # USE_HASHTABLE_UTHASH: uthash.h from <http://uthash.sourceforge.net/>
 # USE_HASHTABLE_SDD:   Sunrise Data Dictionary <>
@@ -23,7 +23,6 @@ MAININCLUDE := $(TOP)/include
 INCLUDES := -I$(MAININCLUDE) -I$(TOP)/external/include
 LIBS := -L$(TOP)/external/lib \
 		-lm \
-		-lconfig \
 		$(PLATFORM_LIBS)
 
 # EXTRA_DEFINES are passed through the command line
@@ -33,7 +32,7 @@ DEBUG_FLAGS := #-g -ggdb -fno-inline#-DDEBUG
 
 ## Archive ##
 ARCHIVE_SRCS_PURE:= pubSubTM.c tm.c log.c lock_log.c array_log.c dslock.c \
-			measurements.c pgas.c config.c fakemem.c ps_hashtable.c cm.c
+			measurements.c pgas.c fakemem.c ps_hashtable.c cm.c
 
 # Include the platform specific Makefile
 # This file has the modifications related to the current platform
@@ -43,7 +42,7 @@ ARCHIVE_SRCS_PURE:= pubSubTM.c tm.c log.c lock_log.c array_log.c dslock.c \
 APPS_DIR := apps
 # add the non PGAS applications only if PGAS is not defined
 ifeq (,$(findstring DPGAS,$(PLATFORM_DEFINES)))
-APPS = tm1 # tm2 tm3 tm4 tm5 tm6 tm7 tm8 tm9 tm10
+APPS = #tm1 tm2 tm3 tm4 tm5 tm6 tm7 tm8 tm9 tm10
 endif
 
 # apps that need tasklib in order to compile
@@ -166,7 +165,7 @@ $(ARCHIVE):
 endif
 
 
-$(DSTM_ARCHIVE): $(ARCHIVE) $(ARCHIVE_OBJS)
+$(DSTM_ARCHIVE): $(ARCHIVE) $(ARCHIVE_OBJS) Makefile.$(PLATFORM)
 	@echo Archive name = $(DSTM_ARCHIVE) 
 ifeq ($(PLATFORM),iRCCE)
 	@rm -rf .ar-lib

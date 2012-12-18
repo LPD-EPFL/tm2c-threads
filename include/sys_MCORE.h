@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <task.h>
+#include <emmintrin.h>
 
 #include "common.h"
 #include "messaging.h"
@@ -16,6 +17,9 @@ EXINLINED void app_barrier();
 EXINLINED void global_barrier();
 #define BARRIER  app_barrier();
 #define BARRIERW global_barrier();
+#define BARRIER_DSL
+
+typedef uint64_t ticks;
 
 extern int nodes_sockets[MAX_NODES]; // holds the sockets (both app and dsl
 extern nodeid_t MY_NODE_ID;
@@ -111,5 +115,7 @@ wtime(void)
 	return (double)t.tv_sec + ((double)t.tv_usec)/1000000.0;
 }
 
+
+extern inline ticks getticks(void);
 
 #endif

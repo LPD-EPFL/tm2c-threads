@@ -1,22 +1,31 @@
 # message passing library: shrimp or ssmp
 
-PLATFORM_CFLAGS =
+PLATFORM_CFLAGS = -O3
 PLATFORM_LDFLAGS = 
-PLATFORM_LIBS = -ltaskplus -lshrimp -lrt
+PLATFORM_LIBS = -ltaskplus -lshrimp -lrt -lconfig
+
 
 PLATFORM_DEFINES = -DPLATFORM_MCORE \
-                   -UPGAS \
+		   -DPLATFORM_MCORE_SHRIMP  \
+		   -UPGAS \
                    -DREAD_BUF_OFF \
                    -DLIBTASK \
-                   -UBACKOFF_RETRY \
+                   -DBACKOFF_RETRY \
+		   -DBACKOFF_MAX="3" \
+		   -DBACKOFF_DELAY="50000" \
                    -UFINISH_ALL_PARALLEL \
-		   -UDO_TIMINGS
+		   -UDO_TIMINGS \
+		   -DNOCM
+
+#if BACKOFF_RETRY is set, the BACKOFF-RETRY contention management scheme is used. This is similar to the TCP-IP exponentional increasing backoff and retry. When BACKOFF_MAX = infinitiy -> then every tx is expected to terminate whp.
+#else, in case of a conflict the transaction is not aborted, but backsoff and retries to acquire the same address BACKOFF_MAX time beforee aborting
 
 
 HAS_TASKLIB = no
 
 ARCHIVE_SRCS_PURE += mcore_malloc.c
 ARCHIVE_SRCS_PURE += sys_MCORE.c
+ARCHIVE_SRCS_PURE += config.c
 
 # same as cluster, non-pgas experiments will not work
 ALL_BMARKS = bank

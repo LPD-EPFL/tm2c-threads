@@ -74,6 +74,8 @@ nodeid_t MY_TOTAL_NODES;
 void
 sys_init_system(int* argc, char** argv[])
 {
+  init_configuration(argc, argv);
+
 	if (*argc < 2) {
 		fprintf(stderr, "Not enough parameters (%d)\n", *argc);
 		fprintf(stderr, "Call this program as:\n");
@@ -305,7 +307,7 @@ INLINED void
 process_message(PS_COMMAND* ps_remote, int fd)
 {
   nodeid_t sender = ps_remote->nodeId;
-  PRINTD("process_message: got message %d from %u", ps_remote->type, sender);
+  PRINTD("process_message: got message %d from %u for addr %u", ps_remote->type, sender, ps_remote->address);
 
   switch (ps_remote->type) {
   case PS_SUBSCRIBE:
@@ -456,13 +458,21 @@ srand_core()
 	srand(time_ + (13 * (ID + 1)));
 }
 
+
 void 
-udelay(unsigned int micros)
+udelay(uint64_t micros)
 {
-   double __ts_end = wtime() + ((double) micros / 1000000);
-   while (wtime() < __ts_end);
-   //usleep(micros);
+  ticks in_cycles = REF_SPEED_GHZ * 1000 * micros;
+  wait_cycles(in_cycles);
 }
+
+void 
+ndelay(uint64_t nanos)
+{
+  ticks in_cycles = REF_SPEED_GHZ * nanos;
+  wait_cycles(in_cycles);
+}
+
 
 static nodeid_t num_tm_nodes;
 static nodeid_t num_dsl_nodes;
@@ -712,7 +722,7 @@ dsl_recvtask(void* cfd)
 	while (1) {
 		size_t ret = fdread(remotefd, ps_remote, sizeof(PS_COMMAND));
 		if (ret >= sizeof(PS_COMMAND)) {
-			PRINTD("dsl_recvtask(): one message (size %d) received on the socket fd=%d\n",
+			PRINTD("dsl_recvtask(): one message (size %u) received on the socket fd=%d\n",
 				   ret, remotefd);
 			//DS_ITimer::handle_timeouts();
 #ifdef DEBUG_MSG
@@ -734,7 +744,8 @@ dsl_recvtask(void* cfd)
 				PRINTD("dsl_recvtask(): exiting\n");
 				taskexit(0);
 			}
-			PRINT("dsl_recvtask(): [ERROR] fdread ret=%d\n", ret);
+			PRINT("dsl_recvtask(): [ERROR] fdread ret=%u\n", ret);
+			EXIT(0);
 		}
 	}
 }
@@ -770,7 +781,7 @@ dsl_listentask(void* v)
 	int rport;
 	fdnoblock(my_fd);
 	while((cfd = netaccept(my_fd, remote, &rport)) >= 0) {
-		PRINTD("connection from %s:%d in socket %d\n", 
+		PRINT("connection from %s:%d in socket %d\n", 
 			   remote, rport, cfd);
 		fdnoblock(cfd);
 		taskcreate(dsl_recvtask, (void*)cfd, STACK);
@@ -790,7 +801,7 @@ app_recvtask(void* cfd)
 	while (1) {
 		size_t ret = fdread(remotefd, ps_remote, sizeof(PS_REPLY));
 		if (ret >= sizeof(PS_REPLY)) {
-			PRINTD("app_recvtask(): one message (size %d) received on the socket fd=%d\n",
+			PRINTD("app_recvtask(): one message (size %u) received on the socket fd=%d\n",
 				   ret, remotefd);
 			//DS_ITimer::handle_timeouts();
 #ifdef DEBUG_MSG
@@ -839,4 +850,40 @@ app_listentask(void* v)
 		taskyield();
 	}
 }
+
+#if defined(__i386__)
+inline ticks getticks(void) {
+  ticks ret;
+
+  __asm__ __volatile__("rdtsc" : "=A" (ret));
+  return ret;
+}
+#elif defined(__x86_64__)
+inline ticks getticks(void)
+{
+  unsigned hi, lo;
+  __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
+  return ( (unsigned long long)lo)|( ((unsigned long long)hi)<<32 );
+}
+
+inline void
+wait_cycles(uint64_t cycles)
+{
+  if (cycles < 512)
+    {
+      cycles /= 6;
+      while (cycles--)
+	{
+	  _mm_pause();
+	}
+    }
+  else
+    {
+      ticks _start_ticks = getticks();
+      ticks _end_ticks = _start_ticks + cycles - 130;
+      while (getticks() < _end_ticks);
+    }
+}
+
+#endif
 

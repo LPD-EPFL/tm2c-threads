@@ -10,30 +10,22 @@ extern "C" {
 #  include <ssmp.h>
 #endif
 
-#ifndef SSMP
-#  if defined(__i386__)
-  EXINLINED ticks getticks(void) {
-    ticks ret;
-
-    __asm__ __volatile__("rdtsc" : "=A" (ret));
-    return ret;
-  }
-#  elif defined(__x86_64__)
-  EXINLINED ticks getticks(void)
-  {
-    unsigned hi, lo;
-    __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
-    return ( (unsigned long long)lo)|( ((unsigned long long)hi)<<32 );
-  }
+#ifndef REF_SPEED_GHZ
+#  if defined(PLATFORM_MCORE)
+#    define REF_SPEED_GHZ           2.1
+#  elif defined(SCC)
+#    define REF_SPEED_GHZ           0.533
 #  elif defined(PLATFORM_TILERA)
-#    define getticks get_cycle_count
+#    define REF_SPEED_GHZ           0.7
+#  else
+#    error "Need to set REF_SPEED_GHZ for the platform"
 #  endif
-#endif
+#endif  /* REF_SPEED_GHZ */
 
   /* 
-     #   DO_TIMINGS_TICKS
-     #   DO_TIMINGS_TICKS_SIMPLE
-     #   DO_TIMINGS_STD
+     #DO_TIMINGS_TICKS
+     #DO_TIMINGS_TICKS_SIMPLE
+     #DO_TIMINGS_STD
  */
 #define DO_TIMINGS_TICKS_SIMPLE
 
@@ -64,7 +56,7 @@ extern "C" {
 #  ifndef DO_TIMINGS_STD
 #    ifndef DO_TIMINGS_TICKS
 #      ifndef DO_TIMINGS_TICKS_SIMPLE
-#      error Define either DO_TIMINGS_STD or DO_TIMINGS_TICKS
+#        error Define either DO_TIMINGS_STD or DO_TIMINGS_TICKS
 #      endif
 #    endif
 #  endif

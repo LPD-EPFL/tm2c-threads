@@ -15,6 +15,7 @@
 
 #define BARRIER  ssmp_barrier_wait(1);
 #define BARRIERW ssmp_barrier_wait(0);
+#define BARRIER_DSL ssmp_barrier_wait(14);
 
 extern nodeid_t MY_NODE_ID;
 extern nodeid_t MY_TOTAL_NODES;
@@ -31,7 +32,7 @@ extern int32_t *cm_abort_flag_mine;
 INLINED nodeid_t
 NODE_ID(void)
 {
-	return MY_NODE_ID;
+  return MY_NODE_ID;
 }
 
 
@@ -40,7 +41,7 @@ extern int is_app_core(int id);
 INLINED nodeid_t
 TOTAL_NODES(void)
 {
-	return MY_TOTAL_NODES;
+  return MY_TOTAL_NODES;
 }
 
 INLINED int

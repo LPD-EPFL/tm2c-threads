@@ -39,7 +39,7 @@
 
 #if defined(SCC)
 /*take advante all 4 MCs*/
-#define MC 
+#define MC__
 #endif
 
 #define DEFAULT_DURATION                10
@@ -89,7 +89,7 @@ typedef struct bank {
 } bank_t;
 
 int transfer(account_t *src, account_t *dst, int amount) {
-  // PRINT("in transfer");
+  /* PRINT("in transfer"); */
 
   int i, j;
 
@@ -99,7 +99,6 @@ int transfer(account_t *src, account_t *dst, int amount) {
   TX_START;
 
 #ifdef LOAD_STORE
-  //TODO: test and use the TX_LOAD_STORE
   PF_START(0);
   TX_LOAD_STORE(&src->balance, -, amount, TYPE_INT);
   PF_STOP(0);
@@ -328,10 +327,9 @@ bank_t * test(void *data, double duration, int nb_accounts) {
 
   //reset(bank);
 
-  PF_PRINT;
-  BARRIER
+  BARRIER;
 
-    return bank;
+  return bank;
 }
 
 TASKMAIN(int argc, char **argv) {
@@ -527,8 +525,8 @@ TASKMAIN(int argc, char **argv) {
 
     free(data);
 
-    TM_END
-      TM_TERM
+    TM_END;
+
 
     EXIT(0);
 }

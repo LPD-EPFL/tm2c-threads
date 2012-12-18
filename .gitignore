@@ -3,6 +3,7 @@
 *.d
 *.o
 *~
+/.#runconf
 /TODO
 /apps/tm10
 /apps/tm[0-9]
@@ -61,6 +62,7 @@
 /prun
 /run_sim.sh
 /run_sim.sh
+/runconf
 /runcrash
 /rundebug
 /runrt

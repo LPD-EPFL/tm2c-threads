@@ -17,7 +17,6 @@
 #include <assert.h>
 #include <limits.h>
 #include <ssmp.h>
-#include <ssmp_send.h>
 #ifdef PLATFORM_NUMA
 #include <numa.h>
 #endif /* PLATFORM_NUMA */
@@ -189,6 +188,8 @@ sys_ps_init_(void)
 void
 sys_dsl_init(void)
 {
+  MCORE_shmalloc_init(1024*1024*1024); //1GB
+
   BARRIERW
 
 #ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
@@ -210,13 +211,13 @@ sys_dsl_init(void)
 void
 sys_dsl_term(void)
 {
-
+  BARRIERW;
 }
 
 void
 sys_ps_term(void)
 {
-
+  BARRIERW;
 }
 
 // If value == NULL, we just return the address.
@@ -276,7 +277,10 @@ dsl_communication()
 
   while (1) {
 
+    //    PF_START(2);
     last_recv_from = ssmp_recv_color_start(cbuf, msg, last_recv_from) + 1;
+    //    PF_STOP(2);
+
     sender = msg->sender;
 
     ps_remote = (PS_COMMAND *) msg;
@@ -343,6 +347,30 @@ dsl_communication()
 			     conflict);
 	break;
       }
+/*     case PS_CAS: */
+/*       { */
+/* #ifdef DEBUG_UTILIZATION */
+/* 	write_reqs_num++; */
+/* #endif */
+/* 	CONFLICT_TYPE conflict = ssht_insert_w_test(ps_hashtable, sender, ps_remote->address); */
+
+/* 	if (conflict == NO_CONFLICT) */
+/* 	  { */
+/* 	    uint32_t *addr = (uint32_t *) ps_remote->address; */
+/* 	    if (*addr == ps_remote->oldval) */
+/* 	      { */
+/* 		*addr = ps_remote->write_value; */
+/* 		conflict = CAS_SUCCESS; */
+/* 	      } */
+/* 	  } */
+
+/* 	sys_ps_command_reply(sender, PS_CAS_RESPONSE, */
+/* 			     (tm_addr_t) ps_remote->address, */
+/* 			     NULL, */
+/* 			     conflict); */
+
+/* 	break; */
+/*       } */
 #ifdef PGAS
     case PS_WRITE_INC:
       {
@@ -441,10 +469,12 @@ dsl_communication()
       }
       default:
 	{
+	  PF_START(1);
 	  sys_ps_command_reply(sender, PS_UKNOWN_RESPONSE,
 			       NULL,
 			       NULL,
 			       NO_CONFLICT);
+	  PF_STOP(1);
 	}
     }
   }
@@ -480,6 +510,7 @@ void
 init_barrier()
 {
   ssmp_barrier_init(1, 0, is_app_core);
+  ssmp_barrier_init(14, 0, is_dsl_core);
 
   BARRIERW;
 }
