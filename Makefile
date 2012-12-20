@@ -1,7 +1,7 @@
 # Main Makefile for DSTM
 
 # For platform, choose one out of: iRCCE, SCC.SSMP, MCORE, MCORE.SSMP,CLUSTER,TILERA
-PLATFORM = SCC.SSMP
+PLATFORM = TILERA
 # USE_HASHTABLE_KHASH:  khash.h from <http://www.freewebs.com/attractivechaos/khash.h>
 # USE_HASHTABLE_UTHASH: uthash.h from <http://uthash.sourceforge.net/>
 # USE_HASHTABLE_SDD:   Sunrise Data Dictionary <>
@@ -82,7 +82,7 @@ HTFILES = hashtable intset test
 
 # add the non PGAS applications only if PGAS is not defined
 ifneq (,$(findstring UPGAS,$(PLATFORM_DEFINES)))
-BMARKS = bank #bankseq \
+BMARKS = bank dsl_stress #bankseq \
 	#	 readonly
 
 # this is a list of programs that do not work, for whatever reason
