@@ -25,40 +25,39 @@ extern "C" {
     COMMITED
   } TX_STATE;
 
-  typedef struct stm_tx		/* Transaction descriptor */
+  typedef struct ALIGNED(64) stm_tx /* Transaction descriptor */
   { 
-#if defined(GREEDY) 		/* placed in diff place than for FAIRCM, according to access seq */
+#if defined(GREEDY) /* placed in diff place than for FAIRCM, according to access seq */
+    ticks start_ts;
+#eif defined(FAIRCM) 
     ticks start_ts;
 #endif
-    sigjmp_buf env;		/* Environment for setjmp/longjmp */
+    uint32_t aborts;	 /* Total number of aborts (cumulative) */
+    uint32_t aborts_raw; /* Aborts due to read after write (cumulative) */
+    uint32_t aborts_war; /* Aborts due to write after read (cumulative) */
+    uint32_t aborts_waw; /* Aborts due to write after write (cumulative) */
+    uint32_t max_retries; /* Maximum number of consecutive aborts (retries) */
+    uint32_t retries;	  /* Number of consecutive aborts (retries) */
+    mem_info_t* mem_info; /* Transactional mem alloc lists*/
 #if !defined(PGAS)		/* in PGAS only the DSLs hold a write_set */
     write_set_t *write_set;	/* Write set */
 #endif
-    uint64_t retries;	  /* Number of consecutive aborts (retries) */
-#if defined(FAIRCM) 
-    ticks start_ts;
-#endif
-    uint64_t aborts;	  /* Total number of aborts (cumulative) */
-    uint64_t aborts_raw; /* Aborts due to read after write (cumulative) */
-    uint64_t aborts_war; /* Aborts due to write after read (cumulative) */
-    uint64_t aborts_waw; /* Aborts due to write after write (cumulative) */
-    uint64_t max_retries; /* Maximum number of consecutive aborts (retries) */
-    mem_info_t *mem_info;	/* Transactional mem alloc lists*/
+    sigjmp_buf env;		/* Environment for setjmp/longjmp */
   } stm_tx_t;
 
   typedef struct stm_tx_node 
   {
-    uint64_t tx_starts;
-    uint64_t tx_commited;
-    uint64_t tx_aborted;
-    uint64_t max_retries;
-    uint64_t aborts_war;
-    uint64_t aborts_raw;
-    uint64_t aborts_waw;
+    uint32_t tx_starts;
+    uint32_t tx_commited;
+    uint32_t tx_aborted;
+    uint32_t max_retries;
+    uint32_t aborts_war;
+    uint32_t aborts_raw;
+    uint32_t aborts_waw;
 #ifdef FAIRCM
     ticks tx_duration;
 #else
-    uint8_t padding[8];
+    uint8_t padding[36];
 #endif
   } stm_tx_node_t;
 
