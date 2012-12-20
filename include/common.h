@@ -278,8 +278,9 @@ extern "C" {
 
 #  define BARRIER tmc_sync_barrier_wait(barrier_apps); //app cores only
 #  define BARRIERW tmc_sync_barrier_wait(barrier_all); //all cores
+#  define BARRIER_DSL tmc_sync_barrier_wait(barrier_dsl); //all cores
 
-
+#  define getticks get_cycle_count
 
 #  define RCCE_num_ues TOTAL_NODES
 #  define RCCE_ue NODE_ID
