@@ -45,7 +45,8 @@ inline ticks getticks(void)
 #endif
 
 
-MAIN(int argc, char **argv) {
+MAIN(int argc, char **argv) 
+{
 
   PF_MSG(0, "roundtrip message");
 
@@ -53,9 +54,10 @@ MAIN(int argc, char **argv) {
 
   PF_MSG(0, "round-trip messaging latencies");
 
-  TM_INIT
+  TM_INIT;
 
-    if (argc > 1) {
+  if (argc > 1) 
+    {
       steps = atoll(argv[1]);
     }
 
@@ -64,13 +66,14 @@ MAIN(int argc, char **argv) {
   int *sm = (int *) sys_shmalloc(steps * sizeof (int));
 #endif
 
-  ONCE {
-    PRINT("## sending %lld messages", steps);
-  }
+  ONCE 
+    {
+      PRINT("## sending %lld messages", steps);
+    }
 
-  BARRIER
+  BARRIER;
 
-    long long int rounds, sum = 0;
+  long long int rounds, sum = 0;
 
   double _start = wtime();
   ticks _start_ticks = getticks();
@@ -82,26 +85,34 @@ MAIN(int argc, char **argv) {
 
 
   PF_START(3);
-  for (rounds = 0; rounds < steps; rounds++) {
-    PF_START(0);
-#ifdef PGAS
-    sum += (int) NONTX_LOAD(sm + rounds);
-#else
-    DUMMY_MSG(to);
-#endif
-    PF_STOP(0);
+  for (rounds = 0; rounds < steps; rounds++) 
+    {
+      /* PF_START(0); */
 
-    if (++to == NUM_DSL_NODES)
-      {
-	to = 0;
-      }
-  }
+#ifdef PGAS
+      sum += (int) NONTX_LOAD(sm + rounds);
+#else
+      DUMMY_MSG(to);
+#endif
+
+      /* PF_STOP(0); */
+
+      to++;
+      if (to == NUM_DSL_NODES)
+      	{
+      	  to = 0;
+      	}
+      /* to %= NUM_DSL_NODES; */
+    }
   PF_STOP(3);
+
 
   if (sum > 0)
     {
       PRINT("sum -- %lld", sum);
     }
+
+  total_samples[3] = steps;
 
   TM_END;
 

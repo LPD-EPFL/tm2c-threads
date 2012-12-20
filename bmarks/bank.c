@@ -79,35 +79,42 @@ int delay = DEFAULT_DELAY;
  * BANK ACCOUNTS
  * ################################################################### */
 
-typedef struct account {
+typedef struct account 
+{
   int32_t number;
   int32_t balance;
 } account_t;
 
-typedef struct bank {
-    account_t *accounts;
-    int size;
+typedef struct bank 
+{
+  account_t *accounts;
+  uint32_t size;
 } bank_t;
 
-int transfer(account_t *src, account_t *dst, int amount) {
+int 
+transfer(account_t *src, account_t *dst, int amount) 
+{
   /* PRINT("in transfer"); */
 
   int i, j;
 
-  /* PF_START(2); */
 
   /* Allow overdrafts */
+  /* PF_START(2); */
   TX_START;
+  /* PF_STOP(2); */
 
 #ifdef LOAD_STORE
-  /* PF_START(0); */
+  PF_START(0);
   TX_LOAD_STORE(&src->balance, -, amount, TYPE_INT);
-  /* PF_STOP(0); */
-  /* PF_START(1); */
+  PF_STOP(0);
+  PF_START(1);
   TX_LOAD_STORE(&dst->balance, +, amount, TYPE_INT);
-  /* PF_STOP(1); */
+  PF_STOP(1);
     
+  /* PF_START(3); */
   TX_COMMIT_NO_PUB;
+  /* PF_STOP(3); */
 #else
   i = *(int *) TX_LOAD(&src->balance);
   i -= amount;
@@ -118,7 +125,6 @@ int transfer(account_t *src, account_t *dst, int amount) {
   TX_COMMIT;
 #endif
 
-  /* PF_STOP(2); */
   return amount;
 }
 
@@ -200,18 +206,19 @@ void reset(bank_t *bank) {
  * ################################################################### */
 
 typedef struct thread_data {
-  uint64_t nb_transfer;
-  uint64_t nb_checks;
-  uint64_t nb_read_all;
-  uint64_t nb_write_all;
-  int32_t id;
-  int32_t read_cores;
-  int32_t write_cores;
-  int32_t read_all;
-  int32_t write_all;
-  int32_t check;
-  int32_t disjoint;
-  int32_t nb_app_cores;
+  uint32_t nb_transfer;
+  uint32_t nb_checks;
+  uint32_t nb_read_all;
+  uint32_t nb_write_all;
+  uint32_t id;
+  uint32_t read_cores;
+  uint32_t write_cores;
+  uint32_t read_all;
+  uint32_t write_all;
+  uint32_t check;
+  uint32_t disjoint;
+  uint32_t nb_app_cores;
+  uint32_t padding[4];
 } thread_data_t;
 
 bank_t * 
@@ -229,6 +236,7 @@ test(void *data, double duration, int nb_accounts)
   /* Prepare for disjoint access */
   if (d->disjoint) 
     {
+      PRINT("disjoint not supported by the way rand_max is calculated");
       rand_max = nb_accounts / d->nb_app_cores;
       rand_min = rand_max * d->id;
       if (rand_max <= 2) {
@@ -238,7 +246,7 @@ test(void *data, double duration, int nb_accounts)
     }
   else 
     {
-      rand_max = nb_accounts;
+      rand_max = nb_accounts - 1;
       rand_min = 0;
     }
 
@@ -286,44 +294,46 @@ test(void *data, double duration, int nb_accounts)
   TX_COMMIT_NO_STATS;
   total(bank, 0);
 
+  uint32_t trans = 0;
   BARRIER;
 
-  FOR(duration) 
+  FOR(duration)
+  /* FOR_ITERS(1000000) */
   {
-    if (d->read_cores && d->id < d->read_cores) 
-      {
-	/* Read all */
-	//  PRINT("READ ALL1");
-	total(bank, 1);
-	d->nb_read_all++;
-	continue;
-      }
+    /* if (d->read_cores && d->id < d->read_cores)  */
+    /*   { */
+    /* 	/\* Read all *\/ */
+    /* 	//  PRINT("READ ALL1"); */
+    /* 	total(bank, 1); */
+    /* 	d->nb_read_all++; */
+    /* 	continue; */
+    /*   } */
 
-    int nb = (int) (rand_range(100) - 1);
-    if (nb < d->read_all) 
-      {
-	/* Read all */
-	total(bank, 1);
-	d->nb_read_all++;
-      }
-    else 
+    uint8_t nb = tm2c_rand() & 127;
+    /* if (nb < d->read_all) */
+    /*   { */
+    /* 	/\* Read all *\/ */
+    /* 	total(bank, 1); */
+    /* 	d->nb_read_all++; */
+    /*   } */
+    /* else */
       {
 	/* Choose random accounts */
-	int src = (int) (rand_range(rand_max) - 1) + rand_min;
-	int dst = (int) (rand_range(rand_max) - 1) + rand_min;
+
+	uint32_t src = tm2c_rand() & rand_max;
+	uint32_t dst = tm2c_rand() & rand_max;
 	if (dst == src)
 	  {
-	    dst = ((src + 1) % rand_max) + rand_min;
+	    dst = ((src + 1) & rand_max);
 	  }
-
 	if (nb < d->check) 
 	  {
-	    check_accs(&bank->accounts[src], &bank->accounts[dst]);
+	    check_accs(bank->accounts + I(src), bank->accounts + I(dst));
 	    d->nb_checks++;
 	  }
 	else 
 	  {
-	    transfer(&bank->accounts[I(src)], &bank->accounts[I(dst)], 1);
+	    transfer(bank->accounts + I(src), bank->accounts + I(dst), 1);
 	    d->nb_transfer++;
 	  }
       }
@@ -334,7 +344,7 @@ test(void *data, double duration, int nb_accounts)
     /* 	/\* ndelay(rand_range(delay)); *\/ */
     /* 	ndelay(delay); */
     /*   } */
-  } 
+  } /* END_FOR_ITERS; */
   END_FOR;
 
   BARRIER;
@@ -468,6 +478,8 @@ TASKMAIN(int argc, char **argv) {
   }
 
 
+  nb_accounts = pow2roundup(nb_accounts);
+
   write_all = 0;
   write_cores = 0;
 
@@ -491,9 +503,22 @@ TASKMAIN(int argc, char **argv) {
       PRINTN("Read cores     : %d\n", read_cores);
       PRINTN("Write-all rate : %d\n", write_all - read_all);
       PRINTN("Write cores    : %d\n", write_cores);
+      PRINT("sizeof(size_t) = %d", sizeof(size_t));
+      PRINT("sizeof(uintptr_t) = %d", sizeof(uintptr_t));
+      PRINT("sizeof(PS_COMMAND) = %d", sizeof(PS_COMMAND));
+      PRINT("sizeof(PS_STATS_CMD_T) = %d", sizeof(PS_STATS_CMD_T));
+      PRINT("sizeof(PS_REPLY) = %d", sizeof(PS_REPLY));
     }
 
-  
+
+  /* normalize percentages to 128 */
+
+  double normalize = (double) 128/100;
+  check *= normalize;
+  write_all *= normalize;
+  read_all *= normalize;
+
+
   if (posix_memalign((void**) &data, 64, sizeof(thread_data_t)) != 0)
     {
       perror("posix_memalign");
@@ -526,7 +551,7 @@ TASKMAIN(int argc, char **argv) {
   uint32_t nd;
   for (nd = 0; nd < TOTAL_NODES(); nd++) {
     if (NODE_ID() == nd) {
-      printf("---Core %d\n  #transfer   : %llu\n  #checks     : %llu\n  #read-all   : %llu\n  #write-all  : %llu\n", 
+      printf("---Core %d\n  #transfer   : %u\n  #checks     : %u\n  #read-all   : %u\n  #write-all  : %u\n", 
 	     NODE_ID(), data->nb_transfer, data->nb_checks, data->nb_read_all, data->nb_write_all);
       FLUSH;
     }
@@ -554,4 +579,3 @@ TASKMAIN(int argc, char **argv) {
 
   EXIT(0);
 }
-
