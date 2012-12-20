@@ -27,25 +27,24 @@ extern "C" {
 
   typedef struct ALIGNED(64) stm_tx /* Transaction descriptor */
   { 
+    sigjmp_buf env;		/* Environment for setjmp/longjmp */
 #if defined(GREEDY) /* placed in diff place than for FAIRCM, according to access seq */
     ticks start_ts;
 #eif defined(FAIRCM) 
     ticks start_ts;
 #endif
-    uint32_t aborts;	 /* Total number of aborts (cumulative) */
-    uint32_t aborts_raw; /* Aborts due to read after write (cumulative) */
-    uint32_t aborts_war; /* Aborts due to write after read (cumulative) */
-    uint32_t aborts_waw; /* Aborts due to write after write (cumulative) */
-    uint32_t max_retries; /* Maximum number of consecutive aborts (retries) */
-    uint32_t retries;	  /* Number of consecutive aborts (retries) */
+    uint16_t aborts;	 /* Total number of aborts (cumulative) */
+    uint16_t aborts_raw; /* Aborts due to read after write (cumulative) */
+    uint16_t aborts_war; /* Aborts due to write after read (cumulative) */
+    uint16_t aborts_waw; /* Aborts due to write after write (cumulative) */
+    uint16_t retries;	  /* Number of consecutive aborts (retries) */
     mem_info_t* mem_info; /* Transactional mem alloc lists*/
 #if !defined(PGAS)		/* in PGAS only the DSLs hold a write_set */
     write_set_t *write_set;	/* Write set */
 #endif
-    sigjmp_buf env;		/* Environment for setjmp/longjmp */
   } stm_tx_t;
 
-  typedef struct stm_tx_node 
+  typedef struct ALIGNED(64) stm_tx_node 
   {
     uint32_t tx_starts;
     uint32_t tx_commited;
@@ -74,11 +73,11 @@ extern "C" {
     fflush(stdout);
   }
 
-  INLINED void tx_metadata_print(stm_tx_t * stm_tx) {
+  INLINED void tx_metadata_print(stm_tx_t* stm_tx) {
     printf("TX Statistics ------------------------------------------------\n");
     printf("Retries     \t: %llu\n", stm_tx->retries);
     printf("Aborts      \t: %llu\n", stm_tx->aborts);
-    printf("Max Retries \t: %llu\n", stm_tx->max_retries);
+    /* printf("Max Retries \t: %llu\n", stm_tx->max_retries); */
     printf("Aborts WAR  \t: %llu\n", stm_tx->aborts_war);
     printf("Aborts RAW  \t: %llu\n", stm_tx->aborts_raw);
     printf("Aborts WAW  \t: %llu\n", stm_tx->aborts_waw);
@@ -128,7 +127,7 @@ extern "C" {
     stm_tx_temp->aborts_war = 0;
     stm_tx_temp->aborts_raw = 0;
     stm_tx_temp->aborts_waw = 0;
-    stm_tx_temp->max_retries = 0;
+    /* stm_tx_temp->max_retries = 0; */
 
 #if defined(FAIRCM) || defined(GREEDY)
     stm_tx_temp->start_ts = 0;
@@ -149,7 +148,7 @@ extern "C" {
     stm_tx_temp->aborts_war = 0;
     stm_tx_temp->aborts_raw = 0;
     stm_tx_temp->aborts_waw = 0;
-    stm_tx_temp->max_retries = 0;
+    /* stm_tx_temp->max_retries = 0; */
 
     return stm_tx_temp;
   }
