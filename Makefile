@@ -33,7 +33,7 @@ DEBUG_FLAGS := #-g -ggdb -fno-inline #-DDEBUG
 
 ## Archive ##
 ARCHIVE_SRCS_PURE:= pubSubTM.c tm.c log.c lock_log.c array_log.c dslock.c \
-			measurements.c ps_hashtable.c cm.c
+			measurements.c ps_hashtable.c cm.c stm.c
 
 
 ifeq ($(HASHTABLE),USE_HASHTABLE_SSHT)
