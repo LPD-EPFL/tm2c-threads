@@ -139,42 +139,52 @@ typedef struct ps_stats_cmd_struct
 
   typedef struct ps_command_struct 
   {
-    uint8_t type;	      /* PS_COMMAND_TYPE */
-    uint8_t nodeId;	      /* we need IDs on networked systems */
-    /* 4*/
-    tm_intern_addr_t address; /* addr of the data, internal representation */
-    /* 8 */ 
-
-    /* OPTIONAL based on PGAS and NOCM */
-#  if defined(PGAS)
-    union 
+    struct
     {
-      int64_t response;       /* used in PS_REMOVE_NODE with PGAS to say persist or not */
-      int64_t write_value;
-      uint64_t num_words;
-    };
+      uint8_t type;	      /* PS_COMMAND_TYPE */
+      uint8_t nodeId;	      /* we need IDs on networked systems */
+      /* 4*/
+      tm_intern_addr_t address; /* addr of the data, internal representation */
+      /* 8 */ 
+
+#  if defined(PGAS)
+      union 
+      {
+	int64_t response;       /* used in PS_REMOVE_NODE with PGAS to say persist or not */
+	int64_t write_value;
+	uint64_t num_words;
+      };
 #  endif	/* PGAS */
 #  if !defined(NOCM)
-    uint64_t tx_metadata;
+      uint64_t tx_metadata;
 #  endif  /* !NOCM */
+    };
+    /* OPTIONAL based on PGAS and NOCM */
   } PS_COMMAND;
-
+  
 
 #  if defined(PGAS)
-#    define PS_REPLY_SIZE       16
-#    define PS_REPLY_SIZE_WORDS 4
+#    define PS_REPLY_SIZE       12
+#    define PS_REPLY_SIZE_WORDS 3
 #  else
-#    define PS_REPLY_SIZE       8
-#    define PS_REPLY_SIZE_WORDS 2
+#    define PS_REPLY_SIZE       4
+#    define PS_REPLY_SIZE_WORDS 1
 #  endif
 
   typedef struct ps_reply_struct 
   {
-  uint8_t type;
-  uint8_t nodeId;
-  uint8_t response;
-  uint8_t resp_size;
-  tm_intern_addr_t address; /* address of the data, internal representation */
+    union
+    {
+      struct
+      {
+	uint8_t type;
+	uint8_t response;
+	uint8_t nodeId;
+	uint8_t resp_size;
+      };
+      uint32_t to_word;
+    };
+  /* tm_intern_addr_t address; /\* address of the data, internal representation *\/ */
 
 #if defined(PGAS)
   int64_t value;

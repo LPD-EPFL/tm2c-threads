@@ -204,6 +204,10 @@ extern "C" {
       NUM_UES == 1)
 
 
+#if defined(PLATFORM_TILERA)	/* need it before measurements.h */
+  typedef uint64_t ticks;
+#endif	/* PLATFORM_TILERA */
+
 #include "measurements.h"
 
   /*  ------- Plug platform related things here BEGIN ------- */
@@ -280,7 +284,6 @@ extern "C" {
 #  define BARRIERW tmc_sync_barrier_wait(barrier_all); //all cores
 #  define BARRIER_DSL tmc_sync_barrier_wait(barrier_dsl); //all cores
 
-  typedef uint64_t ticks;
 #  define getticks get_cycle_count
 
 #  define RCCE_num_ues TOTAL_NODES

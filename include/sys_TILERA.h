@@ -22,7 +22,6 @@
 extern "C" {
 #endif
 
-  extern tm_addr_t shmem_start_address;
   extern nodeid_t *dsl_nodes;
 #define PS_BUFFER_SIZE 32
   extern DynamicHeader *udn_header; //headers for messaging
@@ -47,7 +46,7 @@ extern "C" {
 #ifdef PGAS
     return fakemem_offset((void*) addr);
 #else
-    return ((tm_intern_addr_t) ((uintptr_t) addr - (uintptr_t) shmem_start_address));
+    return ((tm_intern_addr_t) (addr));
 #endif
   }
 
@@ -56,14 +55,21 @@ extern "C" {
 #ifdef PGAS
     return fakemem_addr_from_offset(i_addr);
 #else
-    return (tm_addr_t) ((uintptr_t) shmem_start_address + i_addr);
+    /* return (tm_addr_t) ((uintptr_t) shmem_start_address + i_addr); */
+    return (tm_addr_t) (i_addr);
 #endif
   }
 
   INLINED int
   sys_sendcmd(void* data, size_t len, nodeid_t to)
   {
+#if !defined(NOCM) && !defined(PGAS)
+    uint32_t* d = (uint32_t*) data;
+    tmc_udn_send_2(udn_header[to], UDN0_DEMUX_TAG, d[0], d[1]);
+#else
     tmc_udn_send_buffer(udn_header[to], UDN0_DEMUX_TAG, data, PS_COMMAND_SIZE_WORDS);
+#endif
+
     /* tmc_udn_send_buffer(udn_header[to], UDN0_DEMUX_TAG, data, len/sizeof(int_reg_t)); */
     /* tmc_udn_send_buffer(udn_header[to], demux_tags[to], data, len/sizeof(int_reg_t)); */
   }
@@ -86,7 +92,12 @@ extern "C" {
   INLINED int
   sys_recvcmd(void* data, size_t len, nodeid_t from)
   {
+#if !defined(NOCM) && !defined(PGAS)
+    *(uint32_t*) data = tmc_udn0_receive();
+#else
     tmc_udn0_receive_buffer(data, PS_REPLY_SIZE_WORDS);
+#endif
+
     /* switch (demux_tags[from]) */
     /*   { */
     /*   case UDN0_DEMUX_TAG: */

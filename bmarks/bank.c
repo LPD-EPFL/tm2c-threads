@@ -105,12 +105,12 @@ transfer(account_t *src, account_t *dst, int amount)
   /* PF_STOP(2); */
 
 #ifdef LOAD_STORE
-  PF_START(0);
+  /* PF_START(0); */
   TX_LOAD_STORE(&src->balance, -, amount, TYPE_INT);
-  PF_STOP(0);
-  PF_START(1);
+  /* PF_STOP(0); */
+  /* PF_START(1); */
   TX_LOAD_STORE(&dst->balance, +, amount, TYPE_INT);
-  PF_STOP(1);
+  /* PF_STOP(1); */
     
   /* PF_START(3); */
   TX_COMMIT_NO_PUB;
@@ -508,6 +508,9 @@ TASKMAIN(int argc, char **argv) {
       PRINT("sizeof(PS_COMMAND) = %d", sizeof(PS_COMMAND));
       PRINT("sizeof(PS_STATS_CMD_T) = %d", sizeof(PS_STATS_CMD_T));
       PRINT("sizeof(PS_REPLY) = %d", sizeof(PS_REPLY));
+      PRINT("sizeof(stm_tx_t) = %d", sizeof(stm_tx_t));
+      PRINT("sizeof(stm_tx_node_t) = %d", sizeof(stm_tx_node_t));
+      PRINT("sizeof(sigjmp_buf) = %d", sizeof(sigjmp_buf));
     }
 
 

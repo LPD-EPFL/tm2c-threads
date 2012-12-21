@@ -263,44 +263,50 @@ sys_dsl_init(void)
   // If value == NULL, we just return the address.
   // Otherwise, we return the value.
 
-  INLINED void 
-    sys_ps_command_reply(nodeid_t sender,
-			 PS_REPLY_TYPE command,
-			 tm_addr_t address,
-			 uint32_t* value,
-			 CONFLICT_TYPE response)
-  {
-    PS_REPLY reply;
-    reply.type = command;
-    reply.response = response;
+INLINED void 
+sys_ps_command_reply(nodeid_t sender,
+		     PS_REPLY_TYPE command,
+		     tm_addr_t address,
+		     uint32_t* value,
+		     CONFLICT_TYPE response)
+{
+  PF_START(11);
+  PS_REPLY reply;
+  reply.type = command;
+  reply.response = response;
 
-    PRINTD("sys_ps_command_reply: src=%u target=%d", reply.nodeId, sender);
+  PRINTD("sys_ps_command_reply: src=%u target=%d", reply.nodeId, sender);
 #ifdef PGAS
-    if (value != NULL) {
+  if (value != NULL) 
+    {
       reply.value = *value;
       PRINTD("sys_ps_command_reply: read value %u\n", reply.value);
-    } else {
-      reply.address = (uintptr_t) address;
-    }
+    } 
+  tmc_udn_send_buffer(udn_header[sender], UDN0_DEMUX_TAG, &reply, PS_REPLY_SIZE_WORDS);
 #else
-    reply.address = (uintptr_t) address;
-#endif
+  PF_STOP(11);
+  tmc_udn_send_1(udn_header[sender], UDN0_DEMUX_TAG, reply.to_word);
+#endif	/* PGAS */
 
-    tmc_udn_send_buffer(udn_header[sender], UDN0_DEMUX_TAG, &reply, PS_REPLY_SIZE_WORDS);
-    /* tmc_udn_send_buffer(udn_header[sender], demux_tag_mine, &reply, PS_REPLY_WORDS); */
-  }
+  /* tmc_udn_send_buffer(udn_header[sender], demux_tag_mine, &reply, PS_REPLY_WORDS); */
+}
 
 
 void 
 dsl_communication()
 {
   nodeid_t sender;
+  uint32_t* cmd = (uint32_t*) ps_remote;
 
   PF_MSG(5, "servicing a request");
 
   while (1) 
     {
-      tmc_udn0_receive_buffer(ps_remote, PS_COMMAND_SIZE_WORDS);
+      /* tmc_udn0_receive_buffer(ps_remote, PS_COMMAND_SIZE_WORDS); */
+
+      cmd[0] = tmc_udn0_receive();
+      cmd[1] = tmc_udn0_receive();
+
       PF_START(5);
       //    tmc_udn0_receive_buffer(ps_remote, sizeof(PS_COMMAND)/sizeof(int));
       /* switch (demux_tag_mine) */
