@@ -9,9 +9,10 @@ long long total_samples[ENTRY_TIMES_SIZE] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 const char *measurement_msgs[ENTRY_TIMES_SIZE];
 ticks getticks_correction = 0;
 
+#  if !defined(SSMP)
 ticks getticks_correction_calc() 
 {
-#define GETTICKS_CALC_REPS 1000000
+#    define GETTICKS_CALC_REPS 1000000
   ticks t_dur = 0;
   uint32_t i;
   for (i = 0; i < GETTICKS_CALC_REPS; i++) {
@@ -22,9 +23,10 @@ ticks getticks_correction_calc()
   getticks_correction = (ticks)(t_dur / (double) GETTICKS_CALC_REPS);
   return getticks_correction;
 }
+#  endif  /* !SSMP */
 
 
-#if defined(DO_TIMINGS_TICKS) || defined(DO_TIMINGS_TICKS_SIMPLE)
+#  if defined(DO_TIMINGS_TICKS) || defined(DO_TIMINGS_TICKS_SIMPLE)
 void
 prints_ticks_stats(int start, int end)
 {
@@ -74,5 +76,5 @@ prints_ticks_stats(int start, int end)
       fflush(stdout);
     }
 }
-#endif	/* DO_TIMINGS_TICK[_SIMPLE]?*/
+#  endif	/* DO_TIMINGS_TICK[_SIMPLE]?*/
 #endif	/* DO_TIMINGS */

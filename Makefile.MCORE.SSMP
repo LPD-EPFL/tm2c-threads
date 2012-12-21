@@ -8,7 +8,7 @@ PLATFORM_LIBS = -lssmp -lrt
 PLATFORM_DEFINES =	-DBACKOFF_RETRY \
 		       	-DBACKOFF_MAX="0" \
 		       	-DBACKOFF_DELAY="5000" \
-		       	-UDO_TIMINGS \
+		       	-DDO_TIMINGS \
 		       	-DNOCM \
 			-UGREEDY_GLOBAL_TS
 
@@ -19,7 +19,7 @@ PLATFORM_DEFINES +=    -DPLATFORM_MCORE \
                        -ULIBTASK 
 
 ## not commonly changed defines
-PLATFORM_DEFINES +=    -DPGAS
+PLATFORM_DEFINES +=    -UPGAS
 
 
 #if BACKOFF_RETRY is set, the BACKOFF-RETRY contention management scheme is used. This is similar to the TCP-IP exponentional increasing backoff and retry. When BACKOFF_MAX = infinitiy -> then every tx is expected to terminate whp.

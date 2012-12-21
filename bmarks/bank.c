@@ -309,8 +309,12 @@ test(void *data, double duration, int nb_accounts)
     else 
       {
 	/* Choose random accounts */
+	PF_START(3);
 	int src = (int) (rand_range(rand_max) - 1) + rand_min;
+	PF_STOP(3);
+	PF_START(4);
 	int dst = (int) (rand_range(rand_max) - 1) + rand_min;
+	PF_STOP(4);
 	if (dst == src)
 	  {
 	    dst = ((src + 1) % rand_max) + rand_min;
