@@ -24,6 +24,14 @@
 extern "C" {
 #endif
 
+#define FOR_ITERS(iters)					\
+  double __start = wtime();					\
+  uint32_t __iterations;					\
+  for (__iterations; __iterations < (iters); __iterations++)	\
+
+#define END_FOR_ITERS				\
+  duration__ = wtime() - __start;
+
 #define FOR(seconds)					\
   double __ticks_per_sec = 1000000000*REF_SPEED_GHZ;	\
   ticks __duration_ticks = (seconds) * __ticks_per_sec;	\
@@ -31,7 +39,7 @@ extern "C" {
   ticks __end_ticks = __start_ticks + __duration_ticks;	\
   while ((getticks()) < __end_ticks) {			\
   uint32_t __reps;					\
-  for (__reps = 0; __reps < 100; __reps++) {
+  for (__reps = 0; __reps < 1000; __reps++) {
 
 #define END_FOR						\
   }}							\
@@ -83,17 +91,62 @@ extern "C" {
    * the granularity of rand() could be lower-bounded by the 32767^th which might 
    * be too high for given values of range and initial.
    */
-  INLINED long rand_range(long r) {
+  INLINED long 
+  rand_range(long int r) 
+  {
     int m = RAND_MAX;
     long d, v = 0;
-
-    do {
-      d = (m > r ? r : m);
-      v += 1 + (long) (d * ((double) rand() / ((double) (m) + 1.0)));
-      r -= m;
-    } while (r > 0);
+    do 
+      {
+	d = (m > r ? r : m);
+	v += 1 + (long) (d * ((double) rand() / ((double) (m) + 1.0)));
+	r -= m;
+      } while (r > 0);
+    
     return v;
   }
+
+
+
+  //Marsaglia's xorshf generator
+  //period 2^96-1
+  INLINED unsigned long
+  xorshf96(unsigned long* x, unsigned long* y, unsigned long* z) 
+  {
+    unsigned long t;
+    (*x) ^= (*x) << 16;
+    (*x) ^= (*x) >> 5;
+    (*x) ^= (*x) << 1;
+
+    t = *x;
+    (*x) = *y;
+    (*y) = *z;
+    (*z) = t ^ (*x) ^ (*y);
+    return *z;
+  }
+
+  INLINED unsigned long
+  tm2c_rand()
+  {
+    return xorshf96(tm2c_rand_seeds, tm2c_rand_seeds + 1, tm2c_rand_seeds + 2);
+  }
+
+  INLINED uint32_t
+  pow2roundup (uint32_t x)
+  {
+    if (x==0) 
+      {
+	return 1;
+      }
+    --x;
+    x |= x >> 1;
+    x |= x >> 2;
+    x |= x >> 4;
+    x |= x >> 8;
+    x |= x >> 16;
+    return x + 1;
+  }
+
 
   /*______________________________________________________________________________________________________
    * TM Interface                                                                                         |
@@ -197,9 +250,7 @@ extern "C" {
   TXCOMMITTED();					\
   ps_finish_all(NO_CONFLICT);				\
   CM_METADATA_UPDATE_ON_COMMIT;				\
-  PF_START(7);						\
   mem_info_on_commit(stm_tx->mem_info);			\
-  PF_STOP(7);						\
   stm_tx_node->tx_starts += stm_tx->retries;		\
   stm_tx_node->tx_commited++;				\
   stm_tx_node->tx_aborted += stm_tx->aborts;		\

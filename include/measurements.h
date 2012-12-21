@@ -218,9 +218,10 @@ extern "C" {
 
 #  define ENTRY_TIMES_SIZE 16
 
-  enum timings_bool_t {
-    M_FALSE, M_TRUE
-  };
+  enum timings_bool_t 
+    {
+      M_FALSE, M_TRUE
+    };
 
   extern ticks entry_time[ENTRY_TIMES_SIZE];
   extern ticks total_sum_ticks[ENTRY_TIMES_SIZE];

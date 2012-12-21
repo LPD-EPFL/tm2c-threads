@@ -20,14 +20,13 @@ static void RCCE_shmalloc_init(sys_t_vcharp mem, size_t size);
 sys_t_vcharp RCCE_shmalloc(size_t size);
 void RCCE_shfree(sys_t_vcharp mem);
 
-#define TM_MEM_SIZE (128 * 1024 * 1024)
-#define PS_COMMAND_WORDS 8
-#define PS_REPLY_WORDS 3
-
+#define TM_MEM_SIZE      (128 * 1024 * 1024)
 
 static PS_COMMAND *ps_remote;
 DynamicHeader *udn_header; //headers for messaging
-tmc_sync_barrier_t *barrier_apps, *barrier_all; //BARRIERS
+uint32_t* demux_tags;
+/* uint32_t demux_tag_mine; */
+tmc_sync_barrier_t *barrier_apps, *barrier_all, *barrier_dsl; //BARRIERS
 
 void
 sys_init_system(int* argc, char** argv[]) {
@@ -78,18 +77,22 @@ sys_init_system(int* argc, char** argv[]) {
 
     barrier_apps = (tmc_sync_barrier_t *) tmc_cmem_calloc(1, sizeof (tmc_sync_barrier_t));
     barrier_all = (tmc_sync_barrier_t *) tmc_cmem_calloc(1, sizeof (tmc_sync_barrier_t));
-    if (barrier_all == NULL || barrier_apps == NULL) {
+    barrier_dsl = (tmc_sync_barrier_t *) tmc_cmem_calloc(1, sizeof (tmc_sync_barrier_t));
+    if (barrier_all == NULL || barrier_apps == NULL || barrier_dsl == NULL) {
         tmc_task_die("Failure in allocating mem for barriers");
     }
     tmc_sync_barrier_init(barrier_all, NUM_UES);
     tmc_sync_barrier_init(barrier_apps, NUM_APP_NODES);
+    tmc_sync_barrier_init(barrier_dsl, NUM_DSL_NODES);
 
     if (tmc_cpus_get_my_affinity(&cpus) != 0)
+      {
         tmc_task_die("Failure in 'tmc_cpus_get_my_affinity()'.");
-
+      }
     if (tmc_cpus_count(&cpus) < NUM_UES)
-        tmc_task_die("Insufficient cpus (%d < %d).", tmc_cpus_count(&cpus),
-            NUM_UES);
+      {
+        tmc_task_die("Insufficient cpus (%d < %d).", tmc_cpus_count(&cpus), NUM_UES);
+      }
 
     int watch_forked_children = tmc_task_watch_forked_children(1);
 
@@ -187,33 +190,78 @@ sys_tm_init() {
 }
 
 void
-sys_ps_init_(void) {
+sys_ps_init_(void)
+{
+  demux_tags = (uint32_t*) malloc(TOTAL_NODES() * sizeof(uint32_t));
+  assert(demux_tags != NULL);
 
-    BARRIERW
+  nodeid_t n;
+  for (n = 0; n < TOTAL_NODES(); n++)
+    {
+      if (is_dsl_core(n))
+	{
+	  uint32_t id_seq = dsl_id_seq(n);
+
+	  switch (id_seq % 4)
+	    {
+	    case 0:
+	      demux_tags[n] = UDN0_DEMUX_TAG;
+	      break;
+	    case 1:
+	      demux_tags[n] = UDN1_DEMUX_TAG;
+	      break;
+	    case 2:
+	      demux_tags[n] = UDN2_DEMUX_TAG;
+	      break;
+	    default: 			/* 3 */
+	      demux_tags[n] = UDN3_DEMUX_TAG;
+	      break;
+	    }
+	}
+    }
+
+  BARRIERW;
 }
 
 void
-sys_dsl_init(void) {
-
+sys_dsl_init(void)
+{
   ps_remote = (PS_COMMAND *) malloc(sizeof (PS_COMMAND)); //TODO: free at finalize + check for null
   psc = (PS_COMMAND *) malloc(sizeof (PS_COMMAND)); //TODO: free at finalize + check for null
   assert(ps_remote != NULL && psc != NULL);
 
-  BARRIERW
+  nodeid_t id_seq = dsl_id_seq(NODE_ID());
+  /* switch (id_seq % 4) */
+  /*   { */
+  /*   case 0: */
+  /*     demux_tag_mine = UDN0_DEMUX_TAG; */
+  /*     break; */
+  /*   case 1: */
+  /*     demux_tag_mine = UDN1_DEMUX_TAG; */
+  /*     break; */
+  /*   case 2: */
+  /*     demux_tag_mine = UDN2_DEMUX_TAG; */
+  /*     break; */
+  /*   default: 			/\* 3 *\/ */
+  /*     demux_tag_mine = UDN3_DEMUX_TAG; */
+  /*     break; */
+  /*   } */
+
+  BARRIERW;
 }
 
-void
-sys_dsl_term(void) {
+  void
+    sys_dsl_term(void) {
     // noop
-}
+  }
 
-void
-sys_ps_term(void) {
+  void
+    sys_ps_term(void) {
     // noop
-}
+  }
 
-// If value == NULL, we just return the address.
-// Otherwise, we return the value.
+  // If value == NULL, we just return the address.
+  // Otherwise, we return the value.
 
 INLINED void 
 sys_ps_command_reply(nodeid_t sender,
@@ -222,263 +270,323 @@ sys_ps_command_reply(nodeid_t sender,
 		     uint32_t* value,
 		     CONFLICT_TYPE response)
 {
+  PF_START(11);
   PS_REPLY reply;
   reply.type = command;
   reply.response = response;
 
   PRINTD("sys_ps_command_reply: src=%u target=%d", reply.nodeId, sender);
 #ifdef PGAS
-  if (value != NULL) {
-    reply.value = *value;
-    PRINTD("sys_ps_command_reply: read value %u\n", reply.value);
-  } else {
-    reply.address = (uintptr_t) address;
-  }
+  if (value != NULL) 
+    {
+      reply.value = *value;
+      PRINTD("sys_ps_command_reply: read value %u\n", reply.value);
+    } 
+  tmc_udn_send_buffer(udn_header[sender], UDN0_DEMUX_TAG, &reply, PS_REPLY_SIZE_WORDS);
 #else
-  reply.address = (uintptr_t) address;
-#endif
+  PF_STOP(11);
+  tmc_udn_send_1(udn_header[sender], UDN0_DEMUX_TAG, reply.to_word);
+#endif	/* PGAS */
 
-  tmc_udn_send_buffer(udn_header[sender], UDN0_DEMUX_TAG, &reply, PS_REPLY_WORDS);
-
+  /* tmc_udn_send_buffer(udn_header[sender], demux_tag_mine, &reply, PS_REPLY_WORDS); */
 }
+
 
 void 
 dsl_communication()
 {
-  uint32_t dr = 0;
   nodeid_t sender;
+  uint32_t* cmd = (uint32_t*) ps_remote;
 
-  while (1) {
+  PF_MSG(5, "servicing a request");
 
-    //    tmc_udn0_receive_buffer(ps_remote, PS_COMMAND_WORDS);
-    tmc_udn0_receive_buffer(ps_remote, sizeof(PS_COMMAND)/sizeof(int));
-    sender = ps_remote->nodeId;
+  while (1) 
+    {
+      /* tmc_udn0_receive_buffer(ps_remote, PS_COMMAND_SIZE_WORDS); */
 
-    /* PRINT("CMD from %d | type %d | addr %u",  */
-    /* 	  sender, ps_remote->type, ps_remote->address); */
-    
-    
-    switch (ps_remote->type) {
-    case PS_SUBSCRIBE:
-#ifdef DEBUG_UTILIZATION
-      read_reqs_num++;
-#endif
+      cmd[0] = tmc_udn0_receive();
+      cmd[1] = tmc_udn0_receive();
 
-#ifdef PGAS
-      /*
-	PRINT("RL addr: %3d, val: %d", address, PGAS_read(address));
-      */
-      sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE,
-			   ps_remote->address, 
-			   PGAS_read(ps_remote->address),
-			   try_subscribe(sender, ps_remote->address));
-#else
-      sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE, 
-			   (tm_addr_t) ps_remote->address, 
-			   NULL,
-			   try_subscribe(sender, ps_remote->address));
-      //sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE, address, NO_CONFLICT);
-#endif
-      break;
-    case PS_PUBLISH:
-      {
+      PF_START(5);
+      //    tmc_udn0_receive_buffer(ps_remote, sizeof(PS_COMMAND)/sizeof(int));
+      /* switch (demux_tag_mine) */
+      /* 	{ */
+      /* 	case UDN0_DEMUX_TAG: */
+      /* 	  tmc_udn0_receive_buffer(ps_remote, sizeof(PS_COMMAND)/sizeof(int_reg_t)); */
+      /* 	  break; */
+      /* 	case UDN1_DEMUX_TAG: */
+      /* 	  tmc_udn1_receive_buffer(ps_remote, sizeof(PS_COMMAND)/sizeof(int_reg_t)); */
+      /* 	  break; */
+      /* 	case UDN2_DEMUX_TAG: */
+      /* 	  tmc_udn2_receive_buffer(ps_remote, sizeof(PS_COMMAND)/sizeof(int_reg_t)); */
+      /* 	  break; */
+      /* 	default:			/\* 3 *\/ */
+      /* 	  tmc_udn3_receive_buffer(ps_remote, sizeof(PS_COMMAND)/sizeof(int_reg_t)); */
+      /* 	  break; */
+      /* 	} */
+      sender = ps_remote->nodeId;
 
-#ifdef DEBUG_UTILIZATION
-	write_reqs_num++;
-#endif
+      /* PRINT("CMD from %02d | type: %d | addr: %u", sender, ps_remote->type, ps_remote->address); */
 
-	CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
-#ifdef PGAS
-	if (conflict == NO_CONFLICT) {
-	  write_set_pgas_insert(PGAS_write_sets[sender],
-				ps_remote->write_value, 
-				ps_remote->address);
-	}
-#endif
-	if (conflict > 4)
-	  {
-	    PRINT("...");
-	  }
-	sys_ps_command_reply(sender, PS_PUBLISH_RESPONSE, 
-			     (tm_addr_t) ps_remote->address,
-			     NULL,
-			     conflict);
-	break;
-      }
-#ifdef PGAS
-    case PS_WRITE_INC:
-      {
-
-#ifdef DEBUG_UTILIZATION
-	write_reqs_num++;
-#endif
-	CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
-	if (conflict == NO_CONFLICT) {
-	  //		      PRINT("wval for %d is %d", address, write_value);
-	  /*
-	    PRINT("PS_WRITE_INC from %2d for %3d, old: %3d, new: %d", sender, address, PGAS_read(address),
-	    PGAS_read(address) + write_value);
-	  */
-	  write_set_pgas_insert(PGAS_write_sets[sender], 
-				*(int *) PGAS_read(ps_remote->address) + ps_remote->write_value,
-                                ps_remote->address);
-	}
-	sys_ps_command_reply(sender, PS_PUBLISH_RESPONSE,
-			     ps_remote->address,
-			     NULL,
-			     conflict);
-	break;
-      }
-    case PS_LOAD_NONTX:
-      {
-	//		PRINT("((non-tx ld: from %d, addr %d (val: %d)))", sender, address, (*PGAS_read(address)));
-	sys_ps_command_reply(sender, PS_LOAD_NONTX_RESPONSE,
-			     ps_remote->address,
-			     PGAS_read(ps_remote->address),
-			     NO_CONFLICT);
-		
-	break;
-      }
-    case PS_STORE_NONTX:
-      {
-	//		PRINT("((non-tx st: from %d, addr %d (val: %d)))", sender, address, (write_value));
-	PGAS_write(ps_remote->address, (int) ps_remote->write_value);
-	break;
-      }
-#endif
-    case PS_REMOVE_NODE:
-#ifdef PGAS
-      if (ps_remote->response == NO_CONFLICT) {
-	write_set_pgas_persist(PGAS_write_sets[sender]);
-      }
-      PGAS_write_sets[sender] = write_set_pgas_empty(PGAS_write_sets[sender]);
-#endif
-      ps_hashtable_delete_node(ps_hashtable, sender);
-      break;
-    case PS_UNSUBSCRIBE:
-      ps_hashtable_delete(ps_hashtable, sender, ps_remote->address, READ);
-      break;
-    case PS_PUBLISH_FINISH:
-      ps_hashtable_delete(ps_hashtable, sender, ps_remote->address, WRITE);
-      break;
-    case PS_STATS:
-      {
-	if (ps_remote->tx_duration) {
-	  stats_aborts += ps_remote->aborts;
-	  stats_commits += ps_remote->commits;
-	  stats_duration += ps_remote->tx_duration;
-	  stats_max_retries = stats_max_retries < ps_remote->max_retries ? ps_remote->max_retries : stats_max_retries;
-	  stats_total += ps_remote->commits + ps_remote->aborts;
-	}
-	else {
-	  stats_aborts_raw += ps_remote->aborts_raw;
-	  stats_aborts_war += ps_remote->aborts_war;
-	  stats_aborts_waw += ps_remote->aborts_waw;
-	}
-	if (++stats_received >= 2*NUM_APP_NODES) {
-	  ONCE
-	    {
-	      print_global_stats();
-
-	      print_hashtable_usage();
-
-	      PRINT("dummy reqs completed %u", dr);
-	    }
-
-#ifdef DEBUG_UTILIZATION
-	  PRINT("*** Completed requests: %d", read_reqs_num + write_reqs_num);
-#endif
-
-	  return;
-	}
-	break;
-      }
-      default:
+      switch (ps_remote->type) 
 	{
-	  dr++;
-	  sys_ps_command_reply(sender, PS_UKNOWN_RESPONSE,
-			       NULL,
-			       NULL,
-			       NO_CONFLICT);
+	case PS_SUBSCRIBE:
+	  {
+	    CONFLICT_TYPE conflict = try_subscribe(sender, ps_remote->address);
+#ifdef PGAS
+	    /*
+	      PRINT("RL addr: %3d, val: %d", address, PGAS_read(address));
+	    */
+	    sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE,
+				 ps_remote->address, 
+				 PGAS_read(ps_remote->address),
+				 try_subscribe(sender, ps_remote->address));
+#else
+	    sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE, 
+				 (tm_addr_t) ps_remote->address, 
+				 NULL,
+				 conflict);
+	    //sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE, address, NO_CONFLICT);
+#endif
+	    if (conflict != NO_CONFLICT)
+	      {
+		ps_hashtable_delete_node(ps_hashtable, sender);
+#if defined(GREEDY)
+		cm_metadata_core[sender].timestamp = 0;
+#endif
+#ifdef PGAS
+		PGAS_write_sets[sender] = write_set_pgas_empty(PGAS_write_sets[sender]);
+#endif	/* PGAS */
+	      }
+
+	    break;
+	  }
+	case PS_PUBLISH:
+	  {
+	    CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
+#ifdef PGAS
+	    if (conflict == NO_CONFLICT) 
+	      {
+		write_set_pgas_insert(PGAS_write_sets[sender],
+				      ps_remote->write_value, 
+				      ps_remote->address);
+	      }
+#endif
+	    sys_ps_command_reply(sender, PS_PUBLISH_RESPONSE, 
+				 (tm_addr_t) ps_remote->address,
+				 NULL,
+				 conflict);
+
+	    if (conflict != NO_CONFLICT)
+	      {
+		ps_hashtable_delete_node(ps_hashtable, sender);
+
+#if defined(GREEDY)
+		cm_metadata_core[sender].timestamp = 0;
+#endif
+#ifdef PGAS
+		PGAS_write_sets[sender] = write_set_pgas_empty(PGAS_write_sets[sender]);
+#endif	/* PGAS */
+	      }
+
+	    break;
+	  }
+#ifdef PGAS
+	case PS_WRITE_INC:
+	  {
+
+#ifdef DEBUG_UTILIZATION
+	    write_reqs_num++;
+#endif
+	    CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
+	    if (conflict == NO_CONFLICT) {
+	      //		      PRINT("wval for %d is %d", address, write_value);
+	      /*
+		PRINT("PS_WRITE_INC from %2d for %3d, old: %3d, new: %d", sender, address, PGAS_read(address),
+		PGAS_read(address) + write_value);
+	      */
+	      write_set_pgas_insert(PGAS_write_sets[sender], 
+				    *(int *) PGAS_read(ps_remote->address) + ps_remote->write_value,
+				    ps_remote->address);
+	    }
+	    sys_ps_command_reply(sender, PS_PUBLISH_RESPONSE,
+				 ps_remote->address,
+				 NULL,
+				 conflict);
+	    break;
+	  }
+	case PS_LOAD_NONTX:
+	  {
+	    //		PRINT("((non-tx ld: from %d, addr %d (val: %d)))", sender, address, (*PGAS_read(address)));
+	    sys_ps_command_reply(sender, PS_LOAD_NONTX_RESPONSE,
+				 ps_remote->address,
+				 PGAS_read(ps_remote->address),
+				 NO_CONFLICT);
+		
+	    break;
+	  }
+	case PS_STORE_NONTX:
+	  {
+	    //		PRINT("((non-tx st: from %d, addr %d (val: %d)))", sender, address, (write_value));
+	    PGAS_write(ps_remote->address, (int) ps_remote->write_value);
+	    break;
+	  }
+#endif
+	case PS_REMOVE_NODE:
+#ifdef PGAS
+	  if (ps_remote->response == NO_CONFLICT) {
+	    write_set_pgas_persist(PGAS_write_sets[sender]);
+	  }
+	  PGAS_write_sets[sender] = write_set_pgas_empty(PGAS_write_sets[sender]);
+#endif
+	  ps_hashtable_delete_node(ps_hashtable, sender);
+	  break;
+	case PS_UNSUBSCRIBE:
+	  ps_hashtable_delete(ps_hashtable, sender, ps_remote->address, READ);
+	  break;
+	case PS_PUBLISH_FINISH:
+	  ps_hashtable_delete(ps_hashtable, sender, ps_remote->address, WRITE);
+	  break;
+	case PS_STATS:
+	  {
+	    uint32_t w, collect[PS_STATS_CMD_SIZE_WORDS - PS_COMMAND_SIZE_WORDS];
+	    for (w = 0; w < (PS_STATS_CMD_SIZE_WORDS - PS_COMMAND_SIZE_WORDS); w++)
+	      {
+		collect[w] = tmc_udn0_receive();
+	      }
+
+	    PS_STATS_CMD_T ps_stats;
+	    memcpy(&ps_stats, ps_remote, PS_COMMAND_SIZE);
+	    void* ps_stats_mid = ((void*) &ps_stats) + PS_COMMAND_SIZE;
+	    memcpy(ps_stats_mid, collect, PS_STATS_CMD_SIZE - PS_COMMAND_SIZE);
+	    
+	    PS_STATS_CMD_T* ps_rem_stats = &ps_stats;
+
+	    if (ps_rem_stats->tx_duration) 
+	      {
+		stats_aborts += ps_rem_stats->aborts;
+		stats_commits += ps_rem_stats->commits;
+		stats_duration += ps_rem_stats->tx_duration;
+		stats_max_retries = stats_max_retries < ps_rem_stats->max_retries ? ps_rem_stats->max_retries : stats_max_retries;
+		stats_total += ps_rem_stats->commits + ps_rem_stats->aborts;
+	      }
+	    else 
+	      {
+		stats_aborts_raw += ps_rem_stats->aborts_raw;
+		stats_aborts_war += ps_rem_stats->aborts_war;
+		stats_aborts_waw += ps_rem_stats->aborts_waw;
+	      }
+
+	    if (++stats_received >= 2*NUM_APP_NODES) 
+	      {
+		uint32_t n;
+		for (n = 0; n < TOTAL_NODES(); n++)
+		  {
+		    BARRIER_DSL;
+		    if (n == NODE_ID())
+		      {
+			ssht_stats_print(ps_hashtable, 0);
+		      }
+		    BARRIER_DSL;
+		  }
+
+		BARRIER_DSL;
+		if (NODE_ID() == min_dsl_id()) 
+		  {
+		    print_global_stats();
+		  }
+		return;
+	      }
+	    break;
+	  }
+	default:
+	  {
+	    sys_ps_command_reply(sender, PS_UKNOWN_RESPONSE,
+				 NULL,
+				 NULL,
+				 NO_CONFLICT);
+	  }
 	}
+
+
+      PF_STOP(5);
     }
-  }
 }
 
 
 
 
-/*
- * Seeding the rand()
- */
-void
-srand_core() {
+  /*
+   * Seeding the rand()
+   */
+  void
+    srand_core() {
     double timed_ = wtime();
     unsigned int timeprfx_ = (unsigned int) timed_;
     unsigned int time_ = (unsigned int) ((timed_ - timeprfx_) * 1000000);
     srand(time_ + (13 * (ID + 1)));
-}
+  }
 
 
-inline void
-wait_cycles(uint64_t ncycles)
-{
-  if (ncycles < 10000)
-    {
-      uint32_t cy = (((uint32_t) ncycles) / 8);
-      while(cy--)
-	{
-	  cycle_relax();
-	}
-    }
-  else
-    {
-      ticks __end = getticks() + ncycles;
-      while (getticks() < __end);
-    }
-}
+  inline void
+    wait_cycles(uint64_t ncycles)
+  {
+    if (ncycles < 10000)
+      {
+	uint32_t cy = (((uint32_t) ncycles) / 8);
+	while(cy--)
+	  {
+	    cycle_relax();
+	  }
+      }
+    else
+      {
+	ticks __end = getticks() + ncycles;
+	while (getticks() < __end);
+      }
+  }
 
-void
-udelay(uint64_t micros) 
-{
-  ticks in_cycles = REF_SPEED_GHZ * 1000 * micros;
-  wait_cycles(in_cycles);
-}
+  void
+    udelay(uint64_t micros) 
+  {
+    ticks in_cycles = REF_SPEED_GHZ * 1000 * micros;
+    wait_cycles(in_cycles);
+  }
 
-void 
-ndelay(uint64_t nanos)
-{
-  ticks in_cycles = REF_SPEED_GHZ * nanos;
-  wait_cycles(in_cycles);
-}
+  void 
+    ndelay(uint64_t nanos)
+  {
+    ticks in_cycles = REF_SPEED_GHZ * nanos;
+    wait_cycles(in_cycles);
+  }
 
-/*
- *	Using RCCE's memory allocator ------------------------------------------------------------------------------------------------
- */
+  /*
+   *	Using RCCE's memory allocator ------------------------------------------------------------------------------------------------
+   */
 
-typedef struct rcce_block {
+  typedef struct rcce_block {
     sys_t_vcharp space; // pointer to space for data in block
     size_t free_size; // actual free space in block (0 or whole block)
     struct rcce_block *next; // pointer to next block in circular linked list
-} RCCE_BLOCK;
+  } RCCE_BLOCK;
 
-typedef struct {
+  typedef struct {
     RCCE_BLOCK *tail; // "last" block in linked list of blocks
-} RCCE_BLOCK_S;
+  } RCCE_BLOCK_S;
 
-static RCCE_BLOCK_S RCCE_space; // data structure used for tracking MPB memory blocks
-static RCCE_BLOCK_S *RCCE_spacep; // pointer to RCCE_space
+  static RCCE_BLOCK_S RCCE_space; // data structure used for tracking MPB memory blocks
+  static RCCE_BLOCK_S *RCCE_spacep; // pointer to RCCE_space
 
-//--------------------------------------------------------------------------------------
-// FUNCTION: RCCE_shmalloc_init
-//--------------------------------------------------------------------------------------
-// initialize memory allocator
-//--------------------------------------------------------------------------------------
+  //--------------------------------------------------------------------------------------
+  // FUNCTION: RCCE_shmalloc_init
+  //--------------------------------------------------------------------------------------
+  // initialize memory allocator
+  //--------------------------------------------------------------------------------------
 
-static void RCCE_shmalloc_init(
-        sys_t_vcharp mem, // pointer to shared space that is to be managed by allocator
-        size_t size // size (bytes) of managed space
-        ) {
+  static void RCCE_shmalloc_init(
+				 sys_t_vcharp mem, // pointer to shared space that is to be managed by allocator
+				 size_t size // size (bytes) of managed space
+				 ) {
 
     // create one block containing all memory for truly dynamic memory allocator
     RCCE_spacep = &RCCE_space;
@@ -487,22 +595,22 @@ static void RCCE_shmalloc_init(
     RCCE_spacep->tail->space = mem;
     /* make a circular list by connecting tail to itself */
     RCCE_spacep->tail->next = RCCE_spacep->tail;
-}
+  }
 
-//--------------------------------------------------------------------------------------
-// FUNCTION: RCCE_shmalloc
-//--------------------------------------------------------------------------------------
-// Allocate memory in off-chip shared memory. This is a collective call that should be
-// issued by all participating cores if consistent results are required. All cores will
-// allocate space that is exactly overlapping. Alternatively, determine the beginning of
-// the off-chip shared memory on all cores and subsequently let just one core do all the
-// allocating and freeing. It can then pass offsets to other cores who need to know what
-// shared memory regions were involved.
-//--------------------------------------------------------------------------------------
+  //--------------------------------------------------------------------------------------
+  // FUNCTION: RCCE_shmalloc
+  //--------------------------------------------------------------------------------------
+  // Allocate memory in off-chip shared memory. This is a collective call that should be
+  // issued by all participating cores if consistent results are required. All cores will
+  // allocate space that is exactly overlapping. Alternatively, determine the beginning of
+  // the off-chip shared memory on all cores and subsequently let just one core do all the
+  // allocating and freeing. It can then pass offsets to other cores who need to know what
+  // shared memory regions were involved.
+  //--------------------------------------------------------------------------------------
 
-sys_t_vcharp RCCE_shmalloc(
-        size_t size // requested space
-        ) {
+  sys_t_vcharp RCCE_shmalloc(
+			     size_t size // requested space
+			     ) {
 
     // simple memory allocator, loosely based on public domain code developed by
     // Michael B. Allen and published on "The Scripts--IT /Developers Network".
@@ -527,47 +635,47 @@ sys_t_vcharp RCCE_shmalloc(
     //printf("RCCE_spacep->tail: %x\n",RCCE_spacep->tail);
     b1 = RCCE_spacep->tail;
     if (b1->free_size >= size) {
-        // need to insert new block; new order is: b1->b2 (= new tail)
-        b2 = (RCCE_BLOCK *) malloc(sizeof (RCCE_BLOCK));
-        b2->next = b1->next;
-        b1->next = b2;
-        b2->free_size = b1->free_size - size;
-        b2->space = b1->space + size;
-        b1->free_size = 0;
-        // need to update the tail
-        RCCE_spacep->tail = b2;
-        return (b1->space);
+      // need to insert new block; new order is: b1->b2 (= new tail)
+      b2 = (RCCE_BLOCK *) malloc(sizeof (RCCE_BLOCK));
+      b2->next = b1->next;
+      b1->next = b2;
+      b2->free_size = b1->free_size - size;
+      b2->space = b1->space + size;
+      b1->free_size = 0;
+      // need to update the tail
+      RCCE_spacep->tail = b2;
+      return (b1->space);
     }
 
     // tail didn't have enough space; loop over whole list from beginning
     while (b1->next->free_size < size) {
-        if (b1->next == RCCE_spacep->tail) {
-            return NULL; // we came full circle
-        }
-        b1 = b1->next;
+      if (b1->next == RCCE_spacep->tail) {
+	return NULL; // we came full circle
+      }
+      b1 = b1->next;
     }
 
     b2 = b1->next;
     if (b2->free_size > size) { // split block; new block order: b1->b2->b3
-        b3 = (RCCE_BLOCK *) malloc(sizeof (RCCE_BLOCK));
-        b3->next = b2->next; // reconnect pointers to add block b3
-        b2->next = b3; //     "         "     "  "    "    "
-        b3->free_size = b2->free_size - size; // b3 gets remainder free space
-        b3->space = b2->space + size; // need to shift space pointer
+      b3 = (RCCE_BLOCK *) malloc(sizeof (RCCE_BLOCK));
+      b3->next = b2->next; // reconnect pointers to add block b3
+      b2->next = b3; //     "         "     "  "    "    "
+      b3->free_size = b2->free_size - size; // b3 gets remainder free space
+      b3->space = b2->space + size; // need to shift space pointer
     }
     b2->free_size = 0; // block b2 is completely used
     return (b2->space);
-}
+  }
 
-//--------------------------------------------------------------------------------------
-// FUNCTION: RCCE_shfree
-//--------------------------------------------------------------------------------------
-// Deallocate memory in off-chip shared memory. Also collective, see RCCE_shmalloc
-//--------------------------------------------------------------------------------------
+  //--------------------------------------------------------------------------------------
+  // FUNCTION: RCCE_shfree
+  //--------------------------------------------------------------------------------------
+  // Deallocate memory in off-chip shared memory. Also collective, see RCCE_shmalloc
+  //--------------------------------------------------------------------------------------
 
-void RCCE_shfree(
-        sys_t_vcharp ptr // pointer to data to be freed
-        ) {
+  void RCCE_shfree(
+		   sys_t_vcharp ptr // pointer to data to be freed
+		   ) {
 
     RCCE_BLOCK *b1, *b2, *b3; // running block pointers
     int j1, j2; // booleans determining merging of blocks
@@ -575,7 +683,7 @@ void RCCE_shfree(
     // loop over whole list from the beginning until we locate space ptr
     b1 = RCCE_spacep->tail;
     while (b1->next->space != ptr && b1->next != RCCE_spacep->tail) {
-        b1 = b1->next;
+      b1 = b1->next;
     }
 
     // b2 is target block whose space must be freed
@@ -592,24 +700,24 @@ void RCCE_shfree(
     j2 = (b3->free_size > 0 || b3 == RCCE_spacep->tail); // successor block
 
     if (j1) {
-        if (j2) { // splice all three blocks together: (b1,b2,b3) into b1
-            b1->next = b3->next;
-            b1->free_size += b3->free_size + b2->free_size;
-            if (b3 == RCCE_spacep->tail) RCCE_spacep->tail = b1;
-            free(b3);
-        }
-        else { // only merge (b1,b2) into b1
-            b1->free_size += b2->free_size;
-            b1->next = b3;
-        }
-        free(b2);
+      if (j2) { // splice all three blocks together: (b1,b2,b3) into b1
+	b1->next = b3->next;
+	b1->free_size += b3->free_size + b2->free_size;
+	if (b3 == RCCE_spacep->tail) RCCE_spacep->tail = b1;
+	free(b3);
+      }
+      else { // only merge (b1,b2) into b1
+	b1->free_size += b2->free_size;
+	b1->next = b3;
+      }
+      free(b2);
     }
     else {
-        if (j2) { // only merge (b2,b3) into b2
-            b2->next = b3->next;
-            b2->free_size += b3->free_size;
-            if (b3 == RCCE_spacep->tail) RCCE_spacep->tail = b2;
-            free(b3);
-        }
+      if (j2) { // only merge (b2,b3) into b2
+	b2->next = b3->next;
+	b2->free_size += b3->free_size;
+	if (b3 == RCCE_spacep->tail) RCCE_spacep->tail = b2;
+	free(b3);
+      }
     }
-}
+  }

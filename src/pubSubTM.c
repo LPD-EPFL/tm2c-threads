@@ -13,6 +13,7 @@
 #endif
 
 #include <limits.h>
+#include <assert.h>
 #include "hash.h"
 #ifdef PGAS
 #include "pgas_app.h"
@@ -36,6 +37,8 @@ PS_COMMAND *psc;
 
 int64_t read_value;
 
+unsigned long int* tm2c_rand_seeds;
+
 static inline void ps_sendb(nodeid_t target, PS_COMMAND_TYPE operation,
         tm_intern_addr_t address);
 static inline void ps_sendbr(nodeid_t target, PS_COMMAND_TYPE operation,
@@ -50,53 +53,71 @@ static inline CONFLICT_TYPE ps_recvb(nodeid_t from);
  */
 static inline nodeid_t get_responsible_node(tm_intern_addr_t addr);
 
-void ps_init_(void) {
-    PRINTD("NUM_DSL_NODES = %d", NUM_DSL_NODES);
-    if ((dsl_nodes = (unsigned int *) malloc(NUM_DSL_NODES * sizeof (unsigned int))) == NULL) {
-        PRINT("malloc dsl_nodes");
-        EXIT(-1);
+static unsigned long* 
+seed_rand() 
+{
+  unsigned long* seeds;
+  seeds = (unsigned long*) malloc(3 * sizeof(unsigned long));
+  assert(seeds != NULL);
+  seeds[0] = getticks() % 123456789;
+  seeds[1] = getticks() % 362436069;
+  seeds[2] = getticks() % 521288629;
+  return seeds;
+}
+
+
+void
+ps_init_(void) 
+{
+  PRINTD("NUM_DSL_NODES = %d", NUM_DSL_NODES);
+  if ((dsl_nodes = (unsigned int *) malloc(NUM_DSL_NODES * sizeof (unsigned int))) == NULL) {
+    PRINT("malloc dsl_nodes");
+    EXIT(-1);
+  }
+
+  psc = (PS_COMMAND *) malloc(sizeof (PS_COMMAND)); //TODO: free at finalize + check for null
+  if (psc == NULL) {
+    PRINT("malloc psc == NULL");
+  }
+
+  int dsln = 0;
+  unsigned int j;
+  for (j = 0; j < NUM_UES; j++) 
+    {
+      nodes_contacted[j] = 0;
+      if (!is_app_core(j)) 
+	{
+	  dsl_nodes[dsln++] = j;
+	}
     }
 
-    psc = (PS_COMMAND *) malloc(sizeof (PS_COMMAND)); //TODO: free at finalize + check for null
-    if (psc == NULL) {
-        PRINT("malloc psc == NULL");
-    }
-
-    int dsln = 0;
-    unsigned int j;
-    for (j = 0; j < NUM_UES; j++) {
-        nodes_contacted[j] = 0;
-        if (!is_app_core(j)) {
-            dsl_nodes[dsln++] = j;
-        }
-    }
-
-    sys_ps_init_();
-    PRINT("[APP NODE] Initialized pub-sub..");
+  tm2c_rand_seeds = seed_rand();
+  sys_ps_init_();
+  PRINT("[APP NODE] Initialized pub-sub..");
 }
 
 static inline void
 ps_sendb(nodeid_t target, PS_COMMAND_TYPE command,
          tm_intern_addr_t address)
 {
-    psc->type = command;
+  psc->type = command;
 #if defined(PLATFORM_CLUSTER) || defined(PLATFORM_TILERA) || defined(PLATFORM_MCORE_SHRIMP)
-	psc->nodeId = ID;
+  psc->nodeId = ID;
 #endif
-    psc->address = address;
+  psc->address = address;
 
 #if defined(WHOLLY)
-    psc->tx_metadata = stm_tx_node->tx_commited;
+  psc->tx_metadata = stm_tx_node->tx_commited;
 #elif defined(FAIRCM)
-    psc->tx_metadata = stm_tx_node->tx_duration;
+  psc->tx_metadata = stm_tx_node->tx_duration;
 #elif defined(GREEDY)
 #  ifdef GREEDY_GLOBAL_TS
-    psc->tx_metadata = stm_tx->start_ts;
+  psc->tx_metadata = stm_tx->start_ts;
 #  else
-    psc->tx_metadata = getticks() - stm_tx->start_ts;
+  psc->tx_metadata = getticks() - stm_tx->start_ts;
 #  endif
 #endif
-    sys_sendcmd(psc, sizeof (PS_COMMAND), target);
+  sys_sendcmd(psc, sizeof(PS_COMMAND), target);
 
 }
 
@@ -109,7 +130,9 @@ ps_sendbr(nodeid_t target, PS_COMMAND_TYPE command,
 	psc->nodeId = ID;
 #endif
     psc->address = address;
+#if defined(PGAS)
     psc->response = response;
+#endif	/* PGAS */
     sys_sendcmd(psc, sizeof (PS_COMMAND), target);
 }
 
@@ -122,8 +145,10 @@ ps_sendbv(nodeid_t target, PS_COMMAND_TYPE command,
 	psc->nodeId = ID;
 #endif
     psc->address = address;
+    
+#if defined(PGAS)
     psc->write_value = value;
-
+#endif	/* PGAS */
     sys_sendcmd(psc, sizeof(PS_COMMAND), target);
 #ifdef LOG_LATENCIES
    gettimeofday(&after,NULL);
@@ -373,6 +398,7 @@ CONFLICT_TYPE ps_publish(tm_addr_t address) {
       }
 
     stats_cmd->type = PS_STATS;
+    stats_cmd->nodeId = NODE_ID();
 
     stats_cmd->aborts = stats->tx_aborted;
     stats_cmd->commits = stats->tx_commited;

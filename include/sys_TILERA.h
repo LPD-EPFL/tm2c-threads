@@ -22,20 +22,22 @@
 extern "C" {
 #endif
 
-  extern tm_addr_t shmem_start_address;
   extern nodeid_t *dsl_nodes;
 #define PS_BUFFER_SIZE 32
-  extern  DynamicHeader *udn_header; //headers for messaging
-  extern  tmc_sync_barrier_t *barrier_apps, *barrier_all; //BARRIERS
+  extern DynamicHeader *udn_header; //headers for messaging
+  extern uint32_t* demux_tags;
+  extern tmc_sync_barrier_t *barrier_apps, *barrier_all, *barrier_dsl; //BARRIERS
 
 
   INLINED nodeid_t
-  NODE_ID(void) {
+  NODE_ID(void) 
+  {
     return (nodeid_t) ID;
   }
 
   INLINED nodeid_t
-  TOTAL_NODES(void) {
+  TOTAL_NODES(void) 
+  {
     return (nodeid_t) NUM_UES;
   }
 
@@ -44,7 +46,7 @@ extern "C" {
 #ifdef PGAS
     return fakemem_offset((void*) addr);
 #else
-    return ((tm_intern_addr_t) ((uintptr_t) addr - (uintptr_t) shmem_start_address));
+    return ((tm_intern_addr_t) (addr));
 #endif
   }
 
@@ -53,15 +55,23 @@ extern "C" {
 #ifdef PGAS
     return fakemem_addr_from_offset(i_addr);
 #else
-    return (tm_addr_t) ((uintptr_t) shmem_start_address + i_addr);
+    /* return (tm_addr_t) ((uintptr_t) shmem_start_address + i_addr); */
+    return (tm_addr_t) (i_addr);
 #endif
   }
 
   INLINED int
   sys_sendcmd(void* data, size_t len, nodeid_t to)
   {
-    tmc_udn_send_buffer(udn_header[to], UDN0_DEMUX_TAG,
-			data, len/sizeof(int_reg_t));
+#if !defined(NOCM) && !defined(PGAS)
+    uint32_t* d = (uint32_t*) data;
+    tmc_udn_send_2(udn_header[to], UDN0_DEMUX_TAG, d[0], d[1]);
+#else
+    tmc_udn_send_buffer(udn_header[to], UDN0_DEMUX_TAG, data, PS_COMMAND_SIZE_WORDS);
+#endif
+
+    /* tmc_udn_send_buffer(udn_header[to], UDN0_DEMUX_TAG, data, len/sizeof(int_reg_t)); */
+    /* tmc_udn_send_buffer(udn_header[to], demux_tags[to], data, len/sizeof(int_reg_t)); */
   }
 
 
@@ -69,10 +79,12 @@ extern "C" {
   sys_sendcmd_all(void* data, size_t len)
   {
     int target;
-    for (target = 0; target < NUM_DSL_NODES; target++) {
-      tmc_udn_send_buffer(udn_header[dsl_nodes[target]], UDN0_DEMUX_TAG,
-			  data, len/sizeof(int_reg_t));
-    }
+    for (target = 0; target < NUM_DSL_NODES; target++)
+      {
+	tmc_udn_send_buffer(udn_header[dsl_nodes[target]], UDN0_DEMUX_TAG, data, PS_STATS_CMD_SIZE_WORDS);
+	/* nodeid_t dsl_id = dsl_nodes[target]; */
+	/* tmc_udn_send_buffer(udn_header[dsl_id], demux_tags[dsl_id], data, len/sizeof(int_reg_t)); */
+      }
     return 1;
   
   }
@@ -80,11 +92,32 @@ extern "C" {
   INLINED int
   sys_recvcmd(void* data, size_t len, nodeid_t from)
   {
-    tmc_udn0_receive_buffer(data, len/sizeof(int_reg_t));
+#if !defined(NOCM) && !defined(PGAS)
+    *(uint32_t*) data = tmc_udn0_receive();
+#else
+    tmc_udn0_receive_buffer(data, PS_REPLY_SIZE_WORDS);
+#endif
+
+    /* switch (demux_tags[from]) */
+    /*   { */
+    /*   case UDN0_DEMUX_TAG: */
+    /* 	tmc_udn0_receive_buffer(data, len/sizeof(int_reg_t)); */
+    /* 	break; */
+    /*   case UDN1_DEMUX_TAG: */
+    /* 	tmc_udn1_receive_buffer(data, len/sizeof(int_reg_t)); */
+    /* 	break; */
+    /*   case UDN2_DEMUX_TAG: */
+    /* 	tmc_udn2_receive_buffer(data, len/sizeof(int_reg_t)); */
+    /* 	break; */
+    /*   default:			/\* 3 *\/ */
+    /* 	tmc_udn3_receive_buffer(data, len/sizeof(int_reg_t)); */
+    /* 	break; */
+    /*   } */
   }
 
   INLINED double
-  wtime(void) {
+  wtime(void) 
+  {
     struct timeval t;
     gettimeofday(&t, NULL);
     return (double) t.tv_sec + ((double) t.tv_usec) / 1000000.0;
