@@ -286,9 +286,8 @@ sys_ps_command_reply(nodeid_t sender,
     } 
   tmc_udn_send_buffer(udn_header[sender], UDN0_DEMUX_TAG, ps_reply, PS_REPLY_SIZE_WORDS);
 #else
-  /* tmc_udn_send_buffer(udn_header[sender], UDN0_DEMUX_TAG, ps_reply, PS_REPLY_SIZE_WORDS); */
-
-  tmc_udn_send_1(udn_header[sender], UDN0_DEMUX_TAG, ps_reply->to_word);
+  tmc_udn_send_buffer(udn_header[sender], UDN0_DEMUX_TAG, ps_reply, PS_REPLY_SIZE_WORDS);
+/*   tmc_udn_send_1(udn_header[sender], UDN0_DEMUX_TAG, ps_reply->to_word); */
 #endif	/* PGAS */
 
   /* tmc_udn_send_buffer(udn_header[sender], demux_tag_mine, &reply, PS_REPLY_WORDS); */

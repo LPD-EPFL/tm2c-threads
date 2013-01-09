@@ -102,6 +102,8 @@ transfer(account_t *src, account_t *dst, int amount)
 
   /* Allow overdrafts */
   /* PF_START(2); */
+
+
   TX_START;
   /* PF_STOP(2); */
 
@@ -525,15 +527,15 @@ TASKMAIN(int argc, char **argv) {
       PRINTN("Read cores     : %d\n", read_cores);
       PRINTN("Write-all rate : %d\n", write_all - read_all);
       PRINTN("Write cores    : %d\n", write_cores);
-      /* PRINT("sizeof(size_t) = %d", sizeof(size_t)); */
-      /* PRINT("sizeof(int_reg_t) = %d", sizeof(int_reg_t)); */
-      /* PRINT("sizeof(uintptr_t) = %d", sizeof(uintptr_t)); */
-      /* PRINT("sizeof(PS_COMMAND) = %d", sizeof(PS_COMMAND)); */
-      /* PRINT("sizeof(PS_STATS_CMD_T) = %d", sizeof(PS_STATS_CMD_T)); */
-      /* PRINT("sizeof(PS_REPLY) = %d", sizeof(PS_REPLY)); */
-      /* PRINT("sizeof(stm_tx_t) = %d", sizeof(stm_tx_t)); */
-      /* PRINT("sizeof(stm_tx_node_t) = %d", sizeof(stm_tx_node_t)); */
-      /* PRINT("sizeof(sigjmp_buf) = %d", sizeof(sigjmp_buf)); */
+/*       PRINT("sizeof(size_t) = %d", sizeof(size_t)); */
+/*       PRINT("sizeof(int_reg_t) = %d", sizeof(int_reg_t)); */
+/*       PRINT("sizeof(uintptr_t) = %d", sizeof(uintptr_t)); */
+/*       PRINT("sizeof(PS_COMMAND) = %d", sizeof(PS_COMMAND)); */
+/*       PRINT("sizeof(PS_STATS_CMD_T) = %d", sizeof(PS_STATS_CMD_T)); */
+/*       PRINT("sizeof(PS_REPLY) = %d", sizeof(PS_REPLY)); */
+/*       PRINT("sizeof(stm_tx_t) = %d", sizeof(stm_tx_t)); */
+/*       PRINT("sizeof(stm_tx_node_t) = %d", sizeof(stm_tx_node_t)); */
+/*       PRINT("sizeof(sigjmp_buf) = %d", sizeof(sigjmp_buf)); */
     }
 
 

@@ -81,8 +81,6 @@ extern "C" {
     stm_tx_temp->aborts_war = 0;
     stm_tx_temp->aborts_raw = 0;
     stm_tx_temp->aborts_waw = 0;
-    /* stm_tx_temp->max_retries = 0; */
-
     return stm_tx_temp;
   }
 
