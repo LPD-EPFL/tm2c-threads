@@ -19,7 +19,7 @@ PLATFORM_DEFINES +=    -DPLATFORM_MCORE \
                        -ULIBTASK 
 
 ## not commonly changed defines
-PLATFORM_DEFINES +=    -UPGAS
+PLATFORM_DEFINES +=    -DPGAS
 
 
 #if BACKOFF_RETRY is set, the BACKOFF-RETRY contention management scheme is used. This is similar to the TCP-IP exponentional increasing backoff and retry. When BACKOFF_MAX = infinitiy -> then every tx is expected to terminate whp.

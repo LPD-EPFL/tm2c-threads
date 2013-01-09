@@ -10,7 +10,7 @@ PLATFORM_DEFINES =      -DBACKOFF_RETRY \
 		        -DBACKOFF_MAX="0" \
 		        -DBACKOFF_DELAY="5000" \
 			-DDO_TIMINGS \
-			-DDISABLE_CC \
+			-UDISABLE_CC \
 		   	-DNOCM		   
 
 ## fixed defines
