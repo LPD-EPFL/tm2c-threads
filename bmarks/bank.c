@@ -319,13 +319,9 @@ test(void *data, double duration, int nb_accounts)
     /* else */
       {
 	/* Choose random accounts */
-	PF_START(3);
-	uint32_t src = tm2c_rand() & rand_max;
-	PF_STOP(3);
-	PF_START(4);
-	uint32_t dst = tm2c_rand() & rand_max;
-	PF_STOP(4);
 
+	uint32_t src = tm2c_rand() & rand_max;
+	uint32_t dst = tm2c_rand() & rand_max;
 	if (dst == src)
 	  {
 	    dst = ((src + 1) & rand_max);
@@ -507,14 +503,14 @@ TASKMAIN(int argc, char **argv) {
       PRINTN("Read cores     : %d\n", read_cores);
       PRINTN("Write-all rate : %d\n", write_all - read_all);
       PRINTN("Write cores    : %d\n", write_cores);
-      PRINT("sizeof(size_t) = %lu", sizeof(size_t));
-      PRINT("sizeof(uintptr_t) = %lu", sizeof(uintptr_t));
-      PRINT("sizeof(PS_COMMAND) = %lu", sizeof(PS_COMMAND));
-      PRINT("sizeof(PS_STATS_CMD_T) = %lu", sizeof(PS_STATS_CMD_T));
-      PRINT("sizeof(PS_REPLY) = %lu", sizeof(PS_REPLY));
-      PRINT("sizeof(stm_tx_t) = %lu", sizeof(stm_tx_t));
-      PRINT("sizeof(stm_tx_node_t) = %lu", sizeof(stm_tx_node_t));
-      PRINT("sizeof(sigjmp_buf) = %lu", sizeof(sigjmp_buf));
+      PRINT("sizeof(size_t) = %d", sizeof(size_t));
+      PRINT("sizeof(uintptr_t) = %d", sizeof(uintptr_t));
+      PRINT("sizeof(PS_COMMAND) = %d", sizeof(PS_COMMAND));
+      PRINT("sizeof(PS_STATS_CMD_T) = %d", sizeof(PS_STATS_CMD_T));
+      PRINT("sizeof(PS_REPLY) = %d", sizeof(PS_REPLY));
+      PRINT("sizeof(stm_tx_t) = %d", sizeof(stm_tx_t));
+      PRINT("sizeof(stm_tx_node_t) = %d", sizeof(stm_tx_node_t));
+      PRINT("sizeof(sigjmp_buf) = %d", sizeof(sigjmp_buf));
     }
 
 
