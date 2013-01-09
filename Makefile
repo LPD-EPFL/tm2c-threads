@@ -1,7 +1,7 @@
 # Main Makefile for DSTM
 
 # For platform, choose one out of: iRCCE, SCC.SSMP, MCORE, MCORE.SSMP,CLUSTER,TILERA
-PLATFORM = TILERA
+PLATFORM = MCORE.SSMP
 # USE_HASHTABLE_KHASH:  khash.h from <http://www.freewebs.com/attractivechaos/khash.h>
 # USE_HASHTABLE_UTHASH: uthash.h from <http://uthash.sourceforge.net/>
 # USE_HASHTABLE_SDD:   Sunrise Data Dictionary <>
@@ -33,7 +33,7 @@ DEBUG_FLAGS := #-g -ggdb -fno-inline #-DDEBUG
 
 ## Archive ##
 ARCHIVE_SRCS_PURE:= pubSubTM.c tm.c log.c lock_log.c array_log.c dslock.c \
-			measurements.c ps_hashtable.c cm.c
+			measurements.c ps_hashtable.c cm.c stm.c
 
 
 ifeq ($(HASHTABLE),USE_HASHTABLE_SSHT)
