@@ -28,12 +28,13 @@
    struct timeval after;
 #endif
 
-nodeid_t *dsl_nodes; // holds the ids of the nodes. ids are in range 0..48 (possibly more)
+nodeid_t* dsl_nodes; // holds the ids of the nodes. ids are in range 0..48 (possibly more)
 // To get the address of the node, one must call id_to_addr
 
 unsigned short nodes_contacted[48];
 
 PS_COMMAND *psc;
+
 
 int64_t read_value;
 
@@ -93,7 +94,7 @@ ps_init_(void)
 
   tm2c_rand_seeds = seed_rand();
   sys_ps_init_();
-  PRINT("[APP NODE] Initialized pub-sub..");
+  /* PRINT("[APP NODE] Initialized pub-sub.."); */
 }
 
 static inline void
@@ -127,7 +128,7 @@ ps_sendbr(nodeid_t target, PS_COMMAND_TYPE command,
 {
     psc->type = command;
 #if defined(PLATFORM_CLUSTER) || defined(PLATFORM_TILERA) || defined(PLATFORM_MCORE_SHRIMP)
-	psc->nodeId = ID;
+    psc->nodeId = ID;
 #endif
     psc->address = address;
 #if defined(PGAS)
@@ -209,9 +210,11 @@ ps_subscribe(tm_addr_t address, int words)
 {
   tm_intern_addr_t intern_addr = to_intern_addr(address);
 
-  nodeid_t responsible_node = get_responsible_node(intern_addr);
+  nodeid_t responsible_node;
+  nodeid_t responsible_node_seq = get_responsible_node(intern_addr);
 
-  nodes_contacted[responsible_node]++;
+  nodes_contacted[responsible_node_seq]++;
+  responsible_node = dsl_nodes[responsible_node_seq];
 
 #ifdef PGAS
   intern_addr &= PGAS_DSL_ADDR_MASK;
@@ -223,7 +226,7 @@ ps_subscribe(tm_addr_t address, int words)
   CONFLICT_TYPE response = ps_recvb(responsible_node);
   if (response != NO_CONFLICT)
     {
-      nodes_contacted[responsible_node] = 0;
+      nodes_contacted[responsible_node_seq] = 0;
     }
 
   return response;
@@ -233,13 +236,15 @@ ps_subscribe(tm_addr_t address, int words)
 #ifdef PGAS
 CONFLICT_TYPE ps_publish(tm_addr_t address, int64_t value) {
 #else
-CONFLICT_TYPE ps_publish(tm_addr_t address) {
+  CONFLICT_TYPE ps_publish(tm_addr_t address) {
 #endif
 
     tm_intern_addr_t intern_addr = to_intern_addr(address);
-    nodeid_t responsible_node = get_responsible_node(intern_addr);
+    nodeid_t responsible_node;
+    nodeid_t responsible_node_seq = get_responsible_node(intern_addr);
 
-    nodes_contacted[responsible_node]++;
+    nodes_contacted[responsible_node_seq]++;
+    responsible_node = dsl_nodes[responsible_node];
 
 #ifdef PGAS
     intern_addr &= PGAS_DSL_ADDR_MASK;
@@ -251,7 +256,7 @@ CONFLICT_TYPE ps_publish(tm_addr_t address) {
     CONFLICT_TYPE response = ps_recvb(responsible_node);
     if (response != NO_CONFLICT)
       {
-    	nodes_contacted[responsible_node] = 0;
+    	nodes_contacted[responsible_node_seq] = 0;
       }
 
     return response;
@@ -267,6 +272,8 @@ CONFLICT_TYPE ps_publish(tm_addr_t address) {
     intern_addr &= PGAS_DSL_ADDR_MASK;
 
     nodes_contacted[responsible_node]++;
+    responsible_node = dsl_nodes[responsible_node];
+
     ps_sendbv(responsible_node, PS_WRITE_INC, intern_addr, increment);
 
     CONFLICT_TYPE response = ps_recvb(responsible_node);
@@ -307,10 +314,11 @@ CONFLICT_TYPE ps_publish(tm_addr_t address) {
   /* } */
 
   uint64_t
-  ps_load(tm_addr_t address, int words) 
+    ps_load(tm_addr_t address, int words) 
   {
     tm_intern_addr_t intern_addr = to_intern_addr(address);
     nodeid_t responsible_node = get_responsible_node(intern_addr);
+    responsible_node = dsl_nodes[responsible_node];
 
 #if defined(PGAS)
     intern_addr &= PGAS_DSL_ADDR_MASK;
@@ -327,6 +335,7 @@ CONFLICT_TYPE ps_publish(tm_addr_t address) {
   {
     tm_intern_addr_t intern_addr = to_intern_addr(address);
     nodeid_t responsible_node = get_responsible_node(intern_addr);
+    responsible_node = dsl_nodes[responsible_node];
 
 #if defined(PGAS)
     intern_addr &= PGAS_DSL_ADDR_MASK;
@@ -338,15 +347,18 @@ CONFLICT_TYPE ps_publish(tm_addr_t address) {
 #endif
   }
 
-  void ps_unsubscribe(tm_addr_t address) {
+  void ps_unsubscribe(tm_addr_t address) 
+  {
     tm_intern_addr_t intern_addr = to_intern_addr(address);
     nodeid_t responsible_node = get_responsible_node(intern_addr);
-
 #if defined(PGAS)
     intern_addr &= PGAS_DSL_ADDR_MASK;
 #endif	/* PGAS */
 
     nodes_contacted[responsible_node]--;
+    responsible_node = dsl_nodes[responsible_node];
+
+
     ps_sendb(responsible_node, PS_UNSUBSCRIBE, intern_addr);
 
 #ifdef PLATFORM_CLUSTER
@@ -354,7 +366,8 @@ CONFLICT_TYPE ps_publish(tm_addr_t address) {
 #endif
   }
 
-  void ps_publish_finish(tm_addr_t address) {
+  void ps_publish_finish(tm_addr_t address) 
+  {
     tm_intern_addr_t intern_addr = to_intern_addr(address);
     nodeid_t responsible_node = get_responsible_node(intern_addr);
 
@@ -374,11 +387,11 @@ CONFLICT_TYPE ps_publish(tm_addr_t address) {
     ps_finish_all(CONFLICT_TYPE conflict) 
   {
     nodeid_t i;
-    for (i = 0; i < NUM_UES; i++) 
+    for (i = 0; i < NUM_DSL_NODES; i++) 
       {
-	if (nodes_contacted[i] != 0) 
+	if (nodes_contacted[i] > 0) 
 	  { 
-	    ps_sendbr(i, PS_REMOVE_NODE, 0, conflict);
+	    ps_sendbr(dsl_nodes[i], PS_REMOVE_NODE, 0, conflict);
 #ifdef PLATFORM_CLUSTER
 	    ps_recvb(i);	    // need a dummy receive, due to the way how ZMQ works
 #endif
@@ -434,7 +447,7 @@ CONFLICT_TYPE ps_publish(tm_addr_t address) {
 
 
   static inline nodeid_t
-  get_responsible_node(tm_intern_addr_t addr) 
+    get_responsible_node(tm_intern_addr_t addr) 
   {
 #ifdef USE_ARRAY
     return dsl_nodes[((addr) >> 4) % NUM_DSL_NODES];
@@ -447,7 +460,8 @@ CONFLICT_TYPE ps_publish(tm_addr_t address) {
 #  ifndef PGAS
     /* return dsl_nodes[((addr) >> RESP_NODE_MASK) % NUM_DSL_NODES]; */
     /* return dsl_nodes[(hash_tw(addr) >> RESP_NODE_MASK) % NUM_DSL_NODES]; */
-    return dsl_nodes[(hash_tw(addr)) % NUM_DSL_NODES];
+    /* return dsl_nodes[(hash_tw(addr)) % NUM_DSL_NODES]; */
+    return (hash_tw(addr)) % NUM_DSL_NODES;
 #  else	 /* PGAS */
     /* return dsl_nodes[addr / pgas_dsl_size_node]; */
     return dsl_nodes[addr >> PGAS_DSL_MASK_BITS];
