@@ -225,18 +225,18 @@ extern "C" {
 #endif
 
 
-  /* if ((reason = sigsetjmp(stm_tx->env, 0)) != 0) {	\ */
-  /*   PRINTD("|| restarting due to %d", reason);		\ */
-  /*   WSET_EMPTY;						\ */
-  /* }							\ */
 
 
-#define TX_START				\
-  { PRINTD("|| Starting new tx");		\
-  CM_METADATA_INIT_ON_FIRST_START;		\
-  short int reason;				\
-  stm_tx->retries++;				\
-  TXRUNNING();					\
+#define TX_START					\
+  { PRINTD("|| Starting new tx");			\
+  CM_METADATA_INIT_ON_FIRST_START;			\
+  short int reason;					\
+  if ((reason = sigsetjmp(stm_tx->env, 0)) != 0) {	\
+    PRINTD("|| restarting due to %d", reason);		\
+    WSET_EMPTY;						\
+  }							\
+  stm_tx->retries++;					\
+  TXRUNNING();						\
   CM_METADATA_INIT_ON_START;
 
 #define TX_ABORT(reason)			\
@@ -244,33 +244,33 @@ extern "C" {
   handle_abort(stm_tx, reason);			\
   siglongjmp(stm_tx->env, reason);
 
-#define TX_COMMIT						\
-  ps_finish_all(NO_CONFLICT);					\
-  stm_tx_node->tx_starts++;					\
-  stm_tx_node->tx_commited++;					\
- }
+/* #define TX_COMMIT						\ */
+/*   ps_finish_all(NO_CONFLICT);					\ */
+/*   stm_tx_node->tx_starts++;					\ */
+/*   stm_tx_node->tx_commited++;					\ */
+/*  } */
 
 
-/* #define TX_COMMIT					\ */
-/*   PRINTD("|| commiting tx");				\ */
-/*   WLOCKS_ACQUIRE();					\ */
-/*   TXPERSISTING();					\ */
-/*   WSET_PERSIST(stm_tx->write_set);			\ */
-/*   TXCOMMITTED();					\ */
-/*   ps_finish_all(NO_CONFLICT);				\ */
-/*   CM_METADATA_UPDATE_ON_COMMIT;				\ */
-/*   mem_info_on_commit(stm_tx->mem_info);			\ */
-/*   stm_tx_node->tx_starts += stm_tx->retries;		\ */
-/*   stm_tx_node->tx_commited++;				\ */
-/*   stm_tx_node->tx_aborted += stm_tx->aborts;		\ */
-/*   stm_tx_node->max_retries =				\ */
-/*     (stm_tx->retries < stm_tx_node->max_retries)	\ */
-/*     ? stm_tx_node->max_retries				\ */
-/*     : stm_tx->retries;					\ */
-/*   stm_tx_node->aborts_war += stm_tx->aborts_war;	\ */
-/*   stm_tx_node->aborts_raw += stm_tx->aborts_raw;	\ */
-/*   stm_tx_node->aborts_waw += stm_tx->aborts_waw;	\ */
-/*   stm_tx = tx_metadata_empty(stm_tx);} */
+#define TX_COMMIT					\
+  PRINTD("|| commiting tx");				\
+  WLOCKS_ACQUIRE();					\
+  TXPERSISTING();					\
+  WSET_PERSIST(stm_tx->write_set);			\
+  TXCOMMITTED();					\
+  ps_finish_all(NO_CONFLICT);				\
+  CM_METADATA_UPDATE_ON_COMMIT;				\
+  mem_info_on_commit(stm_tx->mem_info);			\
+  stm_tx_node->tx_starts += stm_tx->retries;		\
+  stm_tx_node->tx_commited++;				\
+  stm_tx_node->tx_aborted += stm_tx->aborts;		\
+  stm_tx_node->max_retries =				\
+    (stm_tx->retries < stm_tx_node->max_retries)	\
+    ? stm_tx_node->max_retries				\
+    : stm_tx->retries;					\
+  stm_tx_node->aborts_war += stm_tx->aborts_war;	\
+  stm_tx_node->aborts_raw += stm_tx->aborts_raw;	\
+  stm_tx_node->aborts_waw += stm_tx->aborts_waw;	\
+  stm_tx = tx_metadata_empty(stm_tx);}
 
 #define TX_COMMIT_NO_STATS			\
   PRINTD("|| commiting tx");			\
@@ -551,6 +551,10 @@ extern "C" {
 	    goto retry;
 	  }
 #endif
+	  if ((stm_tx->aborts+1) % 10000 == 0)
+	    {
+	      PRINT("conflict %d on %p", conflict, address);
+	    }
 	  TX_ABORT(conflict);
 	}
       }
