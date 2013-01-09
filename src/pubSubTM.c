@@ -210,10 +210,9 @@ ps_subscribe(tm_addr_t address, int words)
 {
   tm_intern_addr_t intern_addr = to_intern_addr(address);
 
-  nodeid_t responsible_node;
   nodeid_t responsible_node_seq = get_responsible_node(intern_addr);
 
-  nodes_contacted[responsible_node_seq]++;
+  nodeid_t responsible_node = nodes_contacted[responsible_node_seq]++;
   responsible_node = dsl_nodes[responsible_node_seq];
 
 #ifdef PGAS
@@ -240,11 +239,10 @@ CONFLICT_TYPE ps_publish(tm_addr_t address, int64_t value) {
 #endif
 
     tm_intern_addr_t intern_addr = to_intern_addr(address);
-    nodeid_t responsible_node;
     nodeid_t responsible_node_seq = get_responsible_node(intern_addr);
 
     nodes_contacted[responsible_node_seq]++;
-    responsible_node = dsl_nodes[responsible_node];
+    nodeid_t responsible_node = responsible_node = dsl_nodes[responsible_node_seq];
 
 #ifdef PGAS
     intern_addr &= PGAS_DSL_ADDR_MASK;
