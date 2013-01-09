@@ -22,9 +22,10 @@ void RCCE_shfree(sys_t_vcharp mem);
 
 #define TM_MEM_SIZE      (128 * 1024 * 1024)
 
-static PS_COMMAND *ps_remote;
-DynamicHeader *udn_header; //headers for messaging
-uint32_t* demux_tags;
+static PS_COMMAND* ps_remote;
+static PS_REPLY* ps_reply;
+DynamicHeader* udn_header; //headers for messaging
+/* uint32_t* demux_tags; */
 /* uint32_t demux_tag_mine; */
 tmc_sync_barrier_t *barrier_apps, *barrier_all, *barrier_dsl; //BARRIERS
 
@@ -32,7 +33,6 @@ void
 sys_init_system(int* argc, char** argv[]) {
   char *executable_name = (*argv)[0];
   NUM_UES = atoi(*(++(*argv)));
-  printf("num ues: %d --\n", NUM_UES);
 
   (*argv)[0] = executable_name;
   (*argc)--;
@@ -48,6 +48,8 @@ sys_init_system(int* argc, char** argv[]) {
     tmc_alloc_set_shared(&alloc);
 #ifdef DISABLE_CC
     tmc_alloc_set_home(&alloc, MAP_CACHE_NO_LOCAL);
+#else
+    tmc_alloc_set_home(&alloc, TMC_ALLOC_HOME_HASH);
 #endif
     uint32_t* data = tmc_alloc_map(&alloc, TM_MEM_SIZE);
     if (data == NULL)
@@ -182,43 +184,44 @@ tm_addr_t shmem_start_address;
 #endif
 
 void
-sys_tm_init() {
+sys_tm_init() 
+{
 
 #ifndef PGAS
-    shmem_start_address = NULL;
+  shmem_start_address = NULL;
 #endif
 }
 
 void
 sys_ps_init_(void)
 {
-  demux_tags = (uint32_t*) malloc(TOTAL_NODES() * sizeof(uint32_t));
-  assert(demux_tags != NULL);
+  /* demux_tags = (uint32_t*) malloc(TOTAL_NODES() * sizeof(uint32_t)); */
+  /* assert(demux_tags != NULL); */
 
-  nodeid_t n;
-  for (n = 0; n < TOTAL_NODES(); n++)
-    {
-      if (is_dsl_core(n))
-	{
-	  uint32_t id_seq = dsl_id_seq(n);
+  /* nodeid_t n; */
+  /* for (n = 0; n < TOTAL_NODES(); n++) */
+  /*   { */
+  /* if (is_dsl_core(n)) */
+  /* 	{ */
+  /* 	  uint32_t id_seq = dsl_id_seq(n); */
 
-	  switch (id_seq % 4)
-	    {
-	    case 0:
-	      demux_tags[n] = UDN0_DEMUX_TAG;
-	      break;
-	    case 1:
-	      demux_tags[n] = UDN1_DEMUX_TAG;
-	      break;
-	    case 2:
-	      demux_tags[n] = UDN2_DEMUX_TAG;
-	      break;
-	    default: 			/* 3 */
-	      demux_tags[n] = UDN3_DEMUX_TAG;
-	      break;
-	    }
-	}
-    }
+  /* switch (id_seq % 4) */
+  /*   { */
+  /*   case 0: */
+  /*     demux_tags[n] = UDN0_DEMUX_TAG; */
+  /*     break; */
+  /*   case 1: */
+  /*     demux_tags[n] = UDN1_DEMUX_TAG; */
+  /*     break; */
+  /*   case 2: */
+  /*     demux_tags[n] = UDN2_DEMUX_TAG; */
+  /*     break; */
+  /*   default: 			/\* 3 *\/ */
+  /*     demux_tags[n] = UDN3_DEMUX_TAG; */
+  /*     break; */
+  /*   } */
+  /* } */
+  /* } */
 
   BARRIERW;
 }
@@ -226,9 +229,10 @@ sys_ps_init_(void)
 void
 sys_dsl_init(void)
 {
-  ps_remote = (PS_COMMAND *) malloc(sizeof (PS_COMMAND)); //TODO: free at finalize + check for null
-  psc = (PS_COMMAND *) malloc(sizeof (PS_COMMAND)); //TODO: free at finalize + check for null
-  assert(ps_remote != NULL && psc != NULL);
+  ps_remote = (PS_COMMAND*) malloc(sizeof (PS_COMMAND)); //TODO: free at finalize + check for null
+  psc = (PS_COMMAND*) malloc(sizeof (PS_COMMAND)); //TODO: free at finalize + check for null
+  ps_reply = (PS_REPLY*) malloc(sizeof(PS_REPLY));
+  assert(ps_remote != NULL && psc != NULL && ps_reply != NULL);
 
   nodeid_t id_seq = dsl_id_seq(NODE_ID());
   /* switch (id_seq % 4) */
@@ -270,22 +274,21 @@ sys_ps_command_reply(nodeid_t sender,
 		     uint32_t* value,
 		     CONFLICT_TYPE response)
 {
-  PF_START(11);
-  PS_REPLY reply;
-  reply.type = command;
-  reply.response = response;
+  ps_reply->type = command;
+  ps_reply->response = response;
 
-  PRINTD("sys_ps_command_reply: src=%u target=%d", reply.nodeId, sender);
+  PRINTD("sys_ps_command_reply: src=%u target=%d", ps_reply->nodeId, sender);
 #ifdef PGAS
   if (value != NULL) 
     {
-      reply.value = *value;
-      PRINTD("sys_ps_command_reply: read value %u\n", reply.value);
+      reply->value = *value;
+      PRINTD("sys_ps_command_reply: read value %u\n", ps_reply->value);
     } 
-  tmc_udn_send_buffer(udn_header[sender], UDN0_DEMUX_TAG, &reply, PS_REPLY_SIZE_WORDS);
+  tmc_udn_send_buffer(udn_header[sender], UDN0_DEMUX_TAG, ps_reply, PS_REPLY_SIZE_WORDS);
 #else
-  PF_STOP(11);
-  tmc_udn_send_1(udn_header[sender], UDN0_DEMUX_TAG, reply.to_word);
+  tmc_udn_send_buffer(udn_header[sender], UDN0_DEMUX_TAG, ps_reply, PS_REPLY_SIZE_WORDS);
+
+  /* tmc_udn_send_1(udn_header[sender], UDN0_DEMUX_TAG, ps_reply->to_word); */
 #endif	/* PGAS */
 
   /* tmc_udn_send_buffer(udn_header[sender], demux_tag_mine, &reply, PS_REPLY_WORDS); */
@@ -296,18 +299,18 @@ void
 dsl_communication()
 {
   nodeid_t sender;
-  uint32_t* cmd = (uint32_t*) ps_remote;
+  /* uint32_t* cmd = (uint32_t*) ps_remote; */
 
   PF_MSG(5, "servicing a request");
-
   while (1) 
     {
-      /* tmc_udn0_receive_buffer(ps_remote, PS_COMMAND_SIZE_WORDS); */
 
-      cmd[0] = tmc_udn0_receive();
-      cmd[1] = tmc_udn0_receive();
+      /* PF_START(5); */
+      tmc_udn0_receive_buffer(ps_remote, PS_COMMAND_SIZE_WORDS);
 
-      PF_START(5);
+      /* cmd[0] = tmc_udn0_receive(); */
+      /* cmd[1] = tmc_udn0_receive(); */
+
       //    tmc_udn0_receive_buffer(ps_remote, sizeof(PS_COMMAND)/sizeof(int));
       /* switch (demux_tag_mine) */
       /* 	{ */
@@ -485,7 +488,7 @@ dsl_communication()
 		    BARRIER_DSL;
 		    if (n == NODE_ID())
 		      {
-			ssht_stats_print(ps_hashtable, 0);
+			/* ssht_stats_print(ps_hashtable, 0); */
 		      }
 		    BARRIER_DSL;
 		  }
@@ -508,9 +511,9 @@ dsl_communication()
 	  }
 	}
 
-
-      PF_STOP(5);
+      /* PF_STOP(5); */
     }
+
 }
 
 
