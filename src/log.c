@@ -6,6 +6,7 @@
  */
 
 #include "log.h"
+#include <tmc/mem.h>
 
 write_set_t* 
 write_set_new() 
@@ -135,6 +136,7 @@ write_set_persist(write_set_t* write_set)
     {
       write_entry_persist(write_set->write_entries + i);
     }
+  tmc_mem_fence();
 }
 
 inline write_entry_t* 
