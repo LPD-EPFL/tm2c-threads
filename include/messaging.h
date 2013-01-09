@@ -132,9 +132,14 @@ typedef struct ps_stats_cmd_struct
 #  elif !defined(NOCM) || defined(PGAS)
 #    define PS_COMMAND_SIZE       16
 #    define PS_COMMAND_SIZE_WORDS 4
-#  else
-#    define PS_COMMAND_SIZE       8
-#    define PS_COMMAND_SIZE_WORDS 2
+#  else	 
+#    if defined(TILEPro)
+#        define PS_COMMAND_SIZE       8
+#        define PS_COMMAND_SIZE_WORDS 2
+#    else  /* TILEGx */
+#        define PS_COMMAND_SIZE       16
+#        define PS_COMMAND_SIZE_WORDS 2
+#    endif
 #  endif
 
   typedef struct ps_command_struct 
@@ -193,7 +198,11 @@ typedef struct ps_stats_cmd_struct
 
 
 #define PS_STATS_CMD_SIZE       32
-#define PS_STATS_CMD_SIZE_WORDS 8
+#if defined(TILEPro)
+#    define PS_STATS_CMD_SIZE_WORDS 8
+#else  /* TILEGx */
+#    define PS_STATS_CMD_SIZE_WORDS 4
+#endif
 
 //A command to the pub-sub
 typedef struct ps_stats_cmd_struct 

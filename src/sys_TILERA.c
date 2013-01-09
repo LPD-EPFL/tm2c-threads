@@ -452,7 +452,13 @@ dsl_communication()
 	  break;
 	case PS_STATS:
 	  {
-	    uint32_t w, collect[PS_STATS_CMD_SIZE_WORDS - PS_COMMAND_SIZE_WORDS];
+	    uint32_t w;
+#if defined(TILEPro)
+	    uint32_t collect[PS_STATS_CMD_SIZE_WORDS - PS_COMMAND_SIZE_WORDS];
+#else  /* TILEGx */
+	    uint64_t collect[PS_STATS_CMD_SIZE_WORDS - PS_COMMAND_SIZE_WORDS];
+#endif	/* TILEPro */
+
 	    for (w = 0; w < (PS_STATS_CMD_SIZE_WORDS - PS_COMMAND_SIZE_WORDS); w++)
 	      {
 		collect[w] = tmc_udn0_receive();
