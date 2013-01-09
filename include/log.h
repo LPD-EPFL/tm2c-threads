@@ -39,7 +39,7 @@ extern "C" {
    */
 
 
-#define WRITE_SET_SIZE 32
+#define WRITE_SET_SIZE 4
 
   typedef struct write_entry 
   {
