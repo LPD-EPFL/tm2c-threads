@@ -36,6 +36,7 @@
 /*use TX_LOAD_STORE*/
 #define LOAD_STORE
 
+#define PRINT_STATS
 
 #if defined(SCC)
 /*take advante all 4 MCs*/
@@ -133,17 +134,18 @@ check_accs(account_t *acc1, account_t *acc2)
 {
   /* PRINT("in transfer"); */
 
-  int i, j;
+  volatile int i, j;
   
   TX_START;
   i = *(int *) TX_LOAD(&acc1->balance);
   j = *(int *) TX_LOAD(&acc2->balance);
+
   TX_COMMIT;
 
-  if (i + j == 123000)
-    {
-      PRINT("just disallowing the compiler to do dead-code elimination");
-    }
+  /* if (i + j == 123000) */
+  /*   { */
+  /*     PRINT("just disallowing the compiler to do dead-code elimination"); */
+  /*   } */
 }
 
 
@@ -221,7 +223,16 @@ typedef struct thread_data {
   uint32_t padding[4];
 } thread_data_t;
 
-bank_t * 
+
+volatile int work = 1;
+
+void
+alarm_handler(int sig)
+{
+  work = 0;
+}
+
+bank_t* 
 test(void *data, double duration, int nb_accounts) 
 {
   int rand_max, rand_min;
@@ -295,57 +306,72 @@ test(void *data, double duration, int nb_accounts)
   total(bank, 0);
 
   uint32_t trans = 0;
+
+  /* you do this only once */
+  signal (SIGALRM, alarm_handler);
+
+  double __ticks_per_sec = 1000000000*REF_SPEED_GHZ;
+  /* this triggers the alarm after one second */
+  alarm(duration);
   BARRIER;
 
-  FOR(duration)
+  /* FOR(duration) */
   /* FOR_ITERS(1000000) */
-  {
-    /* if (d->read_cores && d->id < d->read_cores)  */
-    /*   { */
-    /* 	/\* Read all *\/ */
-    /* 	//  PRINT("READ ALL1"); */
-    /* 	total(bank, 1); */
-    /* 	d->nb_read_all++; */
-    /* 	continue; */
-    /*   } */
+ 
+  /* ticks __start_ticks = getticks(); */
+  while(work)
+    {
+      /* if (d->read_cores && d->id < d->read_cores)  */
+      /*   { */
+      /* 	/\* Read all *\/ */
+      /* 	//  PRINT("READ ALL1"); */
+      /* 	total(bank, 1); */
+      /* 	d->nb_read_all++; */
+      /* 	continue; */
+      /*   } */
 
-    uint8_t nb = tm2c_rand() & 127;
-    /* if (nb < d->read_all) */
-    /*   { */
-    /* 	/\* Read all *\/ */
-    /* 	total(bank, 1); */
-    /* 	d->nb_read_all++; */
-    /*   } */
-    /* else */
-      {
-	/* Choose random accounts */
+      uint8_t nb = tm2c_rand() & 127;
+      if (nb < d->read_all)
+	{
+	  /* Read all */
+	  total(bank, 1);
+	  d->nb_read_all++;
+	}
+      else
+	{
+	  /* Choose random accounts */
 
-	uint32_t src = tm2c_rand() & rand_max;
-	uint32_t dst = tm2c_rand() & rand_max;
-	if (dst == src)
-	  {
-	    dst = ((src + 1) & rand_max);
-	  }
-	if (nb < d->check) 
-	  {
-	    check_accs(bank->accounts + I(src), bank->accounts + I(dst));
-	    d->nb_checks++;
-	  }
-	else 
-	  {
-	    transfer(bank->accounts + I(src), bank->accounts + I(dst), 1);
-	    d->nb_transfer++;
-	  }
-      }
+	  uint32_t src = tm2c_rand() & rand_max;
+	  uint32_t dst = tm2c_rand() & rand_max;
+	  if (dst == src)
+	    {
+	      dst = ((src + 1) & rand_max);
+	    }
+	  if (nb < d->check) 
+	    {
+	      check_accs(bank->accounts + I(src), bank->accounts + I(dst));
+	      d->nb_checks++;
+	    }
+	  else 
+	    {
+	      transfer(bank->accounts + I(src), bank->accounts + I(dst), 1);
+	      d->nb_transfer++;
+	    }
+	}
 
 
-    /* if (delay) */
-    /*   { */
-    /* 	/\* ndelay(rand_range(delay)); *\/ */
-    /* 	ndelay(delay); */
-    /*   } */
-  } /* END_FOR_ITERS; */
-  END_FOR;
+      /* if (delay) */
+      /*   { */
+      /* 	/\* ndelay(rand_range(delay)); *\/ */
+      /* 	ndelay(delay); */
+      /*   } */
+    } /* END_FOR_ITERS; */
+  /* END_FOR; */
+  /* ticks __end_ticks = getticks(); */
+  /* ticks __duration_ticks = __end_ticks - __start_ticks; */
+  duration__ = duration;/* __duration_ticks / __ticks_per_sec; */
+  /* PRINT("duration: %f", duration__); */
+
 
   BARRIER;
 
@@ -503,14 +529,14 @@ TASKMAIN(int argc, char **argv) {
       PRINTN("Read cores     : %d\n", read_cores);
       PRINTN("Write-all rate : %d\n", write_all - read_all);
       PRINTN("Write cores    : %d\n", write_cores);
-      PRINT("sizeof(size_t) = %d", sizeof(size_t));
-      PRINT("sizeof(uintptr_t) = %d", sizeof(uintptr_t));
-      PRINT("sizeof(PS_COMMAND) = %d", sizeof(PS_COMMAND));
-      PRINT("sizeof(PS_STATS_CMD_T) = %d", sizeof(PS_STATS_CMD_T));
-      PRINT("sizeof(PS_REPLY) = %d", sizeof(PS_REPLY));
-      PRINT("sizeof(stm_tx_t) = %d", sizeof(stm_tx_t));
-      PRINT("sizeof(stm_tx_node_t) = %d", sizeof(stm_tx_node_t));
-      PRINT("sizeof(sigjmp_buf) = %d", sizeof(sigjmp_buf));
+      /* PRINT("sizeof(size_t) = %d", sizeof(size_t)); */
+      /* PRINT("sizeof(uintptr_t) = %d", sizeof(uintptr_t)); */
+      /* PRINT("sizeof(PS_COMMAND) = %d", sizeof(PS_COMMAND)); */
+      /* PRINT("sizeof(PS_STATS_CMD_T) = %d", sizeof(PS_STATS_CMD_T)); */
+      /* PRINT("sizeof(PS_REPLY) = %d", sizeof(PS_REPLY)); */
+      /* PRINT("sizeof(stm_tx_t) = %d", sizeof(stm_tx_t)); */
+      /* PRINT("sizeof(stm_tx_node_t) = %d", sizeof(stm_tx_node_t)); */
+      /* PRINT("sizeof(sigjmp_buf) = %d", sizeof(sigjmp_buf)); */
     }
 
 
@@ -551,6 +577,7 @@ TASKMAIN(int argc, char **argv) {
 
   BARRIER;
 
+#if defined(PRINT_STATS)
   uint32_t nd;
   for (nd = 0; nd < TOTAL_NODES(); nd++) {
     if (NODE_ID() == nd) {
@@ -560,7 +587,7 @@ TASKMAIN(int argc, char **argv) {
     }
     BARRIER;
   }
-
+#endif	/* PRINT_STATS */
 
   BARRIER;
 
