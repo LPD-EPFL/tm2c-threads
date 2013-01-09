@@ -530,6 +530,7 @@ TASKMAIN(int argc, char **argv) {
       PRINTN("Write-all rate : %d\n", write_all - read_all);
       PRINTN("Write cores    : %d\n", write_cores);
       /* PRINT("sizeof(size_t) = %d", sizeof(size_t)); */
+      /* PRINT("sizeof(int_reg_t) = %d", sizeof(int_reg_t)); */
       /* PRINT("sizeof(uintptr_t) = %d", sizeof(uintptr_t)); */
       /* PRINT("sizeof(PS_COMMAND) = %d", sizeof(PS_COMMAND)); */
       /* PRINT("sizeof(PS_STATS_CMD_T) = %d", sizeof(PS_STATS_CMD_T)); */
