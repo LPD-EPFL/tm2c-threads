@@ -242,6 +242,12 @@ extern "C" {
   handle_abort(stm_tx, reason);			\
   siglongjmp(stm_tx->env, reason);
 
+/* #define TX_COMMIT						\ */
+/*   ps_finish_all(NO_CONFLICT);					\ */
+/*   stm_tx_node->tx_starts++;					\ */
+/*   stm_tx_node->tx_commited++;					\ */
+/*  } */
+
 #define TX_COMMIT					\
   PRINTD("|| commiting tx");				\
   WLOCKS_ACQUIRE();					\
@@ -542,6 +548,10 @@ extern "C" {
 	    goto retry;
 	  }
 #endif
+	  if ((stm_tx->aborts+1) % 10000 == 0)
+	    {
+	      PRINT("conflict %d on %p", conflict, address);
+	    }
 	  TX_ABORT(conflict);
 	}
       }
