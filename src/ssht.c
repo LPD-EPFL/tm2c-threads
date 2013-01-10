@@ -12,12 +12,7 @@ ssht_hashtable_t
 ssht_new() 
 {
   ssht_hashtable_t hashtable;
-  if (posix_memalign((void**) &hashtable, CACHE_LINE_SIZE, NUM_BUCKETS * sizeof(bucket_t)) != 0)
-    {
-      perror("posix_memalign failed\n");
-      EXIT(-1);
-    }
-
+  hashtable = (ssht_hashtable_t) memalign(CACHE_LINE_SIZE, NUM_BUCKETS * sizeof(bucket_t));
   assert(hashtable != NULL);
   assert((intptr_t) hashtable % CACHE_LINE_SIZE == 0);
   assert(sizeof(ssht_rw_entry_t) % CACHE_LINE_SIZE == 0);
