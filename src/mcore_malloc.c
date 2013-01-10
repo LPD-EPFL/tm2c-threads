@@ -21,6 +21,17 @@ static uint8_t mcore_free_cur = 0;
 static uint8_t mcore_free_num = 0;
 
 
+void
+MCORE_shmalloc_set(void* mem)
+{
+  mcore_app_mem = mem;
+}
+
+
+/* 
+   On TILERA we open the shmem in sys_tm_init
+ */
+#if !defined(PLATFORM_TILERA)
 //--------------------------------------------------------------------------------------
 // FUNCTION: MCORE_shmalloc_init
 //--------------------------------------------------------------------------------------
@@ -67,6 +78,8 @@ MCORE_shmalloc_init(size_t size)
   // create one block containing all memory for truly dynamic memory allocator
   mcore_app_mem = (void*) mem;
 }
+
+#endif	/* PLATFORM_TILERA */
 
 //--------------------------------------------------------------------------------------
 // FUNCTION: MCORE_shmalloc
