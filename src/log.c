@@ -6,7 +6,9 @@
  */
 
 #include "log.h"
+#if defined(PLATFORM_TILERA)
 #include <tmc/mem.h>
+#endif  /* PLATFORM_TILERA */
 
 write_set_t* 
 write_set_new() 
@@ -136,7 +138,10 @@ write_set_persist(write_set_t* write_set)
     {
       write_entry_persist(write_set->write_entries + i);
     }
+  
+#if defined(PLATFORM_TILERA)
   tmc_mem_fence();
+#endif  /* PLATFORM_TILERA */
 }
 
 inline write_entry_t* 

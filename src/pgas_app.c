@@ -19,7 +19,7 @@ uint8_t pgas_free_num = 0;
 #  define PTR_ADD(ptr, plus) ((void*)  ((uint32_t) (ptr) + (plus)))
 #  define PTR_SUB(ptr, plus) ((size_t) ((uint32_t) (ptr) - (uint32_t) (plus)))
 #else  /* !SCC ---------------------------------------------------------------*/
-static
+static void* pgas_app_mem;
 static void* pgas_free_list[256] = {0};
 static uint8_t pgas_free_cur = 0;
 static uint8_t pgas_free_num = 0;
