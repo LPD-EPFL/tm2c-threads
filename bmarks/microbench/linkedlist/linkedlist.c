@@ -125,7 +125,7 @@ int set_contains(intset_t *set, val_t val, int transactional) {
 #endif
     val_t v = 0;
 
-    TX_START
+    TX_START;
     prev = ND(set->head);
     next = ND(*(nxt_t *) TX_LOAD(&prev->next));
     while (1) {
@@ -141,8 +141,8 @@ int set_contains(intset_t *set, val_t val, int transactional) {
         TX_RRLS(&rls->next);
 #endif
     }
-    FLUSH
-    TX_COMMIT
+    FLUSH;
+    TX_COMMIT;
     result = (v == val);
 
 #else
@@ -150,7 +150,7 @@ int set_contains(intset_t *set, val_t val, int transactional) {
     nxt_t nextoffs, validateoffs;
     val_t v = 0;
 
-    TX_START
+    TX_START;
     prev = ND(set->head);
     nextoffs = prev->next;
     next = ND(nextoffs);
@@ -174,7 +174,7 @@ int set_contains(intset_t *set, val_t val, int transactional) {
         PRINTD("[C2] Validate failed: expected nxt: %d, got %d", validateoffs, validate->next);
         TX_ABORT(READ_AFTER_WRITE);
     }
-    TX_COMMIT
+    TX_COMMIT;
     result = (v == val);
 #endif
 #endif	
@@ -234,7 +234,7 @@ int set_add(intset_t *set, val_t val, int transactional) {
     node_t *prls, *pprls;
 #endif
     val_t v;
-    TX_START
+    TX_START;
     prev = ND(set->head);
     next = ND(*(nxt_t *) TX_LOAD(&prev->next));
 
@@ -270,7 +270,7 @@ done:
         PRINTD("Created node %5d. Value: %d", nxt, val);
         TX_STORE(&prev->next, nxt, TYPE_INT);
     }
-    TX_COMMIT
+    TX_COMMIT_MEM;
 
 #ifdef DEBUG
     printf("[%02d]--> set_add(%d)\n", NODE_ID(), (int) val);
@@ -335,7 +335,7 @@ done:
             TX_ABORT(READ_AFTER_WRITE);
         }
     }
-    TX_COMMIT
+    TX_COMMIT_MEM;
 #endif
 #endif
             return result;
@@ -382,7 +382,7 @@ int set_remove(intset_t *set, val_t val, int transactional) {
 #endif
     val_t v;
 
-    TX_START
+    TX_START;
     prev = ND(set->head);
     next = ND(*(nxt_t *) TX_LOAD(&prev->next));
 
@@ -421,7 +421,7 @@ done:
 	TX_SHFREE(next);
         PRINTD("Freed node   %5d. Value: %d", OF(next), next->val);
     }
-    TX_COMMIT
+        TX_COMMIT_MEM;
 
 #ifdef DEBUG
     printf("[%02d]--> set_remove(%d)\n", NODE_ID(), (int) val);
@@ -434,7 +434,7 @@ done:
     nxt_t nextoffs, validateoffs, pvalidateoffs;
     val_t v;
 
-    TX_START
+    TX_START;
     prev = ND(set->head);
     nextoffs = prev->next;
     next = ND(nextoffs);
@@ -485,7 +485,7 @@ done:
             TX_ABORT(READ_AFTER_WRITE);
         }
     }
-    TX_COMMIT
+    TX_COMMIT_MEM;
 #endif
 #endif
             return result;
