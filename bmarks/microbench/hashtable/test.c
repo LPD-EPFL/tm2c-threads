@@ -76,129 +76,146 @@ typedef struct thread_data {
     ht_intset_t *set;
 } thread_data_t;
 
-void *test(void *data, double duration) {
-    int val2, numtx, r, last = -1;
-    val_t val = 0;
-    int unext, mnext, cnext;
 
-    thread_data_t *d = (thread_data_t *) data;
+volatile int work = 1;
 
-    srand_core();
+void
+alarm_handler(int sig)
+{
+  work = 0;
+}
 
-    /* Is the first op an update, a move? */
-    r = rand_range_re(&d->seed, 100) - 1;
-    unext = (r < d->update);
-    mnext = (r < d->move);
-    cnext = (r >= d->update + d->snapshot);
+void*
+test(void *data, double duration) 
+{
+  int val2, numtx, r, last = -1;
+  val_t val = 0;
+  int unext, mnext, cnext;
 
-    FOR(duration) {
+  thread_data_t *d = (thread_data_t *) data;
 
-        if (unext) { // update
+  srand_core();
 
-            if (mnext) { // move
+  /* Is the first op an update, a move? */
+  r = tm2c_rand() % 100;
+  unext = (r < d->update);
+  mnext = (r < d->move);
+  cnext = (r >= d->update + d->snapshot);
 
-                if (last == -1) val = rand_range_re(&d->seed, d->range);
-                else val = last;
-                val2 = rand_range_re(&d->seed, d->range);
-                if (ht_move_naive(d->set, val, val2, TRANSACTIONAL)) {
-                    d->nb_moved++;
-                    last = -1;
-                }
-                d->nb_move++;
+  signal (SIGALRM, alarm_handler);
 
-            }
-            else if (last < 0) { // add
+  alarm(duration);
+  BARRIER;
+  while(work)
+    {
+      if (unext) { // update
 
-                val = rand_range_re(&d->seed, d->range);
-                if (ht_add(d->set, val, TRANSACTIONAL)) {
-                    d->nb_added++;
-                    last = val;
-                }
-                d->nb_add++;
+	if (mnext) { // move
 
-            }
-            else { // remove
+	  if (last == -1) val = tm2c_rand() % d->range; //rand_range_re(&d->seed, d->range);
+	  else val = last;
+	  val2 = tm2c_rand() % d->range; //rand_range_re(&d->seed, d->range);
+	  if (ht_move_naive(d->set, val, val2, TRANSACTIONAL)) {
+	    d->nb_moved++;
+	    last = -1;
+	  }
+	  d->nb_move++;
 
-                if (d->alternate) { // alternate mode
-                    if (ht_remove(d->set, last, TRANSACTIONAL)) {
-                        d->nb_removed++;
-                        last = -1;
-                    }
-                }
-                else {
-                    /* Random computation only in non-alternated cases */
-                    val = rand_range_re(&d->seed, d->range);
-                    /* Remove one random value */
-                    if (ht_remove(d->set, val, TRANSACTIONAL)) {
-                        d->nb_removed++;
-                        /* Repeat until successful, to avoid size variations */
-                        last = -1;
-                    }
-                }
-                d->nb_remove++;
-            }
+	}
+	else if (last < 0) { // add
 
-        }
-        else { // reads
+	  val = tm2c_rand() % d->range; //rand_range_re(&d->seed, d->range);
+	  if (ht_add(d->set, val, TRANSACTIONAL)) {
+	    d->nb_added++;
+	    last = val;
+	  }
+	  d->nb_add++;
 
-            if (cnext) { // contains (no snapshot)
+	}
+	else { // remove
 
-                if (d->alternate) {
-                    if (d->update == 0) {
-                        if (last < 0) {
-                            val = d->first;
-                            last = val;
-                        }
-                        else { // last >= 0
-                            val = rand_range_re(&d->seed, d->range);
-                            last = -1;
-                        }
-                    }
-                    else { // update != 0
-                        if (last < 0) {
-                            val = rand_range_re(&d->seed, d->range);
-                            //last = val;
-                        }
-                        else {
-                            val = last;
-                        }
-                    }
-                }
-                else val = rand_range_re(&d->seed, d->range);
+	  if (d->alternate) { // alternate mode
+	    if (ht_remove(d->set, last, TRANSACTIONAL)) {
+	      d->nb_removed++;
+	      last = -1;
+	    }
+	  }
+	  else {
+	    /* Random computation only in non-alternated cases */
+	    val = tm2c_rand() % d->range; //rand_range_re(&d->seed, d->range);
+	    /* Remove one random value */
+	    if (ht_remove(d->set, val, TRANSACTIONAL)) {
+	      d->nb_removed++;
+	      /* Repeat until successful, to avoid size variations */
+	      last = -1;
+	    }
+	  }
+	  d->nb_remove++;
+	}
 
-                if (ht_contains(d->set, val, TRANSACTIONAL))
-                    d->nb_found++;
-                d->nb_contains++;
+      }
+      else { // reads
 
-            }
-            else { // snapshot
+	if (cnext) { // contains (no snapshot)
 
-                if (ht_snapshot(d->set, TRANSACTIONAL))
-                    d->nb_snapshoted++;
-                d->nb_snapshot++;
+	  if (d->alternate) {
+	    if (d->update == 0) {
+	      if (last < 0) {
+		val = d->first;
+		last = val;
+	      }
+	      else { // last >= 0
+		val = tm2c_rand() % d->range; //rand_range_re(&d->seed, d->range);
+		last = -1;
+	      }
+	    }
+	    else { // update != 0
+	      if (last < 0) {
+		val = tm2c_rand() % d->range; //rand_range_re(&d->seed, d->range);
+		//last = val;
+	      }
+	      else {
+		val = last;
+	      }
+	    }
+	  }
+	  else val = tm2c_rand() % d->range; //rand_range_re(&d->seed, d->range);
 
-            }
-        }
+	  if (ht_contains(d->set, val, TRANSACTIONAL))
+	    d->nb_found++;
+	  d->nb_contains++;
 
-        /* Is the next op an update, a move, a contains? */
-        if (d->effective) { // a failed remove/add is a read-only tx
-            numtx = d->nb_contains + d->nb_add + d->nb_remove + d->nb_move + d->nb_snapshot;
-            unext = ((100.0 * (d->nb_added + d->nb_removed + d->nb_moved)) < (d->update * numtx));
-            mnext = ((100.0 * d->nb_moved) < (d->move * numtx));
-            cnext = !((100.0 * d->nb_snapshoted) < (d->snapshot * numtx));
-        }
-        else { // remove/add (even failed) is considered as an update
-            r = rand_range_re(&d->seed, 100) - 1;
-            unext = (r < d->update);
-            mnext = (r < d->move);
-            cnext = (r >= d->update + d->snapshot);
-        }
+	}
+	else { // snapshot
 
-    } END_FOR;
+	  if (ht_snapshot(d->set, TRANSACTIONAL))
+	    d->nb_snapshoted++;
+	  d->nb_snapshot++;
 
-    /* Free transaction */
+	}
+      }
 
-    return NULL;
+      /* Is the next op an update, a move, a contains? */
+      if (d->effective) { // a failed remove/add is a read-only tx
+	numtx = d->nb_contains + d->nb_add + d->nb_remove + d->nb_move + d->nb_snapshot;
+	unext = ((100.0 * (d->nb_added + d->nb_removed + d->nb_moved)) < (d->update * numtx));
+	mnext = ((100.0 * d->nb_moved) < (d->move * numtx));
+	cnext = !((100.0 * d->nb_snapshoted) < (d->snapshot * numtx));
+      }
+      else { // remove/add (even failed) is considered as an update
+	//	r = rand_range_re(&d->seed, 100) - 1;
+	r = tm2c_rand() % 100;
+	unext = (r < d->update);
+	mnext = (r < d->move);
+	cnext = (r >= d->update + d->snapshot);
+      }
+    }
+
+  duration__ = duration;
+
+  /* Free transaction */
+
+  return NULL;
 }
 
 void *test2(void *data, double duration) {
@@ -572,7 +589,7 @@ TASKMAIN(int argc, char **argv) {
   }
 
   shmem_init(((off * 16) * 1024 * 1024) + ((id2use) * 1024 * 1024));
-  PRINT("shmem from %d MB", (off * 16) + id2use);
+  /* PRINT("shmem from %d MB", (off * 16) + id2use); */
 #else
   shmem_init(1024 * 100 * NODE_ID() * sizeof (node_t) + (initial + 2) * sizeof (node_t));
 #endif

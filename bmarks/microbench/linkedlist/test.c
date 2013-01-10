@@ -36,17 +36,7 @@
  * ################################################################### */
 
 /* Re-entrant version of rand_range(r) */
-inline long rand_range_re(unsigned int *seed, long r) {
-    int m = RAND_MAX;
-    long d, v = 0;
-
-    do {
-        d = (m > r ? r : m);
-        v += 1 + (long) (d * ((double) rand_r(seed) / ((double) (m) + 1.0)));
-        r -= m;
-    } while (r > 0);
-    return v;
-}
+#define rand_range_re(dummy, r) (tm2c_rand() % r)
 
 typedef struct thread_data {
     val_t first;
@@ -66,95 +56,112 @@ typedef struct thread_data {
     unsigned long failures_because_contention;
 } thread_data_t;
 
-void *test(void *data, double duration) {
-    int unext, last = -1;
-    val_t val = 0;
+volatile int work = 1;
 
-    thread_data_t *d = (thread_data_t *) data;
+void
+alarm_handler(int sig)
+{
+  work = 0;
+}
 
-    srand_core();
+void*
+test(void *data, double duration) 
+{
+  int unext, last = -1;
+  val_t val = 0;
 
-    /* Create transaction */
+  thread_data_t *d = (thread_data_t *) data;
 
-    /* Is the first op an update? */
-    unext = (rand_range(100) - 1 < d->update);
+  srand_core();
 
-    FOR(duration) {
-        if (unext) { // update
+  /* Create transaction */
 
-            if (last < 0) { // add
+  /* Is the first op an update? */
+  unext = (rand_range(100) < d->update);
 
-                val = rand_range_re(&d->seed, d->range);
-                if (set_add(d->set, val, TRANSACTIONAL)) {
-                    d->nb_added++;
-                    last = val;
-                }
-                d->nb_add++;
+  signal (SIGALRM, alarm_handler);
 
-            }
-            else { // remove
+  alarm(duration);
+  BARRIER;
+  while(work)
+    {
+      if (unext) { // update
 
-                if (d->alternate) { // alternate mode (default)
-                    if (set_remove(d->set, last, TRANSACTIONAL)) {
-                        d->nb_removed++;
-                    }
-                    last = -1;
-                }
-                else {
-                    /* Random computation only in non-alternated cases */
-                    val = rand_range_re(&d->seed, d->range);
-                    /* Remove one random value */
-                    if (set_remove(d->set, val, TRANSACTIONAL)) {
-                        d->nb_removed++;
-                        /* Repeat until successful, to avoid size variations */
-                        last = -1;
-                    }
-                }
-                d->nb_remove++;
-            }
-        }
-        else { // read
+	if (last < 0) { // add
 
-            if (d->alternate) {
-                if (d->update == 0) {
-                    if (last < 0) {
-                        val = d->first;
-                        last = val;
-                    }
-                    else { // last >= 0
-                        val = rand_range_re(&d->seed, d->range);
-                        last = -1;
-                    }
-                }
-                else { // update != 0
-                    if (last < 0) {
-                        val = rand_range_re(&d->seed, d->range);
-                        //last = val;
-                    }
-                    else {
-                        val = last;
-                    }
-                }
-            }
-            else val = rand_range_re(&d->seed, d->range);
+	  val = rand_range_re(&d->seed, d->range);
+	  if (set_add(d->set, val, TRANSACTIONAL)) {
+	    d->nb_added++;
+	    last = val;
+	  }
+	  d->nb_add++;
 
-            if (set_contains(d->set, val, TRANSACTIONAL))
-                d->nb_found++;
-            d->nb_contains++;
+	}
+	else { // remove
 
-        }
+	  if (d->alternate) { // alternate mode (default)
+	    if (set_remove(d->set, last, TRANSACTIONAL)) {
+	      d->nb_removed++;
+	    }
+	    last = -1;
+	  }
+	  else {
+	    /* Random computation only in non-alternated cases */
+	    val = rand_range_re(&d->seed, d->range);
+	    /* Remove one random value */
+	    if (set_remove(d->set, val, TRANSACTIONAL)) {
+	      d->nb_removed++;
+	      /* Repeat until successful, to avoid size variations */
+	      last = -1;
+	    }
+	  }
+	  d->nb_remove++;
+	}
+      }
+      else { // read
 
-        /* Is the next op an update? */
-        if (d->effective) { // a failed remove/add is a read-only tx
-            unext = ((100 * (d->nb_added + d->nb_removed))
-                    < (d->update * (d->nb_add + d->nb_remove + d->nb_contains)));
-        }
-        else { // remove/add (even failed) is considered as an update
-            unext = (rand_range_re(&d->seed, 100) - 1 < d->update);
-        }
-    } END_FOR;
+	if (d->alternate) {
+	  if (d->update == 0) {
+	    if (last < 0) {
+	      val = d->first;
+	      last = val;
+	    }
+	    else { // last >= 0
+	      val = rand_range_re(&d->seed, d->range);
+	      last = -1;
+	    }
+	  }
+	  else { // update != 0
+	    if (last < 0) {
+	      val = rand_range_re(&d->seed, d->range);
+	      //last = val;
+	    }
+	    else {
+	      val = last;
+	    }
+	  }
+	}
+	else val = rand_range_re(&d->seed, d->range);
 
-    return NULL;
+	if (set_contains(d->set, val, TRANSACTIONAL))
+	  d->nb_found++;
+	d->nb_contains++;
+
+      }
+
+      /* Is the next op an update? */
+      if (d->effective) { // a failed remove/add is a read-only tx
+	unext = ((100 * (d->nb_added + d->nb_removed))
+		 < (d->update * (d->nb_add + d->nb_remove + d->nb_contains)));
+      }
+      else { // remove/add (even failed) is considered as an update
+	unext = (rand_range_re(&d->seed, 100) < d->update);
+      }
+    } 
+
+  duration__ = duration;
+
+  return NULL;
 }
 
 TASKMAIN(int argc, char **argv) {
@@ -381,7 +388,7 @@ TASKMAIN(int argc, char **argv) {
   }
 
   shmem_init(((off * 16) * 1024 * 1024) + ((id2use / 2) * 1024 * 1024));
-  PRINT("shmem from %d MB", (off * 16) + id2use / 2);
+  /* PRINT("shmem from %d MB", (off * 16) + id2use / 2); */
 
 #else
   shmem_init(1024 * 100 * (NODE_ID()-1) * sizeof (node_t) + ((initial + 2) * sizeof (node_t)));

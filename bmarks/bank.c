@@ -102,8 +102,6 @@ transfer(account_t *src, account_t *dst, int amount)
 
   /* Allow overdrafts */
   /* PF_START(2); */
-
-
   TX_START;
   /* PF_STOP(2); */
 
@@ -312,7 +310,6 @@ test(void *data, double duration, int nb_accounts)
   /* you do this only once */
   signal (SIGALRM, alarm_handler);
 
-  double __ticks_per_sec = 1000000000*REF_SPEED_GHZ;
   /* this triggers the alarm after one second */
   alarm(duration);
   BARRIER;
