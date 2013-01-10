@@ -1,7 +1,7 @@
 # Main Makefile for DSTM
 
 # For platform, choose one out of: iRCCE, SCC.SSMP, MCORE, MCORE.SSMP,CLUSTER,TILERA
-PLATFORM = MCORE.SSMP
+PLATFORM = NIAGARA
 # USE_HASHTABLE_KHASH:  khash.h from <http://www.freewebs.com/attractivechaos/khash.h>
 # USE_HASHTABLE_UTHASH: uthash.h from <http://uthash.sourceforge.net/>
 # USE_HASHTABLE_SDD:   Sunrise Data Dictionary <>
@@ -21,7 +21,6 @@ SRCPATH := $(TOP)/src
 MAININCLUDE := $(TOP)/include
 
 INCLUDES := -I$(MAININCLUDE) -I$(TOP)/external/include
-INCLUDE_FILES := $(shell ls $(MAININCLUDE));
 LIBS := -L$(TOP)/external/lib \
 		-lm \
 		$(PLATFORM_LIBS)
