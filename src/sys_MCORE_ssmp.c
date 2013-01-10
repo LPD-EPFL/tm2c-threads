@@ -146,7 +146,7 @@ sys_shmalloc(size_t size)
 #ifdef PGAS
   return pgas_app_alloc(size);
 #else
-	return MCORE_shmalloc(size);
+  return MCORE_shmalloc(size);
 #endif
 }
 

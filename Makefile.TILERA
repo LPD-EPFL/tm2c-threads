@@ -27,4 +27,5 @@ PLATFORM_DEFINES +=     -UPGAS \
 #else, in case of a conflict the transaction is not aborted, but backsoff and retries to acquire the same address BACKOFF_MAX time beforee aborting
 
 
-ARCHIVE_SRCS_PURE+=sys_TILERA.c
+ARCHIVE_SRCS_PURE += mcore_malloc.c
+ARCHIVE_SRCS_PURE += sys_TILERA.c
