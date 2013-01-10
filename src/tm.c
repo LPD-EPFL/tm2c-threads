@@ -201,21 +201,21 @@ handle_abort(stm_tx_t* stm_tx, CONFLICT_TYPE reason)
   ps_finish_all(reason);
   stm_tx->aborts++;
 
-  switch (reason) 
-    {
-    case READ_AFTER_WRITE:
-      stm_tx->aborts_raw++;
-      break;
-    case WRITE_AFTER_READ:
-      stm_tx->aborts_war++;
-      break;
-    case WRITE_AFTER_WRITE:
-      stm_tx->aborts_waw++;
-      break;
-    default:
-      /* nothing */
-      break;
-    }
+  /* switch (reason)  */
+  /*   { */
+  /*   case READ_AFTER_WRITE: */
+  /*     stm_tx->aborts_raw++; */
+  /*     break; */
+  /*   case WRITE_AFTER_READ: */
+  /*     stm_tx->aborts_war++; */
+  /*     break; */
+  /*   case WRITE_AFTER_WRITE: */
+  /*     stm_tx->aborts_waw++; */
+  /*     break; */
+  /*   default: */
+  /*     /\* nothing *\/ */
+  /*     break; */
+  /*   } */
 
 #if !defined(PGAS)
   write_set_empty(stm_tx->write_set);

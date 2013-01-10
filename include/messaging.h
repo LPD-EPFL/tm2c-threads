@@ -133,10 +133,10 @@ typedef struct ps_stats_cmd_struct
 #    define PS_COMMAND_SIZE       16
 #    define PS_COMMAND_SIZE_WORDS 4
 #  else	 
-#    if defined(TILEPro)
+#    if defined(__tilepro__)
 #        define PS_COMMAND_SIZE       8
 #        define PS_COMMAND_SIZE_WORDS 2
-#    else  /* TILEGx */
+#    else  /* __tilegx__ */
 #        define PS_COMMAND_SIZE       16
 #        define PS_COMMAND_SIZE_WORDS 2
 #    endif
@@ -198,9 +198,9 @@ typedef struct ps_stats_cmd_struct
 
 
 #define PS_STATS_CMD_SIZE       32
-#if defined(TILEPro)
+#if defined(__tilepro__)
 #    define PS_STATS_CMD_SIZE_WORDS 8
-#else  /* TILEGx */
+#else  /* __tilegx__ */
 #    define PS_STATS_CMD_SIZE_WORDS 4
 #endif
 

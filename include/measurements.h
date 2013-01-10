@@ -16,11 +16,11 @@ extern "C" {
 #  elif defined(SCC)
 #    define REF_SPEED_GHZ           0.533
 #  elif defined(PLATFORM_TILERA)
-#    if defined(TILEPro)
+#    if defined(__tilepro__)
 #        define REF_SPEED_GHZ           0.7
-#    else  /* TileGX */
+#    else  /* __tilegx__ */
 #        define REF_SPEED_GHZ           1.2
-#    endif  /* TILEPro */
+#    endif  /* __tilepro__ */
 #  else
 #    error "Need to set REF_SPEED_GHZ for the platform"
 #  endif

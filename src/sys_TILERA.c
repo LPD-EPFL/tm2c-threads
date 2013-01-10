@@ -452,11 +452,11 @@ dsl_communication()
 	case PS_STATS:
 	  {
 	    uint32_t w;
-#if defined(TILEPro)
+#if defined(__tilepro__)
 	    uint32_t collect[PS_STATS_CMD_SIZE_WORDS - PS_COMMAND_SIZE_WORDS];
-#else  /* TILEGx */
+#else  /* __tilegx__ */
 	    uint64_t collect[PS_STATS_CMD_SIZE_WORDS - PS_COMMAND_SIZE_WORDS];
-#endif	/* TILEPro */
+#endif	/* __tilepro__ */
 
 	    for (w = 0; w < (PS_STATS_CMD_SIZE_WORDS - PS_COMMAND_SIZE_WORDS); w++)
 	      {
