@@ -61,10 +61,67 @@ sys_sendcmd(void* data, size_t len, nodeid_t to)
 INLINED int
 sys_sendcmd_all(void* data, size_t len)
 {
-  int target;
-  for (target = 0; target < NUM_DSL_NODES; target++) {
-    ssmp_send(dsl_nodes[target], (ssmp_msg_t *) data);
-  }
+  PS_STATS_CMD_T* ps_stats = (PS_STATS_CMD_T*) data;
+  PS_STATS_CMD_SEND_T ps_stats_send;
+  ps_stats_send.type = PS_STATS;
+  ps_stats_send.nodeId = NODE_ID();
+
+  data = (void*) &ps_stats_send;
+  if (ps_stats->tx_duration)
+    {
+      ps_stats_send.stats_type = 0;
+      ps_stats_send.tx_duration = ps_stats->tx_duration;
+      int target;
+      for (target = 0; target < NUM_DSL_NODES; target++) 
+	{
+	  ssmp_send(dsl_nodes[target], (ssmp_msg_t *) data);
+	}
+
+      ps_stats_send.stats_type = 1;
+      ps_stats_send.aborts = ps_stats->aborts;
+      for (target = 0; target < NUM_DSL_NODES; target++) 
+	{
+	  ssmp_send(dsl_nodes[target], (ssmp_msg_t *) data);
+	}
+
+      ps_stats_send.stats_type = 2;
+      ps_stats_send.commits = ps_stats->commits;
+      for (target = 0; target < NUM_DSL_NODES; target++) 
+	{
+	  ssmp_send(dsl_nodes[target], (ssmp_msg_t *) data);
+	}
+
+      ps_stats_send.stats_type = 3;
+      ps_stats_send.max_retries = ps_stats->max_retries;
+      for (target = 0; target < NUM_DSL_NODES; target++) 
+	{
+	  ssmp_send(dsl_nodes[target], (ssmp_msg_t *) data);
+	}
+    }
+  else
+    {
+      ps_stats_send.stats_type = 4;
+      ps_stats_send.aborts_war = ps_stats->aborts_war;
+      int target;
+      for (target = 0; target < NUM_DSL_NODES; target++) 
+	{
+	  ssmp_send(dsl_nodes[target], (ssmp_msg_t *) data);
+	}
+
+      ps_stats_send.stats_type = 5;
+      ps_stats_send.aborts_raw = ps_stats->aborts_raw;
+      for (target = 0; target < NUM_DSL_NODES; target++) 
+	{
+	  ssmp_send(dsl_nodes[target], (ssmp_msg_t *) data);
+	}
+
+      ps_stats_send.stats_type = 6;
+      ps_stats_send.aborts_waw = ps_stats->aborts_waw;
+      for (target = 0; target < NUM_DSL_NODES; target++) 
+	{
+	  ssmp_send(dsl_nodes[target], (ssmp_msg_t *) data);
+	}
+    }
   return 1;
 }
 

@@ -24,6 +24,22 @@
 
 #include "hash.h"
 
+
+uint8_t id_to_core_id[] = 
+  {
+    0, 8, 16, 24, 32, 40, 48, 56,
+    1, 9, 17, 25, 33, 41, 49, 57,
+    2, 10, 18, 26, 34, 42, 50, 58,
+    3, 11, 19, 27, 35, 43, 51, 59,
+    4, 12, 20, 28, 36, 44, 52, 60,
+    5, 13, 21, 29, 37, 45, 53, 61,
+    6, 14, 22, 30, 38, 46, 54, 62,
+    7, 15, 23, 31, 39, 47, 55, 63,
+  };
+
+#define ALL_REAL_CORES
+
+
 PS_REPLY* ps_remote_msg; // holds the received msg
 
 INLINED nodeid_t min_dsl_id();
@@ -117,7 +133,11 @@ fork_done:
 	ssmp_mem_init(MY_NODE_ID, MY_TOTAL_NODES);
 
 	// Now, pin the process to the right core (NODE_ID == core id)
+#if defined(ALL_REAL_CORES)
+	set_cpu(id_to_core_id[rank]);
+#else
 	set_cpu(rank);
+#endif
 }
 
 void
@@ -456,23 +476,38 @@ dsl_communication()
 	  break;
 	case PS_STATS:
 	  {
-	    PS_STATS_CMD_T* ps_rem_stats = (PS_STATS_CMD_T*) ps_remote;
-
-	    if (ps_rem_stats->tx_duration) {
-	      stats_aborts += ps_rem_stats->aborts;
-	      stats_commits += ps_rem_stats->commits;
-	      stats_duration += ps_rem_stats->tx_duration;
-	      stats_max_retries = stats_max_retries < ps_rem_stats->max_retries ? ps_rem_stats->max_retries : stats_max_retries;
-	      stats_total += ps_rem_stats->commits + ps_rem_stats->aborts;
-	    }
-	    else {
-	      stats_aborts_raw += ps_rem_stats->aborts_raw;
-	      stats_aborts_war += ps_rem_stats->aborts_war;
-	      stats_aborts_waw += ps_rem_stats->aborts_waw;
-	    }
-
-	    if (++stats_received >= 2*NUM_APP_NODES) 
+	    PS_STATS_CMD_SEND_T* ps_rem_stats = (PS_STATS_CMD_SEND_T*) ps_remote;
+	    switch(ps_rem_stats->stats_type)
 	      {
+	      case 0:
+		stats_duration += ps_rem_stats->tx_duration;
+		break;
+	      case 1:
+		stats_aborts += ps_rem_stats->aborts;
+		break;
+	      case 2:
+		stats_commits += ps_rem_stats->commits;
+		break;
+	      case 3:
+		stats_max_retries = stats_max_retries < ps_rem_stats->max_retries 
+		  ? ps_rem_stats->max_retries : stats_max_retries;
+		break;
+	      case 4:
+		stats_aborts_raw += ps_rem_stats->aborts_raw;
+		break;
+	      case 5:
+		stats_aborts_war += ps_rem_stats->aborts_war;
+		break;
+	      case 6:
+		stats_aborts_waw += ps_rem_stats->aborts_waw;
+		break;
+	      default:
+		break;
+	      }
+
+	    if (++stats_received >= 7*NUM_APP_NODES) 
+	      {
+		stats_total = stats_commits + stats_aborts;
 		uint32_t n;
 		for (n = 0; n < TOTAL_NODES(); n++)
 		  {
