@@ -38,9 +38,6 @@ extern "C" {
   /* A command to the DSL service */
 #if defined(PLATFORM_TILERA)
 
-
-
-
 #  if !defined(NOCM) && defined(PGAS)
 #    define PS_COMMAND_SIZE       24
 #    define PS_COMMAND_SIZE_WORDS 7
@@ -234,6 +231,7 @@ typedef struct ps_stats_cmd_struct
 //A command to the pub-sub
 typedef struct ps_stats_cmd_struct 
 {
+  double tx_duration;
   uint8_t type; //PS_COMMAND_TYPE
   uint8_t nodeId;	/* we need IDs on networked systems */
   /* 8 */
@@ -256,20 +254,29 @@ typedef struct ps_stats_cmd_struct
       };
     };
 
-    /* SSMP[.SCC] uses the last word as a flag, hence it should be not used for data */
-#if defined(SCC)
+    uint32_t ssmp_flag;
+  };
+} PS_STATS_CMD_T;
+
+//A command to the pub-sub
+typedef struct ps_stats_cmd_send
+{
+  union 
+  {			
     double tx_duration;
-    uint32_t mpb_flag;	/* on the SCC, we have CL (MPB) line of 32 bytes */
-#else
-    uint32_t dummy;
-    double tx_duration;
-#endif      
+    uint32_t aborts;
+    uint32_t commits;
+    uint32_t max_retries;
+    uint32_t aborts_war;
+    uint32_t aborts_raw;
+    uint32_t aborts_waw;
   };
 
-#if defined(PLATFORM_MCORE_SSMP)
-  uint8_t padding[32];
-#endif
-} PS_STATS_CMD_T;
+  uint8_t type; //PS_COMMAND_TYPE
+  uint8_t nodeId;	/* we need IDs on networked systems */
+  uint8_t stats_type;
+  uint8_t ssmp_flag[5];
+} PS_STATS_CMD_SEND_T;
 
   /* ____________________________________________________________________________________________________ */
 #else  /* !PLATFORM_TILERA && !NIAGARA                                                                    */
