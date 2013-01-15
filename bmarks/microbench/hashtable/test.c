@@ -105,13 +105,16 @@ test(void *data, double duration)
   signal (SIGALRM, alarm_handler);
 
   alarm(duration);
+
+
   BARRIER;
+  ticks __start_ticks = getticks();
   while(work)
     {
-      if (unext) { // update
-
-	if (mnext) { // move
-
+      if (unext) 
+	{ // update
+	if (mnext)
+	  { // move
 	  if (last == -1) val = tm2c_rand() % d->range; //rand_range_re(&d->seed, d->range);
 	  else val = last;
 	  val2 = tm2c_rand() % d->range; //rand_range_re(&d->seed, d->range);
@@ -120,10 +123,8 @@ test(void *data, double duration)
 	    last = -1;
 	  }
 	  d->nb_move++;
-
 	}
 	else if (last < 0) { // add
-
 	  val = tm2c_rand() % d->range; //rand_range_re(&d->seed, d->range);
 	  if (ht_add(d->set, val, TRANSACTIONAL)) {
 	    d->nb_added++;
@@ -196,14 +197,15 @@ test(void *data, double duration)
       }
 
       /* Is the next op an update, a move, a contains? */
-      if (d->effective) { // a failed remove/add is a read-only tx
+      if (d->effective) // a failed remove/add is a read-only tx
+	{ 
 	numtx = d->nb_contains + d->nb_add + d->nb_remove + d->nb_move + d->nb_snapshot;
 	unext = ((100.0 * (d->nb_added + d->nb_removed + d->nb_moved)) < (d->update * numtx));
 	mnext = ((100.0 * d->nb_moved) < (d->move * numtx));
 	cnext = !((100.0 * d->nb_snapshoted) < (d->snapshot * numtx));
       }
-      else { // remove/add (even failed) is considered as an update
-	//	r = rand_range_re(&d->seed, 100) - 1;
+      else // remove/add (even failed) is considered as an update 
+	{ 
 	r = tm2c_rand() % 100;
 	unext = (r < d->update);
 	mnext = (r < d->move);
@@ -211,7 +213,10 @@ test(void *data, double duration)
       }
     }
 
-  duration__ = duration;
+  ticks __end_ticks = getticks();
+  ticks __duration_ticks = __end_ticks - __start_ticks;
+  ticks __ticks_per_sec = (ticks) (1e9 * REF_SPEED_GHZ);
+  duration__ = (double) __duration_ticks / __ticks_per_sec;
 
   /* Free transaction */
 
@@ -323,9 +328,9 @@ void print_ht(ht_intset_t *set) {
 
 TASKMAIN(int argc, char **argv) {
 #ifndef SEQUENTIAL
-  TM_INIT
+  TM_INIT;
 #else
-    RCCE_init(&argc, &argv);
+  RCCE_init(&argc, &argv);
   iRCCE_init();
   dup2(STDOUT_FILENO, STDERR_FILENO);
 #endif
@@ -518,27 +523,27 @@ TASKMAIN(int argc, char **argv) {
   set = ht_new();
   // Populate set 
 
-  BARRIER
+  BARRIER;
 
-    srand_core();
-  FLUSH
+  srand_core();
+  FLUSH;
 #ifdef STM
-    udelay(rand_range(123));
+  udelay(rand_range(123));
 #endif
   srand_core();
 
   ONCE
     {
-
       i = 0;
-      maxhtlength = (int) (initial / load_factor);
-      while (i < initial) {
-	val = rand_range(range);
-	if (ht_add(set, val, 0)) {
-	  last = val;
-	  i++;
+      while (i < initial) 
+	{
+	  val = rand_range(range);
+	  if (ht_add(set, val, 0)) 
+	    {
+	      last = val;
+	      i++;
+	    }
 	}
-      }
       size = ht_size(set);
       printf("Set size     : %d\n", size);
       printf("Bucket amount: %d\n", maxhtlength);
@@ -546,15 +551,13 @@ TASKMAIN(int argc, char **argv) {
 
       //print_ht(set);
 
-      FLUSH
+      FLUSH;
+    }
 
-
-	}
-
-  BARRIER
+  BARRIER;
 
 #if defined(STM) && !defined(SEQUENTIAL)
-    int off, id2use;
+  int off, id2use;
   if (ID < 6) {
     off = 0;
     id2use = ID;
@@ -588,8 +591,8 @@ TASKMAIN(int argc, char **argv) {
     id2use = ID - 36;
   }
 
-  shmem_init(((off * 16) * 1024 * 1024) + ((id2use) * 1024 * 1024));
-  /* PRINT("shmem from %d MB", (off * 16) + id2use); */
+  /* shmem_init(((off * 16) * 1024 * 1024) + ((id2use) * 1024 * 1024)); */
+  PRINT("shmem from %d MB", (off * 16) + id2use);
 #else
   shmem_init(1024 * 100 * NODE_ID() * sizeof (node_t) + (initial + 2) * sizeof (node_t));
 #endif
