@@ -44,6 +44,7 @@
 #define DEFAULT_ALTERNATE		0
 #define DEFAULT_EFFECTIVE		1
 #define DEFAULT_LOCKS                   0
+#define DEFAULT_VERBOSE                 0
 
 #define XSTR(s)                         STR(s)
 #define STR(s)                          #s
@@ -58,13 +59,14 @@ typedef size_t nxt_t;
 #define VAL_MIN                         INT_MIN
 #define VAL_MAX                         INT_MAX
 
-typedef struct node {
-    val_t val;
-
-    union {
-        struct node *nextp;
-        nxt_t next;
-    };
+typedef struct node 
+{
+  val_t val;
+  union 
+  {
+    struct node *nextp;
+    nxt_t next;
+  };
 } node_t;
 
 typedef struct intset {

@@ -335,18 +335,20 @@ TASKMAIN(int argc, char **argv) {
   dup2(STDOUT_FILENO, STDERR_FILENO);
 #endif
 
-  struct option long_options[] = {
-    // These options don't set a flag
-    {"help", no_argument, NULL, 'h'},
-    {"duration", required_argument, NULL, 'd'},
-    {"initial-size", required_argument, NULL, 'i'},
-    {"range", required_argument, NULL, 'r'},
-    {"update-rate", required_argument, NULL, 'u'},
-    {"move-rate", required_argument, NULL, 'm'},
-    {"snapshot-rate", required_argument, NULL, 'a'},
-    {"elasticity", required_argument, NULL, 'x'},
-    {NULL, 0, NULL, 0}
-  };
+  struct option long_options[] = 
+    {
+      // These options don't set a flag
+      {"help", no_argument, NULL, 'h'},
+      {"verbose", no_argument, NULL, 'v'},
+      {"duration", required_argument, NULL, 'd'},
+      {"initial-size", required_argument, NULL, 'i'},
+      {"range", required_argument, NULL, 'r'},
+      {"update-rate", required_argument, NULL, 'u'},
+      {"move-rate", required_argument, NULL, 'm'},
+      {"snapshot-rate", required_argument, NULL, 'a'},
+      {"elasticity", required_argument, NULL, 'x'},
+      {NULL, 0, NULL, 0}
+    };
 
   ht_intset_t *set;
   int i, c, size;
@@ -365,12 +367,12 @@ TASKMAIN(int argc, char **argv) {
   int unit_tx = DEFAULT_ELASTICITY;
   int alternate = DEFAULT_ALTERNATE;
   int effective = DEFAULT_EFFECTIVE;
+  int verbose = DEFAULT_VERBOSE;
   unsigned int seed = 0;
 
   while (1) {
     i = 0;
-    c = getopt_long(argc, argv, "hAf:d:i:n:r:s:u:m:a:l:x:", long_options, &i);
-
+    c = getopt_long(argc, argv, "hAf:d:i:n:r:s:u:m:a:l:x:v", long_options, &i);
     if (c == -1)
       break;
 
@@ -413,14 +415,8 @@ TASKMAIN(int argc, char **argv) {
 		 "        Percentage of snapshot transactions (default=" XSTR(DEFAULT_SNAPSHOT) ")\n"
 		 "  -l , --load-factor <int>\n"
 		 "        Ratio of keys over buckets (default=" XSTR(DEFAULT_LOAD) ")\n"
-		 "  -x, --elasticity (default=4)\n"
-		 "        Use elastic transactions\n"
-		 "        0 = non-protected,\n"
-		 "        1 = normal transaction,\n"
-		 "        2 = read elastic-tx,\n"
-		 "        3 = read/add elastic-tx,\n"
-		 "        4 = read/add/rem elastic-tx,\n"
-		 "        5 = elastic-tx w/ optimized move.\n"
+		 "  -v , --verbose\n"
+		 "        Print detailed stats"
 		 );
 	}
       exit(0);
@@ -457,6 +453,9 @@ TASKMAIN(int argc, char **argv) {
     case 'x':
       unit_tx = atoi(optarg);
       break;
+    case 'v':
+      verbose = 1;
+      break;
     case '?':
       ONCE
 	{
@@ -486,30 +485,33 @@ TASKMAIN(int argc, char **argv) {
   assert(initial < MAXHTLENGTH);
   assert(initial >= load_factor);
 
-  ONCE
+  if (verbose)
     {
-      printf("Set type     : hash table\n");
+      ONCE
+	{
+	  printf("Set type     : hash table\n");
 #ifdef SEQUENTIAL
-      printf("                sequential\n");
+	  printf("                sequential\n");
 #elif defined(EARLY_RELEASE )
-      printf("                using early-release\n");
+	  printf("                using early-release\n");
 #elif defined(READ_VALIDATION)
-      printf("                using read-validation\n");
+	  printf("                using read-validation\n");
 #endif
 #ifdef LOCKS
-      printf("                  with locks\n");
+	  printf("                  with locks\n");
 #endif
-      printf("Duration     : %f\n", duration);
-      printf("Initial size : %d\n", initial);
-      printf("Nb threads   : %d\n", nb_app_cores);
-      printf("Value range  : %ld\n", range);
-      printf("Update rate  : %d\n", update);
-      printf("Load factor  : %d\n", load_factor);
-      printf("Move rate    : %d\n", move);
-      printf("Snapshot rate: %d\n", snapshot);
-      printf("Alternate    : %d\n", alternate);
-      printf("Effective    : %d\n", effective);
-      FLUSH;
+	  printf("Duration     : %f\n", duration);
+	  printf("Initial size : %d\n", initial);
+	  printf("Nb threads   : %d\n", nb_app_cores);
+	  printf("Value range  : %ld\n", range);
+	  printf("Update rate  : %d\n", update);
+	  printf("Load factor  : %d\n", load_factor);
+	  printf("Move rate    : %d\n", move);
+	  printf("Snapshot rate: %d\n", snapshot);
+	  printf("Alternate    : %d\n", alternate);
+	  printf("Effective    : %d\n", effective);
+	  FLUSH;
+	}
     }
 
   if ((data = (thread_data_t *) malloc(sizeof (thread_data_t))) == NULL) {
@@ -545,18 +547,20 @@ TASKMAIN(int argc, char **argv) {
 	    }
 	}
       size = ht_size(set);
-      printf("Set size     : %d\n", size);
-      printf("Bucket amount: %d\n", maxhtlength);
-      printf("Load         : %d\n", load_factor);
+      if (verbose)
+	{
+	  printf("Set size     : %d\n", size);
+	  printf("Bucket amount: %d\n", maxhtlength);
+	  printf("Load         : %d\n", load_factor);
+	}
 
-      //print_ht(set);
 
       FLUSH;
     }
 
   BARRIER;
 
-#if defined(STM) && !defined(SEQUENTIAL)
+#if defined(STM) && !defined(SEQUENTIAL) && defined(PLATFORM_SCC_SSMP)
   int off, id2use;
   if (ID < 6) {
     off = 0;
@@ -591,8 +595,8 @@ TASKMAIN(int argc, char **argv) {
     id2use = ID - 36;
   }
 
-  /* shmem_init(((off * 16) * 1024 * 1024) + ((id2use) * 1024 * 1024)); */
-  PRINT("shmem from %d MB", (off * 16) + id2use);
+  shmem_init(((off * 16) * 1024 * 1024) + ((id2use) * 1024 * 1024));
+  /* PRINT("shmem from %d MB", (off * 16) + id2use); */
 #else
   shmem_init(1024 * 100 * NODE_ID() * sizeof (node_t) + (initial + 2) * sizeof (node_t));
 #endif
@@ -626,20 +630,23 @@ TASKMAIN(int argc, char **argv) {
 
   BARRIER;
 
-  APP_EXEC_ORDER
+  if (verbose)
     {
-      printf("---------------------------Thread %d\n", NODE_ID());
-      printf("  #add        : %lu\n", data->nb_add);
-      printf("    #added    : %lu\n", data->nb_added);
-      printf("  #remove     : %lu\n", data->nb_remove);
-      printf("    #removed  : %lu\n", data->nb_removed);
-      printf("  #contains   : %lu\n", data->nb_contains);
-      printf("    #found    : %lu\n", data->nb_found);
-      printf("  #move       : %lu\n", data->nb_move);
-      printf("  #moved      : %lu\n", data->nb_moved);
-      printf("  #snapshot   : %lu\n", data->nb_snapshot);
-      printf("  #snapshoted : %lu\n", data->nb_snapshoted);
-    } APP_EXEC_ORDER_END;
+      APP_EXEC_ORDER
+	{
+	  printf("---------------------------Thread %d\n", NODE_ID());
+	  printf("  #add        : %lu\n", data->nb_add);
+	  printf("    #added    : %lu\n", data->nb_added);
+	  printf("  #remove     : %lu\n", data->nb_remove);
+	  printf("    #removed  : %lu\n", data->nb_removed);
+	  printf("  #contains   : %lu\n", data->nb_contains);
+	  printf("    #found    : %lu\n", data->nb_found);
+	  /* printf("  #move       : %lu\n", data->nb_move); */
+	  /* printf("  #moved      : %lu\n", data->nb_moved); */
+	  /* printf("  #snapshot   : %lu\n", data->nb_snapshot); */
+	  /* printf("  #snapshoted : %lu\n", data->nb_snapshoted); */
+	} APP_EXEC_ORDER_END;
+    }
 #ifdef SEQUENTIAL
   int total_ops = data->nb_add + data->nb_contains + data->nb_remove + data->nb_move + data->nb_snapshot;
   printf("#Ops          : %d\n", total_ops);
