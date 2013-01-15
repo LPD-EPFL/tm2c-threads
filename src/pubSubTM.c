@@ -407,6 +407,11 @@ CONFLICT_TYPE ps_publish(tm_addr_t address, int64_t value) {
 	stats_cmd = (PS_STATS_CMD_T*) psc;
       }
 
+    if (duration == 0)
+      {
+	duration = 1;		/* to make stats work properly */
+      }
+
     stats_cmd->type = PS_STATS;
     stats_cmd->nodeId = NODE_ID();
 
