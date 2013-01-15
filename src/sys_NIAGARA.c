@@ -18,17 +18,20 @@
 #include <limits.h>
 #include <ssmp.h>
 #include "common.h"
+#include "tm.h"
 #include "pubSubTM.h"
 #include "dslock.h"
 #include "mcore_malloc.h"
 
 #include "hash.h"
 
+#define ALL_REAL_CORES
 
-uint8_t id_to_core_id[] = 
+/* try to distribute the work around the real cores */
+uint8_t id_to_core_id[] =
   {
-    0, 8, 16, 24, 32, 40, 48, 56,
-    1, 9, 17, 25, 33, 41, 49, 57,
+    0,  8, 16, 24, 32, 40, 48, 56,
+    1,  9, 17, 25, 33, 41, 49, 57,
     2, 10, 18, 26, 34, 42, 50, 58,
     3, 11, 19, 27, 35, 43, 51, 59,
     4, 12, 20, 28, 36, 44, 52, 60,
@@ -37,7 +40,32 @@ uint8_t id_to_core_id[] =
     7, 15, 23, 31, 39, 47, 55, 63,
   };
 
-#define ALL_REAL_CORES
+
+/* try to place the service on separate cores  -- 1 server / 4*/
+/* uint8_t id_to_core_id[] = */
+/*   { */
+/*     0,  8, 16, 1, 32, 40, 2, 56, */
+/*     24,  3, 17, 25, 4, 41, 49, 57, */
+/*     48, 10, 18, 26, 34, 7, 50, 5, */
+/*     9, 11, 6, 27, 35, 43, 51, 59, */
+/*     33, 12, 20, 28, 36, 44, 52, 60, */
+/*     58, 13, 21, 29, 37, 45, 53, 61, */
+/*     19, 14, 22, 30, 38, 46, 54, 62, */
+/*     42, 15, 23, 31, 39, 47, 55, 63, */
+/*   }; */
+
+/* id === core */
+/* uint8_t id_to_core_id[] = */
+/*   { */
+/*     0, 1, 2, 3, 4, 5, 6, 7, */
+/*     8, 9, 10, 11, 12, 13, 14, 15, */
+/*     16, 17, 18, 19, 20, 21, 22, 23, */
+/*     24, 25, 26, 27, 28, 29, 30, 31, */
+/*     32, 33, 34, 35, 36, 37, 38, 39, */
+/*     40, 41, 42, 43, 44, 45, 46, 47, */
+/*     48, 49, 50, 51, 52, 53, 54, 55, */
+/*     56, 57, 58, 59, 60, 61, 62, 63 */
+/*   }; */
 
 
 PS_REPLY* ps_remote_msg; // holds the received msg
@@ -126,12 +154,10 @@ sys_init_system(int* argc, char** argv[])
 		}
 	}
 	rank = 0;
-
 fork_done:
 	PRINTD("Initializing child %u", rank);
 	MY_NODE_ID = rank;
 	ssmp_mem_init(MY_NODE_ID, MY_TOTAL_NODES);
-
 	// Now, pin the process to the right core (NODE_ID == core id)
 #if defined(ALL_REAL_CORES)
 	set_cpu(id_to_core_id[rank]);
@@ -178,7 +204,11 @@ sys_ps_init_(void)
 #if defined(PGAS)
   pgas_app_init();
 #else  /* PGAS */
-  MCORE_shmalloc_init(1024*1024*1024); //1GB
+  APP_EXEC_ORDER
+    {
+      MCORE_shmalloc_init(1024*1024*1024); //1GB
+    }
+  APP_EXEC_ORDER_END;
 #endif /* PGAS */
 
 #ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
@@ -206,7 +236,15 @@ sys_dsl_init(void)
 #if defined(PGAS)
   pgas_dsl_init();
 #else  /* PGAS */
-  MCORE_shmalloc_init(1024*1024*1024); 
+  uint32_t c;
+  for (c = 0; c < TOTAL_NODES(); c++)
+    {
+      if (NODE_ID() == c)
+	{
+	  MCORE_shmalloc_init(1024 * 1024 * 1024);
+	}
+      BARRIER_DSL;
+    }
 #endif	/* PGAS */
 
   BARRIERW;
@@ -225,9 +263,7 @@ sys_dsl_init(void)
 	}
     }
 #endif
-
   BARRIERW;
-
 }
 
 void
@@ -281,15 +317,17 @@ dsl_communication()
   assert((uintptr_t) cbuf % CACHE_LINE_SIZE == 0);
   assert((uintptr_t) ps_remote % CACHE_LINE_SIZE == 0);
 
+  PF_MSG(11, "servicing");
+
 
   ssmp_color_buf_init(cbuf, is_app_core);
 
-  while (1) 
+  while(1) 
     {
       /* PF_START(9); */
       ssmp_recv_color_start(cbuf, msg);
       /* PF_STOP(9); */
-      /* PF_START(11); */
+      PF_START(11);
       sender = msg->sender;
 
       ps_remote = (PS_COMMAND *) msg;
@@ -315,7 +353,7 @@ dsl_communication()
 	case PS_SUBSCRIBE:
 	  {
 	    CONFLICT_TYPE conflict = try_subscribe(sender, ps_remote->address);
-	    /* PF_STOP(11); */
+	    PF_STOP(11);
 #ifdef PGAS
 	    uint64_t val;
 	    if (ps_remote->num_words == 1)
