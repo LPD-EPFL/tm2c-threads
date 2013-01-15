@@ -131,7 +131,6 @@ test(void *data, double duration)
 	    last = val;
 	  }
 	  d->nb_add++;
-
 	}
 	else { // remove
 

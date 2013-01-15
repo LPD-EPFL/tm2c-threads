@@ -268,7 +268,7 @@ done:
     if (result) {
         nxt_t nxt = OF(new_node(val, OF(next), transactional));
         PRINTD("Created node %5d. Value: %d", nxt, val);
-        TX_STORE(&prev->next, nxt, TYPE_INT);
+        TX_STORE(&prev->next, nxt, TYPE_INT64);
     }
     TX_COMMIT_MEM;
 
@@ -417,11 +417,11 @@ done:
     result = (v == val);
     if (result) {
         nxt_t nxt = *(nxt_t *) TX_LOAD(&next->next);
-        TX_STORE(&prev->next, nxt, TYPE_INT);
+        TX_STORE(&prev->next, nxt, TYPE_INT64);
 	TX_SHFREE(next);
         PRINTD("Freed node   %5d. Value: %d", OF(next), next->val);
     }
-        TX_COMMIT_MEM;
+    TX_COMMIT_MEM;
 
 #ifdef DEBUG
     printf("[%02d]--> set_remove(%d)\n", NODE_ID(), (int) val);
