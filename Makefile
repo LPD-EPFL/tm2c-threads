@@ -1,6 +1,6 @@
 # Main Makefile for DSTM
 
-# For platform, choose one out of: iRCCE, SCC.SSMP, MCORE, MCORE.SSMP,CLUSTER,TILERA
+# For platform, choose one out of: iRCCE, SCC.SSMP, MCORE, MCORE.SSMP, CLUSTER, TILERA, NIAGARA
 PLATFORM = TILERA
 # USE_HASHTABLE_KHASH:  khash.h from <http://www.freewebs.com/attractivechaos/khash.h>
 # USE_HASHTABLE_UTHASH: uthash.h from <http://uthash.sourceforge.net/>
