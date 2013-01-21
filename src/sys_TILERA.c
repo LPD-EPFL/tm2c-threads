@@ -94,7 +94,7 @@ sys_init_system(int* argc, char** argv[]) {
     int watch_forked_children = tmc_task_watch_forked_children(1);
 
     ID = 0;
-    PRINT("will create %d more procs", NUM_UES - 1);
+    PRINTD("will create %d more procs", NUM_UES - 1);
 
     int rank;
     for (rank = 1; rank < NUM_UES; rank++) {
@@ -475,7 +475,7 @@ dsl_communication()
 		    BARRIER_DSL;
 		    if (n == NODE_ID())
 		      {
-			/* ssht_stats_print(ps_hashtable, 0); */
+			ssht_stats_print(ps_hashtable, SSHT_DBG_UTILIZATION_DTL);
 		      }
 		    BARRIER_DSL;
 		  }

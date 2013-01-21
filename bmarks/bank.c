@@ -35,6 +35,7 @@
 
 /*use TX_LOAD_STORE*/
 #define LOAD_STORE
+#define NB_ACC_POWER2
 
 #define PRINT_STATS_
 
