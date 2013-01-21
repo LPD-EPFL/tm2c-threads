@@ -81,6 +81,7 @@ write_set_insert(write_set_t* write_set, DATATYPE datatype, int32_t value, tm_in
     write_entry_t *we = write_set_entry(write_set);
 
     we->address = address;
+    we->type = datatype;
     write_entry_set_value(we, value);
 }
 
@@ -110,7 +111,19 @@ inline void
 write_entry_persist(write_entry_t* we) 
 {
   tm_addr_t shmem_address = to_addr(we->address);
+
+#if defined(PLATFORM_NIAGARA)
+  if (we->type == TYPE_INT)
+    {
+      *(int32_t*)(shmem_address) = we->i;
+    }
+  else
+    {
+      *(int64_t*)(shmem_address) = we->i;
+    }
+#else
   *(int32_t*)(shmem_address) = we->i;
+#endif	/* PLATFORM_NIAGARA */
 }
 
 void
@@ -141,7 +154,9 @@ write_set_persist(write_set_t* write_set)
   
 #if defined(PLATFORM_TILERA)
   tmc_mem_fence();
-#endif  /* PLATFORM_TILERA */
+#elif defined(PLATFORM_NIAGARA)
+  __asm__ __volatile__("membar #LoadLoad | #LoadStore | #StoreLoad | #StoreStore");
+#endif  /* PLATFORM_* */
 }
 
 inline write_entry_t* 

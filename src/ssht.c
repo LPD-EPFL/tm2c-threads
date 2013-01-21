@@ -12,12 +12,10 @@ ssht_hashtable_t
 ssht_new() 
 {
   ssht_hashtable_t hashtable;
-  if (posix_memalign((void**) &hashtable, CACHE_LINE_SIZE, NUM_BUCKETS * sizeof(bucket_t)) != 0)
-    {
-      perror("posix_memalign failed\n");
-      EXIT(-1);
-    }
-
+  hashtable = (ssht_hashtable_t) memalign(CACHE_LINE_SIZE, NUM_BUCKETS * sizeof(bucket_t));
+  /* PRINT("size of ht is %d", NUM_BUCKETS * sizeof(bucket_t)); */
+  /* PRINT("size of bu is %d", sizeof(bucket_t)); */
+  /* PRINT("size of en is %d", sizeof(ssht_rw_entry_t)); */
   assert(hashtable != NULL);
   assert((intptr_t) hashtable % CACHE_LINE_SIZE == 0);
   assert(sizeof(ssht_rw_entry_t) % CACHE_LINE_SIZE == 0);
@@ -31,18 +29,22 @@ ssht_new()
       ht_uint64_t[i] = 0;
     }
 
-  for (i = 0; i < NUM_BUCKETS; i++) {
-    uint32_t j;
-    for (j = 0; j < ENTRY_PER_CL; j++) {
-      hashtable[i].entry[j].writer = SSHT_NO_WRITER;
+  for (i = 0; i < NUM_BUCKETS; i++) 
+    {
+      uint32_t j;
+      for (j = 0; j < ENTRY_PER_CL; j++) 
+	{
+	  hashtable[i].entry[j].writer = SSHT_NO_WRITER;
+	}
     }
-  }
 
   return hashtable;
 }
 
 void 
-bucket_print(bucket_t *bu) {
+bucket_print(bucket_t *bu) 
+{
+#if !defined(BIT_OPTS)
   bucket_t* btmp = bu;
   do 
     {
@@ -56,6 +58,7 @@ bucket_print(bucket_t *bu) {
     } 
   while (btmp != NULL);
   printf("\n");
+#endif	/* BIT_OPTS */
 }
 
 
@@ -83,8 +86,13 @@ bucket_insert_r(bucket_t* bu, ssht_log_set_t* log, uint32_t id, uintptr_t addr)
 #endif	/* NOCM */
 		}
 
+#if defined(BIT_OPTS)
+	      rw_entry_ssht_set(e, id);
+#else
 	      e->nr++;
 	      e->reader[id] = 1;
+#endif	/* BIT_OPTS */
+
 	      btmp->addr[i] = addr;
 	      ssht_log_set_insert(log, btmp->addr + i, e);
 	      return NO_CONFLICT;
@@ -101,14 +109,19 @@ bucket_insert_r(bucket_t* bu, ssht_log_set_t* log, uint32_t id, uintptr_t addr)
     {
       for (i = 0; i < ADDR_PER_CL; i++) 
 	{
-	  if (btmp->addr[i] == 0) {
-	    ssht_rw_entry_t *e = btmp->entry + i;
-	    e->nr++;
-	    e->reader[id] = 1;
-	    btmp->addr[i] = addr;
-	    ssht_log_set_insert(log, btmp->addr + i, e);
-	    return NO_CONFLICT;
-	  }
+	  if (btmp->addr[i] == 0) 
+	    {
+	      ssht_rw_entry_t *e = btmp->entry + i;
+#if defined(BIT_OPTS)
+	      rw_entry_ssht_set(e, id);
+#else
+	      e->nr++;
+	      e->reader[id] = 1;
+#endif	/* BIT_OPTS */
+	      btmp->addr[i] = addr;
+	      ssht_log_set_insert(log, btmp->addr + i, e);
+	      return NO_CONFLICT;
+	    }
 	}
 
       if (btmp->next == NULL) 
@@ -151,7 +164,11 @@ bucket_insert_w(bucket_t* bu, ssht_log_set_t* log, uint32_t id, uintptr_t addr)
 		  return WRITE_AFTER_WRITE;
 #endif	/* NOCM */
 		}
+#if defined(BIT_OPTS)
+	      else if (rw_entry_ssht_has_readers(e) && !rw_entry_ssht_is_unique_reader(e, id))
+#else
 	      else if (e->nr > 1 || e->reader[id] == 0) 
+#endif	/* BIT_OPTS */
 		{
 #ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
 		  if (contention_manager_war(id, e->reader, WRITE_AFTER_READ))
@@ -208,6 +225,7 @@ bucket_insert_w(bucket_t* bu, ssht_log_set_t* log, uint32_t id, uintptr_t addr)
 CONFLICT_TYPE 
 ssht_insert_w_test(ssht_hashtable_t ht, uint32_t id, uintptr_t addr)
 {
+#if !defined(BIT_OPTS)
   uint32_t bu = hash_tw((addr>>2) % UINT_MAX);
   bucket_t *btmp = ht + (bu % NUM_OF_BUCKETS);
 
@@ -256,6 +274,8 @@ ssht_insert_w_test(ssht_hashtable_t ht, uint32_t id, uintptr_t addr)
       btmp = btmp->next;
     } 
   while (btmp != NULL);
+
+#endif	/* BIT_OPTS */
 
   return NO_CONFLICT;
 }

@@ -73,6 +73,18 @@ extern "C" {
   }						\
     BARRIER;}}
 
+#define DSL_EXEC_ORDER				\
+  {						\
+  int i;					\
+  for (i = 0; i < TOTAL_NODES(); i++)		\
+    {						\
+  if (i == NODE_ID())				\
+    {						
+  
+#define DSL_EXEC_ORDER_END			\
+  }						\
+    BARRIER_DSL;}}
+
 
   extern stm_tx_t *stm_tx;
   extern stm_tx_node_t *stm_tx_node;
@@ -242,30 +254,30 @@ extern "C" {
   handle_abort(stm_tx, reason);			\
   siglongjmp(stm_tx->env, reason);
 
-#define TX_COMMIT						\
-  WLOCKS_ACQUIRE();						\
-    TXPERSISTING();						\
-    WSET_PERSIST(stm_tx->write_set);				\
-    TXCOMMITTED();						\
-    ps_finish_all(NO_CONFLICT);					\
-    CM_METADATA_UPDATE_ON_COMMIT;				\
-    stm_tx_node->tx_starts++;					\
-    stm_tx_node->tx_commited++;					\
-    stm_tx = tx_metadata_empty(stm_tx);}
+#define TX_COMMIT				\
+  WLOCKS_ACQUIRE();				\
+  TXPERSISTING();				\
+  WSET_PERSIST(stm_tx->write_set);		\
+  TXCOMMITTED();				\
+  ps_finish_all(NO_CONFLICT);			\
+  CM_METADATA_UPDATE_ON_COMMIT;			\
+  stm_tx_node->tx_starts++;			\
+  stm_tx_node->tx_commited++;			\
+  stm_tx = tx_metadata_empty(stm_tx);}
 
 
-#define TX_COMMIT_MEM						\
-  WLOCKS_ACQUIRE();						\
-  TXPERSISTING();						\
-    WSET_PERSIST(stm_tx->write_set);				\
-    TXCOMMITTED();						\
-    ps_finish_all(NO_CONFLICT);					\
-    CM_METADATA_UPDATE_ON_COMMIT;				\
-    mem_info_on_commit(stm_tx->mem_info);			\
-    stm_tx_node->tx_starts++;					\
-    stm_tx_node->tx_commited++;					\
-    stm_tx_node->tx_aborted += stm_tx->aborts;			\
-    stm_tx = tx_metadata_empty(stm_tx);}
+#define TX_COMMIT_MEM				\
+  WLOCKS_ACQUIRE();				\
+  TXPERSISTING();				\
+  WSET_PERSIST(stm_tx->write_set);		\
+  TXCOMMITTED();				\
+  ps_finish_all(NO_CONFLICT);			\
+  CM_METADATA_UPDATE_ON_COMMIT;			\
+  mem_info_on_commit(stm_tx->mem_info);		\
+  stm_tx_node->tx_starts++;			\
+  stm_tx_node->tx_commited++;			\
+  stm_tx_node->tx_aborted += stm_tx->aborts;	\
+  stm_tx = tx_metadata_empty(stm_tx);}
 
 
 /* #define TX_COMMIT					\ */

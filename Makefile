@@ -21,7 +21,6 @@ SRCPATH := $(TOP)/src
 MAININCLUDE := $(TOP)/include
 
 INCLUDES := -I$(MAININCLUDE) -I$(TOP)/external/include
-INCLUDE_FILES := $(shell ls $(MAININCLUDE));
 LIBS := -L$(TOP)/external/lib \
 		-lm \
 		$(PLATFORM_LIBS)

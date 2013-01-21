@@ -29,7 +29,8 @@ extern "C" {
 
   typedef enum 
     {
-      TYPE_INT
+      TYPE_INT,
+      TYPE_INT64
     } DATATYPE;
 
 
@@ -44,6 +45,7 @@ extern "C" {
   typedef struct write_entry 
   {
     tm_intern_addr_t address;
+    DATATYPE type;
     int32_t i;
   } write_entry_t;
 

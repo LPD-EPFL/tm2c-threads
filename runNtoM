@@ -29,13 +29,13 @@ fi
 app=$1;
 shift;
 
-echo "#nue\tThroughput CRate  Latency Th/nue  Th/dsl";
+echo "#nue\tThroughput CRate  Latency NumDSL Th/nue  Th/dsl";
 
-for nue in $(seq $N $STEP $M); do
-    echo -n -e "$nue\t";
-    RES=$(./run $nue $app $@ | grep ")))" | sed 's/)//g' | cut -d"(" -f1 | tr [:blank:] \\t);
-    echo -n $RES;
-    TH=$(echo $RES | cut -d' ' -f1);
-    NUM_DSL=$(echo $RES | cut -d' ' -f4);
-    echo "\t$(($TH/$nue))\t$(($TH/$NUM_DSL))"
+for nue in `seq $N $STEP $M`; do
+    printf "$nue\t";
+    RES=`./run $nue $app $@ | grep ")))" | sed 's/)//g' | cut -d"(" -f1`;
+    printf "$RES";
+    TH=`echo $RES | cut -d' ' -f1`;
+    NUM_DSL=`echo $RES | cut -d' ' -f4`;
+    printf "%7.0f%7.0f\n" `echo $TH/$nue | bc -l` `echo $TH/$NUM_DSL | bc -l`;
 done

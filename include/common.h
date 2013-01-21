@@ -58,15 +58,21 @@ extern "C" {
 #define DSLNDPERNODES   2 /* 1 dedicated DS-Locking core per DSLNDPERNODES cores*/
 
 
-#  define CACHE_LINE_SIZE 64
+
 
 #if defined(PLATFORM_MCORE)
 #  define REF_SPEED_GHZ           2.1
+#  define CACHE_LINE_SIZE 64
 #elif defined(SCC)
 #  define REF_SPEED_GHZ           0.533
+#  define CACHE_LINE_SIZE 64
 #elif defined(PLATFORM_TILERA)
 #  define REF_SPEED_GHZ           0.7
-#else
+#  define CACHE_LINE_SIZE 64
+#  elif defined(PLATFORM_NIAGARA)
+#  define REF_SPEED_GHZ           1.17
+#  define CACHE_LINE_SIZE 16
+#  else
 #  error "Need to set REF_SPEED_GHZ for the platform"
 #endif
 
@@ -259,6 +265,11 @@ extern "C" {
 #  else
 #    include "sys_MCORE_ssmp.h"
 #  endif
+#endif
+
+#ifdef PLATFORM_NIAGARA
+
+#  include "sys_NIAGARA.h"
 #endif
 
 #ifdef PLATFORM_TILERA

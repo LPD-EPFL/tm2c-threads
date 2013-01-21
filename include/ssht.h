@@ -9,13 +9,22 @@
 #include "hash.h"
 
 #include "ssht_log.h"
+
+/* #define SSHT_DBG_UTILIZATION */
+
+/* #define BIT_OPTS */
+
+#if defined(BIT_OPTS)
+#include "rw_entry_ssht.h"
+#endif	/* BIT_OPTS */
+
 #include <assert.h>
 #ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
 #  include "cm.h"
 #endif 
 
 #define SIZE_ENTRY 4
-#define ADDR_PER_CL 7
+#define ADDR_PER_CL 3
 #define ENTRY_PER_CL ADDR_PER_CL
 
 #ifdef SCC
@@ -24,28 +33,36 @@
 #define PADDING_BYTES 0
 #endif	/* SCC */
 
+#if defined(BIT_OPTS)
+#define MAX_READERS 64
+#else
 #define MAX_READERS 62
-  
+#endif	/* BIT_OPTS */
+
 #define SSHT_NO_WRITER 0xFF
 #define SSHT_ENTRY_FREE 0x00000000000000FF
 
 #define FALSE 0
 #define TRUE 1
 
-#define NUM_OF_BUCKETS 47
+#define NUM_OF_BUCKETS 17
 #define NUM_BUCKETS NUM_OF_BUCKETS
 
 typedef uintptr_t addr_t;
 
-typedef struct ALIGNED(64) ssht_rw_entry {
+#if !defined(BIT_OPTS)
+typedef struct ALIGNED(CACHE_LINE_SIZE) ssht_rw_entry 
+{
   uint8_t nr;
   uint8_t reader[MAX_READERS];
   uint8_t writer;
 } ssht_rw_entry_t;
+#endif	/* BIT_OPTS */
 
-typedef struct ALIGNED(64) bucket {          /* SCC */
-  addr_t addr[ADDR_PER_CL];	             /* 4 * 7   28 */
-  struct bucket* next;			     /* 4       32 */
+typedef struct ALIGNED(CACHE_LINE_SIZE) bucket
+{         
+  addr_t addr[ADDR_PER_CL];	             
+  struct bucket* next;			     
   uint8_t padding[PADDING_BYTES];
   ssht_rw_entry_t entry[ENTRY_PER_CL];
 } bucket_t;
@@ -119,11 +136,25 @@ ssht_insert(ssht_hashtable_t ht, uint32_t bu, ssht_log_set_t* log, uint32_t id, 
 }
 
 
-
-
 INLINED uint32_t 
 ssht_bucket_remove_index(addr_t *addr, uint32_t id, ssht_rw_entry_t *entry) 
 {
+#if defined(BIT_OPTS)
+  if (entry->writer == id) 
+    {
+      entry->writer = SSHT_NO_WRITER;
+    }
+  else 
+    {
+      rw_entry_ssht_unset(entry, id);
+    }
+    
+  if (rw_entry_ssht_is_empty(entry))
+    {
+      *addr = 0;
+    }
+
+#else
   if (entry->writer == id) 
     {
       entry->writer = SSHT_NO_WRITER;
@@ -139,6 +170,7 @@ ssht_bucket_remove_index(addr_t *addr, uint32_t id, ssht_rw_entry_t *entry)
       *addr = 0;
     }
 
+#endif	/* BIT_OPTS */
   return TRUE;
 }
 

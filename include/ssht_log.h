@@ -1,13 +1,13 @@
 #ifndef SSHT_LOG_H
 #define	SSHT_LOG_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#include "ssht.h"
-
 #ifdef	__cplusplus
 extern "C" {
 #endif
+
+#include <stdio.h>
+#include <stdlib.h>
+#include "ssht.h"
 
 #ifndef INLINED
 #if __GNUC__ && !__GNUC_STDC_INLINE__
@@ -17,14 +17,16 @@ extern "C" {
 #endif
 #endif
 
-#define SSHT_LOG_SET_SIZE 1024
+#define SSHT_LOG_SET_SIZE 8
 
-  typedef struct ssht_log_entry {
-    uintptr_t * address;    //* to the addr index for this entry
-    struct ssht_rw_entry * entry; //* to the specific entry
+  typedef struct ssht_log_entry 
+  {
+    uintptr_t* address;    //* to the addr index for this entry
+    struct ssht_rw_entry* entry; //* to the specific entry
   } ssht_log_entry_t;
 
-  typedef struct ssht_log_set {
+  typedef struct ssht_log_set 
+  {
     ssht_log_entry_t *log_entries;
     uint32_t nb_entries;
     uint32_t size;

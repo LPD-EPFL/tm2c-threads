@@ -186,13 +186,12 @@ ps_sendbv(nodeid_t target, PS_COMMAND_TYPE command,
 static inline CONFLICT_TYPE
 ps_recvb(nodeid_t from)
 {
-#if defined(PLATFORM_MCORE) || defined(PLATFORM_TILERA) || defined(PLATFORM_SCC_SSMP)
   PS_REPLY cmd;
   sys_recvcmd(&cmd, sizeof (PS_REPLY), from);
-#else
-  PS_COMMAND cmd;
-  sys_recvcmd(&cmd, sizeof (PS_COMMAND), from);
-#endif
+
+  /* PS_COMMAND cmd; */
+  /* sys_recvcmd(&cmd, sizeof (PS_COMMAND), from); */
+
 #ifdef PGAS
   read_value = cmd.value;
 #endif
@@ -406,6 +405,11 @@ CONFLICT_TYPE ps_publish(tm_addr_t address, int64_t value) {
       {
 	PRINT("malloc @ ps_send_stats");
 	stats_cmd = (PS_STATS_CMD_T*) psc;
+      }
+
+    if (duration == 0)
+      {
+	duration = 1;		/* to make stats work properly */
       }
 
     stats_cmd->type = PS_STATS;
