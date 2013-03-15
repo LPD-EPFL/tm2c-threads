@@ -85,6 +85,7 @@ typedef struct account
 {
   int32_t number;
   int32_t balance;
+  uint8_t padding[64 - 8];
 } account_t;
 
 typedef struct bank 
@@ -403,7 +404,6 @@ if (bank->accounts == NULL)
 
 TASKMAIN(int argc, char **argv) {
   dup2(STDOUT_FILENO, STDERR_FILENO);
-
   PF_MSG(0, "1st TX_LOAD_STORE (transfer)");
   PF_MSG(1, "2nd TX_LOAD_STORE (transfer)");
   PF_MSG(2, "the whole transfer");
