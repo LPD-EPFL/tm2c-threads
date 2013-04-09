@@ -37,7 +37,7 @@
 #define LOAD_STORE
 #define NB_ACC_POWER2
 
-#define PRINT_STATS_
+#define PRINT_STATS
 
 #if defined(SCC)
 /*take advante all 4 MCs*/
@@ -85,7 +85,7 @@ typedef struct account
 {
   int32_t number;
   int32_t balance;
-  uint8_t padding[64 - 8];
+  /* uint8_t padding[64 - 8]; */
 } account_t;
 
 typedef struct bank 
@@ -134,7 +134,7 @@ transfer(account_t *src, account_t *dst, int amount)
 void
 check_accs(account_t *acc1, account_t *acc2) 
 {
-  /* PRINT("in transfer"); */
+  /* PRINT("in check_accs"); */
 
   volatile int i, j;
   
@@ -323,7 +323,7 @@ if (bank->accounts == NULL)
   uint32_t trans = 0;
 
   /* you do this only once */
-  signal (SIGALRM, alarm_handler);
+  signal(SIGALRM, alarm_handler);
 
   PF_MSG(11, "alarm call");
 

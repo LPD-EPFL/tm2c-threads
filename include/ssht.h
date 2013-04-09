@@ -28,7 +28,7 @@
 #define ENTRY_PER_CL ADDR_PER_CL
 
 #ifdef SCC
-#define PADDING_BYTES 32
+#define PADDING_BYTES (64 - (ADDR_PER_CL+1)*4)
 #else
 #define PADDING_BYTES 0
 #endif	/* SCC */
@@ -40,7 +40,11 @@
 #endif	/* BIT_OPTS */
 
 #define SSHT_NO_WRITER 0xFF
-#define SSHT_ENTRY_FREE 0x00000000000000FF
+#if defined(SCC)
+#  define SSHT_ENTRY_FREE 0x000000FF
+#else
+#  define SSHT_ENTRY_FREE 0x00000000000000FF
+#endif
 
 #define FALSE 0
 #define TRUE 1
@@ -58,7 +62,7 @@ typedef struct ALIGNED(CACHE_LINE_SIZE) ssht_rw_entry
   uint8_t reader[MAX_READERS];
   uint8_t writer;
 } ssht_rw_entry_t;
-#endif	/* BIT_OPTS */
+#endif	/* !BIT_OPTS */
 
 typedef struct ALIGNED(CACHE_LINE_SIZE) bucket
 {         

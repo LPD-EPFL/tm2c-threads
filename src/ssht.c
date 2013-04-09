@@ -13,9 +13,13 @@ ssht_new()
 {
   ssht_hashtable_t hashtable;
   hashtable = (ssht_hashtable_t) memalign(CACHE_LINE_SIZE, NUM_BUCKETS * sizeof(bucket_t));
-  /* PRINT("size of ht is %d", NUM_BUCKETS * sizeof(bucket_t)); */
-  /* PRINT("size of bu is %d", sizeof(bucket_t)); */
-  /* PRINT("size of en is %d", sizeof(ssht_rw_entry_t)); */
+  /* PRINT("size of hashtable is %d", NUM_BUCKETS * sizeof(bucket_t)); */
+  /* PRINT("size of bucket    is %d", sizeof(bucket_t)); */
+  /* PRINT("size of rw entry  is %d", sizeof(ssht_rw_entry_t)); */
+  /* PRINT("size of addr_t    is %d", sizeof(addr_t)); */
+  /* PRINT("size of *next     is %d", sizeof(struct bucket*)); */
+  /* PRINT("size of uintprt_t is %d", sizeof(uintptr_t)); */
+
   assert(hashtable != NULL);
   assert((intptr_t) hashtable % CACHE_LINE_SIZE == 0);
   assert(sizeof(ssht_rw_entry_t) % CACHE_LINE_SIZE == 0);
