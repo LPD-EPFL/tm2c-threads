@@ -226,15 +226,17 @@ handle_abort(stm_tx_t* stm_tx, CONFLICT_TYPE reason)
   /*BACKOFF and RETRY*/
   if (BACKOFF_MAX > 0)  
     {
-      uint32_t wait_max = (stm_tx->retries < BACKOFF_MAX ? stm_tx->retries : BACKOFF_MAX) * BACKOFF_DELAY;
-      /* pow(2, (stm_tx->retries < BACKOFF_MAX ? stm_tx->retries : BACKOFF_MAX)) * BACKOFF_DELAY; */
-      uint32_t wait = rand_range(wait_max);
-      ndelay(wait);
-    }
-  else 
-    {
       wait_cycles(50 * stm_tx->retries);
+
+      /* uint32_t wait_max = (stm_tx->retries < BACKOFF_MAX ? stm_tx->retries : BACKOFF_MAX) * BACKOFF_DELAY; */
+      /* /\* pow(2, (stm_tx->retries < BACKOFF_MAX ? stm_tx->retries : BACKOFF_MAX)) * BACKOFF_DELAY; *\/ */
+      /* uint32_t wait = rand_range(wait_max); */
+      /* ndelay(wait); */
     }
+  /* else  */
+  /*   { */
+  /*     wait_cycles(50 * stm_tx->retries); */
+  /*   } */
 #endif
 }
 

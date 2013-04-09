@@ -16,9 +16,9 @@ PLATFORM_LIBS = -lssmp
 ## commonly changed defines
 PLATFORM_DEFINES =      -DBACKOFF_RETRY \
 		        -DBACKOFF_MAX="0" \
-		        -DBACKOFF_DELAY="5000" \
+		        -DBACKOFF_DELAY="128" \
 			-UDO_TIMINGS \
-		   	-DNOCM		   
+		   	-DGREEDY
 ## fixed defines
 PLATFORM_DEFINES +=     -DPLATFORM_SCC_SSMP \
 		   	-DSSMP \

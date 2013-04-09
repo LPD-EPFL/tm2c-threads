@@ -29,9 +29,7 @@ extern "C" {
   typedef struct ALIGNED(64) stm_tx /* Transaction descriptor */
   { 
     sigjmp_buf env;		/* Environment for setjmp/longjmp */
-#if defined(GREEDY) /* placed in diff place than for FAIRCM, according to access seq */
-    ticks start_ts;
-#eif defined(FAIRCM) 
+#if defined(GREEDY) | defined(FAIRCM) /* placed in diff place than for FAIRCM, according to access seq */
     ticks start_ts;
 #endif
     uint16_t aborts;	 /* Total number of aborts (cumulative) */

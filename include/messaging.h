@@ -288,9 +288,6 @@ typedef struct ps_stats_cmd_send
     nodeid_t nodeId;	      /* we need IDs on networked systems */
     /* 8 */
     tm_intern_addr_t address; /* addr of the data, internal representation */
-#  if defined(SCC)
-    int32_t dummy[1];		/* tm_inter_add = size_t = size 4 on the SCC */
-#  endif
     /* 8 */
     union 
     {
@@ -300,7 +297,9 @@ typedef struct ps_stats_cmd_send
     };
     /* 8 */
     uint64_t tx_metadata;
-
+#  if defined(SCC)
+    int32_t dummy[1];		/* tm_inter_add = size_t = size 4 on the SCC */
+#  endif
     /* SSMP[.SCC] uses the last word as a flag, hence it should be not used for data */
 #  if defined(PLATFORM_MCORE_SSMP)
     uint8_t padding[32];
@@ -314,12 +313,12 @@ typedef struct ps_stats_cmd_send
     int32_t type; //PS_REPLY_TYPE
     nodeid_t nodeId;
     tm_intern_addr_t address; /* address of the data, internal representation */
-#  if defined(SCC)
-    int32_t dummy[1];		/* tm_inter_add = size_t = size 4 on the SCC */
-#  endif
     int64_t value;
     int32_t response; //BOOLEAN
     int32_t resp_size;
+#  if defined(SCC)
+    int32_t dummy[1];		/* tm_inter_add = size_t = size 4 on the SCC */
+#  endif
     /* SSMP[.SCC] uses the last word as a flag, hence it should be not used for data */
 #  if defined(PLATFORM_MCORE_SSMP)
     uint8_t padding[32];

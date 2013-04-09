@@ -243,8 +243,14 @@ bank_t*
 test(void *data, double duration, int nb_accounts) 
 {
   int rand_max, rand_min;
+  uint8_t is_read_core = 0;
   thread_data_t *d = (thread_data_t *) data;
   bank_t * bank;
+
+  if (d->id < d->read_cores)
+    {
+      is_read_core = 1;
+    }
 
 
   /* Initialize seed (use rand48 as rand is poor) */
@@ -350,7 +356,7 @@ if (bank->accounts == NULL)
       /*   } */
 
       uint8_t nb = tm2c_rand() & 127;
-      if (nb < d->read_all)
+      if (is_read_core | nb < d->read_all)
 	{
 	  /* Read all */
 	  total(bank, 1);

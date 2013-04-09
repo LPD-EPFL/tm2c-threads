@@ -212,219 +212,214 @@ dsl_communication()
 
   ssmp_color_buf_init(cbuf, is_app_core);
 
-  while (1) {
+  while (1)
+    {
 
-    last_recv_from = ssmp_recv_color_start(cbuf, msg, last_recv_from) + 1;
-    sender = msg->sender;
+      last_recv_from = ssmp_recv_color_start(cbuf, msg, last_recv_from) + 1;
+      sender = msg->sender;
     
-    ps_remote = (PS_COMMAND *) msg;
+      ps_remote = (PS_COMMAND *) msg;
 
 #if defined(WHOLLY) || defined(FAIRCM)
-    cm_metadata_core[sender].timestamp = (ticks) ps_remote->tx_metadata;
+      cm_metadata_core[sender].timestamp = (ticks) ps_remote->tx_metadata;
 #elif defined(GREEDY)
-    if (cm_metadata_core[sender].timestamp == 0) {
-      cm_metadata_core[sender].timestamp = getticks() - (ticks) ps_remote->tx_metadata;
-    }
+      if (cm_metadata_core[sender].timestamp == 0)
+	{
+	  cm_metadata_core[sender].timestamp = getticks() - (ticks) ps_remote->tx_metadata;
+	}
 #endif
 
-
-
-    switch (ps_remote->type)
-      {
-      case PS_SUBSCRIBE:
+      switch (ps_remote->type)
 	{
-	  CONFLICT_TYPE conflict = try_subscribe(sender, ps_remote->address);
-	  /* PF_STOP(11); */
+	case PS_SUBSCRIBE:
+	  {
+	    CONFLICT_TYPE conflict = try_subscribe(sender, ps_remote->address);
+	    /* PF_STOP(11); */
 #ifdef PGAS
-	  uint64_t val;
-	  if (ps_remote->num_words == 1)
-	    {
-	      val = pgas_dsl_read32(ps_remote->address);
-	    }
-	  else
-	    {
-	      val = pgas_dsl_read(ps_remote->address);
-	    }
+	    uint64_t val;
+	    if (ps_remote->num_words == 1)
+	      {
+		val = pgas_dsl_read32(ps_remote->address);
+	      }
+	    else
+	      {
+		val = pgas_dsl_read(ps_remote->address);
+	      }
 
-	  sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE,
-			       (tm_addr_t) ps_remote->address, val, conflict);
+	    sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE,
+				 (tm_addr_t) ps_remote->address, val, conflict);
 #else  /* !PGAS */
-	  sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE, 
-			       (tm_addr_t) ps_remote->address, 
-			       0,
-			       conflict);
+	    sys_ps_command_reply(sender, PS_SUBSCRIBE_RESPONSE, 
+				 (tm_addr_t) ps_remote->address, 
+				 0,
+				 conflict);
 #endif	/* PGAS */
-	  if (conflict != NO_CONFLICT)
-	    {
-	      ps_hashtable_delete_node(ps_hashtable, sender);
+	    if (conflict != NO_CONFLICT)
+	      {
+		ps_hashtable_delete_node(ps_hashtable, sender);
 #if defined(GREEDY)
-	      cm_metadata_core[sender].timestamp = 0;
+		cm_metadata_core[sender].timestamp = 0;
 #endif
 #ifdef PGAS
-	      PGAS_write_sets[sender] = write_set_pgas_empty(PGAS_write_sets[sender]);
+		PGAS_write_sets[sender] = write_set_pgas_empty(PGAS_write_sets[sender]);
 #endif	/* PGAS */
-	    }
+	      }
 
-	  break;
-	}
-      case PS_PUBLISH:
-	{
-	  CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
+	    break;
+	  }
+	case PS_PUBLISH:
+	  {
+	    CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
 #ifdef PGAS
 
-	  if (conflict == NO_CONFLICT) 
-	    {
-	      write_set_pgas_insert(PGAS_write_sets[sender], ps_remote->write_value, ps_remote->address);
-	    }
+	    if (conflict == NO_CONFLICT) 
+	      {
+		write_set_pgas_insert(PGAS_write_sets[sender], ps_remote->write_value, ps_remote->address);
+	      }
 #endif	/* PGAS */
 
-	  sys_ps_command_reply(sender, PS_PUBLISH_RESPONSE, 
-			       (tm_addr_t) ps_remote->address, 0, conflict);
+	    sys_ps_command_reply(sender, PS_PUBLISH_RESPONSE, 
+				 (tm_addr_t) ps_remote->address, 0, conflict);
 
-	  if (conflict != NO_CONFLICT)
-	    {
-	      ps_hashtable_delete_node(ps_hashtable, sender);
+	    if (conflict != NO_CONFLICT)
+	      {
+		ps_hashtable_delete_node(ps_hashtable, sender);
 
 #if defined(GREEDY)
-	      cm_metadata_core[sender].timestamp = 0;
+		cm_metadata_core[sender].timestamp = 0;
 #endif
 #ifdef PGAS
-	      PGAS_write_sets[sender] = write_set_pgas_empty(PGAS_write_sets[sender]);
+		PGAS_write_sets[sender] = write_set_pgas_empty(PGAS_write_sets[sender]);
 #endif	/* PGAS */
-	    }
+	      }
 
-	  break;
-	}
+	    break;
+	  }
 #ifdef PGAS
-      case PS_WRITE_INC:
-	{
-	  CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
+	case PS_WRITE_INC:
+	  {
+	    CONFLICT_TYPE conflict = try_publish(sender, ps_remote->address);
 
-	  if (conflict == NO_CONFLICT) 
-	    {
-	      int64_t val = pgas_dsl_read(ps_remote->address) + ps_remote->write_value;
+	    if (conflict == NO_CONFLICT) 
+	      {
+		int64_t val = pgas_dsl_read(ps_remote->address) + ps_remote->write_value;
 
-	      /* PRINT("PS_WRITE_INC from %2d for %3d, off: %lld, old: %3lld, new: %lld", sender,  */
-	      /*       ps_remote->address, ps_remote->write_value, */
-	      /*       pgas_dsl_read(ps_remote->address), val); */
+		/* PRINT("PS_WRITE_INC from %2d for %3d, off: %lld, old: %3lld, new: %lld", sender,  */
+		/*       ps_remote->address, ps_remote->write_value, */
+		/*       pgas_dsl_read(ps_remote->address), val); */
 
-	      write_set_pgas_insert(PGAS_write_sets[sender], val, ps_remote->address);
-	    }
+		write_set_pgas_insert(PGAS_write_sets[sender], val, ps_remote->address);
+	      }
 
-	  sys_ps_command_reply(sender, PS_PUBLISH_RESPONSE,
-			       (tm_addr_t) ps_remote->address,
-			       0,
-			       conflict);
+	    sys_ps_command_reply(sender, PS_PUBLISH_RESPONSE,
+				 (tm_addr_t) ps_remote->address,
+				 0,
+				 conflict);
 
-	  if (conflict != NO_CONFLICT)
-	    {
-	      ps_hashtable_delete_node(ps_hashtable, sender);
-	      PGAS_write_sets[sender] = write_set_pgas_empty(PGAS_write_sets[sender]);
-	      /* PRINT("conflict on %d (aborting %d)", ps_remote->address, sender); */
-	    }
+	    if (conflict != NO_CONFLICT)
+	      {
+		ps_hashtable_delete_node(ps_hashtable, sender);
+		PGAS_write_sets[sender] = write_set_pgas_empty(PGAS_write_sets[sender]);
+		/* PRINT("conflict on %d (aborting %d)", ps_remote->address, sender); */
+	      }
 
-	  break;
-	}
-      case PS_LOAD_NONTX:
-	{
-	  int64_t val;
-	  if (ps_remote->num_words == 1)
-	    {
-	      val = (int64_t) pgas_dsl_read32(ps_remote->address);
-	    }
-	  else
-	    {
-	      val = pgas_dsl_read(ps_remote->address);
-	    }
+	    break;
+	  }
+	case PS_LOAD_NONTX:
+	  {
+	    int64_t val;
+	    if (ps_remote->num_words == 1)
+	      {
+		val = (int64_t) pgas_dsl_read32(ps_remote->address);
+	      }
+	    else
+	      {
+		val = pgas_dsl_read(ps_remote->address);
+	      }
 
-	  /* convert_t c; c.lli = val; */
-	  /* PRINT("      LOAD: addr: %10ld   val: %10d   %d", ps_remote->address, c.i[0], c.i[1]); */
-
-	  sys_ps_command_reply(sender, PS_LOAD_NONTX_RESPONSE,
-			       (tm_addr_t) ps_remote->address,
-			       val,
-			       NO_CONFLICT);
+	    sys_ps_command_reply(sender, PS_LOAD_NONTX_RESPONSE,
+				 (tm_addr_t) ps_remote->address,
+				 val,
+				 NO_CONFLICT);
 		
-	  break;
-	}
-      case PS_STORE_NONTX:
-	{
-	  pgas_dsl_write(ps_remote->address, ps_remote->write_value);
-	  /* convert_t c; c.lli = ps_remote->write_value; */
-	  /* PRINT("     STORE: addr: %10ld   val: %10d   %d", ps_remote->address, c.i[0], c.i[1]); */
-	  break;
-	}
+	    break;
+	  }
+	case PS_STORE_NONTX:
+	  {
+	    pgas_dsl_write(ps_remote->address, ps_remote->write_value);
+	    break;
+	  }
 #endif
-      case PS_REMOVE_NODE:
-	{
+	case PS_REMOVE_NODE:
+	  {
 #ifdef PGAS
-	  if (ps_remote->response == NO_CONFLICT) 
-	    {
-	      write_set_pgas_persist(PGAS_write_sets[sender]);
-	    }
-	  PGAS_write_sets[sender] = write_set_pgas_empty(PGAS_write_sets[sender]);
+	    if (ps_remote->response == NO_CONFLICT) 
+	      {
+		write_set_pgas_persist(PGAS_write_sets[sender]);
+	      }
+	    PGAS_write_sets[sender] = write_set_pgas_empty(PGAS_write_sets[sender]);
 #endif
-	  ps_hashtable_delete_node(ps_hashtable, sender);
+	    ps_hashtable_delete_node(ps_hashtable, sender);
 
 #if defined(GREEDY)
-	  cm_metadata_core[sender].timestamp = 0;
+	    cm_metadata_core[sender].timestamp = 0;
 #endif
+	    break;
+	  }
+	case PS_UNSUBSCRIBE:
+	  ps_hashtable_delete(ps_hashtable, sender, ps_remote->address, READ);
 	  break;
-	}
-      case PS_UNSUBSCRIBE:
-	ps_hashtable_delete(ps_hashtable, sender, ps_remote->address, READ);
-	break;
-      case PS_PUBLISH_FINISH:
-	ps_hashtable_delete(ps_hashtable, sender, ps_remote->address, WRITE);
-	break;
-      case PS_STATS:
-	{
-	  PS_STATS_CMD_T* ps_rem_stats = (PS_STATS_CMD_T*) ps_remote;
-
-	  if (ps_rem_stats->tx_duration)
-	    {
-	      stats_aborts += ps_rem_stats->aborts;
-	      stats_commits += ps_rem_stats->commits;
-	      stats_duration += ps_rem_stats->tx_duration;
-	      stats_max_retries = stats_max_retries < ps_rem_stats->max_retries ? ps_rem_stats->max_retries : stats_max_retries;
-	      stats_total += ps_rem_stats->commits + ps_rem_stats->aborts;
-	    }
-	  else
-	    {
-	      stats_aborts_raw += ps_rem_stats->aborts_raw;
-	      stats_aborts_war += ps_rem_stats->aborts_war;
-	      stats_aborts_waw += ps_rem_stats->aborts_waw;
-	    }
-	  if (++stats_received >= 2*NUM_APP_NODES)
-	    {
-	      uint32_t n;
-	      for (n = 0; n < TOTAL_NODES(); n++)
-		{
-		  BARRIER_DSL;
-		  if (n == NODE_ID())
-		    {
-		      ssht_stats_print(ps_hashtable, SSHT_DBG_UTILIZATION_DTL);
-		    }
-		}
-
-	      BARRIER_DSL;
-	      if (NODE_ID() == min_dsl_id()) 
-		{
-		  print_global_stats();
-		}
-	      return;
-	    }
+	case PS_PUBLISH_FINISH:
+	  ps_hashtable_delete(ps_hashtable, sender, ps_remote->address, WRITE);
 	  break;
+	case PS_STATS:
+	  {
+	    PS_STATS_CMD_T* ps_rem_stats = (PS_STATS_CMD_T*) ps_remote;
+
+	    if (ps_rem_stats->tx_duration)
+	      {
+		stats_aborts += ps_rem_stats->aborts;
+		stats_commits += ps_rem_stats->commits;
+		stats_duration += ps_rem_stats->tx_duration;
+		stats_max_retries = stats_max_retries < ps_rem_stats->max_retries ? ps_rem_stats->max_retries : stats_max_retries;
+		stats_total += ps_rem_stats->commits + ps_rem_stats->aborts;
+	      }
+	    else
+	      {
+		stats_aborts_raw += ps_rem_stats->aborts_raw;
+		stats_aborts_war += ps_rem_stats->aborts_war;
+		stats_aborts_waw += ps_rem_stats->aborts_waw;
+	      }
+	    if (++stats_received >= 2*NUM_APP_NODES)
+	      {
+		uint32_t n;
+		for (n = 0; n < TOTAL_NODES(); n++)
+		  {
+		    BARRIER_DSL;
+		    if (n == NODE_ID())
+		      {
+			ssht_stats_print(ps_hashtable, SSHT_DBG_UTILIZATION_DTL);
+		      }
+		  }
+
+		BARRIER_DSL;
+		if (NODE_ID() == min_dsl_id()) 
+		  {
+		    print_global_stats();
+		  }
+		return;
+	      }
+	    break;
+	  }
+	default:
+	  {
+	    sys_ps_command_reply(sender, PS_UKNOWN_RESPONSE,
+				 NULL,
+				 NULL,
+				 NO_CONFLICT);
+	  }
 	}
-      default:
-	{
-	  sys_ps_command_reply(sender, PS_UKNOWN_RESPONSE,
-			       NULL,
-			       NULL,
-			       NO_CONFLICT);
-	}
-      }
-  }
+    }
 }
 
 
