@@ -100,9 +100,9 @@ int set_contains(intset_t *set, val_t val, int transactional) {
 #ifdef SEQUENTIAL
     node_t *prev, *next;
 
-#ifdef LOCKS
+#  ifdef LOCKS
     global_lock();
-#endif
+#  endif
 
     prev = ND(set->head);
     next = ND(prev->next);
@@ -112,17 +112,17 @@ int set_contains(intset_t *set, val_t val, int transactional) {
     }
     result = (next->val == val);
 
-#ifdef LOCKS
+#  ifdef LOCKS
     global_lock_release();
-#endif
+#  endif
 
 #elif defined STM
 
-#ifndef READ_VALIDATION
+#  ifndef READ_VALIDATION
     node_t *prev, *next;
-#ifdef EARLY_RELEASE
+#    ifdef EARLY_RELEASE
     node_t *rls;
-#endif
+#    endif
     val_t v = 0;
 
     TX_START;
@@ -132,20 +132,20 @@ int set_contains(intset_t *set, val_t val, int transactional) {
         v = next->val;
         if (v >= val)
             break;
-#ifdef EARLY_RELEASE
+#    ifdef EARLY_RELEASE
         rls = prev;
-#endif
+#    endif
         prev = next;
         next = ND(*(nxt_t *) TX_LOAD(&prev->next));
-#ifdef EARLY_RELEASE
+#    ifdef EARLY_RELEASE
         TX_RRLS(&rls->next);
-#endif
+#    endif
     }
     FLUSH;
     TX_COMMIT;
     result = (v == val);
 
-#else
+#  else	 /* READ_VALIDATION */
     node_t *prev, *next, *validate;
     nxt_t nextoffs, validateoffs;
     val_t v = 0;
@@ -176,7 +176,7 @@ int set_contains(intset_t *set, val_t val, int transactional) {
     }
     TX_COMMIT;
     result = (v == val);
-#endif
+#  endif
 #endif	
 
     return result;
@@ -227,12 +227,12 @@ int set_add(intset_t *set, val_t val, int transactional) {
     result = set_seq_add(set, val);
 
 #elif defined STM
-#ifndef READ_VALIDATION
+#  ifndef READ_VALIDATION
     node_t *prev, *next;
 
-#ifdef EARLY_RELEASE
+#    ifdef EARLY_RELEASE
     node_t *prls, *pprls;
-#endif
+#    endif
     val_t v;
     TX_START;
     prev = ND(set->head);
@@ -242,26 +242,26 @@ int set_add(intset_t *set, val_t val, int transactional) {
     if (v >= val)
         goto done;
 
-#ifdef EARLY_RELEASE
+#    ifdef EARLY_RELEASE
     pprls = prev;
-#endif
+#    endif
     prev = next;
     next = ND(*(nxt_t *) TX_LOAD(&prev->next));
 
-#ifdef EARLY_RELEASE
+#    ifdef EARLY_RELEASE
     prls = prev;
-#endif
+#    endif
     while (1) {
         v = next->val;
         if (v >= val)
             break;
         prev = next;
         next = ND(*(nxt_t *) TX_LOAD(&prev->next));
-#ifdef EARLY_RELEASE
+#    ifdef EARLY_RELEASE
         TX_RRLS(&pprls->next);
         pprls = prls;
         prls = prev;
-#endif
+#    endif
     }
 done:
     result = (v != val);
@@ -272,20 +272,22 @@ done:
     }
     TX_COMMIT_MEM;
 
-#ifdef DEBUG
+#    ifdef DEBUG
     printf("[%02d]--> set_add(%d)\n", NODE_ID(), (int) val);
     printf("after: "); set_print(set);
     FLUSH;
-#endif
+#    endif
 
 
-#else
+#  else	 /* READ_VALIDATION */
     node_t *prev, *next, *validate, *pvalidate;
     nxt_t nextoffs, validateoffs, pvalidateoffs;
 
     val_t v;
-    TX_START
+    TX_START;
+
     prev = ND(set->head);
+
     nextoffs = prev->next;
     next = ND(nextoffs);
 
@@ -294,7 +296,9 @@ done:
 
     v = next->val;
     if (v >= val)
+      {
         goto done;
+      }
 
     prev = next;
     nextoffs = prev->next;
@@ -322,173 +326,192 @@ done:
 done:
     result = (v != val);
     if (result) {
-        TX_LOAD(&pvalidate->next);
+      if (&pvalidate->next != &prev->next)
+	{
+	  TX_LOAD(&pvalidate->next);
+	}
         if ((*(nxt_t *) TX_LOAD(&prev->next)) != validateoffs) {
             PRINTD("[A2] Validate failed: expected nxt: %d, got %d", validateoffs, prev->next);
             TX_ABORT(READ_AFTER_WRITE);
         }
         nxt_t nxt = OF(new_node(val, OF(next), transactional));
         PRINTD("Created node %5d. Value: %d", nxt, val);
-        TX_STORE(&prev->next, &nxt, TYPE_UINT);
+        TX_STORE(&prev->next, nxt, TYPE_INT64);
+
         if (pvalidate->next != pvalidateoffs) {
             PRINTD("[A3] Validate failed: expected nxt: %d, got %d", pvalidateoffs, pvalidate->next);
             TX_ABORT(READ_AFTER_WRITE);
         }
     }
+
     TX_COMMIT_MEM;
-#endif
+
+#    ifdef DEBUG
+    printf("[%02d]--> set_add(%d)\n", NODE_ID(), (int) val);
+    printf("after: "); set_print(set);
+    FLUSH;
+#    endif
+
+#  endif
 #endif
             return result;
 }
 
 int set_remove(intset_t *set, val_t val, int transactional) {
-    int result = 0;
+  int result = 0;
 
 #ifdef DEBUG
-    printf("[%02d]++> set_remove(%d)\n", NODE_ID(), (int) val);
-    printf("before: "); set_print(set);
-    FLUSH;
+  printf("[%02d]++> set_remove(%d)\n", NODE_ID(), (int) val);
+  printf("before: "); set_print(set);
+  FLUSH;
 #endif
 
 #ifdef SEQUENTIAL /* Unprotected */
 
-    node_t *prev, *next;
+  node_t *prev, *next;
 
-#ifdef LOCKS
-    global_lock();
-#endif
+#  ifdef LOCKS
+  global_lock();
+#  endif
 
-    prev = ND(set->head);
+  prev = ND(set->head);
+  next = ND(prev->next);
+  while (next->val < val) {
+    prev = next;
     next = ND(prev->next);
-    while (next->val < val) {
-        prev = next;
-        next = ND(prev->next);
-    }
-    result = (next->val == val);
-    if (result) {
-        prev->next = next->next;
-        sys_shfree((t_vcharp) next);
-    }
+  }
+  result = (next->val == val);
+  if (result) {
+    prev->next = next->next;
+    sys_shfree((t_vcharp) next);
+  }
 
-#ifdef LOCKS
-    global_lock_release();
-#endif
+#  ifdef LOCKS
+  global_lock_release();
+#  endif
 
 #elif defined STM
-#ifndef READ_VALIDATION
-    node_t *prev, *next;
-#ifdef EARLY_RELEASE
-    node_t *prls, *pprls;
-#endif
-    val_t v;
+#  ifndef READ_VALIDATION
+  node_t *prev, *next;
+#    ifdef EARLY_RELEASE
+  node_t *prls, *pprls;
+#    endif
+  val_t v;
 
-    TX_START;
-    prev = ND(set->head);
-    next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+  TX_START;
+  prev = ND(set->head);
+  next = ND(*(nxt_t *) TX_LOAD(&prev->next));
 
-    //v = *(val_t *) TX_LOAD(&next->val);
+  //v = *(val_t *) TX_LOAD(&next->val);
+  v = next->val;
+  if (v >= val)
+    goto done;
+
+#    ifdef EARLY_RELEASE
+  pprls = prev;
+#    endif
+
+  prev = next;
+  next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+#    ifdef EARLY_RELEASE
+  prls = prev;
+#    endif
+
+  while (1) {
     v = next->val;
     if (v >= val)
-        goto done;
-
-#ifdef EARLY_RELEASE
-    pprls = prev;
-#endif
-
+      break;
     prev = next;
     next = ND(*(nxt_t *) TX_LOAD(&prev->next));
-#ifdef EARLY_RELEASE
+#    ifdef EARLY_RELEASE
+    TX_RRLS(&pprls->next);
+    pprls = prls;
     prls = prev;
-#endif
+#    endif
+  }
+ done:
+  result = (v == val);
+  if (result) {
+    nxt_t nxt = *(nxt_t *) TX_LOAD(&next->next);
+    TX_STORE(&prev->next, nxt, TYPE_INT64);
+    TX_SHFREE(next);
+    PRINTD("Freed node   %5d. Value: %d", OF(next), next->val);
+  }
+  TX_COMMIT_MEM;
 
-    while (1) {
-        v = next->val;
-        if (v >= val)
-            break;
-        prev = next;
-        next = ND(*(nxt_t *) TX_LOAD(&prev->next));
-#ifdef EARLY_RELEASE
-        TX_RRLS(&pprls->next);
-        pprls = prls;
-        prls = prev;
-#endif
+#    ifdef DEBUG
+  printf("[%02d]--> set_remove(%d)\n", NODE_ID(), (int) val);
+  printf("after: "); set_print(set);
+  FLUSH;
+#    endif
+
+#  else	 /* READ_VALIDATION */
+  node_t *prev, *next, *validate, *pvalidate;
+  nxt_t nextoffs, validateoffs, pvalidateoffs;
+  val_t v;
+
+  TX_START;
+  prev = ND(set->head);
+  nextoffs = prev->next;
+  next = ND(nextoffs);
+
+  pvalidate = prev;
+  pvalidateoffs = validateoffs = nextoffs;
+
+  v = next->val;
+  if (v >= val)
+    {
+      PRINTD("** (rem) first element in the list");
+      goto done;
     }
-done:
-    result = (v == val);
-    if (result) {
-        nxt_t nxt = *(nxt_t *) TX_LOAD(&next->next);
-        TX_STORE(&prev->next, nxt, TYPE_INT64);
-	TX_SHFREE(next);
-        PRINTD("Freed node   %5d. Value: %d", OF(next), next->val);
-    }
-    TX_COMMIT_MEM;
 
-#ifdef DEBUG
-    printf("[%02d]--> set_remove(%d)\n", NODE_ID(), (int) val);
-    printf("after: "); set_print(set);
-    FLUSH;
-#endif
+  prev = next;
+  nextoffs = prev->next;
+  next = ND(nextoffs);
 
-#else
-    node_t *prev, *next, *validate, *pvalidate;
-    nxt_t nextoffs, validateoffs, pvalidateoffs;
-    val_t v;
+  validate = prev;
+  validateoffs = nextoffs;
 
-    TX_START;
-    prev = ND(set->head);
-    nextoffs = prev->next;
-    next = ND(nextoffs);
-
-    pvalidate = prev;
-    pvalidateoffs = validateoffs = nextoffs;
-
+  while (1) {
     v = next->val;
     if (v >= val)
-        goto done;
-
+      break;
     prev = next;
     nextoffs = prev->next;
     next = ND(nextoffs);
-
+    if (pvalidate->next != pvalidateoffs) {
+      PRINTD("[R1] Validate failed: expected nxt: %d, got %d", pvalidateoffs, pvalidate->next);
+      TX_ABORT(READ_AFTER_WRITE);
+    }
+    pvalidate = validate;
+    pvalidateoffs = validateoffs;
     validate = prev;
     validateoffs = nextoffs;
+  }
+ done:
+  result = (v == val);
+  if (result) {
+    if (&pvalidate->next != &prev->next)
+      {
+	TX_LOAD(&pvalidate->next);
+      }
 
-    while (1) {
-        v = next->val;
-        if (v >= val)
-            break;
-        prev = next;
-        nextoffs = prev->next;
-        next = ND(nextoffs);
-        if (pvalidate->next != pvalidateoffs) {
-            PRINTD("[R1] Validate failed: expected nxt: %d, got %d", pvalidateoffs, pvalidate->next);
-            TX_ABORT(READ_AFTER_WRITE);
-        }
-        pvalidate = validate;
-        pvalidateoffs = validateoffs;
-        validate = prev;
-        validateoffs = nextoffs;
+    if ((*(nxt_t *) TX_LOAD(&prev->next)) != validateoffs) {
+      PRINTD("[R2] Validate failed: expected nxt: %d, got %d", validateoffs, prev->next);
+      TX_ABORT(READ_AFTER_WRITE);
     }
-done:
-    result = (v == val);
-    if (result) {
-        TX_LOAD(&pvalidate->next);
-        if ((*(nxt_t *) TX_LOAD(&prev->next)) != validateoffs) {
-            PRINTD("[R2] Validate failed: expected nxt: %d, got %d", validateoffs, prev->next);
-            TX_ABORT(READ_AFTER_WRITE);
-        }
-        nxt_t *nxt = (nxt_t *) TX_LOAD(&next->next);
-        TX_STORE(&prev->next, nxt, TYPE_UINT);
-        TX_SHFREE(next);
-        if (pvalidate->next != pvalidateoffs) {
-            PRINTD("[R3] Validate failed: expected nxt: %d, got %d", pvalidateoffs, pvalidate->next);
-            TX_ABORT(READ_AFTER_WRITE);
-        }
+    nxt_t nxt = *(nxt_t *) TX_LOAD(&next->next);
+    TX_STORE(&prev->next, nxt, TYPE_INT64);
+    TX_SHFREE(next);
+    if (pvalidate->next != pvalidateoffs) {
+      PRINTD("[R3] Validate failed: expected nxt: %d, got %d", pvalidateoffs, pvalidate->next);
+      TX_ABORT(READ_AFTER_WRITE);
     }
-    TX_COMMIT_MEM;
+  }
+  TX_COMMIT_MEM;
+#  endif
 #endif
-#endif
-            return result;
+  return result;
 }
 
 void set_print(intset_t* set) {

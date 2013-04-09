@@ -45,7 +45,8 @@
 #define FALSE 0
 #define TRUE 1
 
-#define NUM_OF_BUCKETS 17
+#define NUM_OF_BUCKETS   64
+#define NUM_OF_BUCKETS_2 63
 #define NUM_BUCKETS NUM_OF_BUCKETS
 
 typedef uintptr_t addr_t;
@@ -175,9 +176,58 @@ ssht_bucket_remove_index(addr_t *addr, uint32_t id, ssht_rw_entry_t *entry)
 }
 
 INLINED uint32_t 
-ssht_remove(addr_t *addr, uint32_t id, ssht_rw_entry_t *entry) 
+ssht_remove_any(addr_t *addr, uint32_t id, ssht_rw_entry_t *entry) 
 {
   return ssht_bucket_remove_index(addr, id, entry);
+}
+
+INLINED void 
+ssht_remove(ssht_log_set_t* log, uint32_t id, addr_t* addr, RW rw) 
+{
+  ssht_log_entry_t *entries = log->log_entries;
+  uint32_t j;
+  for (j = 0; j < log->nb_entries; j++) 
+    {
+      if (entries[j].address != NULL && *entries[j].address == (uintptr_t) addr)
+	{
+	  ssht_rw_entry_t* entry = entries[j].entry;
+	  if (rw == WRITE) 
+	    {
+	      if (entry->writer == id)
+		{
+		  entry->writer = SSHT_NO_WRITER;
+		}
+	    }
+
+#if defined(BIT_OPTS)
+	  else 
+	    {
+	      rw_entry_ssht_unset(entry, id);
+	    }
+    
+	  /* if (rw_entry_ssht_is_empty(entry)) */
+	  /*   { */
+	  /*     *addr = 0; */
+	  /*   } */
+
+#else
+	  else 
+	    {
+	      entry->reader[id] = 0;
+	      entry->nr--;
+	    }
+    
+	  /* WHY not?? */
+	  /* if (entry->nr == 0 && entry->writer == SSHT_NO_WRITER)  */
+	  /*   { */
+	  /*     *addr = 0; */
+	  /*   } */
+#endif	/* BIT_OPTS */
+
+	  entries[j].address = NULL;
+	  break;
+	}
+    }
 }
 
 

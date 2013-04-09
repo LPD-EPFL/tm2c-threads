@@ -554,11 +554,9 @@ extern "C" {
 		      tm_intern_addr_t address, RW rw)
   {
 #ifdef PGAS
-    /* uint32_t bu = ps_get_hash(address) % NUM_OF_BUCKETS; */
-    uint32_t bu = (address) % NUM_OF_BUCKETS;
+    uint32_t bu = (address) & NUM_OF_BUCKETS_2;
 #else  /* !PGAS */
-    uint32_t bu = ps_get_hash(address) % NUM_OF_BUCKETS;
-    /* uint32_t bu = address % NUM_OF_BUCKETS; */
+    uint32_t bu = ps_get_hash(address) & NUM_OF_BUCKETS_2;
 #endif	/* PGAS */
 
     CONFLICT_TYPE conflict = ssht_insert(ps_hashtable, bu, logs[nodeId], nodeId,  address, rw);
@@ -569,7 +567,7 @@ extern "C" {
   ps_hashtable_delete(ps_hashtable_t ps_hashtable, nodeid_t nodeId,
 		      tm_intern_addr_t address, RW rw)
   {
-    //  ssht_remove(ps_hashtable, ps_get_hash(address)%NUM_OF_BUCKETS, address, rw);
+    ssht_remove(logs[nodeId], nodeId, (addr_t*) address, rw);
   }
 
   inline void
@@ -582,7 +580,10 @@ extern "C" {
 	uint32_t j;
 	for (j = 0; j < log->nb_entries; j++) 
 	  {
-	    ssht_remove(entries[j].address, nodeId, entries[j].entry);
+	    if (entries[j].address != NULL)
+	      {
+		ssht_remove_any(entries[j].address, nodeId, entries[j].entry);
+	      }
 	  }
 	ssht_log_set_empty(log);
       }

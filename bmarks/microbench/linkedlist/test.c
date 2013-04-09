@@ -176,6 +176,7 @@ TASKMAIN(int argc, char **argv) {
   struct option long_options[] = {
     // These options don't set a flag
     {"help", no_argument, NULL, 'h'},
+    {"verbose", no_argument, NULL, 'v'},
     {"duration", required_argument, NULL, 'd'},
     {"initial-size", required_argument, NULL, 'i'},
     {"range", required_argument, NULL, 'r'},
@@ -198,11 +199,12 @@ TASKMAIN(int argc, char **argv) {
   int unit_tx = DEFAULT_ELASTICITY;
   int alternate = DEFAULT_ALTERNATE;
   int effective = DEFAULT_EFFECTIVE;
+  int verbose = DEFAULT_VERBOSE;
   unsigned int seed = 0;
 
   while (1) {
     i = 0;
-    c = getopt_long(argc, argv, "hAf:d:i:r:u:x:", long_options, &i);
+    c = getopt_long(argc, argv, "hAf:d:i:r:u:x:v", long_options, &i);
 
     if (c == -1)
       break;
@@ -238,15 +240,8 @@ TASKMAIN(int argc, char **argv) {
 		 "        Range of integer values inserted in set (default=" XSTR(DEFAULT_RANGE) ")\n"
 		 "  -u, --update-rate <int>\n"
 		 "        Percentage of update transactions (default=" XSTR(DEFAULT_UPDATE) ")\n"
-		 "  -x, --elasticity (default=4)\n"
-		 "        Use elastic transactions\n"
-		 "        0 = non-protected,\n"
-		 "        1 = normal transaction,\n"
-		 "        2 = read elastic-tx,\n"
-		 "        3 = read/add elastic-tx,\n"
-		 "        4 = read/add/rem elastic-tx,\n"
-		 "        5 = all recursive elastic-tx,\n"
-		 "        6 = harris lock-free\n"
+		 "  -v , --verbose\n"
+		 "        Print detailed stats"
 		 );
 	}
       exit(0);
@@ -270,6 +265,9 @@ TASKMAIN(int argc, char **argv) {
       break;
     case 'x':
       unit_tx = atoi(optarg);
+      break;
+    case 'v':
+      verbose = 1;
       break;
     case '?':
       ONCE
@@ -332,7 +330,7 @@ TASKMAIN(int argc, char **argv) {
   ONCE
     {
       /* Populate set */
-      printf("Adding %d entries to set\n", initial);
+      /* printf("Adding %d entries to set\n", initial); */
       i = 0;
       while (i < initial) {
 	val = rand_range(range);
@@ -414,18 +412,21 @@ TASKMAIN(int argc, char **argv) {
   /* Start */
   test(data, duration);
 
-  APP_EXEC_ORDER
+  if (verbose)
     {
-      printf("-- Core %d\n", NODE_ID());
-      printf("  #add        : %lu\n", data->nb_add);
-      printf("    #added    : %lu\n", data->nb_added);
-      printf("  #remove     : %lu\n", data->nb_remove);
-      printf("    #removed  : %lu\n", data->nb_removed);
-      printf("  #contains   : %lu\n", data->nb_contains);
-      printf("    #found    : %lu\n", data->nb_found);
-      printf("---------------------------------------------------");
-      FLUSH;
-    } APP_EXEC_ORDER_END;
+      APP_EXEC_ORDER
+	{
+	  printf("-- Core %d\n", NODE_ID());
+	  printf("  #add        : %lu\n", data->nb_add);
+	  printf("    #added    : %lu\n", data->nb_added);
+	  printf("  #remove     : %lu\n", data->nb_remove);
+	  printf("    #removed  : %lu\n", data->nb_removed);
+	  printf("  #contains   : %lu\n", data->nb_contains);
+	  printf("    #found    : %lu\n", data->nb_found);
+	  printf("---------------------------------------------------");
+	  FLUSH;
+	} APP_EXEC_ORDER_END;
+    }
   /* Delete set */
 
 
@@ -442,31 +443,10 @@ TASKMAIN(int argc, char **argv) {
     {
       size_after = set_size(set);
       //set_print(set);
-      *changes = 0;
-      *sequencer = 1;
+      printf("Set size (af): %u\n", size_after);
     }
 
   BARRIER;
-
-#if defined(STM) && defined(DEBUG)
-  TX_START
-    if ((*(int *) sequencer) != ID) {
-      udelay(100);
-      TX_ABORT(WRITE_AFTER_WRITE);
-    }
-  int id1 = ID + 2;
-  TX_STORE(sequencer, &id1, TYPE_INT);
-  int cc = *(int *) TX_LOAD(changes);
-  int newc = cc + mychanges;
-  TX_STORE(changes, &newc, TYPE_INT);
-  TX_COMMIT;
-
-  BARRIER;
-  ONCE
-    {
-      PRINT(":: ~~ :: Set size: %d, expected: %d", size_after, initial + set->head);
-    }
-#endif
 
 
 #ifdef SEQUENTIAL

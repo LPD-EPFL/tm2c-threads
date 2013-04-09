@@ -25,7 +25,7 @@ extern "C" {
 #define NO_WRITERI 0x10000000
 #define NO_WRITERLL 0x1000000000000000ULL
 #define NO_WRITER 0x1000
-#define NUM_OF_BUCKETS 17
+#define NUM_OF_BUCKETS   64
 
 typedef struct rw_entry {
   union {

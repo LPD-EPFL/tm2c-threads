@@ -21,7 +21,7 @@
 extern "C" {
 #endif
 
-#define RESP_NODE_MASK 6
+#define RESP_NODE_MASK 3
 
   //the buffer size for pub-sub = the size (in bytes) of the msg exchanged
 #define PS_BUFFER_SIZE     32
