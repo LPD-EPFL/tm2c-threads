@@ -89,7 +89,7 @@ BMARKS = bank dsl_stress #bankseq \
 BMARKS_NON_WORKING = mtest
 
 # all bmarks that need to be built
-ALL_BMARKS = $(BMARKS) mbll mbht mr mp
+ALL_BMARKS = $(BMARKS) mbll mbht mr # mp
 endif 
 
 ## The rest of the Makefile ##
