@@ -41,7 +41,7 @@
 
 #if defined(SCC)
 /*take advante all 4 MCs*/
-#define MC__
+#  define MC__
 #endif
 
 #define DEFAULT_DURATION                10
@@ -67,9 +67,9 @@ int delay = DEFAULT_DELAY;
 #define INDEX(i)        ((((i) % 4) * MB16) + (i))
 
 #ifdef MC
-#define I(i)            INDEX(i)
+#  define I(i)            INDEX(i)
 #else
-#define I(i)            i
+#  define I(i)            i
 #endif
 
 
@@ -356,7 +356,7 @@ if (bank->accounts == NULL)
       /*   } */
 
       uint8_t nb = tm2c_rand() & 127;
-      if (is_read_core | nb < d->read_all)
+      if (is_read_core || nb < d->read_all)
 	{
 	  /* Read all */
 	  total(bank, 1);
@@ -613,6 +613,9 @@ TASKMAIN(int argc, char **argv) {
       if (NODE_ID() == nd) {
 	printf("---Core %d\n  #transfer   : %u\n  #checks     : %u\n  #read-all   : %u\n  #write-all  : %u\n", 
 	       NODE_ID(), data->nb_transfer, data->nb_checks, data->nb_read_all, data->nb_write_all);
+/* #  if defined(FAIRCM) */
+/* 	PRINT("aborts: %8d / duration: %f", stm_tx_node->tx_aborted, stm_tx_node->tx_duration / (REF_SPEED_GHZ * 1e9)); */
+/* #  endif */
 	FLUSH;
       }
       BARRIER;
