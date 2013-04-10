@@ -94,7 +94,8 @@ is_dsl_core(int id)
 }
 
 
-void tm_init() {
+void tm_init()
+{
   PF_MSG(9, "receiving");
   PF_MSG(10, "sending");
 
@@ -201,7 +202,7 @@ handle_abort(stm_tx_t* stm_tx, CONFLICT_TYPE reason)
   ps_finish_all(reason);
   stm_tx->aborts++;
 
-  /* switch (reason)  */
+  /* switch (reason) */
   /*   { */
   /*   case READ_AFTER_WRITE: */
   /*     stm_tx->aborts_raw++; */
@@ -222,21 +223,31 @@ handle_abort(stm_tx_t* stm_tx, CONFLICT_TYPE reason)
 #endif
   mem_info_on_abort(stm_tx->mem_info);
     
-#ifdef BACKOFF_RETRY
+#if defined(BACKOFF_RETRY)
   /*BACKOFF and RETRY*/
   if (BACKOFF_MAX > 0)  
     {
-      wait_cycles(50 * stm_tx->retries);
+      uint32_t wait_exp = stm_tx->retries;
+      if (wait_exp > BACKOFF_MAX)
+	{
+	  wait_exp = BACKOFF_MAX;
+	}
 
-      /* uint32_t wait_max = (stm_tx->retries < BACKOFF_MAX ? stm_tx->retries : BACKOFF_MAX) * BACKOFF_DELAY; */
-      /* /\* pow(2, (stm_tx->retries < BACKOFF_MAX ? stm_tx->retries : BACKOFF_MAX)) * BACKOFF_DELAY; *\/ */
-      /* uint32_t wait = rand_range(wait_max); */
-      /* ndelay(wait); */
+      uint32_t wait_max = BACKOFF_DELAY;
+      wait_max <<= (wait_exp - 1);
+
+      if (NODE_ID() == 2 && stm_tx->retries < (BACKOFF_MAX + 4))
+	{
+	  PRINT("retry %4d / limited %4d == wait_max: %u", stm_tx->retries, wait_exp, wait_max);
+	}
+
+      uint32_t wait = tm2c_rand() % wait_max;
+
+      ndelay(wait);
     }
-  /* else  */
-  /*   { */
-  /*     wait_cycles(50 * stm_tx->retries); */
-  /*   } */
+
+#elif !defined(NOCM)
+  wait_cycles(50 * (stm_tx->retries & 0xFF));
 #endif
 }
 
@@ -265,25 +276,25 @@ void ps_publish_all()
     {
       CONFLICT_TYPE conflict;
       tm_addr_t addr = to_addr(write_entries[locked].address);
-#ifndef BACKOFF_RETRY
-      unsigned int num_delays = 0;
-      unsigned int delay = BACKOFF_DELAY; //nano
-    retry:
-#endif
+/* #ifndef BACKOFF_RETRY */
+/*       unsigned int num_delays = 0; */
+/*       unsigned int delay = BACKOFF_DELAY; //nano */
+/*     retry: */
+/* #endif */
 #ifdef PGAS
       if ((conflict = ps_publish(addr, write_entries[locked].value)) != NO_CONFLICT) {
 #else
 	if ((conflict = ps_publish(addr)) != NO_CONFLICT) {
 #endif
 	  //ps_publish_finish_all(locked);
-#ifndef BACKOFF_RETRY
-	  if (num_delays++ < BACKOFF_MAX) 
-	    {
-	      ndelay(delay);		      /* ndelay(rand_range(delay)); */
-	      delay *= 2;
-	      goto retry;
-	    }
-#endif
+/* #ifndef BACKOFF_RETRY */
+/* 	  if (num_delays++ < BACKOFF_MAX)  */
+/* 	    { */
+/* 	      ndelay(delay);		      /\* ndelay(rand_range(delay)); *\/ */
+/* 	      delay *= 2; */
+/* 	      goto retry; */
+/* 	    } */
+/* #endif */
 	  TX_ABORT(conflict);
 	}
 	locked++;

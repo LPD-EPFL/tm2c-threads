@@ -441,7 +441,11 @@ srand_core()
 INLINED void
 wait_cycles(uint64_t ncycles)
 {
-  if (ncycles < 256) 
+  if (ncycles < 24)
+    {
+      return;
+    }
+  else if (ncycles < 256) 
     {
       volatile int64_t _ncycles = ncycles;
       _ncycles >>= 3;
@@ -451,10 +455,11 @@ wait_cycles(uint64_t ncycles)
 	  asm("nop");
 	}
     }
-  else {
-    ticks _target = getticks() + ncycles - 50;
-    while (getticks() < _target) ;
-  }
+  else
+    {
+      ticks _target = getticks() + ncycles - 50;
+      while (getticks() < _target) ;
+    }
 }
 
 

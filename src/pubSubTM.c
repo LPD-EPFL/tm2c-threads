@@ -54,7 +54,7 @@ static inline CONFLICT_TYPE ps_recvb(nodeid_t from);
  */
 static inline nodeid_t get_responsible_node(tm_intern_addr_t addr);
 
-static unsigned long* 
+unsigned long* 
 seed_rand() 
 {
   unsigned long* seeds;

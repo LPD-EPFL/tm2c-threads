@@ -176,6 +176,10 @@ extern "C" {
   {						\
   tm_init();
 
+#define SEQ_INIT				\
+  init_system(&argc, &argv);			\
+  tm2c_rand_seeds = seed_rand();
+
 #ifdef PGAS
 #  define WSET                  NULL
 #  define WSET_EMPTY
@@ -213,10 +217,10 @@ extern "C" {
 #  define TXRUNNING()     ;
 #  define TXCOMMITTED()   ;
 #  define TXPERSISTING()  ;
-#  define TXCHKABORTED()	;
+#  define TXCHKABORTED()  ;
 #endif	/* NOCM */
 
-#if defined(WHOLLY) || defined(NOCM)
+#if defined(WHOLLY) || defined(NOCM) || defined(BACKOFF_RETRY)
 #  define CM_METADATA_INIT_ON_START            ;
 #  define CM_METADATA_INIT_ON_FIRST_START      ;
 #  define CM_METADATA_UPDATE_ON_COMMIT         ;
@@ -263,6 +267,7 @@ extern "C" {
   CM_METADATA_UPDATE_ON_COMMIT;			\
   stm_tx_node->tx_starts++;			\
   stm_tx_node->tx_commited++;			\
+  stm_tx_node->tx_aborted += stm_tx->aborts;	\
   stm_tx = tx_metadata_empty(stm_tx);}
 
 
@@ -505,24 +510,24 @@ extern "C" {
       {
 	//the node is NOT already subscribed for the address
 	CONFLICT_TYPE conflict;
-#  ifndef BACKOFF_RETRY
-	unsigned int num_delays = 0;
-	unsigned int delay = BACKOFF_DELAY;
+/* #  ifndef BACKOFF_RETRY */
+/* 	unsigned int num_delays = 0; */
+/* 	unsigned int delay = BACKOFF_DELAY; */
 
-      retry:
-#  endif
+/*       retry: */
+/* #  endif */
 	TXCHKABORTED();
 	if ((conflict = ps_subscribe(addr, 0)) != NO_CONFLICT) /* 0 for the #words used in PGAS */
 	  {
-#  ifndef BACKOFF_RETRY
-	    if (num_delays++ < BACKOFF_MAX) 
-	      {
-		ndelay(delay);
-		/* ndelay(rand_range(delay)); */
-		delay *= 2;
-		goto retry;
-	      }
-#  endif
+/* #  ifndef BACKOFF_RETRY */
+/* 	    if (num_delays++ < BACKOFF_MAX)  */
+/* 	      { */
+/* 		ndelay(delay); */
+/* 		/\* ndelay(rand_range(delay)); *\/ */
+/* 		delay *= 2; */
+/* 		goto retry; */
+/* 	      } */
+/* #  endif */
 	    TX_ABORT(conflict);
 	  }
 	return addr;
@@ -540,26 +545,26 @@ extern "C" {
 #endif
 
       CONFLICT_TYPE conflict;
-#ifndef BACKOFF_RETRY
-      unsigned int num_delays = 0;
-      unsigned int delay = BACKOFF_DELAY;
+/* #ifndef BACKOFF_RETRY */
+/*       unsigned int num_delays = 0; */
+/*       unsigned int delay = BACKOFF_DELAY; */
 
-    retry:
-#endif
+/*     retry: */
+/* #endif */
       TXCHKABORTED();
 #ifdef PGAS
       if ((conflict = ps_publish(address, value)) != NO_CONFLICT) {
 #else      
 	if ((conflict = ps_publish(address)) != NO_CONFLICT) {
 #endif
-#ifndef BACKOFF_RETRY
-	  if (num_delays++ < BACKOFF_MAX) {
-	    ndelay(delay);		      
-	    /* ndelay(rand_range(delay)); */
-	    delay *= 2;
-	    goto retry;
-	  }
-#endif
+/* #ifndef BACKOFF_RETRY */
+/* 	  if (num_delays++ < BACKOFF_MAX) { */
+/* 	    ndelay(delay);		       */
+/* 	    /\* ndelay(rand_range(delay)); *\/ */
+/* 	    delay *= 2; */
+/* 	    goto retry; */
+/* 	  } */
+/* #endif */
 	  TX_ABORT(conflict);
 	}
       }
@@ -599,26 +604,26 @@ extern "C" {
 #endif
 
 	  CONFLICT_TYPE conflict;
-#ifndef BACKOFF_RETRY
-	  unsigned int num_delays = 0;
-	  unsigned int delay = BACKOFF_DELAY;
+/* #ifndef BACKOFF_RETRY */
+/* 	  unsigned int num_delays = 0; */
+/* 	  unsigned int delay = BACKOFF_DELAY; */
 
-	retry:
-#endif
+/* 	retry: */
+/* #endif */
 	  TXCHKABORTED();
 #ifdef PGAS
 	  if ((conflict = ps_store_inc(address, value)) != NO_CONFLICT) {
 #else      
 	    if ((conflict = ps_publish(address)) != NO_CONFLICT) {
 #endif
-#ifndef BACKOFF_RETRY
-	      if (num_delays++ < BACKOFF_MAX) {
-		ndelay(delay);
-		/* ndelay(rand_range(delay)); */
-		delay *= 2;
-		goto retry;
-	      }
-#endif
+/* #ifndef BACKOFF_RETRY */
+/* 	      if (num_delays++ < BACKOFF_MAX) { */
+/* 		ndelay(delay); */
+/* 		/\* ndelay(rand_range(delay)); *\/ */
+/* 		delay *= 2; */
+/* 		goto retry; */
+/* 	      } */
+/* #endif */
 	      TX_ABORT(conflict);
 	    }
 	  }
