@@ -32,11 +32,11 @@ extern "C" {
 #if defined(GREEDY) | defined(FAIRCM) /* placed in diff place than for FAIRCM, according to access seq */
     ticks start_ts;
 #endif
-    uint16_t aborts;	 /* Total number of aborts (cumulative) */
+    uint32_t aborts;	 /* Total number of aborts (cumulative) */
+    uint32_t retries;	  /* Number of consecutive aborts (retries) */
     uint16_t aborts_raw; /* Aborts due to read after write (cumulative) */
     uint16_t aborts_war; /* Aborts due to write after read (cumulative) */
     uint16_t aborts_waw; /* Aborts due to write after write (cumulative) */
-    uint16_t retries;	  /* Number of consecutive aborts (retries) */
     mem_info_t* mem_info; /* Transactional mem alloc lists*/
 #if !defined(PGAS)		/* in PGAS only the DSLs hold a write_set */
     write_set_t *write_set;	/* Write set */
