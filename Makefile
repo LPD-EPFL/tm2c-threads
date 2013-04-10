@@ -82,7 +82,7 @@ HTFILES = hashtable intset test
 
 # add the non PGAS applications only if PGAS is not defined
 ifneq (,$(findstring UPGAS,$(PLATFORM_DEFINES)))
-BMARKS = bank dsl_stress #bankseq \
+BMARKS = bank dsl_stress bankseq
 	#	 readonly
 
 # this is a list of programs that do not work, for whatever reason
