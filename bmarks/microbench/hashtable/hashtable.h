@@ -35,14 +35,8 @@
 /* Hashtable length (# of buckets) */
 extern unsigned int maxhtlength;
 
-/* Hashtable seed */
-#ifdef TLS
-extern __thread unsigned int *rng_seed;
-#else /* ! TLS */
-extern pthread_key_t rng_seed_key;
-#endif /* ! TLS */
-
-typedef struct ht_intset {
+typedef struct ht_intset
+{
   intset_t **buckets;
 } ht_intset_t;
 

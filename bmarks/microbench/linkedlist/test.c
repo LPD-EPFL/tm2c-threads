@@ -167,10 +167,11 @@ test(void *data, double duration)
 TASKMAIN(int argc, char **argv) {
   dup2(STDOUT_FILENO, STDERR_FILENO);
 #ifndef SEQUENTIAL
-  TM_INIT
+  TM_INIT;
 #else
-    RCCE_init(&argc, &argv);
-  iRCCE_init();
+  SEQ_INIT;
+  /* RCCE_init(&argc, &argv); */
+  /* iRCCE_init(); */
 #endif
 
   struct option long_options[] = {
@@ -194,6 +195,9 @@ TASKMAIN(int argc, char **argv) {
   double duration = DEFAULT_DURATION;
   int initial = DEFAULT_INITIAL;
   int nb_app_cores = TOTAL_NODES();
+#if defined(SEQUENTIAL)
+  nb_app_cores = 1;
+#endif
   long range = DEFAULT_RANGE;
   int update = DEFAULT_UPDATE;
   int unit_tx = DEFAULT_ELASTICITY;

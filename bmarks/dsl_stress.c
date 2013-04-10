@@ -36,6 +36,7 @@ closest_dsl(uint8_t id)
 	  return c;
 	}
     }
+  return 0;
 }
 
 

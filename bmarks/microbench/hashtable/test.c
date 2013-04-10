@@ -329,8 +329,9 @@ TASKMAIN(int argc, char **argv) {
 #ifndef SEQUENTIAL
   TM_INIT;
 #else
-  RCCE_init(&argc, &argv);
-  iRCCE_init();
+  SEQ_INIT;
+  /* RCCE_init(&argc, &argv); */
+  /* iRCCE_init(); */
   dup2(STDOUT_FILENO, STDERR_FILENO);
 #endif
 
@@ -356,8 +357,10 @@ TASKMAIN(int argc, char **argv) {
   thread_data_t *data;
   double duration = DEFAULT_DURATION;
   int initial = DEFAULT_INITIAL;
-
   int nb_app_cores = TOTAL_NODES();
+#if defined(SEQUENTIAL)
+  nb_app_cores = 1;
+#endif
   long range = DEFAULT_RANGE;
   int update = DEFAULT_UPDATE;
   int load_factor = DEFAULT_LOAD;
@@ -640,8 +643,8 @@ TASKMAIN(int argc, char **argv) {
 	  printf("    #removed  : %lu\n", data->nb_removed);
 	  printf("  #contains   : %lu\n", data->nb_contains);
 	  printf("    #found    : %lu\n", data->nb_found);
-	  /* printf("  #move       : %lu\n", data->nb_move); */
-	  /* printf("  #moved      : %lu\n", data->nb_moved); */
+	  printf("  #move       : %lu\n", data->nb_move);
+	  printf("    #moved    : %lu\n", data->nb_moved);
 	  /* printf("  #snapshot   : %lu\n", data->nb_snapshot); */
 	  /* printf("  #snapshoted : %lu\n", data->nb_snapshoted); */
 	} APP_EXEC_ORDER_END;
