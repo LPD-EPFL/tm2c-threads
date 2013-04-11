@@ -330,8 +330,6 @@ TASKMAIN(int argc, char **argv) {
   TM_INIT;
 #else
   SEQ_INIT;
-  /* RCCE_init(&argc, &argv); */
-  /* iRCCE_init(); */
   dup2(STDOUT_FILENO, STDERR_FILENO);
 #endif
 
@@ -679,7 +677,7 @@ TASKMAIN(int argc, char **argv) {
 
 #ifndef SEQUENTIAL
   TM_END;
-#else
+#elif defined(SCC)
   RCCE_finalize();
 #endif
 

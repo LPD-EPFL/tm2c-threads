@@ -8,6 +8,7 @@
 /TODO
 /apps/tm10
 /apps/tm[0-9]
+/backoff
 /bank.cm.r100
 /bank.r0.cc
 /bank.sm.pgas.r0
@@ -47,12 +48,15 @@
 /external/tmp/libconfig-1.4.8_scc/tests/.deps/
 /external/tmp/libconfig-1.4.8_scc/tests/.libs/
 /external/tmp/libconfig-1.4.8_scc/tinytest/.deps/
+/fair
+/greedy
 /ll.i1024.u0
 /master.origin.diff
 /mbll.nofair
 /merge.diff
 /nbproject/*
 /nbproject/private/*
+/nocm
 /oprof
 /oprof
 /origin.diff
@@ -83,6 +87,7 @@
 /rundebug
 /runrt
 /screenlog.0
+/wholly
 cscope.*
 cscope.out
 out.runrrep

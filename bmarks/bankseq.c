@@ -76,26 +76,37 @@
  * BANK ACCOUNTS
  * ################################################################### */
 
-typedef struct account {
+typedef struct account 
+{
     int number;
     int balance;
 } account_t;
 
-typedef struct bank {
-    account_t *accounts;
-    int size;
+typedef struct bank
+{
+  account_t *accounts;
+  int size;
 } bank_t;
 
 inline int getlocknum(int account_num) {
     return (account_num % TOTAL_NODES());
 }
 
-void lock_bank() {
-    RCCE_acquire_lock(0);
+void
+lock_bank() 
+{
+#if defined(SCC)
+  RCCE_acquire_lock(0);
+#endif	/*  SCC */
 }
 
-void release_lock_bank() {
-    RCCE_release_lock(0);
+void
+release_lock_bank() 
+{
+#if defined(SCC)
+  RCCE_release_lock(0);
+#endif	/*  SCC */
+
 }
 
 int transfer(account_t *src, account_t *dst, int amount, int use_locks) {

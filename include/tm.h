@@ -178,6 +178,7 @@ extern "C" {
 
 #define SEQ_INIT				\
   init_system(&argc, &argv);			\
+  sys_ps_init_();				\
   tm2c_rand_seeds = seed_rand();
 
 #ifdef PGAS

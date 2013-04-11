@@ -1,8 +1,14 @@
 #!/bin/bash
 
+rc="rc.hosts"
+
+if [ $(uname -n) = "lpd48core" ];
+then
+rc=""
+fi;
+
 cores=$1;
 shift;
-rc="rc.hosts"
 app=$1;
 shift;
 params="$@";

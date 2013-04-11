@@ -5,12 +5,11 @@ PLATFORM_LDFLAGS =
 PLATFORM_LIBS = -lssmp -lrt
 
 ## commonly changed defines
-PLATFORM_DEFINES =	-DBACKOFF_RETRY \
-		       	-DBACKOFF_MAX="0" \
+PLATFORM_DEFINES =	-DBACKOFF_MAX="0" \
 		       	-DBACKOFF_DELAY="5000" \
 		       	-UDO_TIMINGS \
-		       	-DNOCM \
-			-UGREEDY_GLOBAL_TS
+			-UGREEDY_GLOBAL_TS \
+			-DNOCM
 
 ## fixed defines
 PLATFORM_DEFINES +=    -DPLATFORM_MCORE \
