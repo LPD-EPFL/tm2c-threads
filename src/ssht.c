@@ -94,11 +94,14 @@ bucket_insert_r(bucket_t* bu, ssht_log_set_t* log, uint32_t id, uintptr_t addr)
 #if defined(BIT_OPTS)
 	      rw_entry_ssht_set(e, id);
 #else
-	      e->nr++;
-	      e->reader[id] = 1;
+	      if (!e->reader[id])
+		{
+		  e->nr = e->nr++;
+		  e->reader[id] = 1;
+		  ssht_log_set_insert(log, btmp->addr + i, e);
+		}
 #endif	/* BIT_OPTS */
 
-	      ssht_log_set_insert(log, btmp->addr + i, e);
 	      return NO_CONFLICT;
 	    }
 	}
