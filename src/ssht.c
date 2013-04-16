@@ -150,7 +150,7 @@ bucket_insert_w(bucket_t* bu, ssht_log_set_t* log, uint32_t id, uintptr_t addr)
 	  if (btmp->addr[i] == addr)                               /* there is an entry for this addr */
 	    {
 	      ssht_rw_entry_t* e = btmp->entry + i;
-	      if (e->writer != SSHT_NO_WRITER)                    /* there is a writer for this entry */
+	      if (e->writer != SSHT_NO_WRITER && e->writer != id) /* there is a writer for this entry */
 		{
 #if !defined(NOCM) && !defined(BACKOFF_RETRY)                    /* any other CM (greedy, wholly, faircm) */
 		  if (contention_manager_raw_waw(id, e->writer, WRITE_AFTER_WRITE)) 

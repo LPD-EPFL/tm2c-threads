@@ -357,7 +357,8 @@ done:
             return result;
 }
 
-int set_remove(intset_t *set, val_t val, int transactional) {
+int set_remove(intset_t *set, val_t val, int transactional) 
+{
   int result = 0;
 
 #ifdef DEBUG

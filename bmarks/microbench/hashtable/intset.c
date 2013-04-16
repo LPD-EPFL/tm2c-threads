@@ -105,76 +105,89 @@ int ht_remove(ht_intset_t *set, int val, int transactional) {
  * because val2 already present. (Despite this partial failure, the move returns 
  * true.) As a result, data structure size may decrease as moves execute.
  */
-int ht_move_naive(ht_intset_t *set, int val1, int val2, int transactional) {
-    int result = 0;
+int
+ht_move_naive(ht_intset_t *set, int val1, int val2, int transactional) 
+{
+  int result = 0;
 
 #ifdef SEQUENTIAL
 
 #ifdef LOCKS
-    global_lock();
+  global_lock();
 #endif
 
-    int addr1, addr2;
+  int addr1, addr2;
 
-    addr1 = val1 % maxhtlength;
-    addr2 = val2 % maxhtlength;
-    result = (set_remove(set->buckets[addr1], val1, transactional) &&
+  addr1 = val1 % maxhtlength;
+  addr2 = val2 % maxhtlength;
+  result = (set_remove(set->buckets[addr1], val1, transactional) &&
             set_add(set->buckets[addr2], val2, transactional));
 
 #ifdef LOCKS
-    global_lock_release();
+  global_lock_release();
 #endif
 
 #elif defined STM
 
-    int v, addr1, addr2;
-    node_t *prev, *next, *prev1, *next1;
-    ;
-    nxt_t nxt;
+  int v, addr1, addr2;
+  node_t *prev, *next, *prev1, *next1;
+  nxt_t nxt;
 
-    TX_START
-    addr1 = val1 % maxhtlength;
-    OFFSET(set->buckets[addr1]);
-    prev = ND(set->buckets[addr1]->head);
-    next = ND(*(nxt_t *) TX_LOAD(&prev->next));
-    while (1) {
-        v = next->val; //was TX
-        if (v >= val1) {
-            break;
-        }
-        prev = next;
-        next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+  PRINT("%d / %d", val1, val2);
+
+  TX_START;
+
+  addr1 = val1 % maxhtlength;
+  OFFSET(set->buckets[addr1]);
+  prev = ND(set->buckets[addr1]->head);
+  next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+
+  while (1) 
+    {
+      v = next->val; //was TX
+      if (v >= val1) 
+	{
+	  break;
+	}
+      prev = next;
+      next = ND(*(nxt_t *) TX_LOAD(&prev->next));
     }
-    if (v == val1) {
-        /* Physically removing */
-        nxt = *(nxt_t *) TX_LOAD(&next->next);
-        TX_STORE(&prev->next, nxt, TYPE_INT);
-        TX_SHFREE(next);
-        /* Inserting */
-        addr2 = val2 % maxhtlength;
-        OFFSET(set->buckets[addr2]);
-        prev1 = ND(set->buckets[addr2]->head);
-        next1 = ND(*(nxt_t *) TX_LOAD(&prev1->next));
-        while (1) {
-            v = next1->val; //was TX
-            if (v >= val2) {
-                break;
-            }
-            prev1 = next1;
-            next1 = ND(*(nxt_t *) TX_LOAD(&prev1->next));
-        }
-        if (v != val2) {
-            nxt_t nxt1 = OF(new_node(val2, OF(next1), transactional));
-            //PRINTD("Created node %5d. Value: %d", nxt, val);
-            TX_STORE(&prev1->next, nxt1, TYPE_INT);
-        }
-        /* Even if the key is already in, the operation succeeds */
-        result = 1;
+
+  if (v == val1) 
+    {
+      /* Physically removing */
+      nxt = *(nxt_t *) TX_LOAD(&next->next);
+      TX_STORE(&prev->next, nxt, TYPE_INT64);
+      TX_SHFREE(next);
+      /* Inserting */
+      addr2 = val2 % maxhtlength;
+      OFFSET(set->buckets[addr2]);
+      prev1 = ND(set->buckets[addr2]->head);
+      next1 = ND(*(nxt_t *) TX_LOAD(&prev1->next));
+      while (1) 
+	{
+	  v = next1->val; //was TX
+	  if (v >= val2) 
+	    {
+	      break;
+	    }
+	  prev1 = next1;
+	  next1 = ND(*(nxt_t *) TX_LOAD(&prev1->next));
+	}
+      if (v != val2) 
+	{
+	  nxt_t nxt1 = OF(new_node(val2, OF(next1), transactional));
+	  //PRINTD("Created node %5d. Value: %d", nxt, val);
+	  TX_STORE(&prev1->next, nxt1, TYPE_INT64);
+	}
+      /* Even if the key is already in, the operation succeeds */
+      result = 1;
     }
-    else {
-        result = 0;
+  else 
+    {
+      result = 0;
     }
-    TX_COMMIT
+  TX_COMMIT_MEM;
 
 #endif
 
