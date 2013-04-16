@@ -9,9 +9,90 @@
 #include "ps_hashtable.h"
 extern ps_hashtable_t ps_hashtable;
 
-#ifndef NOCM 			/* any CM: wholly, greedy, faircm */
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* any CM: wholly, greedy, faircm */
 
 static int32_t* cm_init();
+
+inline BOOLEAN 
+contention_manager_raw_waw(nodeid_t attacker, uint16_t defender, CONFLICT_TYPE conflict) 
+{
+  /* if (conflict == READ_AFTER_WRITE) */
+  /*   { */
+  /*     return FALSE; */
+  /*   } */
+
+  if (cm_metadata_core[attacker].timestamp < cm_metadata_core[defender].timestamp ||
+      (cm_metadata_core[attacker].timestamp == cm_metadata_core[defender].timestamp && attacker < defender)) 
+    {
+      //new TX - attacker won
+      abort_node((uint32_t) defender, conflict);
+      ps_hashtable_delete_node(ps_hashtable, defender);
+      return TRUE;
+    } 
+  else 				/* existing TX won */
+    { 
+      return FALSE;
+    }
+
+  return FALSE;
+}
+
+inline BOOLEAN 
+contention_manager_war(nodeid_t attacker, uint8_t *defenders, CONFLICT_TYPE conflict)
+{
+  nodeid_t defender;
+  for (defender = 0; defender < NUM_UES; defender++)
+    {
+      if (defenders[defender])
+	{
+	  if (cm_metadata_core[attacker].timestamp > cm_metadata_core[defender].timestamp ||
+	      (cm_metadata_core[attacker].timestamp == cm_metadata_core[defender].timestamp && defender < attacker))
+	    {
+	      return FALSE;
+	    }
+	}
+    }
+  //attacker won all readers
+  //TODO: handle the aborting
+  for (defender = 0; defender < NUM_UES; defender++)
+    {
+      if (defenders[defender] && defender != attacker)
+	{
+	  abort_node((unsigned int) defender, conflict);
+	  ps_hashtable_delete_node(ps_hashtable, defender);
+	}
+    }
+
+  return TRUE;
+}
+
+void contention_manager_pri_print() {
+  uint32_t reps = TOTAL_NODES();
+  uint32_t *found = (uint32_t *) calloc(reps, sizeof(uint32_t));
+  assert(found != NULL);
+
+  printf("\t");
+
+  while (reps--) {
+    uint64_t max = 100000000, max_index = max;
+    uint32_t i;
+    for (i = 0; i < TOTAL_NODES(); i++) {
+      if (!found[i]) {
+	if (cm_metadata_core[i].timestamp < max ||
+	  (cm_metadata_core[i].timestamp == max && i < max_index)) {
+	  max = cm_metadata_core[i].timestamp;
+	  max_index = i;
+	}
+      }
+    }
+    found[max_index] = 1;
+    if (max > 0) {
+      printf("%02llu [%llu] > ", (long long unsigned int) max_index, (long long unsigned int) max);
+    }
+  }
+  printf("none\n");
+  FLUSH;
+}
 
 inline BOOLEAN 
 contention_manager(nodeid_t attacker, unsigned short *defenders, CONFLICT_TYPE conflict) {
@@ -68,93 +149,6 @@ contention_manager(nodeid_t attacker, unsigned short *defenders, CONFLICT_TYPE c
         }
         //to avoid non ret warning
         return FALSE;
-}
-
-inline BOOLEAN 
-contention_manager_raw_waw(nodeid_t attacker, uint16_t defender, CONFLICT_TYPE conflict) 
-{
-  /* if (conflict == READ_AFTER_WRITE) */
-  /*   { */
-  /*     return FALSE; */
-  /*   } */
-
-  if (cm_metadata_core[attacker].timestamp < cm_metadata_core[defender].timestamp ||
-      (cm_metadata_core[attacker].timestamp == cm_metadata_core[defender].timestamp && attacker < defender)) 
-    {
-      //new TX - attacker won
-      abort_node((uint32_t) defender, conflict);
-      ps_hashtable_delete_node(ps_hashtable, defender);
-      return TRUE;
-    } 
-  else 				/* existing TX won */
-    { 
-      return FALSE;
-    }
-
-  return FALSE;
-}
-
-uint32_t pm = 0;
-
-inline BOOLEAN 
-contention_manager_war(nodeid_t attacker, uint8_t *defenders, CONFLICT_TYPE conflict)
-{
-  /* return FALSE; */
-
-  nodeid_t defender;
-  for (defender = 0; defender < NUM_UES; defender++)
-    {
-      if (defenders[defender])
-	{
-	  if (pm++ < 1000)
-	    printf("%u vs %u", attacker, defender);
-	  if (cm_metadata_core[attacker].timestamp > cm_metadata_core[defender].timestamp ||
-	      (cm_metadata_core[attacker].timestamp == cm_metadata_core[defender].timestamp && defender < attacker))
-	    {
-	      return FALSE;
-	    }
-	}
-    }
-  //attacker won all readers
-  //TODO: handle the aborting
-  for (defender = 0; defender < NUM_UES; defender++)
-    {
-      if (defenders[defender] && defender != attacker)
-	{
-	  abort_node((unsigned int) defender, conflict);
-	  ps_hashtable_delete_node(ps_hashtable, defender);
-	}
-    }
-
-  return TRUE;
-}
-
-void contention_manager_pri_print() {
-  uint32_t reps = TOTAL_NODES();
-  uint32_t *found = (uint32_t *) calloc(reps, sizeof(uint32_t));
-  assert(found != NULL);
-
-  printf("\t");
-
-  while (reps--) {
-    uint64_t max = 100000000, max_index = max;
-    uint32_t i;
-    for (i = 0; i < TOTAL_NODES(); i++) {
-      if (!found[i]) {
-	if (cm_metadata_core[i].timestamp < max ||
-	  (cm_metadata_core[i].timestamp == max && i < max_index)) {
-	  max = cm_metadata_core[i].timestamp;
-	  max_index = i;
-	}
-      }
-    }
-    found[max_index] = 1;
-    if (max > 0) {
-      printf("%02llu [%llu] > ", (long long unsigned int) max_index, (long long unsigned int) max);
-    }
-  }
-  printf("none\n");
-  FLUSH;
 }
 
 #endif	/* NOCM */
