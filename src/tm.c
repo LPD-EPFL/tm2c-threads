@@ -201,6 +201,11 @@ handle_abort(stm_tx_t* stm_tx, CONFLICT_TYPE reason)
 {
   ps_finish_all(reason);
   stm_tx->aborts++;
+ 
+  if (stm_tx->aborts == 1e6)
+    {
+      PRINT("aborts %u", stm_tx->aborts);
+    }
 
   /* switch (reason) */
   /*   { */
@@ -235,11 +240,6 @@ handle_abort(stm_tx_t* stm_tx, CONFLICT_TYPE reason)
 
       uint32_t wait_max = BACKOFF_DELAY;
       wait_max <<= (wait_exp - 1);
-
-      if (NODE_ID() == 2 && stm_tx->retries < (BACKOFF_MAX + 4))
-	{
-	  PRINT("retry %4d / limited %4d == wait_max: %u", stm_tx->retries, wait_exp, wait_max);
-	}
 
       uint32_t wait = tm2c_rand() % wait_max;
 
@@ -281,6 +281,7 @@ void ps_publish_all()
 /*       unsigned int delay = BACKOFF_DELAY; //nano */
 /*     retry: */
 /* #endif */
+      TXCHKABORTED();
 #ifdef PGAS
       if ((conflict = ps_publish(addr, write_entries[locked].value)) != NO_CONFLICT) {
 #else

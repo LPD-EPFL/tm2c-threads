@@ -80,8 +80,8 @@ bucket_insert_r(bucket_t* bu, ssht_log_set_t* log, uint32_t id, uintptr_t addr)
 	      ssht_rw_entry_t *e = btmp->entry + i;
 	      if (e->writer != SSHT_NO_WRITER) 
 		{
-#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
-		  if (!contention_manager_raw_waw(id, (uint16_t) e->writer, READ_AFTER_WRITE)) 
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) 			/* if any other CM (greedy, wholly, faircm) */
+		  if (contention_manager_raw_waw(id, (uint16_t) e->writer, READ_AFTER_WRITE)) 
 		    {
 		      return READ_AFTER_WRITE;
 		    }
@@ -90,6 +90,7 @@ bucket_insert_r(bucket_t* bu, ssht_log_set_t* log, uint32_t id, uintptr_t addr)
 #endif	/* NOCM */
 		}
 
+	      btmp->addr[i] = addr;
 #if defined(BIT_OPTS)
 	      rw_entry_ssht_set(e, id);
 #else
@@ -97,7 +98,6 @@ bucket_insert_r(bucket_t* bu, ssht_log_set_t* log, uint32_t id, uintptr_t addr)
 	      e->reader[id] = 1;
 #endif	/* BIT_OPTS */
 
-	      btmp->addr[i] = addr;
 	      ssht_log_set_insert(log, btmp->addr + i, e);
 	      return NO_CONFLICT;
 	    }
@@ -116,13 +116,13 @@ bucket_insert_r(bucket_t* bu, ssht_log_set_t* log, uint32_t id, uintptr_t addr)
 	  if (btmp->addr[i] == 0) 
 	    {
 	      ssht_rw_entry_t *e = btmp->entry + i;
+	      btmp->addr[i] = addr;
 #if defined(BIT_OPTS)
 	      rw_entry_ssht_set(e, id);
 #else
 	      e->nr++;
 	      e->reader[id] = 1;
 #endif	/* BIT_OPTS */
-	      btmp->addr[i] = addr;
 	      ssht_log_set_insert(log, btmp->addr + i, e);
 	      return NO_CONFLICT;
 	    }
@@ -152,7 +152,7 @@ bucket_insert_w(bucket_t* bu, ssht_log_set_t* log, uint32_t id, uintptr_t addr)
 	      ssht_rw_entry_t* e = btmp->entry + i;
 	      if (e->writer != SSHT_NO_WRITER)                    /* there is a writer for this entry */
 		{
-#if !defined(NOCM)		                                  /* any other CM (greedy, wholly, faircm) */
+#if !defined(NOCM) && !defined(BACKOFF_RETRY)                    /* any other CM (greedy, wholly, faircm) */
 		  if (contention_manager_raw_waw(id, e->writer, WRITE_AFTER_WRITE)) 
 		    {
 		      btmp->addr[i] = addr;
@@ -171,10 +171,10 @@ bucket_insert_w(bucket_t* bu, ssht_log_set_t* log, uint32_t id, uintptr_t addr)
 #if defined(BIT_OPTS)
 	      else if (rw_entry_ssht_has_readers(e) && !rw_entry_ssht_is_unique_reader(e, id))
 #else
-	      else if (e->nr > 1 || e->reader[id] == 0) 
+	      else if (e->nr > 1 || (e->nr == 1 && e->reader[id] == 0))
 #endif	/* BIT_OPTS */
 		{
-#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) 			/* if any other CM (greedy, wholly, faircm) */
 		  if (contention_manager_war(id, e->reader, WRITE_AFTER_READ))
 		    {
 		      e->writer = id;
@@ -242,7 +242,7 @@ ssht_insert_w_test(ssht_hashtable_t ht, uint32_t id, uintptr_t addr)
 	    ssht_rw_entry_t* e = btmp->entry + i;
 	    if (e->writer != SSHT_NO_WRITER)
 	      {
-#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) 			/* if any other CM (greedy, wholly, faircm) */
 		if (contention_manager_raw_waw(id, e->writer, WRITE_AFTER_WRITE))
 		  {
 		    btmp->addr[i] = 0;
@@ -258,7 +258,7 @@ ssht_insert_w_test(ssht_hashtable_t ht, uint32_t id, uintptr_t addr)
 	      }
 	    else 
 	      {
-#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) 			/* if any other CM (greedy, wholly, faircm) */
 		if (contention_manager_war(id, e->reader, WRITE_AFTER_READ)) 
 		  {
 		    btmp->addr[i] = 0;
