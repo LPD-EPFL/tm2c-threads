@@ -73,13 +73,17 @@ contention_manager(nodeid_t attacker, unsigned short *defenders, CONFLICT_TYPE c
 inline BOOLEAN 
 contention_manager_raw_waw(nodeid_t attacker, uint16_t defender, CONFLICT_TYPE conflict) 
 {
+  /* if (conflict == READ_AFTER_WRITE) */
+  /*   { */
+  /*     return FALSE; */
+  /*   } */
+
   if (cm_metadata_core[attacker].timestamp < cm_metadata_core[defender].timestamp ||
       (cm_metadata_core[attacker].timestamp == cm_metadata_core[defender].timestamp && attacker < defender)) 
     {
       //new TX - attacker won
       abort_node((uint32_t) defender, conflict);
       ps_hashtable_delete_node(ps_hashtable, defender);
-      //it was running and the current node aborted it
       return TRUE;
     } 
   else 				/* existing TX won */
@@ -90,30 +94,37 @@ contention_manager_raw_waw(nodeid_t attacker, uint16_t defender, CONFLICT_TYPE c
   return FALSE;
 }
 
+uint32_t pm = 0;
+
 inline BOOLEAN 
-contention_manager_war(nodeid_t attacker, uint8_t *defenders, CONFLICT_TYPE conflict) {
-  uint32_t i;
-  for (i = 0; i < NUM_UES; i++) {
-    if (defenders[i]) {
-      if (cm_metadata_core[attacker].timestamp > cm_metadata_core[i].timestamp ||
-	  (cm_metadata_core[attacker].timestamp == cm_metadata_core[i].timestamp && i < attacker)) {
-	PRINTD("[norml abort] %d (%d) for %d (%d)",
-	       attacker,
-	       cm_metadata_core[attacker].num_txs,
-	       i, cm_metadata_core[i].num_txs);
-                            
-	return FALSE;
-      }
+contention_manager_war(nodeid_t attacker, uint8_t *defenders, CONFLICT_TYPE conflict)
+{
+  /* return FALSE; */
+
+  nodeid_t defender;
+  for (defender = 0; defender < NUM_UES; defender++)
+    {
+      if (defenders[defender])
+	{
+	  if (pm++ < 1000)
+	    printf("%u vs %u", attacker, defender);
+	  if (cm_metadata_core[attacker].timestamp > cm_metadata_core[defender].timestamp ||
+	      (cm_metadata_core[attacker].timestamp == cm_metadata_core[defender].timestamp && defender < attacker))
+	    {
+	      return FALSE;
+	    }
+	}
     }
-  }
   //attacker won all readers
   //TODO: handle the aborting
-  for (i = 0; i < NUM_UES; i++) {
-    if (defenders[i] && i != attacker) {
-      abort_node((unsigned int) i, conflict);
-      ps_hashtable_delete_node(ps_hashtable, i);
+  for (defender = 0; defender < NUM_UES; defender++)
+    {
+      if (defenders[defender] && defender != attacker)
+	{
+	  abort_node((unsigned int) defender, conflict);
+	  ps_hashtable_delete_node(ps_hashtable, defender);
+	}
     }
-  }
 
   return TRUE;
 }
