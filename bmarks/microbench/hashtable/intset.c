@@ -133,11 +133,17 @@ ht_move_naive(ht_intset_t *set, int val1, int val2, int transactional)
   node_t *prev, *next, *prev1, *next1;
   nxt_t nxt;
 
-  PRINT("%d / %d", val1, val2);
+  addr1 = val1 % maxhtlength;
+  addr2 = val2 % maxhtlength;
+  while (addr1 == addr2)
+    {
+      val2 = (val2+1) % htsize;
+      addr2 = val2 % maxhtlength;
+    }
+
 
   TX_START;
 
-  addr1 = val1 % maxhtlength;
   OFFSET(set->buckets[addr1]);
   prev = ND(set->buckets[addr1]->head);
   next = ND(*(nxt_t *) TX_LOAD(&prev->next));
@@ -160,7 +166,6 @@ ht_move_naive(ht_intset_t *set, int val1, int val2, int transactional)
       TX_STORE(&prev->next, nxt, TYPE_INT64);
       TX_SHFREE(next);
       /* Inserting */
-      addr2 = val2 % maxhtlength;
       OFFSET(set->buckets[addr2]);
       prev1 = ND(set->buckets[addr2]->head);
       next1 = ND(*(nxt_t *) TX_LOAD(&prev1->next));

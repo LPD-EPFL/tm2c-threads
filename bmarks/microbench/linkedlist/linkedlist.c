@@ -515,20 +515,24 @@ int set_remove(intset_t *set, val_t val, int transactional)
   return result;
 }
 
-void set_print(intset_t* set) {
+void set_print(intset_t* set) 
+{
 
-    node_t *node = ND(set->head);
-    node = ND(node->next);
+  node_t *node = ND(set->head);
+  node = ND(node->next);
 
-    if (node == NULL) {
-        goto null;
+  if (node == NULL) 
+    {
+      goto null;
     }
-    while (node->nextp != NULL) {
-      printf("%u -> ", (unsigned int) node->val);
+
+  while (node->nextp != NULL) 
+    {
+      printf("(@%p) %u -[%u]-> ", &node->next, (unsigned int) node->val, node->next);
       node = ND(node->next);
     }
 
-null:
-    PRINTSF("NULL\n");
+ null:
+  PRINTSF("NULL\n");
 
 }

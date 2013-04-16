@@ -31,7 +31,7 @@
 #endif
 
 /* Hashtable length (# of buckets) */
-unsigned int maxhtlength;
+unsigned int maxhtlength, htsize;
 
 /* ################################################################### *
  * RANDOM
@@ -519,6 +519,7 @@ TASKMAIN(int argc, char **argv) {
     exit(1);
   }
 
+  htsize = initial;
   maxhtlength = (unsigned int) initial / load_factor;
 
 
