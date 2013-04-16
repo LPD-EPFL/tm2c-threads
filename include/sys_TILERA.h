@@ -10,6 +10,8 @@
 
 #include "common.h"
 #include "messaging.h"
+#include <tmc/mem.h>
+
 #ifdef PGAS
 /*
  * Under PGAS we're using fakemem allocator, to have fake allocations, that
@@ -24,6 +26,12 @@ extern "C" {
 
   extern nodeid_t *dsl_nodes;
 #define PS_BUFFER_SIZE 32
+
+#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+  extern int32_t **cm_abort_flags;
+  extern int32_t *cm_abort_flag_mine;
+#endif /* CM_H */
+
   extern DynamicHeader *udn_header; //headers for messaging
   extern uint32_t* demux_tags;
   extern tmc_sync_barrier_t *barrier_apps, *barrier_all, *barrier_dsl; //BARRIERS
@@ -63,13 +71,7 @@ extern "C" {
   INLINED int
   sys_sendcmd(void* data, size_t len, nodeid_t to)
   {
-#if !defined(NOCM) && !defined(PGAS)
-    uint32_t* d = (uint32_t*) data;
-    tmc_udn_send_2(udn_header[to], UDN0_DEMUX_TAG, d[0], d[1]);
-#else
     tmc_udn_send_buffer(udn_header[to], UDN0_DEMUX_TAG, data, PS_COMMAND_SIZE_WORDS);
-#endif
-
     /* tmc_udn_send_buffer(udn_header[to], UDN0_DEMUX_TAG, data, len/sizeof(int_reg_t)); */
     /* tmc_udn_send_buffer(udn_header[to], demux_tags[to], data, len/sizeof(int_reg_t)); */
   }
@@ -92,11 +94,7 @@ extern "C" {
   INLINED int
   sys_recvcmd(void* data, size_t len, nodeid_t from)
   {
-#if !defined(NOCM) && !defined(PGAS)
-    *(uint32_t*) data = tmc_udn0_receive();
-#else
     tmc_udn0_receive_buffer(data, PS_REPLY_SIZE_WORDS);
-#endif
 
     /* switch (demux_tags[from]) */
     /*   { */
@@ -122,6 +120,56 @@ extern "C" {
     gettimeofday(&t, NULL);
     return (double) t.tv_sec + ((double) t.tv_usec) / 1000000.0;
   }
+
+
+#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+  INLINED void
+  abort_node(nodeid_t node, CONFLICT_TYPE reason)
+  {
+    CONFLICT_TYPE abort;
+    do
+      {
+	abort = arch_atomic_val_compare_and_exchange(cm_abort_flags[node], NO_CONFLICT, reason);
+      }
+    while(abort == PERSISTING_WRITES);
+  }
+
+  INLINED CONFLICT_TYPE
+  check_aborted()
+  {
+    /* return (*cm_abort_flag_mine != NO_CONFLICT); */
+    /* return arch_atomic_bool_compare_and_exchange(cm_abort_flag_mine, NO_CONFLICT, NO_CONFLICT); */
+    /* return arch_atomic_val_compare_and_exchange(cm_abort_flag_mine, NO_CONFLICT, NO_CONFLICT) != NO_CONFLICT; */
+    return arch_atomic_exchange(cm_abort_flag_mine, NO_CONFLICT);
+  }
+
+  INLINED CONFLICT_TYPE
+  get_abort_reason()
+  {
+    return (*cm_abort_flag_mine);	
+  }
+
+  INLINED void
+  set_tx_running()
+  {
+    arch_atomic_exchange(cm_abort_flag_mine, NO_CONFLICT);
+    /* *cm_abort_flag_mine = NO_CONFLICT; */
+    /* tmc_mem_fence(); */
+  }
+
+  INLINED void
+  set_tx_committed()
+  {
+    arch_atomic_exchange(cm_abort_flag_mine, TX_COMMITED);
+ /* *cm_abort_flag_mine = TX_COMMITED; */
+  }
+
+  INLINED CONFLICT_TYPE
+  set_tx_persisting()
+  {
+    return arch_atomic_bool_compare_and_exchange(cm_abort_flag_mine, NO_CONFLICT, PERSISTING_WRITES);
+  }
+#endif	/* NOCM */
 
 
 #ifdef	__cplusplus

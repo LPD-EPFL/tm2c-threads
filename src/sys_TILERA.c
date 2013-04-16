@@ -2,6 +2,16 @@
 #include "pubSubTM.h"
 #include "dslock.h"
 
+#include <sys/time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/mman.h>
+#include <string.h>
+#include <errno.h>
+#include <unistd.h>
+#include <fcntl.h>
+
+
 #ifdef PGAS
 /*
  * Under PGAS we're using fakemem allocator, to have fake allocations, that
@@ -9,6 +19,12 @@
  */
 #include "fakemem.h"
 #endif
+
+#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+int32_t **cm_abort_flags;
+int32_t *cm_abort_flag_mine;
+#endif /* NOCM */
+
 
 #define DEBUG_UTILIZATION_OFF
 #ifdef  DEBUG_UTILIZATION
@@ -177,6 +193,13 @@ sys_tm_init()
 void
 sys_ps_init_(void)
 {
+
+#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+  cm_abort_flag_mine = cm_init(NODE_ID());
+  *cm_abort_flag_mine = NO_CONFLICT;
+#endif
+  BARRIERW;
+
   /* demux_tags = (uint32_t*) malloc(TOTAL_NODES() * sizeof(uint32_t)); */
   /* assert(demux_tags != NULL); */
 
@@ -233,6 +256,23 @@ sys_dsl_init(void)
   /*     break; */
   /*   } */
 
+#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+  cm_abort_flags = (int32_t **) malloc(TOTAL_NODES() * sizeof(int32_t *));
+  assert(cm_abort_flags != NULL);
+
+  BARRIERW;
+
+  uint32_t i;
+  for (i = 0; i < TOTAL_NODES(); i++) 
+    {
+      //TODO: make it open only for app nodes
+      if (is_app_core(i))
+	{
+	  cm_abort_flags[i] = cm_init(i);    
+	}
+    }
+#endif
+
   BARRIERW;
 }
 
@@ -285,37 +325,26 @@ dsl_communication()
   PF_MSG(5, "servicing a request");
   while (1) 
     {
-
       /* PF_START(5); */
       tmc_udn0_receive_buffer(ps_remote, PS_COMMAND_SIZE_WORDS);
 
-      /* cmd[0] = tmc_udn0_receive(); */
-      /* cmd[1] = tmc_udn0_receive(); */
-
-      //    tmc_udn0_receive_buffer(ps_remote, sizeof(PS_COMMAND)/sizeof(int));
-      /* switch (demux_tag_mine) */
-      /* 	{ */
-      /* 	case UDN0_DEMUX_TAG: */
-      /* 	  tmc_udn0_receive_buffer(ps_remote, sizeof(PS_COMMAND)/sizeof(int_reg_t)); */
-      /* 	  break; */
-      /* 	case UDN1_DEMUX_TAG: */
-      /* 	  tmc_udn1_receive_buffer(ps_remote, sizeof(PS_COMMAND)/sizeof(int_reg_t)); */
-      /* 	  break; */
-      /* 	case UDN2_DEMUX_TAG: */
-      /* 	  tmc_udn2_receive_buffer(ps_remote, sizeof(PS_COMMAND)/sizeof(int_reg_t)); */
-      /* 	  break; */
-      /* 	default:			/\* 3 *\/ */
-      /* 	  tmc_udn3_receive_buffer(ps_remote, sizeof(PS_COMMAND)/sizeof(int_reg_t)); */
-      /* 	  break; */
-      /* 	} */
       sender = ps_remote->nodeId;
-
+      
+#if defined(WHOLLY) || defined(FAIRCM)
+      cm_metadata_core[sender].timestamp = (ticks) ps_remote->tx_metadata;
+#elif defined(GREEDY)
+      if (cm_metadata_core[sender].timestamp == 0)
+	{
+	  cm_metadata_core[sender].timestamp = getticks() - (ticks) ps_remote->tx_metadata;
+	}
+#endif
       /* PRINT("CMD from %02d | type: %d | addr: %u", sender, ps_remote->type, ps_remote->address); */
 
       switch (ps_remote->type) 
 	{
 	case PS_SUBSCRIBE:
 	  {
+
 	    CONFLICT_TYPE conflict = try_subscribe(sender, ps_remote->address);
 #ifdef PGAS
 	    /*
@@ -417,14 +446,19 @@ dsl_communication()
 	  }
 #endif
 	case PS_REMOVE_NODE:
+	  {
 #ifdef PGAS
-	  if (ps_remote->response == NO_CONFLICT) {
-	    write_set_pgas_persist(PGAS_write_sets[sender]);
-	  }
-	  PGAS_write_sets[sender] = write_set_pgas_empty(PGAS_write_sets[sender]);
+	    if (ps_remote->response == NO_CONFLICT) {
+	      write_set_pgas_persist(PGAS_write_sets[sender]);
+	    }
+	    PGAS_write_sets[sender] = write_set_pgas_empty(PGAS_write_sets[sender]);
 #endif
-	  ps_hashtable_delete_node(ps_hashtable, sender);
-	  break;
+	    ps_hashtable_delete_node(ps_hashtable, sender);
+#if defined(GREEDY)
+	    cm_metadata_core[sender].timestamp = 0;
+#endif
+	    break;
+	  }
 	case PS_UNSUBSCRIBE:
 	  ps_hashtable_delete(ps_hashtable, sender, ps_remote->address, READ);
 	  break;
@@ -434,21 +468,25 @@ dsl_communication()
 	case PS_STATS:
 	  {
 	    uint32_t w;
+	    int left = PS_STATS_CMD_SIZE_WORDS - PS_COMMAND_SIZE_WORDS;
 #if defined(__tilepro__)
 	    uint32_t collect[PS_STATS_CMD_SIZE_WORDS - PS_COMMAND_SIZE_WORDS];
 #else  /* __tilegx__ */
 	    uint64_t collect[PS_STATS_CMD_SIZE_WORDS - PS_COMMAND_SIZE_WORDS];
 #endif	/* __tilepro__ */
 
-	    for (w = 0; w < (PS_STATS_CMD_SIZE_WORDS - PS_COMMAND_SIZE_WORDS); w++)
+	    for (w = 0; w < left; w++)
 	      {
 		collect[w] = tmc_udn0_receive();
 	      }
 
 	    PS_STATS_CMD_T ps_stats;
 	    memcpy(&ps_stats, ps_remote, PS_COMMAND_SIZE);
-	    void* ps_stats_mid = ((void*) &ps_stats) + PS_COMMAND_SIZE;
-	    memcpy(ps_stats_mid, collect, PS_STATS_CMD_SIZE - PS_COMMAND_SIZE);
+	    if (left > 0)
+	      {
+		void* ps_stats_mid = ((void*) &ps_stats) + PS_COMMAND_SIZE;
+		memcpy(ps_stats_mid, collect, PS_STATS_CMD_SIZE - PS_COMMAND_SIZE);
+	      }
 	    
 	    PS_STATS_CMD_T* ps_rem_stats = &ps_stats;
 
@@ -549,3 +587,46 @@ dsl_communication()
     ticks in_cycles = REF_SPEED_GHZ * nanos;
     wait_cycles(in_cycles);
   }
+
+
+#if !defined(NOCM)	/* if any other CM (greedy, wholly, faircm) */
+static int32_t*
+cm_init(nodeid_t node) {
+   char keyF[50];
+   sprintf(keyF,"/cm_abort_flag%03d", node);
+
+   size_t cache_line = 64;
+
+   int abrtfd = shm_open(keyF, O_CREAT | O_EXCL | O_RDWR, S_IRWXU | S_IRWXG);
+   if (abrtfd<0)
+   {
+      if (errno != EEXIST)
+      {
+         perror("In shm_open");
+         exit(1);
+      }
+
+      //this time it is ok if it already exists                                                    
+      abrtfd = shm_open(keyF, O_CREAT | O_RDWR, S_IRWXU | S_IRWXG);
+      if (abrtfd<0)
+      {
+         perror("In shm_open");
+         exit(1);
+      }
+   }
+   else
+   {
+      //only if it is just created                                                                 
+     if(ftruncate(abrtfd, cache_line))
+       {
+	 printf("ftruncate");
+       }
+   }
+
+   int32_t *tmp = (int32_t *) mmap(NULL, 64, PROT_READ | PROT_WRITE, MAP_SHARED, abrtfd, 0);
+   assert(tmp != NULL);
+   
+   return tmp;
+}
+
+#endif	/* NOCM */
