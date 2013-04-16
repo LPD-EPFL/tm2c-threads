@@ -1,17 +1,16 @@
 CCOMPILE=tile-gcc
 
 PLATFORM_CFLAGS = -O3
-PLATFORM_LDFLAGS = -ltmc
+PLATFORM_LDFLAGS = -ltmc -lm -lrt
 PLATFORM_LIBS = 
 
 
 ## commonly changed defines
-PLATFORM_DEFINES =      -DBACKOFF_RETRY \
-		        -DBACKOFF_MAX="0" \
+PLATFORM_DEFINES =      -DBACKOFF_MAX="0" \
 		        -DBACKOFF_DELAY="5000" \
 			-DDO_TIMINGS \
 			-UDISABLE_CC \
-		   	-DNOCM		   
+		   	-DWHOLLY
 
 ## fixed defines
 PLATFORM_DEFINES +=     -DPLATFORM_TILERA \

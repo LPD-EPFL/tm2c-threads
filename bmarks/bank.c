@@ -37,8 +37,6 @@
 #define LOAD_STORE
 #define NB_ACC_POWER2
 
-#define PRINT_STATS
-
 #if defined(SCC)
 /*take advante all 4 MCs*/
 #  define MC__
@@ -54,9 +52,10 @@
 #define DEFAULT_READ_THREADS            0
 #define DEFAULT_WRITE_THREADS           0
 #define DEFAULT_DISJOINT                0
+#define DEFAULT_VERBOSE                 0
 
 int delay = DEFAULT_DELAY;
-
+int test_verbose = DEFAULT_VERBOSE;
 
 #define XSTR(s)                         STR(s)
 #define STR(s)                          #s
@@ -285,17 +284,17 @@ test(void *data, double duration, int nb_accounts)
       EXIT(1);
     }
 
-/* #ifdef MC */
-/*   bank->accounts = (account_t *) sys_shmalloc(64 * 1024 * 1024); */
-/* #else */
+  /* #ifdef MC */
+  /*   bank->accounts = (account_t *) sys_shmalloc(64 * 1024 * 1024); */
+  /* #else */
   bank->accounts = (account_t *) sys_shmalloc(nb_accounts * sizeof (account_t));
-/* #endif */
+  /* #endif */
 
-if (bank->accounts == NULL) 
-  {
-    PRINT("malloc bank->accounts");
-    EXIT(1);
-  }
+  if (bank->accounts == NULL) 
+    {
+      PRINT("malloc bank->accounts");
+      EXIT(1);
+    }
 
   bank->size = nb_accounts;
 
@@ -312,10 +311,11 @@ if (bank->accounts == NULL)
   ONCE
     {
       uint32_t tot = total(bank, 0);
-#if defined(PRINT_STATS)
-      PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\tBank total (before): %d",
-	    tot);
-#endif	/* PRINT_STATS */
+      if (test_verbose)
+	{
+	  PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\tBank total (before): %d",
+		tot);
+	}
     }
 
   /* Wait on barrier */
@@ -408,6 +408,7 @@ if (bank->accounts == NULL)
   return bank;
 }
 
+
 TASKMAIN(int argc, char **argv) {
   dup2(STDOUT_FILENO, STDERR_FILENO);
   PF_MSG(0, "1st TX_LOAD_STORE (transfer)");
@@ -429,6 +430,7 @@ TASKMAIN(int argc, char **argv) {
     {"write-all-rate", required_argument, NULL, 'w'},
     {"write-threads", required_argument, NULL, 'W'},
     {"disjoint", no_argument, NULL, 'j'},
+    {"verbose", no_argument, NULL, 'v'},
     {NULL, 0, NULL, 0}
   };
 
@@ -446,10 +448,9 @@ TASKMAIN(int argc, char **argv) {
   int write_cores = DEFAULT_WRITE_THREADS;
   int disjoint = DEFAULT_DISJOINT;
 
-
   while (1) {
     i = 0;
-    c = getopt_long(argc, argv, "h:a:d:D:r:c:R:w:W:j", long_options, &i);
+    c = getopt_long(argc, argv, "h:a:d:D:r:c:R:w:W:jv", long_options, &i);
 
     if (c == -1)
       break;
@@ -520,6 +521,9 @@ TASKMAIN(int argc, char **argv) {
     case 'j':
       disjoint = 1;
       break;
+    case 'v':
+      test_verbose = 1;
+      break;
     case '?':
       ONCE
 	{
@@ -548,26 +552,26 @@ TASKMAIN(int argc, char **argv) {
   assert(read_all >= 0 && write_all >= 0 && check >= 0 && check <= 100);
   assert(read_cores + write_cores <= nb_app_cores);
 
-#if defined(PRINT_STATS)
-  ONCE
+  if (test_verbose)
     {
-      PRINTN("Nb accounts    : %d\n", nb_accounts);
-      PRINTN("Duration       : %fs\n", duration);
-      PRINTN("Check acc rate : %d\n", check - write_all);
-      PRINTN("Transfer rate  : %d\n", 100 - check);
-      PRINTN("Read-all rate  : %d\n", read_all);
-      /* PRINT("sizeof(size_t) = %d", sizeof(size_t)); */
-      /* PRINT("sizeof(uintptr_t) = %d", sizeof(uintptr_t)); */
-      /* PRINT("sizeof(PS_COMMAND) = %d", sizeof(PS_COMMAND)); */
-      /* PRINT("sizeof(PS_STATS_CMD_T) = %d", sizeof(PS_STATS_CMD_T)); */
-      /* PRINT("sizeof(PS_STATS_CMD_SEND_T) = %d", sizeof(PS_STATS_CMD_SEND_T)); */
-      /* PRINT("sizeof(PS_REPLY) = %d", sizeof(PS_REPLY)); */
-      /* PRINT("sizeof(stm_tx_t) = %d", sizeof(stm_tx_t)); */
-      /* PRINT("sizeof(stm_tx_node_t) = %d", sizeof(stm_tx_node_t)); */
-      /* PRINT("sizeof(sigjmp_buf) = %d", sizeof(sigjmp_buf)); */
+      ONCE
+	{
+	  PRINTN("Nb accounts    : %d\n", nb_accounts);
+	  PRINTN("Duration       : %fs\n", duration);
+	  PRINTN("Check acc rate : %d\n", check - write_all);
+	  PRINTN("Transfer rate  : %d\n", 100 - check);
+	  PRINTN("Read-all rate  : %d\n", read_all);
+	  /* PRINT("sizeof(size_t) = %d", sizeof(size_t)); */
+	  /* PRINT("sizeof(uintptr_t) = %d", sizeof(uintptr_t)); */
+	  /* PRINT("sizeof(PS_COMMAND) = %d", sizeof(PS_COMMAND)); */
+	  /* PRINT("sizeof(PS_STATS_CMD_T) = %d", sizeof(PS_STATS_CMD_T)); */
+	  /* PRINT("sizeof(PS_STATS_CMD_SEND_T) = %d", sizeof(PS_STATS_CMD_SEND_T)); */
+	  /* PRINT("sizeof(PS_REPLY) = %d", sizeof(PS_REPLY)); */
+	  /* PRINT("sizeof(stm_tx_t) = %d", sizeof(stm_tx_t)); */
+	  /* PRINT("sizeof(stm_tx_node_t) = %d", sizeof(stm_tx_node_t)); */
+	  /* PRINT("sizeof(sigjmp_buf) = %d", sizeof(sigjmp_buf)); */
+	}
     }
-#endif	/* PRINT_STATS */
-
   /* normalize percentages to 128 */
 
   double normalize = (double) 128/100;
@@ -606,31 +610,33 @@ TASKMAIN(int argc, char **argv) {
 
   BARRIER;
 
-#if defined(PRINT_STATS)
-  uint32_t nd;
-  for (nd = 0; nd < TOTAL_NODES(); nd++) 
+  if (test_verbose)
     {
-      if (NODE_ID() == nd) {
-	printf("---Core %d\n  #transfer   : %u\n  #checks     : %u\n  #read-all   : %u\n  #write-all  : %u\n", 
-	       NODE_ID(), data->nb_transfer, data->nb_checks, data->nb_read_all, data->nb_write_all);
-/* #  if defined(FAIRCM) */
-/* 	PRINT("aborts: %8d / duration: %f", stm_tx_node->tx_aborted, stm_tx_node->tx_duration / (REF_SPEED_GHZ * 1e9)); */
-/* #  endif */
-	FLUSH;
-      }
-      BARRIER;
+      uint32_t nd;
+      for (nd = 0; nd < TOTAL_NODES(); nd++) 
+	{
+	  if (NODE_ID() == nd) {
+	    printf("---Core %d\n  #transfer   : %u\n  #checks     : %u\n  #read-all   : %u\n  #write-all  : %u\n", 
+		   NODE_ID(), data->nb_transfer, data->nb_checks, data->nb_read_all, data->nb_write_all);
+	    /* #  if defined(FAIRCM) */
+	    /* 	PRINT("aborts: %8d / duration: %f", stm_tx_node->tx_aborted, stm_tx_node->tx_duration / (REF_SPEED_GHZ * 1e9)); */
+	    /* #  endif */
+	    FLUSH;
+	  }
+	  BARRIER;
+	}
     }
-#endif	/* PRINT_STATS */
 
   BARRIER;
 
   ONCE
     {
       uint32_t tot = total(bank, 0);
-#if defined(PRINT_STATS)
-      PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\tBank total  (after): %d",
-	    tot);
-#endif	/* PRINT_STATS */
+      if (test_verbose || 1)
+	{
+	  PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\tBank total  (after): %d",
+		tot);
+	}
     }
 
   /* Delete bank and accounts */
