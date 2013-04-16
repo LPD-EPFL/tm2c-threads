@@ -41,10 +41,12 @@ extern "C" {
 #  if !defined(NOCM) && defined(PGAS)
 #    define PS_COMMAND_SIZE       24
 #    define PS_COMMAND_SIZE_WORDS 7
-#  elif !defined(NOCM) || defined(PGAS)
-#    define PS_COMMAND_SIZE       16
-#    define PS_COMMAND_SIZE_WORDS 4
-#  else	 
+#  elif (!defined(NOCM) && !defined(BACKOFF_RETRY))|| defined(PGAS)
+#    if defined(__tilegx__)
+#        define PS_COMMAND_SIZE       24
+#        define PS_COMMAND_SIZE_WORDS 3
+#    endif  /* __tilegx__ */
+#  else	 /* defined(NOCM) */
 #    if defined(__tilepro__)
 #        define PS_COMMAND_SIZE       8
 #        define PS_COMMAND_SIZE_WORDS 2
@@ -60,9 +62,9 @@ extern "C" {
     {
       uint8_t type;	      /* PS_COMMAND_TYPE */
       uint8_t nodeId;	      /* we need IDs on networked systems */
-      /* 4*/
+      /* 2*/
       tm_intern_addr_t address; /* addr of the data, internal representation */
-      /* 8 */ 
+      /* 16 */ 
 
 #  if defined(PGAS)
       union 
