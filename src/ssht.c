@@ -95,8 +95,8 @@ bucket_insert_r(bucket_t* bu, ssht_log_set_t* log, uint32_t id, uintptr_t addr)
 	      rw_entry_ssht_set(e, id);
 #else
 	      if (!e->reader[id])
-		{
-		  e->nr = e->nr++;
+	      	{
+		  e->nr++;
 		  e->reader[id] = 1;
 		  ssht_log_set_insert(log, btmp->addr + i, e);
 		}
