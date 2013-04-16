@@ -26,20 +26,20 @@ extern "C" {
 
 #define FOR_ITERS(iters)					\
   double __start = wtime();					\
-  uint32_t __iterations;					\
-  for (__iterations; __iterations < (iters); __iterations++)	\
+    uint32_t __iterations;					\
+    for (__iterations; __iterations < (iters); __iterations++)	\
 
 #define END_FOR_ITERS				\
   duration__ = wtime() - __start;
 
-#define FOR(seconds)					\
-  double __ticks_per_sec = 1000000000*REF_SPEED_GHZ;	\
-  ticks __duration_ticks = (seconds) * __ticks_per_sec;	\
-  ticks __start_ticks = getticks();			\
-  ticks __end_ticks = __start_ticks + __duration_ticks;	\
-  while ((getticks()) < __end_ticks) {			\
-  uint32_t __reps;					\
-  for (__reps = 0; __reps < 1000; __reps++) {
+#define FOR(seconds)						\
+  double __ticks_per_sec = 1000000000*REF_SPEED_GHZ;		\
+    ticks __duration_ticks = (seconds) * __ticks_per_sec;	\
+    ticks __start_ticks = getticks();				\
+    ticks __end_ticks = __start_ticks + __duration_ticks;	\
+    while ((getticks()) < __end_ticks) {			\
+      uint32_t __reps;						\
+      for (__reps = 0; __reps < 1000; __reps++) {
 
 #define END_FOR						\
   }}							\
@@ -201,20 +201,22 @@ extern "C" {
   /* Contention management related macros */
   /* -------------------------------------------------------------------------------- */
 
-#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if any other CM (greedy, wholly, faircm) */
 #  define TXRUNNING()     set_tx_running();
 #  define TXCOMMITTED()   set_tx_committed();
 
 #  define TXPERSISTING()			\
-  if (!set_tx_persisting()) {			\
-    TX_ABORT(get_abort_reason());		\
-  }
+  if (!set_tx_persisting())			\
+    {						\
+      TX_ABORT(get_abort_reason());		\
+    }
 
 #  define TXCHKABORTED()			\
-  if (check_aborted()) {			\
-    TX_ABORT(get_abort_reason());		\
-  }
-#else  /* if no CM */
+  if (check_aborted())				\
+    {						\
+      TX_ABORT(get_abort_reason());		\
+    }
+#else  /* if no CM or BACKOFF_RETRY */
 #  define TXRUNNING()     ;
 #  define TXCOMMITTED()   ;
 #  define TXPERSISTING()  ;
@@ -531,6 +533,7 @@ extern "C" {
 /* #  endif */
 	    TX_ABORT(conflict);
 	  }
+	TXCHKABORTED();
 	return addr;
       }
   }
