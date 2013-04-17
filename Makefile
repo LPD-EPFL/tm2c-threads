@@ -11,6 +11,10 @@ ifeq ($(UNAME), parsasrv1.epfl.ch)
 PLATFORM=TILERA
 endif
 
+ifeq ($(UNAME), marc041)
+PLATFORM=SCC.SSMP
+endif
+
 # USE_HASHTABLE_KHASH:  khash.h from <http://www.freewebs.com/attractivechaos/khash.h>
 # USE_HASHTABLE_UTHASH: uthash.h from <http://uthash.sourceforge.net/>
 # USE_HASHTABLE_SDD:   Sunrise Data Dictionary <>
