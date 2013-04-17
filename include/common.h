@@ -49,6 +49,8 @@ extern "C" {
 
 #include "tm_types.h"
 
+/* #define EAGER_WRITE_ACQ         /\*ENABLE eager write lock acquisition*\/ */
+
 #ifdef PGAS
 #  define EAGER_WRITE_ACQ         /*ENABLE eager write lock acquisition*/
 #endif

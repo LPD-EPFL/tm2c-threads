@@ -189,7 +189,7 @@ rw_entry_new()
         if (rw == WRITE) { /*publishing*/
             if (rw_entry_has_writer(rw_entry)) { /*WRITE/WRITE conflict*/
                 //here the logic for WRITE -> WRITE
-#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if any other CM (greedy, wholly, faircm) */
                 if (contention_manager(nodeId, &rw_entry->shorts[3], WRITE_AFTER_WRITE) == TRUE) {
                     //attacker won - old aborted
                     return NO_CONFLICT;
@@ -209,7 +209,7 @@ rw_entry_new()
                 /* else {  */
 		  /*WRITE AFTER READ conflict*/
                     // here the logic for READ -> WRITE
-#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if any other CM (greedy, wholly, faircm) */
                     unsigned short readers[NUM_UES];
                     rw_entry_fetch_readers(rw_entry, readers);
                     readers[nodeId] = 0;
@@ -235,8 +235,7 @@ rw_entry_new()
             if (rw_entry_has_writer(rw_entry)
                     && !rw_entry_is_writer(rw_entry, nodeId)) { /*READ AFTER WRITE*/
                 //TODO: here the logic for READ -> WRITE
-
-#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if any other CM (greedy, wholly, faircm) */
                 if (contention_manager(nodeId, &rw_entry->shorts[3], READ_AFTER_WRITE) == TRUE) {
                     //attacker won - old aborted
                     rw_entry_unset_writer(rw_entry);

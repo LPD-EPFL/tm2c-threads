@@ -533,7 +533,7 @@ extern "C" {
 /* #  endif */
 	    TX_ABORT(conflict);
 	  }
-	TXCHKABORTED();
+	/* TXCHKABORTED(); */
 	return addr;
       }
   }
