@@ -542,7 +542,8 @@ TASKMAIN(int argc, char **argv) {
       PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\tBank total  (after): %d",
 	    total(bank, 0));
 
-      PRINT("))) %u", throughput_tot);
+      printf("\n))) %u %u %f\n", throughput_tot, 100, (1.0e6/throughput_tot));
+      FLUSH;
     }
 
   /* Delete bank and accounts */

@@ -31,7 +31,7 @@
 #endif
 
 /* Hashtable length (# of buckets) */
-unsigned int maxhtlength, htsize;
+unsigned int maxhtlength, htrange;
 
 /* ################################################################### *
  * RANDOM
@@ -113,47 +113,63 @@ test(void *data, double duration)
     {
       if (unext) 
 	{ // update
-	if (mnext)
-	  { // move
-	  if (last == -1) val = tm2c_rand() % d->range; //rand_range_re(&d->seed, d->range);
-	  else val = last;
-	  val2 = tm2c_rand() % d->range; //rand_range_re(&d->seed, d->range);
-	  if (ht_move_naive(d->set, val, val2, TRANSACTIONAL)) {
-	    d->nb_moved++;
-	    last = -1;
-	  }
-	  d->nb_move++;
-	}
-	else if (last < 0) { // add
-	  val = tm2c_rand() % d->range; //rand_range_re(&d->seed, d->range);
-	  if (ht_add(d->set, val, TRANSACTIONAL)) {
-	    d->nb_added++;
-	    last = val;
-	  }
-	  d->nb_add++;
-	}
-	else { // remove
-
-	  if (d->alternate) { // alternate mode
-	    if (ht_remove(d->set, last, TRANSACTIONAL)) {
-	      d->nb_removed++;
-	      last = -1;
+	  if (mnext)
+	    { // move
+	      if (last == -1) val = tm2c_rand() % d->range; //rand_range_re(&d->seed, d->range);
+	      else val = last;
+	      val2 = tm2c_rand() % d->range; //rand_range_re(&d->seed, d->range);
+	      int mv = ht_move_naive(d->set, val, val2, TRANSACTIONAL);
+	      if (mv == 1)
+		{
+		  d->nb_moved++;
+		  last = -1;
+		}
+	      else if (mv == 2)
+		{
+		  d->nb_moved++;
+		  if (ht_add(d->set, val, TRANSACTIONAL))
+		    {
+		      d->nb_added++;
+		      last = val;
+		    }
+		  d->nb_add++;
+		}
+	      else
+		{
+		  last = -1;
+		}
+	      d->nb_move++;
 	    }
-	  }
-	  else {
-	    /* Random computation only in non-alternated cases */
+	  else if (last < 0) { // add
 	    val = tm2c_rand() % d->range; //rand_range_re(&d->seed, d->range);
-	    /* Remove one random value */
-	    if (ht_remove(d->set, val, TRANSACTIONAL)) {
-	      d->nb_removed++;
-	      /* Repeat until successful, to avoid size variations */
-	      last = -1;
+	    if (ht_add(d->set, val, TRANSACTIONAL)) {
+	      d->nb_added++;
+	      last = val;
 	    }
+	    d->nb_add++;
 	  }
-	  d->nb_remove++;
-	}
+	  else { // remove
 
-      }
+	    if (d->alternate) { // alternate mode
+	      if (ht_remove(d->set, last, TRANSACTIONAL)) {
+		d->nb_removed++;
+		last = -1;
+	      }
+	    }
+	    else {
+	      /* Random computation only in non-alternated cases */
+	      val = tm2c_rand() % d->range; //rand_range_re(&d->seed, d->range);
+	      /* Remove one random value */
+	      if (ht_remove(d->set, val, TRANSACTIONAL)) {
+		d->nb_removed++;
+		/* Repeat until successful, to avoid size variations */
+		last = -1;
+	      }
+	    }
+	    d->nb_remove++;
+	  }
+
+	}
       else { // reads
 
 	if (cnext) { // contains (no snapshot)
@@ -198,18 +214,18 @@ test(void *data, double duration)
       /* Is the next op an update, a move, a contains? */
       if (d->effective) // a failed remove/add is a read-only tx
 	{ 
-	numtx = d->nb_contains + d->nb_add + d->nb_remove + d->nb_move + d->nb_snapshot;
-	unext = ((100.0 * (d->nb_added + d->nb_removed + d->nb_moved)) < (d->update * numtx));
-	mnext = ((100.0 * d->nb_moved) < (d->move * numtx));
-	cnext = !((100.0 * d->nb_snapshoted) < (d->snapshot * numtx));
-      }
+	  numtx = d->nb_contains + d->nb_add + d->nb_remove + d->nb_move + d->nb_snapshot;
+	  unext = ((100.0 * (d->nb_added + d->nb_removed + d->nb_moved)) < (d->update * numtx));
+	  mnext = ((100.0 * d->nb_moved) < (d->move * numtx));
+	  cnext = !((100.0 * d->nb_snapshoted) < (d->snapshot * numtx));
+	}
       else // remove/add (even failed) is considered as an update 
 	{ 
-	r = tm2c_rand() % 100;
-	unext = (r < d->update);
-	mnext = (r < d->move);
-	cnext = (r >= d->update + d->snapshot);
-      }
+	  r = tm2c_rand() % 100;
+	  unext = (r < d->update);
+	  mnext = (r < d->move);
+	  cnext = (r >= d->update + d->snapshot);
+	}
     }
 
   ticks __end_ticks = getticks();
@@ -366,7 +382,7 @@ TASKMAIN(int argc, char **argv) {
   int snapshot = DEFAULT_SNAPSHOT;
   int unit_tx = DEFAULT_ELASTICITY;
   int alternate = DEFAULT_ALTERNATE;
-  int effective = DEFAULT_EFFECTIVE;
+  int effective = 0;//DEFAULT_EFFECTIVE;
   int verbose = DEFAULT_VERBOSE;
   unsigned int seed = 0;
 
@@ -519,7 +535,7 @@ TASKMAIN(int argc, char **argv) {
     exit(1);
   }
 
-  htsize = initial;
+  htrange = range;
   maxhtlength = (unsigned int) initial / load_factor;
 
 
