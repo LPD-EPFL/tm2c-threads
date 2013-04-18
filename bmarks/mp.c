@@ -75,9 +75,7 @@ MAIN(int argc, char **argv)
 
   long long int rounds, sum = 0;
 
-  double _start = wtime();
-  ticks _start_ticks = getticks();
-
+  ticks __start_ticks = getticks();
   nodeid_t to = 0;
   /* PRINT("sending to %d", to);  */
 
@@ -105,7 +103,10 @@ MAIN(int argc, char **argv)
       /* to %= NUM_DSL_NODES; */
     }
   PF_STOP(3);
-
+  ticks __end_ticks = getticks();
+  ticks __duration_ticks = __end_ticks - __start_ticks;
+  ticks __ticks_per_sec = (ticks) (1e9 * REF_SPEED_GHZ);
+  duration__ = (double) __duration_ticks / __ticks_per_sec;
 
   if (sum > 0)
     {
@@ -113,6 +114,7 @@ MAIN(int argc, char **argv)
     }
 
   total_samples[3] = steps;
+  stm_tx_node->tx_commited = steps;
 
   TM_END;
 

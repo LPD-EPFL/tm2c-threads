@@ -164,28 +164,30 @@ test(void *data, double duration)
   return NULL;
 }
 
-TASKMAIN(int argc, char **argv) {
-  dup2(STDOUT_FILENO, STDERR_FILENO);
+TASKMAIN(int argc, char **argv)
+{
 #ifndef SEQUENTIAL
   TM_INIT;
 #else
   SEQ_INIT;
+  dup2(STDOUT_FILENO, STDERR_FILENO);
   /* RCCE_init(&argc, &argv); */
   /* iRCCE_init(); */
 #endif
 
-  struct option long_options[] = {
-    // These options don't set a flag
-    {"help", no_argument, NULL, 'h'},
-    {"verbose", no_argument, NULL, 'v'},
-    {"duration", required_argument, NULL, 'd'},
-    {"initial-size", required_argument, NULL, 'i'},
-    {"range", required_argument, NULL, 'r'},
-    {"update-rate", required_argument, NULL, 'u'},
-    {"elasticity", required_argument, NULL, 'x'},
-    {"effective", required_argument, NULL, 'f'},
-    {NULL, 0, NULL, 0}
-  };
+  struct option long_options[] =
+    {
+      // These options don't set a flag
+      {"help", no_argument, NULL, 'h'},
+      {"verbose", no_argument, NULL, 'v'},
+      {"duration", required_argument, NULL, 'd'},
+      {"initial-size", required_argument, NULL, 'i'},
+      {"range", required_argument, NULL, 'r'},
+      {"update-rate", required_argument, NULL, 'u'},
+      {"elasticity", required_argument, NULL, 'x'},
+      {"effective", required_argument, NULL, 'f'},
+      {NULL, 0, NULL, 0}
+    };
 
   intset_t *set;
   int i, c, size;
@@ -458,19 +460,21 @@ TASKMAIN(int argc, char **argv) {
   printf("#Ops          : %d\n", total_ops);
   printf("#Ops/s        : %d\n", (int) (total_ops / duration__));
   printf("#Latency      : %f\n", duration__ / total_ops);
-  FLUSH
+  FLUSH;
 #endif
 
-    //set_delete(set);
+  //set_delete(set);
 
-    /* Cleanup STM */
+  /* Cleanup STM */
 
-    free(data);
+  free(data);
 
   BARRIER;
 
-#ifdef STM
+#ifndef SEQUENTIAL
   TM_END;
+#elif defined(SCC)
+  RCCE_finalize();
 #endif
 
   EXIT(0);

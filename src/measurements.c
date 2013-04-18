@@ -2,7 +2,7 @@
 #include "measurements.h"
 
 #ifdef DO_TIMINGS
-#  if !defined(SSMP)
+/* #  if !defined(SSMP) */
 ticks entry_time[ENTRY_TIMES_SIZE];
 enum timings_bool_t entry_time_valid[ENTRY_TIMES_SIZE] = {M_FALSE, M_FALSE, M_FALSE, M_FALSE, M_FALSE, M_FALSE, M_FALSE, M_FALSE, M_FALSE, M_FALSE, M_FALSE, M_FALSE, M_FALSE, M_FALSE, M_FALSE, M_FALSE};
 ticks total_sum_ticks[ENTRY_TIMES_SIZE] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -12,7 +12,7 @@ ticks getticks_correction = 0;
 
 ticks getticks_correction_calc() 
 {
-#    define GETTICKS_CALC_REPS 1000000
+#  define GETTICKS_CALC_REPS 1000000
   ticks t_dur = 0;
   uint32_t i;
   for (i = 0; i < GETTICKS_CALC_REPS; i++) {
@@ -25,7 +25,7 @@ ticks getticks_correction_calc()
 }
 
 
-#    if defined(DO_TIMINGS_TICKS) || defined(DO_TIMINGS_TICKS_SIMPLE)
+#  if defined(DO_TIMINGS_TICKS) || defined(DO_TIMINGS_TICKS_SIMPLE)
 void
 prints_ticks_stats(int start, int end)
 {
@@ -75,6 +75,6 @@ prints_ticks_stats(int start, int end)
       fflush(stdout);
     }
 }
-#    endif	/* DO_TIMINGS_TICK[_SIMPLE]?*/
-#  endif  /* !SSMP */
+#  endif	/* DO_TIMINGS_TICK[_SIMPLE]?*/
+/* #  endif  /\* !SSMP *\/ */
 #endif	/* DO_TIMINGS */
