@@ -17,7 +17,7 @@ PLATFORM_LIBS = -lssmp
 PLATFORM_DEFINES =      -DBACKOFF_MAX="10" \
 		        -DBACKOFF_DELAY="500" \
 			-DDO_TIMINGS \
-		   	-DGREEDY
+		   	-DNOCM
 ## fixed defines
 PLATFORM_DEFINES +=     -DPLATFORM_SCC_SSMP \
 		   	-DSSMP \

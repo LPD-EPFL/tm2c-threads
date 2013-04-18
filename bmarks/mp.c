@@ -56,6 +56,13 @@ MAIN(int argc, char **argv)
 
   TM_INIT;
 
+#if !defined(NOCM) && !defined(BACKOFF_RETRY)
+  ONCE
+    {
+      PRINT("*** better run mp with either NOCM and BACKOFF_RETRY to minimize the overhead!\n");
+    }
+#endif
+
   if (argc > 1) 
     {
       steps = atoll(argv[1]);
