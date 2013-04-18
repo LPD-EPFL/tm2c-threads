@@ -12,7 +12,7 @@ else
     shift;
 
     for nue in 2 4 8 16 32 48; do
-	echo -n -e "$nue \t";
+	printf "$nue \t";
 	./run  $nue $prog $@ | grep "$pattern" | awk -v fl=$field '// {sum+=$fl}; END {print sum/NR}'
 	
     done
