@@ -78,6 +78,9 @@ extern "C" {
   void ps_finish_all(CONFLICT_TYPE conflict);
 
   void ps_send_stats(stm_tx_node_t *, double duration);
+
+  CONFLICT_TYPE ps_dummy_msg(nodeid_t node);
+
 #ifdef	__cplusplus
 }
 #endif
