@@ -7,7 +7,7 @@ PLATFORM_LIBS = -lssmp -lrt
 ## commonly changed defines
 PLATFORM_DEFINES =	-DBACKOFF_MAX="10" \
 		       	-DBACKOFF_DELAY="500" \
-		       	-UDO_TIMINGS \
+		       	-DDO_TIMINGS \
 			-UGREEDY_GLOBAL_TS \
 			-DNOCM
 
