@@ -382,7 +382,7 @@ TASKMAIN(int argc, char **argv) {
   int snapshot = DEFAULT_SNAPSHOT;
   int unit_tx = DEFAULT_ELASTICITY;
   int alternate = DEFAULT_ALTERNATE;
-  int effective = 0;//DEFAULT_EFFECTIVE;
+  int effective = DEFAULT_EFFECTIVE;
   int verbose = DEFAULT_VERBOSE;
   unsigned int seed = 0;
 
@@ -459,6 +459,10 @@ TASKMAIN(int argc, char **argv) {
       break;
     case 'm':
       move = atoi(optarg);
+      if (move)
+	{
+	  effective = 0;
+	}
       break;
     case 'a':
       snapshot = atoi(optarg);
