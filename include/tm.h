@@ -176,6 +176,9 @@ extern "C" {
   {						\
   tm_init();
 
+
+  extern unsigned long* seed_rand();
+
 #define SEQ_INIT				\
   init_system(&argc, &argv);			\
   sys_ps_init_();				\
@@ -193,8 +196,10 @@ extern "C" {
 
 #ifdef EAGER_WRITE_ACQ
 #  define WLOCKS_ACQUIRE()
+#  define WLOCK_ACQUIRE(addr)    tx_wlock(addr)
 #else
-#  define WLOCKS_ACQUIRE()        ps_publish_all()
+#  define WLOCKS_ACQUIRE()       ps_publish_all()
+#  define WLOCK_ACQUIRE(addr)
 #endif
 
   /* -------------------------------------------------------------------------------- */
@@ -393,6 +398,7 @@ extern "C" {
 #else /* !PGAS */
 #  define TX_STORE(addr, val, datatype)				\
   do {								\
+    WLOCK_ACQUIRE(addr);					\
     TXCHKABORTED();						\
     tm_intern_addr_t intern_addr = to_intern_addr(addr);	\
     write_set_insert(stm_tx->write_set,				\
