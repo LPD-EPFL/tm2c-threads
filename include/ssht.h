@@ -209,11 +209,6 @@ ssht_remove(ssht_log_set_t* log, uint32_t id, addr_t* addr, RW rw)
 	      rw_entry_ssht_unset(entry, id);
 	    }
     
-	  /* if (rw_entry_ssht_is_empty(entry)) */
-	  /*   { */
-	  /*     *addr = 0; */
-	  /*   } */
-
 #else
 	  else 
 	    {
@@ -228,7 +223,10 @@ ssht_remove(ssht_log_set_t* log, uint32_t id, addr_t* addr, RW rw)
 	  /*   } */
 #endif	/* BIT_OPTS */
 
-	  entries[j].address = NULL;
+	  /* entries[j].address = NULL; */
+	  int last = --log->nb_entries;
+	  entries[j].address = entries[last].address;
+	  entries[j].entry = entries[last].entry;
 	  break;
 	}
     }
