@@ -196,12 +196,21 @@ tm_term()
     }
 }
 
+
+#define PRINT_ON_ABORT()						\
+  if (stm_tx->aborts == 1e4 || stm_tx->aborts == 1e5 || stm_tx->aborts == 1e6) \
+    {									\
+      PRINT("** number of aborts: %u", stm_tx->aborts);			\
+    }
+
 void 
 handle_abort(stm_tx_t* stm_tx, CONFLICT_TYPE reason) 
 {
   ps_finish_all(reason);
   stm_tx->aborts++;
- 
+  
+  /* PRINT_ON_ABORT(); */
+
   /* switch (reason) */
   /*   { */
   /*   case READ_AFTER_WRITE: */
