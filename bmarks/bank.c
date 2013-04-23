@@ -42,7 +42,7 @@
 #  define MC__
 #endif
 
-#define DEFAULT_DURATION                10
+#define DEFAULT_DURATION                2
 #define DEFAULT_DELAY                   0
 #define DEFAULT_NB_ACCOUNTS             1024
 #define DEFAULT_NB_THREADS              1
@@ -206,7 +206,7 @@ void reset(bank_t *bank) {
         TX_STORE(&bank->accounts[I(i)].balance, j, TYPE_INT);
 #endif
     }
-    TX_COMMIT
+  TX_COMMIT;
 }
 
 /* ################################################################### *
@@ -599,6 +599,7 @@ TASKMAIN(int argc, char **argv) {
   data->disjoint = disjoint;
   data->nb_app_cores = nb_app_cores;
   data->nb_transfer = 0;
+  data->nb_checks = 0;
   data->nb_read_all = 0;
   data->nb_write_all = 0;
 
