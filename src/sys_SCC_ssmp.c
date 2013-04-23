@@ -15,7 +15,7 @@
 nodeid_t MY_NODE_ID;
 nodeid_t MY_TOTAL_NODES;
 
-#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if any other CM (greedy, wholly, faircm) */
 ssmp_mpb_line_t *abort_reason_mine;
 ssmp_mpb_line_t **abort_reasons;
 volatile ssmp_mpb_line_t *persisting_mine;

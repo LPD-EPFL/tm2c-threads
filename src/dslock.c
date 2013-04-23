@@ -27,7 +27,7 @@ unsigned long int stats_total = 0,
                   stats_received = 0;
 double stats_duration = 0;
 
-#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if any other CM (greedy, wholly, faircm) */
 cm_metadata_t *cm_metadata_core;
 #endif
 
@@ -41,46 +41,53 @@ int bucket_max[NUM_OF_BUCKETS];
 
 extern void tm_term();
 
-void dsl_init(void) {
+void
+dsl_init(void)
+{
 #ifdef PGAS
-    PGAS_write_sets = (write_set_pgas_t **) malloc(NUM_UES * sizeof (write_set_pgas_t *));
-    if (PGAS_write_sets == NULL) {
-        PRINT("malloc PGAS_write_sets == NULL");
-        EXIT(-1);
+  PGAS_write_sets = (write_set_pgas_t **) malloc(NUM_UES * sizeof (write_set_pgas_t *));
+  if (PGAS_write_sets == NULL)
+    {
+      PRINT("malloc PGAS_write_sets == NULL");
+      EXIT(-1);
     }
 
-    nodeid_t j;
-    for (j = 0; j < NUM_UES; j++) {
-        if (is_app_core(j)) { /*only for non DSL cores*/
-            PGAS_write_sets[j] = write_set_pgas_new();
-            if (PGAS_write_sets[j] == NULL) {
-                PRINT("malloc PGAS_write_sets[i] == NULL");
-                EXIT(-1);
-            }
-        }
+  nodeid_t j;
+  for (j = 0; j < NUM_UES; j++)
+    {
+      if (is_app_core(j))
+	{ /*only for non DSL cores*/
+	  PGAS_write_sets[j] = write_set_pgas_new();
+	  if (PGAS_write_sets[j] == NULL)
+	    {
+	      PRINT("malloc PGAS_write_sets[i] == NULL");
+	      EXIT(-1);
+	    }
+	}
     }
 
 #endif
 
-    ps_hashtable = ps_hashtable_new();
+  ps_hashtable = ps_hashtable_new();
 
-#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
-    cm_metadata_core = (cm_metadata_t *) calloc(NUM_UES, sizeof(cm_metadata_t));
-    if (cm_metadata_core == NULL) {
-        PRINT("calloc @ dsl_init");
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if any other CM (greedy, wholly, faircm) */
+  cm_metadata_core = (cm_metadata_t *) calloc(NUM_UES, sizeof(cm_metadata_t));
+  if (cm_metadata_core == NULL)
+    {
+      PRINT("calloc @ dsl_init");
     }
 #endif
 
-    sys_dsl_init();
+  sys_dsl_init();
 
-    /* PRINT("[DSL NODE] Initialized pub-sub.."); */
-    dsl_communication();
+  /* PRINT("[DSL NODE] Initialized pub-sub.."); */
+  dsl_communication();
 
-    BARRIERW;
-    tm_term();
+  BARRIERW;
+  tm_term();
     
-    term_system();
-    EXIT(0);
+  term_system();
+  EXIT(0);
 }
 
 void print_global_stats() {

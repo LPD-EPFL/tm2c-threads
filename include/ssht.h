@@ -19,7 +19,7 @@
 #endif	/* BIT_OPTS */
 
 #include <assert.h>
-#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if any other CM (greedy, wholly, faircm) */
 #  include "cm.h"
 #endif 
 

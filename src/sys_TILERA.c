@@ -20,7 +20,7 @@
 #include "fakemem.h"
 #endif
 
-#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) 			/* if any other CM (greedy, wholly, faircm) */
 int32_t **cm_abort_flags;
 int32_t *cm_abort_flag_mine;
 #endif /* NOCM */
@@ -194,7 +194,7 @@ void
 sys_ps_init_(void)
 {
 
-#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) 			/* if any other CM (greedy, wholly, faircm) */
   cm_abort_flag_mine = cm_init(NODE_ID());
   *cm_abort_flag_mine = NO_CONFLICT;
 #endif
@@ -256,7 +256,7 @@ sys_dsl_init(void)
   /*     break; */
   /*   } */
 
-#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if any other CM (greedy, wholly, faircm) */
   cm_abort_flags = (int32_t **) malloc(TOTAL_NODES() * sizeof(int32_t *));
   assert(cm_abort_flags != NULL);
 
@@ -271,6 +271,8 @@ sys_dsl_init(void)
 	  cm_abort_flags[i] = cm_init(i);    
 	}
     }
+#else
+  BARRIERW;
 #endif
 
   BARRIERW;
@@ -513,7 +515,9 @@ dsl_communication()
 		    BARRIER_DSL;
 		    if (n == NODE_ID())
 		      {
+#if defined(USE_HASHTABLE_SSHT)
 			ssht_stats_print(ps_hashtable, SSHT_DBG_UTILIZATION_DTL);
+#endif
 		      }
 		    BARRIER_DSL;
 		  }
@@ -589,44 +593,45 @@ dsl_communication()
   }
 
 
-#if !defined(NOCM)	/* if any other CM (greedy, wholly, faircm) */
+#if !defined(NOCM) && !defined(BACKOFF_RETRY)	/* if any other CM (greedy, wholly, faircm) */
 static int32_t*
-cm_init(nodeid_t node) {
-   char keyF[50];
-   sprintf(keyF,"/cm_abort_flag%03d", node);
+cm_init(nodeid_t node)
+{
+  char keyF[50];
+  sprintf(keyF,"/cm_abort_flag%03d", node);
 
-   size_t cache_line = 64;
+  size_t cache_line = 64;
 
-   int abrtfd = shm_open(keyF, O_CREAT | O_EXCL | O_RDWR, S_IRWXU | S_IRWXG);
-   if (abrtfd<0)
-   {
+  int abrtfd = shm_open(keyF, O_CREAT | O_EXCL | O_RDWR, S_IRWXU | S_IRWXG);
+  if (abrtfd<0)
+    {
       if (errno != EEXIST)
-      {
-         perror("In shm_open");
-         exit(1);
-      }
+	{
+	  perror("In shm_open");
+	  exit(1);
+	}
 
       //this time it is ok if it already exists                                                    
       abrtfd = shm_open(keyF, O_CREAT | O_RDWR, S_IRWXU | S_IRWXG);
       if (abrtfd<0)
-      {
-         perror("In shm_open");
-         exit(1);
-      }
-   }
-   else
-   {
+	{
+	  perror("In shm_open");
+	  exit(1);
+	}
+    }
+  else
+    {
       //only if it is just created                                                                 
-     if(ftruncate(abrtfd, cache_line))
-       {
-	 printf("ftruncate");
-       }
-   }
+      if(ftruncate(abrtfd, cache_line))
+	{
+	  printf("ftruncate");
+	}
+    }
 
-   int32_t *tmp = (int32_t *) mmap(NULL, 64, PROT_READ | PROT_WRITE, MAP_SHARED, abrtfd, 0);
-   assert(tmp != NULL);
+  int32_t *tmp = (int32_t *) mmap(NULL, 64, PROT_READ | PROT_WRITE, MAP_SHARED, abrtfd, 0);
+  assert(tmp != NULL);
    
-   return tmp;
+  return tmp;
 }
 
 #endif	/* NOCM */

@@ -7,6 +7,12 @@ then
 shared="."
 fi;
 
+if [ $(uname -n) = "parsasrv1.epfl.ch" ];
+then
+shared="."
+fi;
+
+
 bank="bmarks/bank"
 ht="bmarks/mbht"
 ll="bmarks/mbll"

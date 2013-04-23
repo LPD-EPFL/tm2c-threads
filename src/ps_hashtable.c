@@ -236,32 +236,39 @@ extern "C" {
 
 #elif USE_ARRAY
   array_log_set_t** the_logs;
-  int next_log_free;
-  int* log_map;
 
   ps_hashtable_t
-  ps_hashtable_new() {
+  ps_hashtable_new()
+  {
     ps_hashtable_t ps_hashtable;
-    if ((ps_hashtable = (ps_hashtable_t) calloc(NUM_OF_ELEMENTS, sizeof(rw_entry_t)))==NULL) {
-      PRINTDNN("calloc ps_hashtable @ os_hashtable_init\n");
-      return NULL;
-    }
+    if ((ps_hashtable = (ps_hashtable_t) calloc(NUM_OF_ELEMENTS, sizeof(rw_entry_t)))==NULL)
+      {
+	PRINTDNN("calloc ps_hashtable @ os_hashtable_init\n");
+	return NULL;
+      }
 
     uintptr_t i;
-    for (i = 0; i < NUM_OF_ELEMENTS; i++) {
-      ps_hashtable[i].shorts[3] = NO_WRITER;
-    }
+    for (i = 0; i < NUM_OF_ELEMENTS; i++)
+      {
+	ps_hashtable[i].shorts[3] = NO_WRITER;
+      }
     int j;
-    the_logs=(array_log_set_t**) malloc(NUM_APP_NODES*sizeof(array_log_set_t*));
-    log_map=(int*)malloc(NUM_UES * sizeof(int));
-    for (j=0;j<NUM_APP_NODES;j++){
-      the_logs[j]=array_log_set_new();
-    }
-    next_log_free=0;
-    for (j=0;j<NUM_UES;j++) {
-      log_map[j]=-1;
-    }
-
+    the_logs = (array_log_set_t**) malloc(NUM_UES * sizeof(array_log_set_t*));
+    if (the_logs == NULL)
+      {
+	perror("malloc @ ps_hashtable_new()");
+      }
+    for (j=0;j<NUM_UES;j++)
+      {
+	if (is_app_core(j))
+	  {
+	    the_logs[j] = array_log_set_new();
+	  }
+	else
+	  {
+	    the_logs[j] = NULL;
+	  }
+      }
     return ps_hashtable;
   }
 
@@ -291,15 +298,18 @@ extern "C" {
     CONFLICT_TYPE conflict = rw_entry_is_conflicting(rwe, nodeId, rw);
     //fprintf(stderr, "ch1\n");
     //sleep(1);
-    if (conflict==NO_CONFLICT){
-      if (rw == READ) {
-	rw_entry_set(rwe, nodeId);
+    if (conflict==NO_CONFLICT)
+      {
+	if (rw == READ)
+	  {
+	    rw_entry_set(rwe, nodeId);
+	  }
+	else
+	  {
+	    rw_entry_set_writer(rwe, nodeId);
+	  }
+	array_log_set_insert(the_log,index);
       }
-      else {
-	rw_entry_set_writer(rwe, nodeId);
-      }
-      array_log_set_insert(the_log,index);
-    }
 
     //fprintf(stderr, "done inserting\n");
     //sleep(1);
@@ -443,9 +453,6 @@ extern "C" {
 #elif USE_SSLARRAY
 
   sslarray_log_set_t **logs;
-  uint32_t next_log_free;
-  int32_t *log_map;
-
 
   inline tm_intern_addr_t 
   ps_get_index(tm_intern_addr_t address) 
@@ -465,18 +472,14 @@ extern "C" {
     uint32_t i;
     logs = (sslarray_log_set_t **) malloc(NUM_APP_NODES * sizeof(sslarray_log_set_t*));
     assert(logs != NULL);
-    log_map = (int32_t *) malloc(NUM_UES * sizeof(int));
-    assert(log_map != NULL);
 
-    for (i=0; i < NUM_APP_NODES; i++){
-      logs[i] = sslarray_log_set_new();
-    }
-
-    next_log_free = 0;
-
-    for (i=0; i<NUM_UES; i++) {
-      log_map[i] = -1;
-    }
+    for (i=0; i < NUM_APP_NODES; i++)
+      {
+	if (is_app_core(i))
+	  {
+	    logs[i] = sslarray_log_set_new();
+	  }
+      }
 
     return sslarray_new();
   }
@@ -487,11 +490,7 @@ extern "C" {
   {
   
     address = ps_get_index(address);
-    if (log_map[nodeId] < 0) {
-      log_map[nodeId] = next_log_free++;
-    }
-
-    CONFLICT_TYPE conflict = sslarray_insert(ps_hashtable, logs[log_map[nodeId]], nodeId,  address, rw);
+    CONFLICT_TYPE conflict = sslarray_insert(ps_hashtable, logs[nodeId], nodeId,  address, rw);
     return conflict;
   }
 
@@ -505,11 +504,12 @@ extern "C" {
   inline void
   ps_hashtable_delete_node(ps_hashtable_t ps_hashtable, nodeid_t nodeId)
   {
-    sslarray_log_set_t *log = logs[log_map[nodeId]];
+    sslarray_log_set_t *log = logs[nodeId];
     uint32_t j;
-    for (j = 0; j < log->nb_entries; j++) {
-      sslarray_remove(ps_hashtable, log->log_entries[j]);
-    }
+    for (j = 0; j < log->nb_entries; j++)
+      {
+	sslarray_remove(ps_hashtable, log->log_entries[j]);
+      }
     sslarray_log_set_empty(log);
   }
 
@@ -525,9 +525,9 @@ extern "C" {
   static inline uint32_t
   ps_get_hash(uintptr_t address)
   {
-    /* return hash_tw((address>>2) % UINT_MAX); */
-    /* return hash_tw((address)); */
-    return hash_32((unsigned long)(address), 32);
+    /* return hash_tw((address>>2) & (UINT_MAX-1)); */
+    return hash_tw((address>>3));
+    /* return hash_32((unsigned long)(address), 32); */
   }
 
 

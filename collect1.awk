@@ -7,7 +7,8 @@ BEGIN{}
 END{
     for (nue = 2; nue < 33; nue *= 2)
 	cores[nu++] = nue;
-    cores[nu] = 48;
+    # cores[nu] = 48;
+    cores[nu] = 36;
     
     print "#nue\tThroughput\tCommit rate\tLatency"
 

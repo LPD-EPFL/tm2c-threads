@@ -14,7 +14,7 @@ extern "C" {
 
 #include <inttypes.h>
 #include "common.h"
-#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if any other CM (greedy, wholly, faircm) */
 #include "cm.h"
 #endif
 
@@ -186,7 +186,7 @@ extern "C" {
 	if (rw_entry_ssht_has_writer(rw_entry)) 
 	  { /*WRITE/WRITE conflict*/
 	    //here the logic for WRITE -> WRITE
-#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if any other CM (greedy, wholly, faircm) */
 	    if (contention_manager(nodeId, &rw_entry->shorts[3], WRITE_AFTER_WRITE) == TRUE) 
 	      {
 		//attacker won - old aborted
@@ -209,7 +209,7 @@ extern "C" {
 	    /* else {  */
 	    /*WRITE AFTER READ conflict*/
 	    // here the logic for READ -> WRITE
-#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if any other CM (greedy, wholly, faircm) */
 	    unsigned short readers[NUM_UES];
 	    rw_entry_ssht_fetch_readers(rw_entry, readers);
 	    readers[nodeId] = 0;
@@ -241,7 +241,7 @@ extern "C" {
 	  {
 	    //TODO: here the logic for READ -> WRITE
 
-#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if any other CM (greedy, wholly, faircm) */
 	    if (contention_manager(nodeId, &rw_entry->shorts[3], READ_AFTER_WRITE) == TRUE) 
 	      {
 		//attacker won - old aborted

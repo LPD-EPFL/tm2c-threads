@@ -6,11 +6,11 @@ PLATFORM_LIBS =
 
 
 ## commonly changed defines
-PLATFORM_DEFINES =      -DBACKOFF_MAX="0" \
-		        -DBACKOFF_DELAY="5000" \
+PLATFORM_DEFINES =      -DBACKOFF_MAX="10" \
+		        -DBACKOFF_DELAY="500" \
 			-DDO_TIMINGS \
 			-UDISABLE_CC \
-		   	-DWHOLLY
+		   	-DNOCM
 
 ## fixed defines
 PLATFORM_DEFINES +=     -DPLATFORM_TILERA \
@@ -20,7 +20,7 @@ PLATFORM_DEFINES +=     -DPLATFORM_TILERA \
 ## not commonly changed defines
 PLATFORM_DEFINES +=     -UPGAS \
 			-USSHT_DBG_UTILIZATION \
-			-DSSHT_DBG_UTILIZATION_DTL="0"	
+			-DSSHT_DBG_UTILIZATION_DTL="1"	
 
 #if BACKOFF_RETRY is set, the BACKOFF-RETRY contention management scheme is used. This is similar to the TCP-IP exponentional increasing backoff and retry. When BACKOFF_MAX = infinitiy -> then every tx is expected to terminate whp.
 #else, in case of a conflict the transaction is not aborted, but backsoff and retries to acquire the same address BACKOFF_MAX time beforee aborting

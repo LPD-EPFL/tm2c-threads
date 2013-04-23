@@ -47,7 +47,7 @@ nodeid_t MY_NODE_ID;
 nodeid_t MY_TOTAL_NODES;
 
 
-#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if any other CM (greedy, wholly, faircm) */
 int32_t **cm_abort_flags;
 int32_t *cm_abort_flag_mine;
 #if defined(GREEDY) && defined(GREEDY_GLOBAL_TS)
@@ -574,7 +574,7 @@ global_barrier()
 
 }
 
-#if !defined(NOCM)	/* if any other CM (greedy, wholly, faircm) */
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if any other CM (greedy, wholly, faircm) */
 static int32_t *
 cm_init(nodeid_t node) {
    char keyF[50];
