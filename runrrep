@@ -2,6 +2,12 @@
 
 repetitions=3;
 out="out.runrrep";
+cores="2 4 8 16 32 48";
+
+if [ $(uname -n) = "parsasrv1.epfl.ch" ];
+then
+cores="2 4 8 16 32 36";
+fi;
 
 if [ -f  $out ]; then
     rm $out;
@@ -17,9 +23,11 @@ if [ $# -lt 2 ]; then
 else
     repetitions=$1;
     if [ $# -lt 4 ]; then
-	for nue in 2 4 8 16 32 48; do
+	for nue in $cores; 
+	do
 	    echo $nue
-	    for prog in $2; do
+	    for prog in $2; 
+	    do
 		echo $prog " " $3;
 		./runrep_ $prog $nue $repetitions $3 >> $out;
 	    done
@@ -41,3 +49,4 @@ else
 fi
 
 exit
+

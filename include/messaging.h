@@ -38,21 +38,15 @@ extern "C" {
   /* A command to the DSL service */
 #if defined(PLATFORM_TILERA)
 
-#  if !defined(NOCM) && defined(PGAS)
-#    define PS_COMMAND_SIZE       24
-#    define PS_COMMAND_SIZE_WORDS 7
-#  elif (!defined(NOCM) && !defined(BACKOFF_RETRY))|| defined(PGAS)
+#  if defined(WHOLLY) || defined(GREEDY) || defined(FAIRCM) || defined(PGAS)
 #    if defined(__tilegx__)
-#        define PS_COMMAND_SIZE       24
-#        define PS_COMMAND_SIZE_WORDS 3
+#      define PS_COMMAND_SIZE       24
+#      define PS_COMMAND_SIZE_WORDS 3
 #    endif  /* __tilegx__ */
 #  else	 /* defined(NOCM) */
-#    if defined(__tilepro__)
-#        define PS_COMMAND_SIZE       8
-#        define PS_COMMAND_SIZE_WORDS 2
-#    else  /* __tilegx__ */
-#        define PS_COMMAND_SIZE       16
-#        define PS_COMMAND_SIZE_WORDS 2
+#    if  defined( __tilegx__)
+#      define PS_COMMAND_SIZE       16
+#      define PS_COMMAND_SIZE_WORDS 2
 #    endif
 #  endif
 
@@ -74,7 +68,7 @@ extern "C" {
 	uint64_t num_words;
       };
 #  endif	/* PGAS */
-#  if !defined(NOCM)
+#  if !defined(NOCM) && !defined(BACKOFF_RETRY)
       uint64_t tx_metadata;
 #  endif  /* !NOCM */
     };
@@ -105,18 +99,18 @@ extern "C" {
     };
   /* tm_intern_addr_t address; /\* address of the data, internal representation *\/ */
 
-#if defined(PGAS)
+#  if defined(PGAS)
   int64_t value;
-#endif	/* PGAS */
+#  endif	/* PGAS */
 } PS_REPLY;
 
 
-#define PS_STATS_CMD_SIZE       32
-#if defined(__tilepro__)
+#  define PS_STATS_CMD_SIZE       32
+#  if defined(__tilepro__)
 #    define PS_STATS_CMD_SIZE_WORDS 8
-#else  /* __tilegx__ */
+#  else  /* __tilegx__ */
 #    define PS_STATS_CMD_SIZE_WORDS 4
-#endif
+#  endif
 
 //A command to the pub-sub
 typedef struct ps_stats_cmd_struct 
@@ -143,19 +137,10 @@ typedef struct ps_stats_cmd_struct
       };
     };
 
-    /* SSMP[.SCC] uses the last word as a flag, hence it should be not used for data */
-#if defined(SCC)
-    double tx_duration;
-    uint32_t mpb_flag;	/* on the SCC, we have CL (MPB) line of 32 bytes */
-#else
     uint32_t dummy;
     double tx_duration;
-#endif      
   };
 
-#if defined(PLATFORM_MCORE_SSMP)
-  uint8_t padding[32];
-#endif
 } PS_STATS_CMD_T;
 
 
@@ -221,14 +206,14 @@ typedef struct ps_stats_cmd_struct
     };
   /* tm_intern_addr_t address; /\* address of the data, internal representation *\/ */
 
-#if defined(PGAS)
+#  if defined(PGAS)
   int64_t value;
-#endif	/* PGAS */
+#  endif	/* PGAS */
 } PS_REPLY;
 
 
-#define PS_STATS_CMD_SIZE       32
-# define PS_STATS_CMD_SIZE_WORDS 4
+#  define PS_STATS_CMD_SIZE       32
+#  define PS_STATS_CMD_SIZE_WORDS 4
 
 //A command to the pub-sub
 typedef struct ps_stats_cmd_struct 
@@ -353,18 +338,18 @@ typedef struct ps_stats_cmd_struct
     };
 
     /* SSMP[.SCC] uses the last word as a flag, hence it should be not used for data */
-#if defined(SCC)
+#  if defined(SCC)
     double tx_duration;
     uint32_t mpb_flag;	/* on the SCC, we have CL (MPB) line of 32 bytes */
-#else
+#  else
     uint32_t dummy;
     double tx_duration;
-#endif      
+#  endif      
   };
 
-#if defined(PLATFORM_MCORE_SSMP)
+#  if defined(PLATFORM_MCORE_SSMP)
   uint8_t padding[32];
-#endif
+#  endif
 } PS_STATS_CMD_T;
 
 #endif  /* PLATFORM_TILERA */

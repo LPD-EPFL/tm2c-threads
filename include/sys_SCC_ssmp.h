@@ -28,7 +28,7 @@ extern "C" {
   extern nodeid_t MY_NODE_ID;
   extern nodeid_t MY_TOTAL_NODES;
 
-#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if any other CM (greedy, wholly, faircm) */
   extern ssmp_mpb_line_t *abort_reason_mine;
   extern ssmp_mpb_line_t **abort_reasons;
   extern volatile ssmp_mpb_line_t *persisting_mine;
@@ -108,7 +108,7 @@ extern void* pgas_app_addr_from_offs(size_t offs);
   }
 
 
-#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if any other CM (greedy, wholly, faircm) */
 
   /* 
      using the TST as follows:
