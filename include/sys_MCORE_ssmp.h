@@ -27,7 +27,7 @@ extern nodeid_t MY_TOTAL_NODES;
 extern PS_REPLY* ps_remote_msg; // holds the received msg
 extern nodeid_t *dsl_nodes;
 
-#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if any other CM (greedy, wholly, faircm) */
 extern int32_t **cm_abort_flags;
 extern int32_t *cm_abort_flag_mine;
 #endif /* CM_H */
@@ -112,19 +112,13 @@ wtime(void)
 }
 
 
-#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if any other CM (greedy, wholly, faircm) */
 INLINED void
 abort_node(nodeid_t node, CONFLICT_TYPE reason) {
-  //  uint32_t p = 0;
-  while (__sync_val_compare_and_swap(cm_abort_flags[node], NO_CONFLICT, reason) == PERSISTING_WRITES) {
-    //    p++; 
-    wait_cycles(180); 
-  }
-
-  /* if (p > 0) { */
-  /*   PRINT("Wait %3d rounds", p); */
-  /* } */
-
+  while (__sync_val_compare_and_swap(cm_abort_flags[node], NO_CONFLICT, reason) == PERSISTING_WRITES)
+    {
+      wait_cycles(180); 
+    }
 }
 
 INLINED CONFLICT_TYPE
@@ -148,7 +142,8 @@ set_tx_committed() {
 }
 
 INLINED CONFLICT_TYPE
-set_tx_persisting() {
+set_tx_persisting()
+{
   return __sync_bool_compare_and_swap(cm_abort_flag_mine, NO_CONFLICT, PERSISTING_WRITES);
 }
 #endif	/* NOCM */

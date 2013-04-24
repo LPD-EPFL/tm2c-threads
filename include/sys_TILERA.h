@@ -27,7 +27,7 @@ extern "C" {
   extern nodeid_t *dsl_nodes;
 #define PS_BUFFER_SIZE 32
 
-#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) 			/* if any other CM (greedy, wholly, faircm) */
   extern int32_t **cm_abort_flags;
   extern int32_t *cm_abort_flag_mine;
 #endif /* CM_H */
@@ -122,25 +122,21 @@ extern "C" {
   }
 
 
-#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if any other CM (greedy, wholly, faircm) */
   INLINED void
   abort_node(nodeid_t node, CONFLICT_TYPE reason)
   {
-    CONFLICT_TYPE abort;
-    do
+    while(arch_atomic_val_compare_and_exchange(cm_abort_flags[node], NO_CONFLICT, reason) == PERSISTING_WRITES)
       {
-	abort = arch_atomic_val_compare_and_exchange(cm_abort_flags[node], NO_CONFLICT, reason);
+	cycle_relax();
       }
-    while(abort == PERSISTING_WRITES);
   }
 
   INLINED CONFLICT_TYPE
   check_aborted()
   {
-    /* return (*cm_abort_flag_mine != NO_CONFLICT); */
-    /* return arch_atomic_bool_compare_and_exchange(cm_abort_flag_mine, NO_CONFLICT, NO_CONFLICT); */
-    /* return arch_atomic_val_compare_and_exchange(cm_abort_flag_mine, NO_CONFLICT, NO_CONFLICT) != NO_CONFLICT; */
-    return arch_atomic_exchange(cm_abort_flag_mine, NO_CONFLICT);
+    return (*cm_abort_flag_mine != NO_CONFLICT);
+    /* return arch_atomic_exchange(cm_abort_flag_mine, NO_CONFLICT); */
   }
 
   INLINED CONFLICT_TYPE
@@ -152,16 +148,16 @@ extern "C" {
   INLINED void
   set_tx_running()
   {
-    arch_atomic_exchange(cm_abort_flag_mine, NO_CONFLICT);
-    /* *cm_abort_flag_mine = NO_CONFLICT; */
+    /* arch_atomic_exchange(cm_abort_flag_mine, NO_CONFLICT); */
+    *cm_abort_flag_mine = NO_CONFLICT;
     /* tmc_mem_fence(); */
   }
 
   INLINED void
   set_tx_committed()
   {
-    arch_atomic_exchange(cm_abort_flag_mine, TX_COMMITED);
- /* *cm_abort_flag_mine = TX_COMMITED; */
+    /* arch_atomic_exchange(cm_abort_flag_mine, TX_COMMITED); */
+    *cm_abort_flag_mine = TX_COMMITED;
   }
 
   INLINED CONFLICT_TYPE

@@ -8,7 +8,7 @@
 
 #include "common.h"
 #include "pubSubTM.h"
-#ifndef NOCM 			/* if any other CM (greedy, wholly, faircm) */
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if any other CM (greedy, wholly, faircm) */
 #  include "tm.h"
 #endif
 
