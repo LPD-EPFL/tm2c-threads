@@ -67,6 +67,7 @@ extern "C" {
 #  define CACHE_LINE_SIZE 64
 #elif defined(SCC)
 #  define REF_SPEED_GHZ           0.533
+/* #  define REF_SPEED_GHZ           0.800 */
 #  define CACHE_LINE_SIZE 64
 #elif defined(PLATFORM_TILERA)
 #if defined(__tilepro__)
