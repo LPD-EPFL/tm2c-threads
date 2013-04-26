@@ -1,17 +1,23 @@
-#!/bin/bash                              
+#!/bin/bash
+
+if [ $# -eq 1 ];
+then
+    platform="."$1;
+fi;
+
 data="comnet/data";
 
 ## hash table to compare platforms (Fig. 8(d))
-
 apps="fair/mbht";
-out="$data/ht.i512.l4.u10.platforms.dat";
+out="$data/ht.i512.l4.u10.platforms"$platform".dat";
 params="-d2 -i512 -r1024 -u10 -l4";
 echo "# $apps  // $params" | tee -a $out;
 ./runrrep 5 "$apps" "$params";
 ./collect1.awk out.runrrep | tee -a $out;
 
-out="$data/ht.i512.l16.u10.platforms.dat";
+out="$data/ht.i512.l16.u10.platforms"$platform".dat";
 params="-d2 -i512 -r1024 -u10 -l16";
 echo "# $apps  // $params" | tee -a $out;
 ./runrrep 5 "$apps" "$params";
 ./collect1.awk out.runrrep | tee -a $out;
+
