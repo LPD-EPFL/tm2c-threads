@@ -210,9 +210,9 @@ ps_subscribe(tm_addr_t address, int words)
   tm_intern_addr_t intern_addr = to_intern_addr(address);
 
   nodeid_t responsible_node_seq = get_responsible_node(intern_addr);
+  nodes_contacted[responsible_node_seq]++;
 
-  nodeid_t responsible_node = nodes_contacted[responsible_node_seq]++;
-  responsible_node = dsl_nodes[responsible_node_seq];
+  nodeid_t responsible_node = dsl_nodes[responsible_node_seq];
 
 #ifdef PGAS
   intern_addr &= PGAS_DSL_ADDR_MASK;
@@ -241,7 +241,7 @@ CONFLICT_TYPE ps_publish(tm_addr_t address, int64_t value) {
     nodeid_t responsible_node_seq = get_responsible_node(intern_addr);
 
     nodes_contacted[responsible_node_seq]++;
-    nodeid_t responsible_node = responsible_node = dsl_nodes[responsible_node_seq];
+    nodeid_t responsible_node = dsl_nodes[responsible_node_seq];
 
 #ifdef PGAS
     intern_addr &= PGAS_DSL_ADDR_MASK;
@@ -373,6 +373,8 @@ CONFLICT_TYPE ps_publish(tm_addr_t address, int64_t value) {
 #endif	/* PGAS */
 
     nodes_contacted[responsible_node]--;
+    responsible_node = dsl_nodes[responsible_node];
+
     ps_sendb(responsible_node, PS_PUBLISH_FINISH, intern_addr);
 
 #ifdef PLATFORM_CLUSTER
@@ -447,7 +449,6 @@ CONFLICT_TYPE ps_publish(tm_addr_t address, int64_t value) {
     return response;
   }
 
-
   static inline nodeid_t
     get_responsible_node(tm_intern_addr_t addr) 
   {
@@ -462,8 +463,8 @@ CONFLICT_TYPE ps_publish(tm_addr_t address, int64_t value) {
 #  ifndef PGAS
     /* return dsl_nodes[(hash_tw(addr) >> RESP_NODE_MASK) % NUM_DSL_NODES]; */
     /* return dsl_nodes[(hash_tw(addr)) % NUM_DSL_NODES]; */
-    return ((addr) >> RESP_NODE_MASK) % NUM_DSL_NODES;
-/*     return (hash_tw(addr)) % NUM_DSL_NODES; */
+    /* return ((addr) >> RESP_NODE_MASK) % NUM_DSL_NODES; */
+    return (hash_tw(addr)) % NUM_DSL_NODES;
 #  else	 /* PGAS */
     /* return dsl_nodes[addr / pgas_dsl_size_node]; */
     return dsl_nodes[addr >> PGAS_DSL_MASK_BITS];

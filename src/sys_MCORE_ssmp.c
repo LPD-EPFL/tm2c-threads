@@ -500,7 +500,7 @@ dsl_communication()
 		    BARRIER_DSL;
 		    if (n == NODE_ID())
 		      {
-			ssht_stats_print(ps_hashtable, 0);
+			ssht_stats_print(ps_hashtable, SSHT_DBG_UTILIZATION_DTL);
 		      }
 		    BARRIER_DSL;
 		  }
