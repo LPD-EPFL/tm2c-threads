@@ -10,6 +10,8 @@ then
     platform="scc";
 fi;
 
+echo "Platform: $platform"
+
 ./comnet/run_bank_platforms.sh $platform;
 ./comnet/run_ht_platforms.sh $platform;
 ./comnet/run_ll_platforms.sh $platform;
