@@ -295,8 +295,8 @@ void
 ssht_stats_print(ssht_hashtable_t ht, uint32_t details)
 {
 #if defined(SSHT_DBG_UTILIZATION)
-  printf("SSHT usage stats for Core %02d ______________________________________________________\n", NODE_ID());
-  printf(" total insertions: %-14u num expansions  : %u\n", ssht_dbg_usages, ssht_dbg_bu_expansions);
+  printf("SSHT stats: core %02d  /  ", NODE_ID());
+  printf("total insertions: %-14u  /  num expansions  : %u\n", ssht_dbg_usages, ssht_dbg_bu_expansions);
   if (details)
     {
       printf(" per bucket:\n");
