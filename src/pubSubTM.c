@@ -463,8 +463,8 @@ CONFLICT_TYPE ps_publish(tm_addr_t address, int64_t value) {
 #  ifndef PGAS
     /* return dsl_nodes[(hash_tw(addr) >> RESP_NODE_MASK) % NUM_DSL_NODES]; */
     /* return dsl_nodes[(hash_tw(addr)) % NUM_DSL_NODES]; */
-    /* return ((addr) >> RESP_NODE_MASK) % NUM_DSL_NODES; */
-    return (hash_tw(addr)) % NUM_DSL_NODES;
+    return ((addr) >> RESP_NODE_MASK) % NUM_DSL_NODES;
+    /* return (hash_tw(addr)) % NUM_DSL_NODES; */
 #  else	 /* PGAS */
     /* return dsl_nodes[addr / pgas_dsl_size_node]; */
     return dsl_nodes[addr >> PGAS_DSL_MASK_BITS];

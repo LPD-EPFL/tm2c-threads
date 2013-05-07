@@ -342,6 +342,13 @@ extern "C" {
   ps_send_stats(stm_tx_node, duration__);	\
   TM_TERM;}
 
+#define TM_EXIT(code)				\
+  PRINTD("|| FAKE: TM ends");			\
+  ps_send_stats(stm_tx_node, duration__);	\
+  TM_TERM;					\
+  exit(code)
+
+
   /*
     tx_metadata_free(&stm_tx);                                          \
     free(stm_tx_node); }
@@ -398,9 +405,9 @@ extern "C" {
 #else /* !PGAS */
 #  define TX_STORE(addr, val, datatype)				\
   do {								\
-    WLOCK_ACQUIRE(addr);					\
+    WLOCK_ACQUIRE((addr));					\
     TXCHKABORTED();						\
-    tm_intern_addr_t intern_addr = to_intern_addr(addr);	\
+    tm_intern_addr_t intern_addr = to_intern_addr((addr));	\
     write_set_insert(stm_tx->write_set,				\
 		     datatype,					\
 		     val, intern_addr);				\

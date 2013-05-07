@@ -17,7 +17,7 @@ PLATFORM_LIBS = -lssmp
 PLATFORM_DEFINES =      -DBACKOFF_MAX="10" \
 		        -DBACKOFF_DELAY="500" \
 			-UDO_TIMINGS \
-		   	-DNOCM__
+		   	-DFAIRCM
 ## fixed defines
 PLATFORM_DEFINES +=     -DPLATFORM_SCC_SSMP \
 		   	-DSSMP \
@@ -26,7 +26,7 @@ PLATFORM_DEFINES +=     -DPLATFORM_SCC_SSMP \
 ## not commonly changed defines
 PLATFORM_DEFINES +=     -UPGAS \
 			-USSHT_DBG_UTILIZATION \
-			-DSSHT_DBG_UTILIZATION_DTL="0"	
+			-DSSHT_DBG_UTILIZATION_DTL="1"	
 
 
 
