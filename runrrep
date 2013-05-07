@@ -1,17 +1,12 @@
 #!/bin/sh
 
+num_params=$#;
+
 repetitions=3;
 out="out.runrrep";
-cores="2 4 8 16 32 48";
-
-if [ $(uname -n) = "parsasrv1.epfl.ch" ];
-then
-cores="2 4 8 16 32 36";
-fi;
 
 if [ -f  $out ]; then
     rm $out;
-
 fi
 
 
@@ -22,31 +17,39 @@ if [ $# -lt 2 ]; then
     echo "output can be collected using collect[.].awk from $out file";
 else
     repetitions=$1;
-    if [ $# -lt 4 ]; then
-	for nue in $cores; 
-	do
+    shift;
+    progs=$1;
+    shift;
+    params="$@";
+    if [ $num_params -lt 4 ]; then
+	for nue in 2 4 8 16 32 48; do
 	    echo $nue
-	    for prog in $2; 
-	    do
-		echo $prog " " $3;
-		./runrep_ $prog $nue $repetitions $3 >> $out;
+	    for prog in $progs; do
+		echo $prog " " $params;
+		./runrep_ $prog $nue $repetitions $params >> $out;
 	    done
 	done
     else
 	nue=48;
-	if [ $# -gt 3 ]; then
-	    nue=$4;
+	if [ $num_params -eq 5 ]; 
+	then
+	    nue=$3;
 	fi
 
-	for par in $3; do
-	    echo $par
-	    for prog in $2; do
-		echo $prog
-		screen -L ./run $nue rc.hosts ./$prog $1 $par;
+	fixed_params="$1";
+	shift;
+	params="$1";
+
+	for par in $params; 
+	do
+	    use_param="$fixed_params $par";
+	    for prog in $progs; 
+	    do
+		echo $prog " " $use_param;
+		./runrep_ $prog $nue $repetitions $use_param >> $out;
 	    done
 	done
     fi
 fi
 
 exit
-
