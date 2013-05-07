@@ -29,7 +29,7 @@ const char* conflict_reasons[4] =
 
 
 #define DSL_BY_MOD
-#define DSLPERNODE 3
+#define DSLPERNODE 48
 
 //custom assignment
 const unsigned short buf[8] = {0xAAAA,0xAAAA,0xAAAA,0xAAAA,0xAAAA,0xAAAA,0xAAAA,0xAAAA};
