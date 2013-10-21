@@ -1,8 +1,31 @@
+/*
+ *   File: pgas_app.c
+ *   Author: Vasileios Trigonakis <vasileios.trigonakis@epfl.ch>
+ *   Description: PGAS memory for the application processes
+ *   This file is part of TM2C
+ *
+ *   Copyright (C) 2013  Vasileios Trigonakis
+ *
+ *   This program is free software; you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation; either version 2 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License along
+ *   with this program; if not, write to the Free Software Foundation, Inc.,
+ *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ */
 #include "pgas_app.h"
 
-nodeid_t  pgas_app_my_resp_node;
-nodeid_t  pgas_app_my_resp_node_real;
-size_t  pgas_dsl_size_node;
+nodeid_t pgas_app_my_resp_node;
+nodeid_t pgas_app_my_resp_node_real;
+size_t pgas_dsl_size_node;
 
 static void* pgas_app_mem_mine;
 static size_t pgas_mem_size;
@@ -16,8 +39,8 @@ void* pgas_free_list[256] = {0};
 uint8_t pgas_free_cur = 0;
 uint8_t pgas_free_num = 0;
 /* to avoid void ptr arithmetic warning */
-#  define PTR_ADD(ptr, plus) ((void*)  ((uint32_t) (ptr) + (plus)))
-#  define PTR_SUB(ptr, plus) ((size_t) ((uint32_t) (ptr) - (uint32_t) (plus)))
+#  define PTR_ADD(ptr, plus) ((void*)  ((char*) (ptr) + (plus)))
+#  define PTR_SUB(ptr, plus) ((size_t) ((char*) (ptr) - (plus)))
 #else  /* !SCC ---------------------------------------------------------------*/
 static void* pgas_app_mem;
 static void* pgas_free_list[256] = {0};
@@ -32,8 +55,8 @@ pgas_app_init()
 {
   pgas_dsl_size_node = PGAS_DSL_SIZE_NODE;
   pgas_mem_size = NUM_DSL_NODES * PGAS_DSL_SIZE_NODE;
-  pgas_app_mem = malloc(pgas_mem_size);
-  assert(pgas_app_mem != NULL);
+  /* do not actually need the memory, just the addr space */
+  pgas_app_mem = (void*) 0;	
 
   alloc_next = 64;
 
@@ -47,7 +70,7 @@ pgas_app_init()
     }
 
   assert(NODE_ID() > 0);
-  nodeid_t real_id;
+  nodeid_t real_id = 0;
   for (n = NODE_ID() - 1; n >= 0; n--)
     {
       if (is_dsl_core(n))
@@ -60,7 +83,7 @@ pgas_app_init()
     }
 
   /* find how many other APP nodes will be using the same DSL node */
-  uint32_t num_app_sharing = 0, my_seq_sharing;
+  uint32_t num_app_sharing = 0, my_seq_sharing = 0;
   for (n = real_id + 1; n < TOTAL_NODES(); n++)
     {
       if (is_app_core(n))
@@ -80,15 +103,21 @@ pgas_app_init()
   size_t my_offset = (pgas_dsl_size_node / num_app_sharing) * my_seq_sharing;
   size_t node_offset = pgas_app_my_resp_node * pgas_dsl_size_node;
   pgas_app_mem_mine = (void*)((uintptr_t) pgas_app_mem + node_offset + my_offset);
-  PRINT(" **  Sending to %3d (realid: %02d) :: off: %10lu :: shared by %2d (my seq %d)", 
-	pgas_app_my_resp_node, real_id, pgas_app_addr_offs(pgas_app_mem_mine), 
-	num_app_sharing, my_seq_sharing);
+  PRINTD(" **  Sending to %3d (realid: %02d) :: off: %10lu :: shared by %2d (my seq %d)", 
+	pgas_app_my_resp_node, real_id, (UL) pgas_app_addr_offs(pgas_app_mem_mine), 
+	 num_app_sharing, my_seq_sharing);
+}
+
+void
+pgas_app_term()
+{
+  free(pgas_allocs);
 }
 
 void*
 pgas_app_alloc(size_t size)
 {
-  void *ret;
+  void* ret;
   if (pgas_free_num > 2)
     {
       uint8_t spot = pgas_free_cur - pgas_free_num;

@@ -1,5 +1,29 @@
-#ifndef _HT_H_
-#define _HT_H_
+/*
+ *   File: ssht.h
+ *   Author: Vasileios Trigonakis <vasileios.trigonakis@epfl.ch>
+ *   Description: interface and structures of ssht 
+ *   This file is part of TM2C
+ *
+ *   Copyright (C) 2013  Vasileios Trigonakis
+ *
+ *   This program is free software; you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation; either version 2 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License along
+ *   with this program; if not, write to the Free Software Foundation, Inc.,
+ *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ */
+
+#ifndef _SSHT_H_
+#define _SSHT_H_
 
 #include <sys/time.h>
 #include <inttypes.h>
@@ -10,17 +34,13 @@
 
 #include "ssht_log.h"
 
-/* #define SSHT_DBG_UTILIZATION */
-
-/* #define BIT_OPTS */
-
 #if defined(BIT_OPTS)
 #include "rw_entry_ssht.h"
 #endif	/* BIT_OPTS */
 
 #include <assert.h>
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if any other CM (greedy, wholly, faircm) */
-#  include "cm.h"
+#  include "tm2c_cm.h"
 #endif 
 
 #define SIZE_ENTRY 4
@@ -36,7 +56,7 @@
 #if defined(BIT_OPTS)
 #define MAX_READERS 64
 #else
-#define MAX_READERS 62
+#define MAX_READERS TM2C_MAX_PROCS
 #endif	/* BIT_OPTS */
 
 #define SSHT_NO_WRITER 0xFF
@@ -84,14 +104,13 @@ extern uint32_t ssht_dbg_bu_usages_r[NUM_BUCKETS];
 typedef bucket_t* ssht_hashtable_t;
 
 extern ssht_hashtable_t ssht_new();
+extern void ssht_free(ssht_hashtable_t*);
 
 extern void bucket_print(bucket_t* bu);
 extern void ssht_stats_print(ssht_hashtable_t ht, uint32_t details);
 
-extern CONFLICT_TYPE bucket_insert_r(bucket_t* bu, ssht_log_set_t* log, uint32_t id, uintptr_t addr); 
-extern CONFLICT_TYPE bucket_insert_w(bucket_t* bu, ssht_log_set_t* log, uint32_t id, uintptr_t addr);
-extern CONFLICT_TYPE ssht_insert_w_test(ssht_hashtable_t ht, uint32_t id, uintptr_t addr);
-
+extern TM2C_CONFLICT_T bucket_insert_r(bucket_t* bu, ssht_log_set_t* log, uint32_t id, uintptr_t addr); 
+extern TM2C_CONFLICT_T bucket_insert_w(bucket_t* bu, ssht_log_set_t* log, uint32_t id, uintptr_t addr);
 
 INLINED bucket_t* 
 ssht_bucket_new() 
@@ -114,14 +133,14 @@ ssht_bucket_new()
 
 #define ssht_rw_entry_has_readers(entry) (entry)->nr
 
-INLINED CONFLICT_TYPE 
+INLINED TM2C_CONFLICT_T 
 ssht_insert(ssht_hashtable_t ht, uint32_t bu, ssht_log_set_t* log, uint32_t id, uintptr_t addr, RW rw) 
 {
 #if defined(SSHT_DBG_UTILIZATION)
   ssht_dbg_usages++;
   ssht_dbg_bu_usages[bu]++;
 #endif	/* SSHT_DBG_UTILIZATION */
-  CONFLICT_TYPE ct;
+  TM2C_CONFLICT_T ct;
   if (rw == READ) 
     {
 #if defined(SSHT_DBG_UTILIZATION)
@@ -244,4 +263,4 @@ ht_print(bucket_t * ht)
     }
 }
 
-#endif /* _HT_H_ */
+#endif /* _SSHT_H_ */

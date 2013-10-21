@@ -1,3 +1,27 @@
+/*
+ *   File: measurements.h
+ *   Author: Vasileios Trigonakis <vasileios.trigonakis@epfl.ch>
+ *   Description: interface of simple profiler
+ *   This file is part of TM2C
+ *
+ *   Copyright (C) 2013  Vasileios Trigonakis
+ *
+ *   This program is free software; you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation; either version 2 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License along
+ *   with this program; if not, write to the Free Software Foundation, Inc.,
+ *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ */
+
 #ifndef _MEASUREMENTS_H_
 #define _MEASUREMENTS_H_
 
@@ -9,22 +33,6 @@ extern "C" {
 #ifdef SSMP
 #  include <ssmp.h>
 #endif
-
-#ifndef REF_SPEED_GHZ
-#  if defined(PLATFORM_MCORE)
-#    define REF_SPEED_GHZ           2.1
-#  elif defined(SCC)
-#    define REF_SPEED_GHZ           0.533
-#  elif defined(PLATFORM_TILERA)
-#    if defined(__tilepro__)
-#        define REF_SPEED_GHZ           0.7
-#    else  /* __tilegx__ */
-#        define REF_SPEED_GHZ           1.2
-#    endif  /* __tilepro__ */
-#  else
-#    error "Need to set REF_SPEED_GHZ for the platform"
-#  endif
-#endif  /* REF_SPEED_GHZ */
 
   /* 
      #DO_TIMINGS_TICKS
@@ -240,6 +248,10 @@ extern "C" {
 #  define EXIT_TIME EXIT_TIME_POS(0)
 #  define KILL_ENTRY_TIME KILL_ENTRY_TIME_POS(0)
 
+#  define KILL_ENTRY_TIME_POS(pos)		\
+  EXCLUDE_ENTRY(pos)
+
+
 #  define SET_PROF_MSG_POS(pos, msg)		\
   measurement_msgs[pos] = msg;
 
@@ -300,6 +312,8 @@ extern "C" {
 #  define REPORT_TIMINGS_SECS_RANGE(start,end)	\
   prints_ticks_stats(start, end);
 
+
+extern void prints_ticks_stats(int start, int end);
 
   // }}}
   // ================================== OTHER ================================== {{{

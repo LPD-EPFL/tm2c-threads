@@ -1,4 +1,31 @@
+/*
+ *   File: ssht.c
+ *   Author: Vasileios Trigonakis <vasileios.trigonakis@epfl.ch>
+ *   Description: Super-Simple Hash Table a fixed-bucket hash table
+ *                which include the contention manager calls
+ *   This file is part of TM2C
+ *
+ *   Copyright (C) 2013  Vasileios Trigonakis
+ *
+ *   This program is free software; you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation; either version 2 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License along
+ *   with this program; if not, write to the Free Software Foundation, Inc.,
+ *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ */
+
 #include "ssht.h"
+
+#include <malloc.h>
 
 #if defined(SSHT_DBG_UTILIZATION)
 uint32_t ssht_dbg_usages = 0;
@@ -13,24 +40,17 @@ ssht_new()
 {
   ssht_hashtable_t hashtable;
   hashtable = (ssht_hashtable_t) memalign(CACHE_LINE_SIZE, NUM_BUCKETS * sizeof(bucket_t));
-  /* PRINT("size of hashtable is %d", NUM_BUCKETS * sizeof(bucket_t)); */
-  /* PRINT("size of bucket    is %d", sizeof(bucket_t)); */
-  /* PRINT("size of rw entry  is %d", sizeof(ssht_rw_entry_t)); */
-  /* PRINT("size of addr_t    is %d", sizeof(addr_t)); */
-  /* PRINT("size of *next     is %d", sizeof(struct bucket*)); */
-  /* PRINT("size of uintprt_t is %d", sizeof(uintptr_t)); */
 
   assert(hashtable != NULL);
   assert((intptr_t) hashtable % CACHE_LINE_SIZE == 0);
-  assert(sizeof(ssht_rw_entry_t) % CACHE_LINE_SIZE == 0);
   assert(sizeof(bucket_t) % CACHE_LINE_SIZE == 0);
 
-  uint64_t* ht_uint64_t = (uint64_t*) hashtable;
+  uint64_t* ht_uint64 = (uint64_t*) hashtable;
   uint32_t i;
 
   for (i = 0; i < (NUM_BUCKETS * sizeof(bucket_t)) / sizeof(uint64_t); i++)
     {
-      ht_uint64_t[i] = 0;
+      ht_uint64[i] = 0;
     }
 
   for (i = 0; i < NUM_BUCKETS; i++) 
@@ -45,8 +65,14 @@ ssht_new()
   return hashtable;
 }
 
+void
+ssht_free(ssht_hashtable_t* ht)
+{
+  free(ht);
+}
+
 void 
-bucket_print(bucket_t *bu) 
+bucket_print(bucket_t* bu) 
 {
 #if !defined(BIT_OPTS)
   bucket_t* btmp = bu;
@@ -55,7 +81,7 @@ bucket_print(bucket_t *bu)
       uint32_t j;
       for (j = 0; j < ADDR_PER_CL; j++) 
 	{
-	  printf("%p:%2d/%d|", (void *)btmp->addr[j], btmp->entry[j].nr, btmp->entry[j].writer);
+	  printf("%p:%2d/%d|", (void*)btmp->addr[j], btmp->entry[j].nr, btmp->entry[j].writer);
 	}
       btmp = btmp->next;
       printf("|");
@@ -66,18 +92,18 @@ bucket_print(bucket_t *bu)
 }
 
 
-CONFLICT_TYPE 
+TM2C_CONFLICT_T 
 bucket_insert_r(bucket_t* bu, ssht_log_set_t* log, uint32_t id, uintptr_t addr) 
 {
   uint32_t i;
-  bucket_t *btmp = bu;
+  bucket_t* btmp = bu;
   do 
     {
       for (i = 0; i < ADDR_PER_CL; i++) 
 	{
 	  if (btmp->addr[i] == addr) 
 	    {
-	      ssht_rw_entry_t *e = btmp->entry + i;
+	      ssht_rw_entry_t* e = btmp->entry + i;
 	      if (e->writer != SSHT_NO_WRITER) 
 		{
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) 			/* if any other CM (greedy, wholly, faircm) */
@@ -93,6 +119,7 @@ bucket_insert_r(bucket_t* bu, ssht_log_set_t* log, uint32_t id, uintptr_t addr)
 	      btmp->addr[i] = addr;
 #if defined(BIT_OPTS)
 	      rw_entry_ssht_set(e, id);
+	      ssht_log_set_insert(log, btmp->addr + i, e);
 #else
 	      if (!e->reader[id])
 	      	{
@@ -118,7 +145,7 @@ bucket_insert_r(bucket_t* bu, ssht_log_set_t* log, uint32_t id, uintptr_t addr)
 	{
 	  if (btmp->addr[i] == 0) 
 	    {
-	      ssht_rw_entry_t *e = btmp->entry + i;
+	      ssht_rw_entry_t* e = btmp->entry + i;
 	      btmp->addr[i] = addr;
 #if defined(BIT_OPTS)
 	      rw_entry_ssht_set(e, id);
@@ -141,11 +168,11 @@ bucket_insert_r(bucket_t* bu, ssht_log_set_t* log, uint32_t id, uintptr_t addr)
   while (1);
 }  
 
-CONFLICT_TYPE 
+TM2C_CONFLICT_T 
 bucket_insert_w(bucket_t* bu, ssht_log_set_t* log, uint32_t id, uintptr_t addr) 
 {
   uint32_t i;
-  bucket_t *btmp = bu;
+  bucket_t* btmp = bu;
   do 
     {
       for (i = 0; i < ADDR_PER_CL; i++) 
@@ -178,7 +205,14 @@ bucket_insert_w(bucket_t* bu, ssht_log_set_t* log, uint32_t id, uintptr_t addr)
 #endif	/* BIT_OPTS */
 		{
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) 			/* if any other CM (greedy, wholly, faircm) */
-		  if (contention_manager_war(id, e->reader, WRITE_AFTER_READ))
+#  if defined(BIT_OPTS)
+		  uint8_t readers[MAX_READERS];
+		  rw_entry_ssht_fetch_readers(e, readers);
+#  else
+		  uint8_t* readers = e->reader;
+#  endif
+
+		  if (contention_manager_war(id, readers, WRITE_AFTER_READ))
 		    {
 		      btmp->addr[i] = addr;
 		      e->writer = id;
@@ -231,65 +265,6 @@ bucket_insert_w(bucket_t* bu, ssht_log_set_t* log, uint32_t id, uintptr_t addr)
     } 
   while (1);
 }
-
-CONFLICT_TYPE 
-ssht_insert_w_test(ssht_hashtable_t ht, uint32_t id, uintptr_t addr)
-{
-#if !defined(BIT_OPTS)
-  uint32_t bu = hash_tw((addr>>2) % UINT_MAX);
-  bucket_t *btmp = ht + (bu % NUM_OF_BUCKETS);
-
-  uint32_t i;
-  do 
-    {
-      for (i = 0; i < ADDR_PER_CL; i++)
-	{
-	  if (btmp->addr[i] == addr) {
-	    ssht_rw_entry_t* e = btmp->entry + i;
-	    if (e->writer != SSHT_NO_WRITER)
-	      {
-#if !defined(NOCM) && !defined(BACKOFF_RETRY) 			/* if any other CM (greedy, wholly, faircm) */
-		if (contention_manager_raw_waw(id, e->writer, WRITE_AFTER_WRITE))
-		  {
-		    btmp->addr[i] = 0;
-		    return NO_CONFLICT;
-		  }
-		else 
-		  {
-		    return WRITE_AFTER_WRITE;
-		  }
-#else
-		return WRITE_AFTER_WRITE;
-#endif	/* NOCM */
-	      }
-	    else 
-	      {
-#if !defined(NOCM) && !defined(BACKOFF_RETRY) 			/* if any other CM (greedy, wholly, faircm) */
-		if (contention_manager_war(id, e->reader, WRITE_AFTER_READ)) 
-		  {
-		    btmp->addr[i] = 0;
-		    return NO_CONFLICT;
-		  }
-		else 
-		  {
-		    return WRITE_AFTER_READ;
-		  }
-#else
-		return WRITE_AFTER_READ;
-#endif	/* NOCM */
-	      }
-	  }
-	}
-    
-      btmp = btmp->next;
-    } 
-  while (btmp != NULL);
-
-#endif	/* BIT_OPTS */
-
-  return NO_CONFLICT;
-}
-
 
 void 
 ssht_stats_print(ssht_hashtable_t ht, uint32_t details)

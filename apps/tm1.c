@@ -1,157 +1,106 @@
 /*
- * Benchmarks the time to start and finish an empty TX ->
- * -> the time to start and finish an empty TX that has one (explicitly called) abort
+ *   File: tmN.c
+ *   Author: Vasileios Trigonakis <vasileios.trigonakis@epfl.ch>
+ *   Description: simple TM benchmarks
+ *   This file is part of TM2C
+ *
+ *   Copyright (C) 2013  Vasileios Trigonakis
+ *
+ *   This program is free software; you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation; either version 2 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License along
+ *   with this program; if not, write to the Free Software Foundation, Inc.,
+ *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
  */
 
-#include "tm.h"
+/*
+ * testing the assignement of addr to dsl cores
+ */
 
-#define SIS_SIZE 480
+#include <assert.h>
 
-int aborted = 0;
+#include "tm2c.h"
 
-extern volatile ssmp_msg_t **ssmp_recv_buf;
+#define SIS_SIZE 65536
 
-inline int ssmp_recv_from_pick(int from) {
-  
-  MPB_INV();
-  if (ssmp_recv_buf[from]->state) {
-    return 1;
-  }
-  return 0;
+size_t mem_size = SIS_SIZE * sizeof(int32_t);
+size_t num_dsl = 16;
+
+static inline nodeid_t
+get_responsible_node(tm_intern_addr_t addr) 
+{
+#if defined(PGAS)
+  return addr >> PGAS_DSL_MASK_BITS;
+#else	 /* !PGAS */
+#  if (ADDR_TO_DSL_SEL == 0)
+  return hash_tw(addr >> ADDR_SHIFT_MASK) % num_dsl;
+#  elif (ADDR_TO_DSL_SEL == 1)
+  return ((addr) >> ADDR_SHIFT_MASK) % num_dsl;
+#  endif
+#endif	/* PGAS */
 }
 
-extern t_vcharp virtual_lockaddress[48];
+int
+main(int argc, char **argv)
+{
+  TM2C_INIT;
 
-MAIN(int argc, char **argv) {
-
-
-  TM_INIT
+  if (argc > 1)
     {
+      mem_size = atoi(argv[1]) * sizeof(int32_t);
+    }
 
-    uint32_t *shmall = (uint32_t *) sys_shmalloc(2 * TOTAL_NODES() * sizeof(uint32_t));
+  if (argc > 1)
+    {
+      num_dsl = atoi(argv[2]);
+    }
 
-    uint32_t i = 0;
-    while (((((intptr_t) (shmall + i)) >> 3) % NUM_DSL_NODES) > 0) i++;
-    uint32_t *shm = shmall + i;
-
-    uint32_t c = 0;
-    i = 0;
-    while (i++ < NODE_ID()) 
-      {
-	if (is_app_core(i))
-	  {
-	    c++;
-	  }
-      }
-    c--;
-
-    BARRIER;
-    //    shm += 2*c;
-
-  uint32_t res[] = {0, 0};
-  uint32_t r;
-
-
-  ONCE {
-      uint32_t w;
-      for (w = 0; w < TOTAL_NODES(); w++)
-	{
-	  shm[w] = 0;
-	}
-  }
+  ONCE
+    {
+      printf("memory size in bytes: %lu, words: %lu\n  emulating %lu dsl nodes\n",
+	     ((LU) mem_size), ((LU) mem_size / sizeof(int)), (LU) num_dsl);
+    }
+  int32_t *mem = (int32_t *) sys_shmalloc(SIS_SIZE * sizeof(int32_t));
+  assert(mem != NULL);
 
   BARRIER;
 
+  ONCE
+    {
+      PRINT("proc        | number of addr");
 
-            short j = 0;
-	    long long int ll = 100000;
+      size_t num_resp[TM2C_MAX_PROCS] = {0};
 
-	    uint32_t cnt = 0;
-
-    while (ll--) {
-      uint32_t w;
-      for (w = 0; w < 16; w++)
+      uint32_t a;
+      for (a = 0; a < SIS_SIZE; a++)
 	{
-	  PF_START(j);
-	  r = TX_CASI(shm + w, cnt, cnt+1);
-          /* r = TX_CAS(shm, ll%2, 1); */
-	  /* r = __sync_bool_compare_and_swap(shm + w, cnt, cnt+1); */
-	  PF_STOP(j);
-	  res[r]++;
+	  tm_intern_addr_t ia = to_intern_addr(mem + a);
+	  num_resp[get_responsible_node(ia)]++;
 	}
-      cnt++;
-    }
 
-    BARRIER;
-
-    ONCE {
-      uint32_t w;
-      for (w = 0; w < TOTAL_NODES(); w++)
+      for (a = 0; a < TM2C_MAX_PROCS; a++)
 	{
-	  printf("w# %02d, val %u\n", w, shm[w]);
+	  if (num_resp[a])
+	    {
+	      printf("%-20u%lu\n", a, (LU) num_resp[a]);
+	    }
 	}
     }
-    FLUSH;
-    BARRIER;
-    PRINT("res[f] = %u, res[t] = %u", res[0], res[1]);
-    BARRIER;
 
-    /* j++; */
-    /* ll = 1000000; */
-    /* while (ll--) { */
-    /*     PF_START(j); */
-    /* 	r = TX_CAS(shm, 0, 1); */
-    /*     PF_STOP(j); */
-    /* 	res[r]++; */
-    /* } */
+  BARRIER;
 
+  sys_shfree((void*) mem);
 
+  TM_END;
 
-    /* j++; */
-    /* ll = 100000; */
-    /* while (ll--) { */
-    /*     PF_START(j); */
-    /*     PF_STOP(j); */
-    /* } */
-
-    /* j++; */
-    /* ll = 10000; */
-    /* while (ll--) { */
-    /*     PF_START(j); */
-    /*     PF_STOP(j); */
-    /* } */
-
-    /* j++; */
-    /* ll = 1000; */
-    /* while (ll--) { */
-    /*     PF_START(j); */
-    /*     PF_STOP(j); */
-    /* } */
-
-    /* j++; */
-    /* ll = 100; */
-    /* while (ll--) { */
-    /*     PF_START(j); */
-    /*     PF_STOP(j); */
-    /* } */
-
-
-    /* j++; */
-    /* ll = 10; */
-    /* while (ll--) { */
-    /*     PF_START(j); */
-    /*     PF_STOP(j); */
-    /* } */
-
-
-    /* j++; */
-    /* ll = 1; */
-    /* while (ll--) { */
-    /*     PF_START(j); */
-    /*     PF_STOP(j); */
-    /* } */
-
-
-	} TM_END;
   EXIT(0);
 }

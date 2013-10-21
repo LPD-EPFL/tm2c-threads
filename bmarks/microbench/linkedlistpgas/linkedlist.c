@@ -1,16 +1,32 @@
 /*
- *  Linkedlist.C
- *  
- *  Linked list data structure
+ * PGAS version
+ * Adapted to TM2C by Vasileios Trigonakis <vasileios.trigonakis@epfl.ch> 
  *
- *  Created by Vincent Gramoli on 1/12/09.
- *  Copyright 2009 __MyCompanyName__. All rights reserved.
+ * File:
+ *   test.c
+ * Author(s):
+ *   Vincent Gramoli <vincent.gramoli@epfl.ch>
+ * Description:
+ *   Concurrent accesses of the linked list
  *
+ * Copyright (c) 2009-2010.
+ *
+ * test.c is part of Microbench
+ * 
+ * Microbench is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, version 2
+ * of the License.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  */
 
 #include "linkedlist.h"
 
-//#define DEBUG
+/* #define DEBUG */
 
 node_t*
 new_node(val_t val, nxt_t next, int transactional) 
@@ -23,9 +39,7 @@ new_node(val_t val, nxt_t next, int transactional)
 
   if (transactional) 
     {
-      PF_START(5);
       node = (node_t *) TX_SHMALLOC(sizeof (node_t));
-      PF_STOP(5);
       TX_STORE(node, nd.to_int64, TYPE_INT);
     }
   else 
@@ -90,7 +104,7 @@ void set_delete(intset_t *set) {
         sys_shfree(ND(to_del));
         node.next = next.next;
     }
-    sys_shfree((t_vcharp) set);
+    sys_shfree((void*) set);
 }
 
 int
@@ -152,7 +166,6 @@ set_contains(intset_t *set, val_t val, int transactional)
 #endif
 
   node_t prev, next;
-  val_t v = 0;
 
   TX_START;
   TX_LOAD_NODE(prev, set->head);
@@ -168,6 +181,7 @@ set_contains(intset_t *set, val_t val, int transactional)
   return result;
 }
 
+#ifdef SEQUENTIAL
 static int 
 set_seq_contains(intset_t *set, val_t val) 
 {
@@ -196,6 +210,7 @@ set_seq_contains(intset_t *set, val_t val)
 
   return result;
 }
+#endif /* SEQUENTIAL */
 
 /* static int set_early_contains(intset_t *set, val_t val) { */
 /*   int result; */
@@ -280,9 +295,10 @@ set_add(intset_t* set, val_t val, int transactional)
 {
   int result = 0;
 
-  if (!transactional) {
-    return set_seq_add(set, val);
-  }
+  if (!transactional)
+    {
+      return set_seq_add(set, val);
+    }
 
 #ifdef SEQUENTIAL /* Unprotected */
   return set_seq_add(set, val);
@@ -300,7 +316,7 @@ set_add(intset_t* set, val_t val, int transactional)
   TX_START;
 
 #ifdef DEBUG
-  PRINT("++> set_add(%d)\tretry: %u", (int) val, stm_tx->retries);
+  PRINT("++> set_add(%d)\tretry: %u", (int) val, tm2c_tx->retries);
 #endif
 
   to_store = OF(set->head);
@@ -320,7 +336,7 @@ set_add(intset_t* set, val_t val, int transactional)
       prev.next = OF(nn);
       TX_STORE(ND(to_store), prev.to_int64, TYPE_INT);
     }
-  TX_COMMIT;
+  TX_COMMIT_MEM;
   return result;
 }
 
@@ -499,9 +515,9 @@ set_seq_add(intset_t* set, val_t val)
   set remove --------------------------------------------------------------
 
  */
-static int set_seq_remove(intset_t *set, val_t val);
-static int set_early_remove(intset_t *set, val_t val);
-static int set_readval_remove(intset_t *set, val_t val);
+int set_seq_remove(intset_t *set, val_t val);
+int set_early_remove(intset_t *set, val_t val);
+int set_readval_remove(intset_t *set, val_t val);
 
 int
 set_remove(intset_t* set, val_t val, int transactional) 
@@ -543,7 +559,7 @@ set_remove(intset_t* set, val_t val, int transactional)
       prev.next = next.next;
       TX_STORE(ND(to_store), prev.to_int64, TYPE_INT);
     }
-  TX_COMMIT;
+  TX_COMMIT_MEM;
   return result;
 }
 

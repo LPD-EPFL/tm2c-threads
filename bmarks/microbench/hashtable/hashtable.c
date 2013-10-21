@@ -1,4 +1,6 @@
 /*
+ * Adapted to TM2C by Vasileios Trigonakis <vasileios.trigonakis@epfl.ch> 
+ *
  * File:
  *   hashtable.c
  * Author(s):
@@ -26,29 +28,32 @@
 
 #include "hashtable.h"
 
-void ht_delete(ht_intset_t *set) {
-    node_t *node, *next;
-    int i;
-    
-    for (i = 0; i < maxhtlength; i++) {
-        intset_t *iset = set->buckets[i];
-        set_delete(iset);
-        free(set->buckets[i]);
+void
+ht_delete(ht_intset_t *set)
+{
+  int i;
+  for (i = 0; i < maxhtlength; i++)
+    {
+      intset_t *iset = set->buckets[i];
+      set_delete(iset);
+      free(set->buckets[i]);
     }
-    free(set->buckets);
-    free(set);
+  free(set->buckets);
+  free(set);
 }
 
-int ht_size(ht_intset_t *set) {
-    int size = 0;
-    node_t *node;
-    int i;
+int
+ht_size(ht_intset_t *set)
+{
+  int size = 0;
+  int i;
 
-    for (i = 0; i < maxhtlength; i++) {
-        intset_t *iset = set->buckets[i];
-        size += set_size(iset);
+  for (i = 0; i < maxhtlength; i++)
+    {
+      intset_t *iset = set->buckets[i];
+      size += set_size(iset);
     }
-    return size;
+  return size;
 }
 
 int floor_log_2(unsigned int n) {

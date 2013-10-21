@@ -1,4 +1,6 @@
 /*
+ * Adapted to TM2C by Vasileios Trigonakis <vasileios.trigonakis@epfl.ch> 
+ *
  * File:
  *   test.c
  * Author(s):
@@ -24,42 +26,28 @@
 #include "linkedlist.h"
 #include <unistd.h>
 
-/* ################################################################### *
- * RANDOM
- * ################################################################### */
-
-/* Re-entrant version of rand_range(r) */
-inline long rand_range_re(unsigned int *seed, long r) {
-    int m = RAND_MAX;
-    long d, v = 0;
-
-    do {
-        d = (m > r ? r : m);
-        v += 1 + (long) (d * ((double) rand_r(seed) / ((double) (m) + 1.0)));
-        r -= m;
-    } while (r > 0);
-    return v;
-}
-
-typedef struct thread_data {
-    val_t first;
-    long range;
-    int update;
-    int unit_tx;
-    int alternate;
-    int effective;
-    unsigned long nb_add;
-    unsigned long nb_added;
-    unsigned long nb_remove;
-    unsigned long nb_removed;
-    unsigned long nb_contains;
-    unsigned long nb_found;
-    unsigned int seed;
-    intset_t *set;
-    unsigned long failures_because_contention;
+typedef struct thread_data
+{
+  val_t first;
+  long range;
+  int update;
+  int unit_tx;
+  int alternate;
+  int effective;
+  unsigned long nb_add;
+  unsigned long nb_added;
+  unsigned long nb_remove;
+  unsigned long nb_removed;
+  unsigned long nb_contains;
+  unsigned long nb_found;
+  unsigned int seed;
+  intset_t *set;
+  unsigned long failures_because_contention;
 } thread_data_t;
 
-void *test(void *data, double duration) {
+void*
+test(void *data, double duration)
+{
   int unext, last = -1;
   val_t val = 0;
 
@@ -72,234 +60,226 @@ void *test(void *data, double duration) {
   /* Is the first op an update? */
   unext = (rand_range(100) - 1 < d->update);
 
+
   FOR(duration) 
   {
+    if (unext) 
+      { // update
+	if (last < 0)
+	  { // add
+	    val = rand_range(d->range);
+	    if (set_add(d->set, val, TRANSACTIONAL)) 
+	      {
+		d->nb_added++;
+		last = val;
+	      }
+	    d->nb_add++;
+	  }
+	else
+	  { // remove
 
-    /* if (NODE_ID() == 2) */
-    /*   /\* if (NODE_ID() == 1 || NODE_ID() == 2) *\/ */
-    /*   { */
-    /* 	long int val = rand_range_re(&d->seed, d->range); */
-    /* 	if (set_add(d->set, val, TRANSACTIONAL)) { */
-    /* 	  d->nb_added++; */
-    /* 	  last = val; */
-    /* 	} */
-    /* 	d->nb_add++; */
-    /* 	continue; */
-    /*   } */
-    /* else if (NODE_ID() == 1) */
-    /*   { */
-    /* 	long int  */
-    /* 	  val = rand_range_re(&d->seed, d->range); */
-    /* 	if (set_remove(d->set, val, TRANSACTIONAL)) { */
-    /* 	  d->nb_removed++; */
-    /* 	  /\* Repeat until successful, to avoid size variations *\/ */
-    /* 	} */
-    /* 	d->nb_remove++; */
-    /* 	continue; */
-    /*   } */
-
-    if (unext) { // update
-
-      if (last < 0) { // add
-
-	val = rand_range(d->range);
-	if (set_add(d->set, val, TRANSACTIONAL)) {
-	  d->nb_added++;
-	  last = val;
-	}
-	d->nb_add++;
-
+	    if (d->alternate) 
+	      { // alternate mode (default)
+		if (set_remove(d->set, last, TRANSACTIONAL))
+		  {
+		    d->nb_removed++;
+		  }
+		last = -1;
+	      }
+	    else
+	      {
+		/* Random computation only in non-alternated cases */
+		val = tm2c_rand() % d->range;
+		/* Remove one random value */
+		/* goto not_rem; */
+		if (set_remove(d->set, val, TRANSACTIONAL))
+		  {
+		    d->nb_removed++;
+		    /* Repeat until successful, to avoid size variations */
+		    last = -1;
+		  }
+	      }
+	    d->nb_remove++;
+	  }
       }
-      else { // remove
-
-	if (d->alternate) { // alternate mode (default)
-	  if (set_remove(d->set, last, TRANSACTIONAL)) {
-	    d->nb_removed++;
-	  }
-	  last = -1;
+    else
+      { // read
+      if (d->alternate)
+	{
+	  if (d->update == 0)
+	    {
+	      if (last < 0)
+		{
+		  val = d->first;
+		  last = val;
+		}
+	      else
+		{ // last >= 0
+		  val = tm2c_rand() % d->range;
+		  last = -1;
+		}
+	    }
+	  else
+	    { // update != 0
+	      if (last < 0)
+		{
+		  val = tm2c_rand() % d->range;
+		  //last = val;
+		}
+	      else
+		{
+		  val = last;
+		}
+	    }
 	}
-	else {
-	  /* Random computation only in non-alternated cases */
-	  val = rand_range_re(&d->seed, d->range);
-	  /* Remove one random value */
-	  /* goto not_rem; */
-	  if (set_remove(d->set, val, TRANSACTIONAL)) {
-	    d->nb_removed++;
-	    /* Repeat until successful, to avoid size variations */
-	    last = -1;
-	  }
-	}
-	d->nb_remove++;
-      }
-    }
-    else { // read
-
-      if (d->alternate) {
-	if (d->update == 0) {
-	  if (last < 0) {
-	    val = d->first;
-	    last = val;
-	  }
-	  else { // last >= 0
-	    val = rand_range_re(&d->seed, d->range);
-	    last = -1;
-	  }
-	}
-	else { // update != 0
-	  if (last < 0) {
-	    val = rand_range_re(&d->seed, d->range);
-	    //last = val;
-	  }
-	  else {
-	    val = last;
-	  }
-	}
-      }
-      else val = rand_range_re(&d->seed, d->range);
+      else val = tm2c_rand() % d->range;
 
       if (set_contains(d->set, val, TRANSACTIONAL))
-	d->nb_found++;
+	{
+	  d->nb_found++;
+	}
       d->nb_contains++;
 
     }
 
     /* Is the next op an update? */
-    if (d->effective) { // a failed remove/add is a read-only tx
-      unext = ((100 * (d->nb_added + d->nb_removed))
-	       < (d->update * (d->nb_add + d->nb_remove + d->nb_contains)));
-    }
-    else { // remove/add (even failed) is considered as an update
-      unext = (rand_range_re(&d->seed, 100) - 1 < d->update);
-    }
+    if (d->effective)
+      { // a failed remove/add is a read-only tx
+	unext = ((100 * (d->nb_added + d->nb_removed))
+		 < (d->update * (d->nb_add + d->nb_remove + d->nb_contains)));
+      }
+    else
+      { // remove/add (even failed) is considered as an update
+	unext = (tm2c_rand() % 100) < d->update;
+      }
   }
   END_FOR;
 
   return NULL;
 }
 
-TASKMAIN(int argc, char **argv) {
-  dup2(STDOUT_FILENO, STDERR_FILENO);
+int
+main(int argc, char **argv)
+{
 #ifndef SEQUENTIAL
-  TM_INIT;
+  TM2C_INIT;
 #else
-  RCCE_init(&argc, &argv);
-  iRCCE_init();
+  SEQ_INIT;
 #endif
 
-  struct option long_options[] = {
-    // These options don't set a flag
-    {"help", no_argument, NULL, 'h'},
-    {"duration", required_argument, NULL, 'd'},
-    {"initial-size", required_argument, NULL, 'i'},
-    {"range", required_argument, NULL, 'r'},
-    {"update-rate", required_argument, NULL, 'u'},
-    {"elasticity", required_argument, NULL, 'x'},
-    {"effective", required_argument, NULL, 'f'},
-    {NULL, 0, NULL, 0}
-  };
+  struct option long_options[] =
+    {
+      // These options don't set a flag
+      {"help", no_argument, NULL, 'h'},
+      {"verbose", no_argument, NULL, 'v'},
+      {"duration", required_argument, NULL, 'd'},
+      {"initial-size", required_argument, NULL, 'i'},
+      {"range", required_argument, NULL, 'r'},
+      {"update-rate", required_argument, NULL, 'u'},
+      {"elasticity", required_argument, NULL, 'x'},
+      {"effective", required_argument, NULL, 'f'},
+      {NULL, 0, NULL, 0}
+    };
 
-  intset_t *set;
+  intset_t* set = NULL;
   int i, c, size;
   val_t last = 0;
   val_t val = 0;
   thread_data_t *data;
   double duration = DEFAULT_DURATION;
   int initial = DEFAULT_INITIAL;
-  int nb_app_cores = NUM_APP_NODES;
+  int nb_app_cores = TOTAL_NODES();
+#if defined(SEQUENTIAL)
+  nb_app_cores = 1;
+#endif
   long range = DEFAULT_RANGE;
   int update = DEFAULT_UPDATE;
   int unit_tx = DEFAULT_ELASTICITY;
   int alternate = DEFAULT_ALTERNATE;
   int effective = DEFAULT_EFFECTIVE;
+  int verbose = DEFAULT_VERBOSE;
   unsigned int seed = 0;
 
-  while (1) {
-    i = 0;
-    c = getopt_long(argc, argv, "hAf:d:i:r:u:x:", long_options, &i);
+  while (1)
+    {
+      i = 0;
+      c = getopt_long(argc, argv, "hAf:d:i:r:u:", long_options, &i);
 
-    if (c == -1)
-      break;
+      if (c == -1)
+	break;
 
-    if (c == 0 && long_options[i].flag == 0)
-      c = long_options[i].val;
+      if (c == 0 && long_options[i].flag == 0)
+	c = long_options[i].val;
 
-    switch (c) {
-    case 0:
-      /* Flag is automatically set */
-      break;
-    case 'h':
-      ONCE
+      switch (c)
 	{
-	  printf("intset -- STM stress test "
-		 "(linked list)\n"
-		 "\n"
-		 "Usage:\n"
-		 "  intset [options...]\n"
-		 "\n"
-		 "Options:\n"
-		 "  -h, --help\n"
-		 "        Print this message\n"
-		 "  -A, --alternate (default="XSTR(DEFAULT_ALTERNATE)")\n"
-		 "        Consecutive insert/remove target the same value\n"
-		 "  -f, --effective <int>\n"
-		 "        update txs must effectively write (0=trial, 1=effective, default=" XSTR(DEFAULT_EFFECTIVE) ")\n"
-		 "  -d, --duration secs<double>\n"
-		 "        Test duration in milliseconds (0=infinite, default=" XSTR(DEFAULT_DURATION) ")\n"
-		 "  -i, --initial-size <int>\n"
-		 "        Number of elements to insert before test (default=" XSTR(DEFAULT_INITIAL) ")\n"
-		 "  -r, --range <int>\n"
-		 "        Range of integer values inserted in set (default=" XSTR(DEFAULT_RANGE) ")\n"
-		 "  -u, --update-rate <int>\n"
-		 "        Percentage of update transactions (default=" XSTR(DEFAULT_UPDATE) ")\n"
-		 "  -x, --elasticity (default=4)\n"
-		 "        Use elastic transactions\n"
-		 "        0 = non-protected,\n"
-		 "        1 = normal transaction,\n"
-		 "        2 = read elastic-tx,\n"
-		 "        3 = read/add elastic-tx,\n"
-		 "        4 = read/add/rem elastic-tx,\n"
-		 "        5 = all recursive elastic-tx,\n"
-		 "        6 = harris lock-free\n"
-		 );
+	case 0:
+	  /* Flag is automatically set */
+	  break;
+	case 'h':
+	  ONCE
+	    {
+	      printf("intset -- STM stress test "
+		     "(linked list)\n"
+		     "\n"
+		     "Usage:\n"
+		     "  intset [options...]\n"
+		     "\n"
+		     "Options:\n"
+		     "  -h, --help\n"
+		     "        Print this message\n"
+		     "  -A, --alternate (default="XSTR(DEFAULT_ALTERNATE)")\n"
+		     "        Consecutive insert/remove target the same value\n"
+		     "  -f, --effective <int>\n"
+		     "        update txs must effectively write (0=trial, 1=effective, default=" XSTR(DEFAULT_EFFECTIVE) ")\n"
+		     "  -d, --duration secs<double>\n"
+		     "        Test duration in milliseconds (0=infinite, default=" XSTR(DEFAULT_DURATION) ")\n"
+		     "  -i, --initial-size <int>\n"
+		     "        Number of elements to insert before test (default=" XSTR(DEFAULT_INITIAL) ")\n"
+		     "  -r, --range <int>\n"
+		     "        Range of integer values inserted in set (default=" XSTR(DEFAULT_RANGE) ")\n"
+		     "  -u, --update-rate <int>\n"
+		     "        Percentage of update transactions (default=" XSTR(DEFAULT_UPDATE) ")\n"
+		     );
+	    }
+	  goto end;
+	case 'A':
+	  alternate = 1;
+	  break;
+	case 'f':
+	  effective = atoi(optarg);
+	  break;
+	case 'd':
+	  duration = atof(optarg);
+	  break;
+	case 'i':
+	  initial = atoi(optarg);
+	  break;
+	case 'r':
+	  range = atol(optarg);
+	  break;
+	case 'u':
+	  update = atoi(optarg);
+	  break;
+	case 'x':
+	  unit_tx = atoi(optarg);
+	  break;
+	case '?':
+	  ONCE
+	    {
+	      printf("Use -h or --help for help\n");
+	    }
+	default:
+	  goto end;
 	}
-      exit(0);
-    case 'A':
-      alternate = 1;
-      break;
-    case 'f':
-      effective = atoi(optarg);
-      break;
-    case 'd':
-      duration = atof(optarg);
-      break;
-    case 'i':
-      initial = atoi(optarg);
-      break;
-    case 'r':
-      range = atol(optarg);
-      break;
-    case 'u':
-      update = atoi(optarg);
-      break;
-    case 'x':
-      unit_tx = atoi(optarg);
-      break;
-    case '?':
-      ONCE
-	{
-	  printf("Use -h or --help for help\n");
-	}
-      exit(0);
-    default:
-      exit(1);
     }
-  }
 
-  if (seed == 0) {
-    srand_core();
-    seed = rand_range((ID + 17) * 123);
-    srand(seed);
-  }
+  if (seed == 0)
+    {
+      srand_core();
+      seed = rand_range((NODE_ID() + 17) * 123);
+      srand(seed);
+    }
   else
     srand(seed);
 
@@ -333,10 +313,11 @@ TASKMAIN(int argc, char **argv) {
       FLUSH;
     }
 
-  if ((data = (thread_data_t *) malloc(sizeof (thread_data_t))) == NULL) {
-    perror("malloc");
-    exit(1);
-  }
+  if ((data = (thread_data_t *) malloc(sizeof (thread_data_t))) == NULL)
+    {
+      perror("malloc");
+      exit(1);
+    }
 
   APP_EXEC_ORDER
     {
@@ -347,8 +328,6 @@ TASKMAIN(int argc, char **argv) {
   BARRIER;
 
   uint32_t my_app_seq_id = app_id_seq(NODE_ID());
-  PRINT("Adding %d entries to set (%2d)", initial, my_app_seq_id);
-
   int round;
   for (round = 0; round < initial; round++)
     {
@@ -359,17 +338,11 @@ TASKMAIN(int argc, char **argv) {
 	  do
 	    {
 	      val = rand_range(range);
-	      was_added = set_add(set, val, 0);
+	      was_added = set_add(set, val, 1);
 	    } while (!was_added);
-	  udelay(123);
 	}
       BARRIER;
     }
-
-  BARRIER;
-  PRINT("finish insertion!");
-  udelay(10000);
-  BARRIER;
   
   ONCE
     {
@@ -398,24 +371,34 @@ TASKMAIN(int argc, char **argv) {
 
   BARRIER;
   /* Start */
-            
   test(data, duration);
 
-  APP_EXEC_ORDER
+  if (verbose)
     {
-      printf("-- Core %d\n", NODE_ID());
-      printf("  #add        : %lu\n", data->nb_add);
-      printf("    #added    : %lu\n", data->nb_added);
-      printf("  #remove     : %lu\n", data->nb_remove);
-      printf("    #removed  : %lu\n", data->nb_removed);
-      printf("  #contains   : %lu\n", data->nb_contains);
-      printf("    #found    : %lu\n", data->nb_found);
-      printf("---------------------------------------------------");
-      /* tx_metadata_node_print(stm_tx_node); */
-      FLUSH;
-      /* Delete set */
-    } 
-  APP_EXEC_ORDER_END;
+      APP_EXEC_ORDER
+	{
+	  printf("-- Core %d\n", NODE_ID());
+	  printf("  #add        : %lu\n", data->nb_add);
+	  printf("    #added    : %lu\n", data->nb_added);
+	  printf("  #remove     : %lu\n", data->nb_remove);
+	  printf("    #removed  : %lu\n", data->nb_removed);
+	  printf("  #contains   : %lu\n", data->nb_contains);
+	  printf("    #found    : %lu\n", data->nb_found);
+	  printf("---------------------------------------------------");
+	  FLUSH;
+	} APP_EXEC_ORDER_END;
+    }
+  /* Delete set */
+
+  BARRIER;
+
+  ONCE
+    {
+      int size_after = set_size(set);
+      /* set_print(set); */
+      printf("Set size (af): %u\n", size_after);
+    }
+
   BARRIER;
   
 #ifdef SEQUENTIAL
@@ -433,7 +416,8 @@ TASKMAIN(int argc, char **argv) {
   free(data);
   BARRIER;
 
-#ifdef STM
+ end:
+#ifndef SEQUENTIAL
   TM_END;
 #endif
 

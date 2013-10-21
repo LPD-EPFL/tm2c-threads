@@ -1,4 +1,6 @@
 /*
+ * Adapted to TM2C by Vasileios Trigonakis <vasileios.trigonakis@epfl.ch> 
+ *
  * File:
  *   test.c
  * Author(s):
@@ -38,22 +40,23 @@
 /* Re-entrant version of rand_range(r) */
 #define rand_range_re(dummy, r) (tm2c_rand() % r)
 
-typedef struct thread_data {
-    val_t first;
-    long range;
-    int update;
-    int unit_tx;
-    int alternate;
-    int effective;
-    unsigned long nb_add;
-    unsigned long nb_added;
-    unsigned long nb_remove;
-    unsigned long nb_removed;
-    unsigned long nb_contains;
-    unsigned long nb_found;
-    unsigned int seed;
-    intset_t *set;
-    unsigned long failures_because_contention;
+typedef struct thread_data 
+{
+  val_t first;
+  long range;
+  int update;
+  int unit_tx;
+  int alternate;
+  int effective;
+  unsigned long nb_add;
+  unsigned long nb_added;
+  unsigned long nb_remove;
+  unsigned long nb_removed;
+  unsigned long nb_contains;
+  unsigned long nb_found;
+  unsigned int seed;
+  intset_t* set;
+  unsigned long failures_because_contention;
 } thread_data_t;
 
 volatile int work = 1;
@@ -65,12 +68,12 @@ alarm_handler(int sig)
 }
 
 void*
-test(void *data, double duration) 
+test(void* data, double duration) 
 {
   int unext, last = -1;
   val_t val = 0;
 
-  thread_data_t *d = (thread_data_t *) data;
+  thread_data_t* d = (thread_data_t*) data;
 
   srand_core();
 
@@ -164,15 +167,13 @@ test(void *data, double duration)
   return NULL;
 }
 
-TASKMAIN(int argc, char **argv)
+int
+main(int argc, char** argv)
 {
 #ifndef SEQUENTIAL
-  TM_INIT;
+  TM2C_INIT;
 #else
   SEQ_INIT;
-  dup2(STDOUT_FILENO, STDERR_FILENO);
-  /* RCCE_init(&argc, &argv); */
-  /* iRCCE_init(); */
 #endif
 
   struct option long_options[] =
@@ -189,14 +190,14 @@ TASKMAIN(int argc, char **argv)
       {NULL, 0, NULL, 0}
     };
 
-  intset_t *set;
+  intset_t* set;
   int i, c, size;
   val_t last = 0;
   val_t val = 0;
-  thread_data_t *data;
+  thread_data_t* data;
   double duration = DEFAULT_DURATION;
   int initial = DEFAULT_INITIAL;
-  int nb_app_cores = TOTAL_NODES();
+  int nb_app_cores = NUM_APP_NODES;
 #if defined(SEQUENTIAL)
   nb_app_cores = 1;
 #endif
@@ -208,89 +209,90 @@ TASKMAIN(int argc, char **argv)
   int verbose = DEFAULT_VERBOSE;
   unsigned int seed = 0;
 
-  while (1) {
-    i = 0;
-    c = getopt_long(argc, argv, "hAf:d:i:r:u:x:v", long_options, &i);
+  while (1) 
+    {
+      i = 0;
+      c = getopt_long(argc, argv, "hAf:d:i:r:u:x:v", long_options, &i);
 
-    if (c == -1)
-      break;
+      if (c == -1)
+	break;
 
-    if (c == 0 && long_options[i].flag == 0)
-      c = long_options[i].val;
+      if (c == 0 && long_options[i].flag == 0)
+	c = long_options[i].val;
 
-    switch (c) {
-    case 0:
-      /* Flag is automatically set */
-      break;
-    case 'h':
-      ONCE
-	{
-	  printf("intset -- STM stress test "
-		 "(linked list)\n"
-		 "\n"
-		 "Usage:\n"
-		 "  intset [options...]\n"
-		 "\n"
-		 "Options:\n"
-		 "  -h, --help\n"
-		 "        Print this message\n"
-		 "  -A, --alternate (default="XSTR(DEFAULT_ALTERNATE)")\n"
-		 "        Consecutive insert/remove target the same value\n"
-		 "  -f, --effective <int>\n"
-		 "        update txs must effectively write (0=trial, 1=effective, default=" XSTR(DEFAULT_EFFECTIVE) ")\n"
-		 "  -d, --duration secs<double>\n"
-		 "        Test duration in milliseconds (0=infinite, default=" XSTR(DEFAULT_DURATION) ")\n"
-		 "  -i, --initial-size <int>\n"
-		 "        Number of elements to insert before test (default=" XSTR(DEFAULT_INITIAL) ")\n"
-		 "  -r, --range <int>\n"
-		 "        Range of integer values inserted in set (default=" XSTR(DEFAULT_RANGE) ")\n"
-		 "  -u, --update-rate <int>\n"
-		 "        Percentage of update transactions (default=" XSTR(DEFAULT_UPDATE) ")\n"
-		 "  -v , --verbose\n"
-		 "        Print detailed stats"
-		 );
-	}
-      exit(0);
-    case 'A':
-      alternate = 1;
-      break;
-    case 'f':
-      effective = atoi(optarg);
-      break;
-    case 'd':
-      duration = atof(optarg);
-      break;
-    case 'i':
-      initial = atoi(optarg);
-      break;
-    case 'r':
-      range = atol(optarg);
-      break;
-    case 'u':
-      update = atoi(optarg);
-      break;
-    case 'x':
-      unit_tx = atoi(optarg);
-      break;
-    case 'v':
-      verbose = 1;
-      break;
-    case '?':
-      ONCE
-	{
-	  printf("Use -h or --help for help\n");
-	}
-      exit(0);
-    default:
-      exit(1);
+      switch (c) {
+      case 0:
+	/* Flag is automatically set */
+	break;
+      case 'h':
+	ONCE
+	  {
+	    printf("intset -- STM stress test "
+		   "(linked list)\n"
+		   "\n"
+		   "Usage:\n"
+		   "  intset [options...]\n"
+		   "\n"
+		   "Options:\n"
+		   "  -h, --help\n"
+		   "        Print this message\n"
+		   "  -A, --alternate (default="XSTR(DEFAULT_ALTERNATE)")\n"
+		   "        Consecutive insert/remove target the same value\n"
+		   "  -f, --effective <int>\n"
+		   "        update txs must effectively write (0=trial, 1=effective, default=" XSTR(DEFAULT_EFFECTIVE) ")\n"
+		   "  -d, --duration secs<double>\n"
+		   "        Test duration in milliseconds (0=infinite, default=" XSTR(DEFAULT_DURATION) ")\n"
+		   "  -i, --initial-size <int>\n"
+		   "        Number of elements to insert before test (default=" XSTR(DEFAULT_INITIAL) ")\n"
+		   "  -r, --range <int>\n"
+		   "        Range of integer values inserted in set (default=" XSTR(DEFAULT_RANGE) ")\n"
+		   "  -u, --update-rate <int>\n"
+		   "        Percentage of update transactions (default=" XSTR(DEFAULT_UPDATE) ")\n"
+		   "  -v , --verbose\n"
+		   "        Print detailed stats"
+		   );
+	  }
+	goto end;
+      case 'A':
+	alternate = 1;
+	break;
+      case 'f':
+	effective = atoi(optarg);
+	break;
+      case 'd':
+	duration = atof(optarg);
+	break;
+      case 'i':
+	initial = atoi(optarg);
+	break;
+      case 'r':
+	range = atol(optarg);
+	break;
+      case 'u':
+	update = atoi(optarg);
+	break;
+      case 'x':
+	unit_tx = atoi(optarg);
+	break;
+      case 'v':
+	verbose = 1;
+	break;
+      case '?':
+	ONCE
+	  {
+	    printf("Use -h or --help for help\n");
+	  }
+      default:
+	goto end;
+      }
     }
-  }
 
-  if (seed == 0) {
-    srand_core();
-    seed = rand_range((ID + 17) * 123);
-    srand(seed);
-  }
+ if (seed == 0)
+    {
+      srand_core();
+      seed = rand_range((NODE_ID() + 17) * 123);
+      srand(seed);
+    }
   else
     srand(seed);
 
@@ -321,13 +323,14 @@ TASKMAIN(int argc, char **argv)
       printf("Elasticity   : %d\n", unit_tx);
       printf("Alternate    : %d\n", alternate);
       printf("Effective    : %d\n", effective);
-      FLUSH
-	}
+      FLUSH;
+    }
 
-  if ((data = (thread_data_t *) malloc(sizeof (thread_data_t))) == NULL) {
-    perror("malloc");
-    exit(1);
-  }
+  if ((data = (thread_data_t*) malloc(sizeof (thread_data_t))) == NULL)
+    {
+      perror("malloc");
+      exit(1);
+    }
 
   set = set_new();
 
@@ -346,57 +349,13 @@ TASKMAIN(int argc, char **argv)
 	}
       }
       size = set_size(set);
+      /* set_print(set); */
       printf("Set size     : %d\n", size);
-
-      /*
-        set_print(set);
-      */
-
       assert(size == initial);
       FLUSH
 	}
 
-#if defined(STM) && defined(PLATFORM_iRCCE)
-  int off, id2use;
-  if (ID < 6) {
-    off = 0;
-    id2use = ID;
-  }
-  else if (ID < 12) {
-    off = 1;
-    id2use = ID - 6;
-  }
-  else if (ID < 18) {
-    off = 0;
-    id2use = ID - 6;
-  }
-  else if (ID < 24) {
-    off = 1;
-    id2use = ID - 12;
-  }
-  else if (ID < 30) {
-    off = 2;
-    id2use = ID - 24;
-  }
-  else if (ID < 36) {
-    off = 3;
-    id2use = ID - 30;
-  }
-  else if (ID < 42) {
-    off = 2;
-    id2use = ID - 30;
-  }
-  else if (ID < 48) {
-    off = 3;
-    id2use = ID - 36;
-  }
-
-  shmem_init(((off * 16) * 1024 * 1024) + ((id2use / 2) * 1024 * 1024));
-  /* PRINT("shmem from %d MB", (off * 16) + id2use / 2); */
-
-#else
-  shmem_init(1024 * 100 * (NODE_ID()-1) * sizeof (node_t) + ((initial + 2) * sizeof (node_t)));
-#endif
+  shmem_init(10 * 1024 * (NODE_ID()-1) * sizeof (node_t) + ((initial + 2) * sizeof (node_t)));
 
   /* Access set from all threads */
   data->first = last;
@@ -435,26 +394,17 @@ TASKMAIN(int argc, char **argv)
     }
   /* Delete set */
 
-
   BARRIER;
 
-  int *changes;
-  changes = (int *) set;
-  int *sequencer;
-  sequencer = changes + sizeof (int);
-  int mychanges = data->nb_added - data->nb_removed;
-
-  int size_after;
   ONCE
     {
-      size_after = set_size(set);
-      //set_print(set);
+      int size_after = set_size(set);
+      /* set_print(set); */
       printf("Set size (af): %u\n", size_after);
     }
 
   BARRIER;
-
-
+  
 #ifdef SEQUENTIAL
   int total_ops = data->nb_add + data->nb_contains + data->nb_remove;
   printf("#Ops          : %d\n", total_ops);
@@ -468,13 +418,11 @@ TASKMAIN(int argc, char **argv)
   /* Cleanup STM */
 
   free(data);
-
   BARRIER;
 
+ end:
 #ifndef SEQUENTIAL
   TM_END;
-#elif defined(SCC)
-  RCCE_finalize();
 #endif
 
   EXIT(0);

@@ -1,12 +1,3 @@
-/*
- *  linkedlist.h
- *  
- *
- *  Created by Vincent Gramoli on 1/12/09.
- *  Copyright 2009 __MyCompanyName__. All rights reserved.
- *
- */
-
 #include <assert.h>
 #include <getopt.h>
 #include <limits.h>
@@ -18,7 +9,7 @@
 #include <time.h>
 #include <stdint.h>
 
-#include "tm.h"
+#include "tm2c.h"
 
 /*______________________________________________________________________________
  * SETTINGS
@@ -36,13 +27,14 @@
 #endif
 #endif
 
-#define DEFAULT_DURATION                10
-#define DEFAULT_INITIAL                 256
-#define DEFAULT_RANGE                   0x7FFFFFFF
-#define DEFAULT_UPDATE                  20
+#define DEFAULT_DURATION                2
+#define DEFAULT_INITIAL                 1024
+#define DEFAULT_RANGE                   (2*DEFAULT_INITIAL)
+#define DEFAULT_UPDATE                  10
 #define DEFAULT_ELASTICITY		4
 #define DEFAULT_ALTERNATE		0
 #define DEFAULT_EFFECTIVE		1
+#define DEFAULT_VERBOSE  		0
 #define DEFAULT_LOCKS                   0
 
 #define XSTR(s)                         STR(s)
@@ -101,13 +93,3 @@ int set_remove(intset_t *set, val_t val, int transactional);
 
 void set_print(intset_t *set);
 
-INLINED void global_lock() {
-    PRINTD("askking for global lock");
-    RCCE_acquire_lock(0);
-    PRINTD("got global lock");
-}
-
-INLINED void global_lock_release() {
-    RCCE_release_lock(0);
-    PRINTD("released global lock");
-}

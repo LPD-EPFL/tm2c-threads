@@ -1,4 +1,7 @@
 /*
+ * PGAS version
+ * Adapted to TM2C by Vasileios Trigonakis <vasileios.trigonakis@epfl.ch> 
+ *
  * File:
  *   bank.c
  * Author(s):
@@ -25,7 +28,7 @@
 #include <limits.h>
 #include <signal.h>
 
-#include "tm.h"
+#include "tm2c.h"
 
 /*
  * Useful macros to work with transactions. Note that, to use nested
@@ -33,7 +36,9 @@
  * stm_get_env() and only call sigsetjmp() if it is not null.
  */
 
-#define DEFAULT_DURATION                10
+#define NB_ACC_POWER2
+
+#define DEFAULT_DURATION                2
 #define DEFAULT_DELAY                   0
 #define DEFAULT_NB_ACCOUNTS             1024
 #define DEFAULT_NB_THREADS              1
@@ -43,23 +48,15 @@
 #define DEFAULT_READ_THREADS            0
 #define DEFAULT_WRITE_THREADS           0
 #define DEFAULT_DISJOINT                0
+#define DEFAULT_VERBOSE                 0
 
 int delay = DEFAULT_DELAY;
+int test_verbose = DEFAULT_VERBOSE;
 
 #define XSTR(s)                         STR(s)
 #define STR(s)                          #s
 
 #define CAST_VOIDP(addr)                ((void *) (addr))
-
-#define MB16            16777216
-#define INDEX(i)        ((((i) % 4) * MB16) + (i))
-
-#ifdef MC
-#define I(i)            INDEX(i)
-#else
-#define I(i)            i
-#endif
-
 
 /* ################################################################### *
  * GLOBALS
@@ -69,7 +66,7 @@ int delay = DEFAULT_DELAY;
  * BANK ACCOUNTS
  * ################################################################### */
 
-typedef struct account
+typedef struct account 
 {
   uint32_t balance;
   uint32_t number;
@@ -85,32 +82,30 @@ int
 transfer(account_t* src, account_t* dst, int amount) 
 {
   /* PRINT("in transfer"); */
-  int i, j;
-
   /* Allow overdrafts */
   TX_START;
-
   TX_LOAD_STORE(src, -, amount, TYPE_INT);
   TX_LOAD_STORE(dst, +, amount, TYPE_INT);
   TX_COMMIT_NO_PUB;
 
-  /* PF_STOP(2); */
   return amount;
 }
 
 void
 check_accs(account_t* acc1, account_t* acc2) 
 {
-  int i, j;
+  /* PRINT("in check_accs"); */
+
+  volatile int i, j;
   
   TX_START;
   i = TX_LOAD(acc1, 1);
   j = TX_LOAD(acc2, 1);
   TX_COMMIT;
 
-  if (i + j == 123000)
+  if (i == j<<20)
     {
-      PRINT("just disallowing the compiler to do dead-code elimination");
+      PRINT("dummy print");
     }
 }
 
@@ -132,14 +127,31 @@ total(bank_t* bank, int transactional)
     {
       TX_START;
       total = 0;
-      for (i = 0; i < bank->size; i++) {
-	int val = TX_LOAD(bank->accounts[i], 1);
-	total += val;
-      }
+      for (i = 0; i < bank->size; i++) 
+	{
+	  int val = TX_LOAD(bank->accounts[i], 1);
+	  total += val;
+	}
       TX_COMMIT;
     }
 
   return total;
+}
+
+
+static inline int64_t
+acc_to_int64(account_t a)
+{
+  union
+  {
+    int64_t lli;
+    account_t ac;
+  } c;
+
+  c.ac.balance = a.balance;
+  c.ac.number = a.number;
+  
+  return c.lli;
 }
 
 void
@@ -155,7 +167,7 @@ reset(bank_t *bank, int transactional)
 	  account_t a;
 	  a.balance = 0;
 	  a.number = i;
-	  TX_STORE(bank->accounts[i], *(int64_t*) &a, TYPE_INT);
+	  TX_STORE(bank->accounts[i], acc_to_int64(a), TYPE_INT);
 	}
       TX_COMMIT;
     }
@@ -166,7 +178,7 @@ reset(bank_t *bank, int transactional)
 	  account_t a;
 	  a.balance = 0;
 	  a.number = i;
-	  NONTX_STORE(bank->accounts[i], *(int64_t*) &a, TYPE_INT);
+	  NONTX_STORE(bank->accounts[i], acc_to_int64(a), TYPE_INT);
 	}
     }
 }
@@ -230,8 +242,12 @@ test(void *data, double duration, int nb_accounts)
   ONCE
     {
       reset(bank, 0);
-      PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\tBank total (before): %d\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
-	    total(bank, 0));
+      uint32_t tot = total(bank, 0);
+      if (test_verbose)
+	{
+	  PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\tBank total (before): %d",
+		tot);
+	}
     }
 
   BARRIER;
@@ -247,8 +263,6 @@ test(void *data, double duration, int nb_accounts)
   {
     if (d->read_cores && d->id < d->read_cores) 
       {
-	/* Read all */
-	//  PRINT("READ ALL1");
 	total(bank, 1);
 	d->nb_read_all++;
 	continue;
@@ -282,12 +296,6 @@ test(void *data, double duration, int nb_accounts)
 	    d->nb_transfer++;
 	  }
       }
-
-    /* if (delay) */
-    /*   { */
-    /* 	/\* ndelay(rand_range(delay)); *\/ */
-    /* 	ndelay(delay); */
-    /*   } */
   } 
   END_FOR;
 
@@ -297,31 +305,34 @@ test(void *data, double duration, int nb_accounts)
   return bank;
 }
 
-TASKMAIN(int argc, char **argv) 
+
+int
+main(int argc, char **argv) 
 {
   dup2(STDOUT_FILENO, STDERR_FILENO);
-
   PF_MSG(0, "1st TX_LOAD_STORE (transfer)");
   PF_MSG(1, "2nd TX_LOAD_STORE (transfer)");
   PF_MSG(2, "the whole transfer");
 
-  TM_INIT;
+  TM2C_INIT;
 
-  struct option long_options[] = {
-    // These options don't set a flag
-    {"help", no_argument, NULL, 'h'},
-    {"accounts", required_argument, NULL, 'a'},
-    {"contention-manager", required_argument, NULL, 'c'},
-    {"duration", required_argument, NULL, 'd'},
-    {"delay", required_argument, NULL, 'D'},
-    {"read-all-rate", required_argument, NULL, 'r'},
-    {"check", required_argument, NULL, 'c'},
-    {"read-threads", required_argument, NULL, 'R'},
-    {"write-all-rate", required_argument, NULL, 'w'},
-    {"write-threads", required_argument, NULL, 'W'},
-    {"disjoint", no_argument, NULL, 'j'},
-    {NULL, 0, NULL, 0}
-  };
+  struct option long_options[] =
+    {
+      // These options don't set a flag
+      {"help", no_argument, NULL, 'h'},
+      {"accounts", required_argument, NULL, 'a'},
+      {"contention-manager", required_argument, NULL, 'c'},
+      {"duration", required_argument, NULL, 'd'},
+      {"delay", required_argument, NULL, 'D'},
+      {"read-all-rate", required_argument, NULL, 'r'},
+      {"check", required_argument, NULL, 'c'},
+      {"read-threads", required_argument, NULL, 'R'},
+      {"write-all-rate", required_argument, NULL, 'w'},
+      {"write-threads", required_argument, NULL, 'W'},
+      {"disjoint", no_argument, NULL, 'j'},
+      {"verbose", no_argument, NULL, 'v'},
+      {NULL, 0, NULL, 0}
+    };
 
   bank_t* bank;
   int i, c;
@@ -337,11 +348,10 @@ TASKMAIN(int argc, char **argv)
   int write_cores = DEFAULT_WRITE_THREADS;
   int disjoint = DEFAULT_DISJOINT;
 
-
-  while (1) 
+  while (1)
     {
       i = 0;
-      c = getopt_long(argc, argv, "h:a:d:D:r:c:R:w:W:j", long_options, &i);
+      c = getopt_long(argc, argv, "ha:d:D:r:c:R:w:W:jv", long_options, &i);
 
       if (c == -1)
 	break;
@@ -349,7 +359,7 @@ TASKMAIN(int argc, char **argv)
       if (c == 0 && long_options[i].flag == 0)
 	c = long_options[i].val;
 
-      switch (c) 
+      switch (c)
 	{
 	case 0:
 	  /* Flag is automatically set */
@@ -413,11 +423,15 @@ TASKMAIN(int argc, char **argv)
 	case 'j':
 	  disjoint = 1;
 	  break;
+	case 'v':
+	  test_verbose = 1;
+	  break;
 	case '?':
 	  ONCE
 	    {
 	      PRINT("Use -h or --help for help\n");
 	    }
+
 	  exit(0);
 	default:
 	  exit(1);
@@ -437,23 +451,22 @@ TASKMAIN(int argc, char **argv)
   assert(read_all >= 0 && write_all >= 0 && check >= 0 && check <= 100);
   assert(read_cores + write_cores <= nb_app_cores);
 
-  ONCE
+  if (test_verbose)
     {
-      PRINTN("Nb accounts    : %d\n", nb_accounts);
-      PRINTN("Duration       : %fs\n", duration);
-      PRINTN("Nb cores       : %d\n", nb_app_cores);
-      PRINTN("Check acc rate : %d\n", check - write_all);
-      PRINTN("Transfer rate  : %d\n", 100 - check);
-      PRINTN("Read-all rate  : %d\n", read_all);
-      PRINTN("Read cores     : %d\n", read_cores);
-      PRINTN("Write-all rate : %d\n", write_all - read_all);
-      PRINTN("Write cores    : %d\n", write_cores);
+      ONCE
+	{
+	  PRINTN("Nb accounts    : %d\n", nb_accounts);
+	  PRINTN("Duration       : %fs\n", duration);
+	  PRINTN("Check acc rate : %d\n", check - write_all);
+	  PRINTN("Transfer rate  : %d\n", 100 - check);
+	}
     }
 
   
-  if (posix_memalign((void**) &data, 64, sizeof(thread_data_t)) != 0)
+  data = (thread_data_t*) memalign(64, sizeof(thread_data_t));
+  if (data == NULL)
     {
-      perror("posix_memalign");
+      perror("memalign");
       exit(1);
     }
 
@@ -469,6 +482,7 @@ TASKMAIN(int argc, char **argv)
   data->disjoint = disjoint;
   data->nb_app_cores = nb_app_cores;
   data->nb_transfer = 0;
+  data->nb_checks = 0;
   data->nb_read_all = 0;
   data->nb_write_all = 0;
 
@@ -480,22 +494,26 @@ TASKMAIN(int argc, char **argv)
 
   BARRIER;
 
-  APP_EXEC_ORDER
+  if (test_verbose)
     {
-      printf("---Core %d\n  #transfer   : %llu\n  #checks     : %llu\n  #read-all   : %llu\n  #write-all  : %llu\n", 
-	     NODE_ID(), data->nb_transfer, data->nb_checks, data->nb_read_all, data->nb_write_all);
-      FLUSH;
-    } APP_EXEC_ORDER_END;
-
+      APP_EXEC_ORDER
+	{
+	  printf("---Core %d\n  #transfer   : %llu\n  #checks     : %llu\n  #read-all   : %llu\n  #write-all  : %llu\n", 
+		 NODE_ID(), (LLU) data->nb_transfer, (LLU) data->nb_checks, (LLU)  data->nb_read_all, (LLU)  data->nb_write_all);
+	  FLUSH;
+	} APP_EXEC_ORDER_END;
+    }
 
   BARRIER;
 
   ONCE
     {
-      PRINT("\t\t\t~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-	    "\t\t\t\tBank total (after): %d\n"
-	    "\t\t\t~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
-	    total(bank, 0));
+      uint32_t tot = total(bank, 0);
+      if (test_verbose || 1)
+	{
+	  PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\tBank total  (after): %d",
+		tot);
+	}
     }
 
   /* Delete bank and accounts */

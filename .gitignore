@@ -1,9 +1,11 @@
+
 *#
 *.a
 *.d
 *.o
 *~
 /.#runconf
+/.#settings
 /18446603556606706240
 /TODO
 /apps/tm10
@@ -13,6 +15,7 @@
 /bank.r0.cc
 /bank.sm.pgas.r0
 /bank.sm.pgas.r100
+/bank_num_dsl
 /bmarks/bank
 /bmarks/bank_*
 /bmarks/bankpgas
@@ -28,6 +31,7 @@
 /bmarks/readonly
 /boo
 /c.c
+/client_server_rt
 /core
 /data
 /external/*
@@ -49,7 +53,9 @@
 /external/tmp/libconfig-1.4.8_scc/tests/.libs/
 /external/tmp/libconfig-1.4.8_scc/tinytest/.deps/
 /fair
+/fh.diff
 /greedy
+/li
 /ll.i1024.u0
 /master.origin.diff
 /mbll.nofair
@@ -86,13 +92,15 @@
 /runconf
 /runcrash
 /rundebug
+/runn
 /runrt
+/runt
 /screenlog.0
+/testname
+/tm
 /wholly
 cscope.*
 cscope.out
 out.runrrep
-run
 runr
 runrep_.log
-

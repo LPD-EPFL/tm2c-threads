@@ -1,4 +1,6 @@
 /*
+ * Adapted to TM2C by Vasileios Trigonakis <vasileios.trigonakis@epfl.ch> 
+ *
  * File:
  *   hashtable.c
  * Author(s):
@@ -26,16 +28,19 @@
 
 #include "hashtable.h"
 
-void ht_delete(ht_intset_t *set) {
-    int i;
+void
+ht_delete(ht_intset_t *set) 
+{
+  int i;
 
-    for (i = 0; i < maxhtlength; i++) {
-        intset_t *iset = set->buckets[i];
-        set_delete(iset);
-        free(set->buckets[i]);
+  for (i = 0; i < maxhtlength; i++) 
+    {
+      intset_t *iset = set->buckets[i];
+      set_delete(iset);
+      free(set->buckets[i]);
     }
-    free(set->buckets);
-    free(set);
+  free(set->buckets);
+  free(set);
 }
 
 int
@@ -52,32 +57,6 @@ ht_size(ht_intset_t *set)
   return size;
 }
 
-int floor_log_2(unsigned int n) {
-    int pos = 0;
-    printf("n result = %d\n", n);
-    if (n >= 1 << 16) {
-        n >>= 16;
-        pos += 16;
-    }
-    if (n >= 1 << 8) {
-        n >>= 8;
-        pos += 8;
-    }
-    if (n >= 1 << 4) {
-        n >>= 4;
-        pos += 4;
-    }
-    if (n >= 1 << 2) {
-        n >>= 2;
-        pos += 2;
-    }
-    if (n >= 1 << 1) {
-        pos += 1;
-    }
-    printf("floor result = %d\n", pos);
-    return ((n == 0) ? (-1) : pos);
-}
-
 
 static void
 write_node(node_t* node, val_t val, nxt_t next, int transactional) 
@@ -87,11 +66,11 @@ write_node(node_t* node, val_t val, nxt_t next, int transactional)
   nd.next = next;
   if (transactional)
     {
-      TX_STORE(node, nd.to_int64, TYPE_INT);
+      TX_STORE(node, nd.to_int64, TYPE_INT64);
     }
   else
     {
-      NONTX_STORE(node, nd.to_int64, TYPE_INT);
+      NONTX_STORE(node, nd.to_int64, TYPE_INT64);
     }
 }
 
@@ -109,7 +88,7 @@ set_new1()
 
   node_t** nodes = (node_t**) pgas_app_alloc_rr(1, 2 * sizeof(node_t));
   min = nodes[0];
-  max = (node_t*) (((uint64_t) nodes[0]) + sizeof(node_t));
+  max = (node_t*) (((char*) nodes[0]) + sizeof(node_t));
   write_node(max, VAL_MAX, 0, 0);
   write_node(min, VAL_MIN, OF(max), 0);
 

@@ -1,4 +1,6 @@
 /*
+ * Adapted to TM2C by Vasileios Trigonakis <vasileios.trigonakis@epfl.ch> 
+ *
  * File:
  *   intset.c
  * Author(s):
@@ -25,75 +27,39 @@
 
 intset_t *offset;
 
-int ht_contains(ht_intset_t *set, int val, int transactional) {
-    int addr, result;
+extern int range;
 
-    /*
-    #if defined(SEQUENTIAL) && defined(LOCKS)
-        global_lock();
-    #endif
-     */
+int
+ht_contains(ht_intset_t *set, int val, int transactional) 
+{
+  int addr, result;
 
-    addr = val % maxhtlength;
-    if (transactional == 5)
-        result = set_contains(set->buckets[addr], val, 4);
-    else
-        result = set_contains(set->buckets[addr], val, transactional);
-
-    /*
-    #if defined(SEQUENTIAL) && defined(LOCKS)
-        global_lock_release();
-    #endif
-     */
-
-    return result;
-}
-
-int ht_add(ht_intset_t *set, int val, int transactional) {
-  int result;
-
-
-  /*
-    #if defined(SEQUENTIAL) && defined(LOCKS)
-    global_lock();
-    #endif
-  */
-
-  int addr = val % maxhtlength;
-
-  result = set_add(set->buckets[addr], val, transactional);
-
-
-  /*
-    #if defined(SEQUENTIAL) && defined(LOCKS)
-    global_lock_release();
-    #endif
-  */
+  addr = val % maxhtlength;
+  if (transactional == 5)
+    result = set_contains(set->buckets[addr], val, 4);
+  else
+    result = set_contains(set->buckets[addr], val, transactional);
 
   return result;
-
 }
 
-int ht_remove(ht_intset_t *set, int val, int transactional) {
-    int result;
+int
+ht_add(ht_intset_t *set, int val, int transactional) 
+{
+  int result;
 
-    /*
-    #if defined(SEQUENTIAL) && defined(LOCKS)
-        global_lock();
-    #endif
-     */
+  int addr = val % maxhtlength;
+  result = set_add(set->buckets[addr], val, transactional);
+  return result;
+}
 
-    int addr = val % maxhtlength;
-
-    result = set_remove(set->buckets[addr], val, transactional);
-
-    /*
-    #if defined(SEQUENTIAL) && defined(LOCKS)
-        global_lock_release();
-    #endif
-     */
-
-    return result;
+int
+ht_remove(ht_intset_t *set, int val, int transactional) 
+{
+  int result;
+  int addr = val % maxhtlength;
+  result = set_remove(set->buckets[addr], val, transactional);
+  return result;
 
 }
 
@@ -137,7 +103,7 @@ ht_move_naive(ht_intset_t *set, int val1, int val2, int transactional)
   addr2 = val2 % maxhtlength;
   while (addr1 == addr2)
     {
-      val2 = (val2 + 1) % htrange;
+      val2 = (val2 + 1) % range;
       addr2 = val2 % maxhtlength;
     }
 
@@ -240,7 +206,7 @@ int ht_move(ht_intset_t *set, int val1, int val2, int transactional) {
   addr2 = val2 % maxhtlength;
   while (addr1 == addr2)
     {
-      val2 = (val2 + 1) % htrange;
+      val2 = (val2 + 1) % range;
       addr2 = val2 % maxhtlength;
     }
 

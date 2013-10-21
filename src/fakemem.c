@@ -1,13 +1,25 @@
-/**
- * File: cluster_malloc.c
- * Author: Nikola Knezevic <nikola.knezevic@epfl.ch>
- */
-
-/**
- * a dummy memory allocator for DTM
- * works in a similar fashion to RCCE_*malloc, where allocations are collective,
- * all starting from the same offset
- * dummy: doesn't actually allocate anything, just returns addresses which do not overlap locally.
+/*
+ *   File: fakemem.c
+ *   Author: Nikola Knezevic <nikola.knezevic@epfl.ch>
+ *   Description: a dummy memory allocator similar to Intel's RCCE
+ *   This file is part of TM2C
+ *
+ *   Copyright (C) 2013  Vasileios Trigonakis
+ *
+ *   This program is free software; you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation; either version 2 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License along
+ *   with this program; if not, write to the Free Software Foundation, Inc.,
+ *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
  */
 
 #include <errno.h>
