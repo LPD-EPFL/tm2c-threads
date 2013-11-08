@@ -41,15 +41,15 @@
 
 #include "tm2c.h"
 
-nodeid_t ID;
+__thread nodeid_t ID; //to be thread specific
 nodeid_t NUM_UES;
 nodeid_t NUM_DSL_NODES;
 nodeid_t NUM_APP_NODES;
 
-tm2c_tx_t *tm2c_tx = NULL;
-tm2c_tx_node_t *tm2c_tx_node = NULL;
+__thread tm2c_tx_t *tm2c_tx = NULL; //to be thread specific
+__thread tm2c_tx_node_t *tm2c_tx_node = NULL;
 
-double duration__ = 0;
+__thread double duration__ = 0;
 
 const char* conflict_reasons[4] = 
   {
@@ -96,14 +96,15 @@ is_dsl_core(int id)
   return !is_app_core(id);
 }
 
-
+/**threads have been created*/
 void
 tm2c_init()
 {
   PF_MSG(9, "receiving");
   PF_MSG(10, "sending");
 
-  sys_tm2c_init();
+  ID = NODE_ID(); //thread specific
+  sys_tm2c_init();//nothing to do in sys_default
   if (!is_app_core(ID)) 
     {
       //dsl node
@@ -132,7 +133,7 @@ tm2c_init_system(int* argc, char** argv[])
   sys_tm2c_init_system(argc, argv);
 
   /* initialize globals */
-  ID            = NODE_ID();
+  //ID            = NODE_ID(); //thread specific
   NUM_UES       = TOTAL_NODES();
 
   uint32_t i, tot = 0;
@@ -145,8 +146,6 @@ tm2c_init_system(int* argc, char** argv[])
     }
   NUM_DSL_NODES = tot;
   NUM_APP_NODES = NUM_UES - tot;
-
-  tm2c_init_barrier();
 }
 /*
  * Trampolining code for terminating everything

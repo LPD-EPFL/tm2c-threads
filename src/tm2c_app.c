@@ -46,6 +46,7 @@
 
 nodeid_t* dsl_nodes; /* holds the ids of the nodes. ids are in range 0..64 (possibly more)
 			To get the address of the node, one must call id_to_addr */
+/**dsl_nodes can be shared among threads*/
 unsigned short nodes_contacted[TM2C_MAX_PROCS];
 TM2C_RPC_REQ *psc;
 int64_t read_value;
@@ -214,7 +215,6 @@ tm2c_rpc_recvb(nodeid_t from)
  TM interface _________________________________________________________________________________|
  * ____________________________________________________________________________________________|
  */
-
 TM2C_CONFLICT_T
 tm2c_rpc_load(tm_addr_t address, int words) 
 {

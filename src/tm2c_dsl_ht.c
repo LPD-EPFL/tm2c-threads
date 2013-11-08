@@ -39,7 +39,7 @@ extern "C" {
 
 #if USE_HASHTABLE_SSHT /************************************************************* SSHT ***/
 
-  ssht_log_set_t** logs;
+  __thread ssht_log_set_t** logs;
 
   static inline uint32_t
   tm2c_ht_get_hash(uintptr_t address)

@@ -35,13 +35,13 @@
 #include <unistd.h>
 #include <math.h>
 
-tm2c_ht_t tm2c_ht;
+__thread tm2c_ht_t tm2c_ht; //hash table need to be thread specific
 
 #ifdef PGAS
 tm2c_write_set_pgas_t** PGAS_write_sets;
 #endif
 
-unsigned long int tm2c_stats_total = 0,
+__thread unsigned long int tm2c_stats_total = 0,
                   tm2c_stats_commits = 0,
                   tm2c_stats_aborts = 0,
                   tm2c_stats_max_retries = 0,
@@ -49,10 +49,10 @@ unsigned long int tm2c_stats_total = 0,
                   tm2c_stats_aborts_raw = 0,
                   tm2c_stats_aborts_waw = 0,
                   tm2c_stats_received = 0;
-double tm2c_stats_duration = 0;
+__thread double tm2c_stats_duration = 0;
 
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if any other CM (greedy, wholly, faircm) */
-cm_metadata_t* cm_metadata_core;
+__thread cm_metadata_t* cm_metadata_core;
 #endif
 
 #ifdef DEBUG_UTILIZATION
@@ -65,6 +65,7 @@ int bucket_max[NUM_OF_BUCKETS];
 
 extern void tm2c_term();
 
+/**already fork here*/
 void
 tm2c_dsl_init(void)
 {

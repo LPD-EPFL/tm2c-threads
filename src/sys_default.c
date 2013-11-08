@@ -63,7 +63,7 @@ uint8_t rank_to_core[] =
     70, 71, 72, 73, 74, 75, 76, 77, 78, 79,
   };
 
-TM2C_RPC_REPLY* tm2c_rpc_remote_msg; // holds the received msg
+__thread TM2C_RPC_REPLY* tm2c_rpc_remote_msg; // holds the received msg
 
 INLINED nodeid_t min_dsl_id();
 
@@ -73,7 +73,7 @@ INLINED void sys_tm2c_rpc_req_reply(nodeid_t sender,
                     int64_t value,
                     TM2C_CONFLICT_T response);
 
-nodeid_t TM2C_ID;
+__thread nodeid_t TM2C_ID;
 nodeid_t TM2C_NUM_NODES;
 
 
@@ -133,43 +133,12 @@ sys_tm2c_init_system(int* argc, char** argv[])
     }
   *argc = *argc - (p-cur);
 
-  TM2C_ID = 0;
-
   ssmp_init(TM2C_NUM_NODES);
+  //call to ssmp_init_barrier
+  tm2c_init_barrier();
 
-  nodeid_t rank;
-  for (rank = 1; rank < TM2C_NUM_NODES; rank++)
-    {
-      PRINTD("Forking child %u", rank);
-      pid_t child = fork();
-      if (child < 0)
-	{
-	  PRINT("Failure in fork():\n%s", strerror(errno));
-	}
-      else if (child == 0)
-	{
-	  goto fork_done;
-	}
-    }
-  rank = 0;
-
- fork_done:
-  PRINTD("Initializing child %u", rank);
-  TM2C_ID = rank;
-  ssmp_mem_init(TM2C_ID, TM2C_NUM_NODES);
-
-  // Now, pin the process to the right core (NODE_ID == core id)
-  int place = rank_to_core[rank];
-  cpu_set_t mask;
-  CPU_ZERO(&mask);
-  CPU_SET(place, &mask);
-  if (sched_setaffinity(0, sizeof(cpu_set_t), &mask) != 0)
-    {
-      PRINT("Problem with setting processor affinity: %s\n",
-	    strerror(errno));
-      EXIT(3);
-    }
 }
+
 
 void
 term_system()
@@ -230,6 +199,7 @@ sys_app_init(void)
   BARRIERW;
 }
 
+/**already a thread here*/
 void
 sys_dsl_init(void)
 {
@@ -385,6 +355,7 @@ dsl_service()
 	{
 	case TM2C_RPC_LOAD:
 	  {
+		/**try_load calls function from the ssht*/
 	    TM2C_CONFLICT_T conflict = try_load(sender, tm2c_rpc_remote->address);
 #ifdef PGAS
 	    uint64_t val;

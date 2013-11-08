@@ -188,7 +188,9 @@ extern "C" {
    * TM Interface                                                                                         |
    *______________________________________________________________________________________________________|
    */
-
+  /**to call after pthread_create*/
+#define TM2C_INIT_THREAD
+  tm2c_init();
 
 #define TM2C_INIT				\
   tm2c_init_system(&argc, &argv);		\
