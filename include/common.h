@@ -133,7 +133,7 @@ extern "C" {
       WRITE
     } RW;
 
-  extern nodeid_t TM2C_ID;
+  extern __thread nodeid_t TM2C_ID;
   extern nodeid_t NUM_UES;
   extern nodeid_t NUM_APP_NODES;
   extern nodeid_t NUM_DSL_NODES;

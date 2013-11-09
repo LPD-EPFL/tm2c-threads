@@ -40,7 +40,7 @@
 #include <sched.h>
 #include <assert.h>
 #include <limits.h>
-#include <ssmp.h>
+#include <ssmpthread.h>
 #ifdef PLATFORM_NUMA
 #  include <numa.h>
 #endif /* PLATFORM_NUMA */
@@ -50,6 +50,7 @@
 #include "tm2c_malloc.h"
 
 #include "hash.h"
+#include <pthread.h>
 
 uint8_t rank_to_core[] =
   {
@@ -172,15 +173,24 @@ sys_tm2c_init()
 
 }
 
-void
-sys_app_init(void)
-{
+static pthread_once_t tm2c_shmalloc_init_once_control = PTHREAD_ONCE_INIT;
+void tm2c_shmalloc_init_once(void) {
+	tm2c_shmalloc_init(TM2C_SHMEM_SIZE);
+}
+
+static pthread_once_t sys_app_init_once_control = PTHREAD_ONCE_INIT;
+void sys_app_init_once(void) {
 #if defined(PGAS)
   pgas_app_init();
 #else  /* PGAS */
-  tm2c_shmalloc_init(TM2C_SHMEM_SIZE);
+  pthread_once(&tm2c_shmalloc_init_once_control, tm2c_shmalloc_init);
 #endif /* PGAS */
+}
 
+void
+sys_app_init(void)
+{
+pthread_once(&sys_app_init_once_control, sys_app_init_once);
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
   cm_abort_flag_mine = cm_init(NODE_ID());
   *cm_abort_flag_mine = NO_CONFLICT;
@@ -199,18 +209,22 @@ sys_app_init(void)
   BARRIERW;
 }
 
+
+static pthread_once_t sys_dsl_init_once_control = PTHREAD_ONCE_INIT;
+void sys_dsl_init_once(void) {
+#if defined(PGAS)
+  pgas_dsl_init();
+#else  /* PGAS */
+  pthread_once(&tm2c_shmalloc_init_once_control, tm2c_shmalloc_init);
+#endif	/* PGAS */
+}
+
 /**already a thread here*/
 void
 sys_dsl_init(void)
 {
-
-#if defined(PGAS)
-  pgas_dsl_init();
-#else  /* PGAS */
-  tm2c_shmalloc_init(TM2C_SHMEM_SIZE); //todo
-#endif	/* PGAS */
-
-  BARRIERW;
+pthread_once(&sys_dsl_init_once_control, sys_dsl_init_once);
+// BARRIERW;
 
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
   cm_abort_flags = (int32_t**) malloc(TOTAL_NODES() * sizeof(int32_t*));

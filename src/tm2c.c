@@ -77,7 +77,21 @@ const uint8_t dsl_node[] =
  * TM Interface                                                                                         |
  *______________________________________________________________________________________________________|
  */
-
+/*void spawn_thread(void (*mainthread)(void *args)) {
+  TM2C_INIT_SYS;
+  pthread_t threads;
+  int rank = 0;
+  for(rank = 0; rank < TM2C_NUM_NODES; rank++) {
+      PRINTD("Forking child %u", rank);
+	  uint8_t *id = malloc(sizeof(uint8_t));
+	  *id = (uint8_t) rank;
+	  if (0 < pthread_create(&threads, NULL, mainthread, (void*) id)) {
+		  P("Failure in pthread_create():\n%s", strerror(errno));
+	  }
+  }
+  pthread_exit(NULL);
+}
+*/
 int
 is_app_core(int id)
 {
@@ -108,13 +122,13 @@ tm2c_init()
   if (!is_app_core(ID)) 
     {
       //dsl node
-      tm2c_dsl_init();//now
+      tm2c_dsl_init();//todo
     }
   else 
     { //app node
       tm2c_app_init();
-      tm2c_tx_node = tm2c_tx_meta_node_new();
-      tm2c_tx = tm2c_tx_meta_new();
+      tm2c_tx_node = tm2c_tx_meta_node_new();//ok
+      tm2c_tx = tm2c_tx_meta_new(); //ok
       if (tm2c_tx == NULL || tm2c_tx_node == NULL) 
 	{
 	  PRINTD("Could not alloc tx metadata @ TM2C_INIT");

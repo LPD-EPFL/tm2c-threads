@@ -34,6 +34,7 @@
 #include <stdio.h> //TODO: clean the includes
 #include <unistd.h>
 #include <math.h>
+#include <pthread.h>
 
 __thread tm2c_ht_t tm2c_ht; //hash table need to be thread specific
 
@@ -64,6 +65,11 @@ __thread int bucket_max[NUM_OF_BUCKETS];
 #endif
 
 extern void tm2c_term();
+
+static pthread_once_t tmp2c_dsl_init_once_control = PTHREAD_ONCE_INIT;
+void tm2c_dsl_init_once(void) {
+
+}
 
 /**already fork here*/
 void

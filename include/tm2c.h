@@ -110,9 +110,9 @@ extern "C" {
     BARRIER_DSL;}}
 
 
-  extern tm2c_tx_t* tm2c_tx;
-  extern tm2c_tx_node_t* tm2c_tx_node;
-  extern double duration__;
+  extern __thread tm2c_tx_t* tm2c_tx;
+  extern __thread tm2c_tx_node_t* tm2c_tx_node;
+  extern __thread double duration__;
 
   extern const char* conflict_reasons[4];
 
@@ -188,6 +188,8 @@ extern "C" {
    * TM Interface                                                                                         |
    *______________________________________________________________________________________________________|
    */
+void spawn_thread(void (*mainthread)(void *args));
+
 #define TM2C_INIT_SYS \
   tm2c_init_system(&argc, &argv);
 

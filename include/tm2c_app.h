@@ -43,9 +43,9 @@ extern "C" {
 #endif
 
   //TODO: remove ? have them at .c file
-  extern int64_t read_value;
+  extern __thread int64_t read_value;
   extern nodeid_t* dsl_nodes;
-  extern unsigned long int* tm2c_rand_seeds;
+  extern __thread unsigned long int* tm2c_rand_seeds;
 
   void tm2c_app_init(void);
 

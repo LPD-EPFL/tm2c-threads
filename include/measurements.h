@@ -31,7 +31,7 @@ extern "C" {
 
 #include "common.h"
 #ifdef SSMP
-#  include <ssmp.h>
+#  include <ssmpthread.h>
 #endif
 
   /* 
