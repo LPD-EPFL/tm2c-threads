@@ -195,6 +195,7 @@ void start_threads(int argc, char **argv, void* (*mainthread)(void *args));
 
   /**to call after pthread_create*/
 #define TM2C_INIT_THREAD \
+  { \
   tm2c_init();
 
 #define TM2C_INIT				\

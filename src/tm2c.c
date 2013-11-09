@@ -89,7 +89,6 @@ void start_threads(int argc, char **argv, void* (*mainthread)(void *args)) {
 		  fprintf(stderr, "Failure in pthread_create():\n%s", strerror(errno));
 	  }
   }
-  pthread_exit(NULL);
 }
 
 int

@@ -29,6 +29,7 @@
 #include <assert.h>
 
 #include "tm2c.h"
+#include <pthread.h>
 
 #define SIS_SIZE 65536
 
@@ -49,11 +50,10 @@ get_responsible_node(tm_intern_addr_t addr)
 #endif	/* PGAS */
 }
 
-int
-main(int argc, char **argv)
-{
-  TM2C_INIT;
+void* mainthread(void *args);
 
+int
+main(int argc, char **argv) {
   if (argc > 1)
     {
       mem_size = atoi(argv[1]) * sizeof(int32_t);
@@ -63,6 +63,12 @@ main(int argc, char **argv)
     {
       num_dsl = atoi(argv[2]);
     }
+  start_threads(argc, argv, mainthread);
+  pthread_exit(NULL);
+}
+
+void* mainthread(void *args) {
+  TM2C_INIT_THREAD;
 
   ONCE
     {
@@ -99,8 +105,6 @@ main(int argc, char **argv)
   BARRIER;
 
   sys_shfree((void*) mem);
-
   TM_END;
-
-  EXIT(0);
+  pthread_exit(NULL);
 }
