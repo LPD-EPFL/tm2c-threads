@@ -52,38 +52,8 @@ get_responsible_node(tm_intern_addr_t addr)
 int
 main(int argc, char **argv)
 {
-  TM2C_INIT_SYS;
-  for(rank = 1; rank < TM2C_NUM_NODES; rank++) {
-      PRINTD("Forking child %u", rank);
-	  uint8_t *id = malloc(sizeof(uint8_t));
-	  *id = (uint8_t) rank;
-	  if (0 < pthread_create(&threads[rank], NULL, mainthread, (void*) id)) {
-		  P("Failure in pthread_create():\n%s", strerror(errno));
-	  }
-  }
-  pthread_exit(NULL);
-}
+  TM2C_INIT;
 
-void* mainthread(void* args) {
-  TM2C_INIT_THREAD;
-  PRINTD("Initializing child %u", rank);
-  TM2C_ID = *((nodeid_t*) args);
-  free(args);
-  ssmp_mem_init(TM2C_ID, TM2C_NUM_NODES);
-
-  // Now, pin the process to the right core (NODE_ID == core id)
-  int place = rank_to_core[rank];
-  cpu_set_t mask;
-  cpu_set_t cpuset;
-  pthread_t thread = pthread_self();
-  CPU_ZERO(&cpuset);
-  CPU_SET(place, &cpuset);
-  if (pthread_setaffinity_np(thread, sizeof(cpu_set_t), &cpuset) != 0) {
-	  fprintf(stderr, "Problem with setting thread affinity\n");
-	  pthread_exit(3);
-  }
-  printf("init without bug\n");
-  BARRIER;
   if (argc > 1)
     {
       mem_size = atoi(argv[1]) * sizeof(int32_t);
@@ -131,5 +101,6 @@ void* mainthread(void* args) {
   sys_shfree((void*) mem);
 
   TM_END;
-  pthread_exit(NULL);
+
+  EXIT(0);
 }

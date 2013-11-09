@@ -183,7 +183,7 @@ void sys_app_init_once(void) {
 #if defined(PGAS)
   pgas_app_init();
 #else  /* PGAS */
-  pthread_once(&tm2c_shmalloc_init_once_control, tm2c_shmalloc_init);
+  pthread_once(&tm2c_shmalloc_init_once_control, tm2c_shmalloc_init_once);
 #endif /* PGAS */
 }
 
@@ -215,7 +215,7 @@ void sys_dsl_init_once(void) {
 #if defined(PGAS)
   pgas_dsl_init();
 #else  /* PGAS */
-  pthread_once(&tm2c_shmalloc_init_once_control, tm2c_shmalloc_init);
+  pthread_once(&tm2c_shmalloc_init_once_control, tm2c_shmalloc_init_once);
 #endif	/* PGAS */
 }
 
