@@ -51,7 +51,8 @@ inline void ro_tx(int* sis);
  */
 
 unsigned int SIS_SIZE = 200;
-unsigned int store_me, TM2C_ID;
+unsigned int store_me;//, TM2C_ID;
+extern __thread unsigned int TM2C_ID;
 int sum = 0;
 
 int

@@ -188,7 +188,7 @@ extern "C" {
    * TM Interface                                                                                         |
    *______________________________________________________________________________________________________|
    */
-void spawn_thread(void (*mainthread)(void *args));
+void start_threads(int argc, char **argv, void* (*mainthread)(void *args));
 
 #define TM2C_INIT_SYS \
   tm2c_init_system(&argc, &argv);

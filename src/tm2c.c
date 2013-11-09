@@ -77,7 +77,7 @@ const uint8_t dsl_node[] =
  * TM Interface                                                                                         |
  *______________________________________________________________________________________________________|
  */
-/*void spawn_thread(void (*mainthread)(void *args)) {
+void start_threads(int argc, char **argv, void* (*mainthread)(void *args)) {
   TM2C_INIT_SYS;
   pthread_t threads;
   int rank = 0;
@@ -86,12 +86,12 @@ const uint8_t dsl_node[] =
 	  uint8_t *id = malloc(sizeof(uint8_t));
 	  *id = (uint8_t) rank;
 	  if (0 < pthread_create(&threads, NULL, mainthread, (void*) id)) {
-		  P("Failure in pthread_create():\n%s", strerror(errno));
+		  fprintf(stderr, "Failure in pthread_create():\n%s", strerror(errno));
 	  }
   }
   pthread_exit(NULL);
 }
-*/
+
 int
 is_app_core(int id)
 {
