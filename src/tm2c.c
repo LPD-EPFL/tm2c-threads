@@ -108,7 +108,7 @@ tm2c_init()
   if (!is_app_core(ID)) 
     {
       //dsl node
-      tm2c_dsl_init();
+      tm2c_dsl_init();//now
     }
   else 
     { //app node

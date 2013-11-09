@@ -78,10 +78,10 @@ nodeid_t TM2C_NUM_NODES;
 
 
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if any other CM (greedy, wholly, faircm) */
-int32_t**cm_abort_flags;
-int32_t* cm_abort_flag_mine;
+__thread int32_t**cm_abort_flags;
+__thread int32_t* cm_abort_flag_mine;
 #  if defined(GREEDY) && defined(GREEDY_GLOBAL_TS)
-ticks* greedy_global_ts;
+__thread ticks* greedy_global_ts;
 #  endif
 #endif /* NOCM */
 
@@ -207,7 +207,7 @@ sys_dsl_init(void)
 #if defined(PGAS)
   pgas_dsl_init();
 #else  /* PGAS */
-  tm2c_shmalloc_init(TM2C_SHMEM_SIZE);
+  tm2c_shmalloc_init(TM2C_SHMEM_SIZE); //todo
 #endif	/* PGAS */
 
   BARRIERW;

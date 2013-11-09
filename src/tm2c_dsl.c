@@ -58,9 +58,9 @@ __thread cm_metadata_t* cm_metadata_core;
 #ifdef DEBUG_UTILIZATION
 extern unsigned int read_reqs_num;
 extern unsigned int write_reqs_num;
-int bucket_usages[NUM_OF_BUCKETS];
-int bucket_current[NUM_OF_BUCKETS];
-int bucket_max[NUM_OF_BUCKETS];
+__thread int bucket_usages[NUM_OF_BUCKETS];
+__thread int bucket_current[NUM_OF_BUCKETS];
+__thread int bucket_max[NUM_OF_BUCKETS];
 #endif
 
 extern void tm2c_term();

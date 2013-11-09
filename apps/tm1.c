@@ -49,8 +49,23 @@ get_responsible_node(tm_intern_addr_t addr)
 #endif	/* PGAS */
 }
 
+int
+main(int argc, char **argv)
+{
+  TM2C_INIT_SYS;
+  for(rank = 1; rank < TM2C_NUM_NODES; rank++) {
+      PRINTD("Forking child %u", rank);
+	  uint8_t *id = malloc(sizeof(uint8_t));
+	  *id = (uint8_t) rank;
+	  if (0 < pthread_create(&threads[rank], NULL, mainthread, (void*) id)) {
+		  P("Failure in pthread_create():\n%s", strerror(errno));
+	  }
+  }
+  pthread_exit(NULL);
+}
+
 void* mainthread(void* args) {
- ///TM2C_INIT_THREAD
+  TM2C_INIT_THREAD;
   PRINTD("Initializing child %u", rank);
   TM2C_ID = *((nodeid_t*) args);
   free(args);
@@ -65,25 +80,8 @@ void* mainthread(void* args) {
   CPU_SET(place, &cpuset);
   if (pthread_setaffinity_np(thread, sizeof(cpu_set_t), &cpuset) != 0) {
 	  fprintf(stderr, "Problem with setting thread affinity\n");
-	  exit(3);
+	  pthread_exit(3);
   }
-  //resume to tm2c_init_system
-}
-int
-main(int argc, char **argv)
-{
-  TM2C_INIT;
-/**must fork here I believe*/
-  /*for(rank = 1; rank < TM2C_NUM_NODES; rank++) {
-      PRINTD("Forking child %u", rank);
-	  uint8_t *id = malloc(sizeof(uint8_t));
-	  *id = (uint8_t) rank;
-	  if (0 < pthread_create(&threads[rank], NULL, mainthread, (void*) id)) {
-		  P("Failure in pthread_create():\n%s", strerror(errno));
-	  }
-  }
-  pthread_exit(NULL);*/
-
   printf("init without bug\n");
   BARRIER;
   if (argc > 1)
@@ -133,6 +131,5 @@ main(int argc, char **argv)
   sys_shfree((void*) mem);
 
   TM_END;
-
-  EXIT(0);
+  pthread_exit(NULL);
 }
