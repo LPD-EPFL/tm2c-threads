@@ -144,7 +144,6 @@ void *initthread(void *args) {
 	free(args);
 	TM2C_ID = c_args.id;
 	tm2c_init();
-	printf("pointer to function %p\n", c_args.mainthread);
 	(*c_args.mainthread)(NULL);
 }
 

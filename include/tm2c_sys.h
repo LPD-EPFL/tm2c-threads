@@ -32,6 +32,7 @@
  * immediately upon startup
  */
 void sys_tm2c_init_system(int* argc, char** argv[]);
+void* initthread(void* args);
 
 /*
  * This method is called by tm2c_init_system to initialize the barrier

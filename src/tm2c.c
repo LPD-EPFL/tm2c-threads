@@ -107,12 +107,9 @@ tm2c_init() {
   sys_tm2c_init();//nothing to do in sys_default
   if (!is_app_core(ID)) {
       //dsl node
-	  printf("tm2c_dsl_init %d\n", ID);
       tm2c_dsl_init();
   } else { //app node
-	  printf("tm2c_app_init\n");
       tm2c_app_init(); //block
-      printf("end tm2c_app_init\n");
       tm2c_tx_node = tm2c_tx_meta_node_new();//ok
       tm2c_tx = tm2c_tx_meta_new(); //ok
       if (tm2c_tx == NULL || tm2c_tx_node == NULL) 
