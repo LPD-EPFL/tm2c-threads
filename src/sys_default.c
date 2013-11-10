@@ -138,6 +138,33 @@ sys_tm2c_init_system(int* argc, char** argv[])
   tm2c_init_barrier();
 }
 
+struct args_start_thread {
+	uint8_t id;
+	void* (*mainthread) (void*);
+};
+
+void *initthread(void *args) {
+	struct args_start_thread c_args= *((struct args_start_thread *) args);
+	free(args);
+	TM2C_ID = c_args.id;
+	tm2c_init();
+	printf("pointer to function %p\n", c_args.mainthread);
+	(*c_args.mainthread)(NULL);
+}
+
+void start_threads(void* (*mainthread)(void *args)) {
+  pthread_t threads;
+  int rank = 0;
+  for(rank = 0; rank < TM2C_NUM_NODES; rank++) {
+      PRINTD("Forking child %u", rank);
+	  struct args_start_thread *args = malloc(sizeof(struct args_start_thread));
+	  args->id = rank;
+	  args->mainthread = mainthread;
+	  if (0 < pthread_create(&threads, NULL, initthread, (void*) args)) {
+		  fprintf(stderr, "Failure in pthread_create():\n%s", strerror(errno));
+	  }
+  }
+}
 
 void
 term_system()
@@ -199,12 +226,12 @@ pthread_once(&sys_app_init_once_control, sys_app_init_once);
 
 #endif
 
-  BARRIERW;
+  //BARRIERW;
 
   tm2c_rpc_remote_msg = NULL;
   PRINTD("sys_app_init: done");
 
-  BARRIERW;
+  //BARRIERW;
 }
 
 

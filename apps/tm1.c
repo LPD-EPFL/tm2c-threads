@@ -63,13 +63,12 @@ main(int argc, char **argv) {
     {
       num_dsl = atoi(argv[2]);
     }
-  start_threads(argc, argv, mainthread);
+  TM2C_INIT_SYS;
+  TM2C_INIT_THREAD;
   pthread_exit(NULL);
 }
 
 void* mainthread(void *args) {
-  printf("tm2c_init_thread\n");
-  TM2C_INIT_THREAD;
   printf("tm2c_init_thread\n");
   ONCE
     {

@@ -77,19 +77,6 @@ const uint8_t dsl_node[] =
  * TM Interface                                                                                         |
  *______________________________________________________________________________________________________|
  */
-void start_threads(int argc, char **argv, void* (*mainthread)(void *args)) {
-  TM2C_INIT_SYS;
-  pthread_t threads;
-  int rank = 0;
-  for(rank = 0; rank < TM2C_NUM_NODES; rank++) {
-      PRINTD("Forking child %u", rank);
-	  uint8_t *id = malloc(sizeof(uint8_t));
-	  *id = (uint8_t) rank;
-	  if (0 < pthread_create(&threads, NULL, mainthread, (void*) id)) {
-		  fprintf(stderr, "Failure in pthread_create():\n%s", strerror(errno));
-	  }
-  }
-}
 
 int
 is_app_core(int id)
@@ -116,6 +103,7 @@ tm2c_init() {
   PF_MSG(10, "sending");
 
   ID = NODE_ID(); //thread specific, reads TM2C_ID in sys_default
+  ssmp_mem_init(ID, TM2C_NUM_NODES);
   sys_tm2c_init();//nothing to do in sys_default
   if (!is_app_core(ID)) {
       //dsl node
@@ -123,7 +111,8 @@ tm2c_init() {
       tm2c_dsl_init();
   } else { //app node
 	  printf("tm2c_app_init\n");
-      tm2c_app_init();
+      tm2c_app_init(); //block
+      printf("end tm2c_app_init\n");
       tm2c_tx_node = tm2c_tx_meta_node_new();//ok
       tm2c_tx = tm2c_tx_meta_new(); //ok
       if (tm2c_tx == NULL || tm2c_tx_node == NULL) 

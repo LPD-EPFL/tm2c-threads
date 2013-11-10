@@ -188,15 +188,13 @@ extern "C" {
    * TM Interface                                                                                         |
    *______________________________________________________________________________________________________|
    */
-void start_threads(int argc, char **argv, void* (*mainthread)(void *args));
-
 #define TM2C_INIT_SYS \
   tm2c_init_system(&argc, &argv);
 
   /**to call after pthread_create*/
 #define TM2C_INIT_THREAD \
   { \
-  tm2c_init();
+  start_threads(&mainthread); \
 
 #define TM2C_INIT				\
   tm2c_init_system(&argc, &argv);		\
