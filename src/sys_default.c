@@ -90,7 +90,6 @@ __thread ticks* greedy_global_ts;
 void
 sys_tm2c_init_system(int* argc, char** argv[])
 {
-
   if (*argc < 2)
     {
       fprintf(stderr, "Not enough parameters (%d)\n", *argc);
@@ -137,7 +136,6 @@ sys_tm2c_init_system(int* argc, char** argv[])
   ssmp_init(TM2C_NUM_NODES);
   //call to ssmp_init_barrier
   tm2c_init_barrier();
-
 }
 
 
@@ -585,8 +583,7 @@ tm2c_init_barrier()
 {
   ssmp_barrier_init(1, 0, is_app_core);
   ssmp_barrier_init(14, 0, is_dsl_core);
-
-  BARRIERW;
+  //BARRIERW;
 }
 
 void

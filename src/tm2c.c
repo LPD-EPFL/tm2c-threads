@@ -111,20 +111,18 @@ is_dsl_core(int id)
 
 /**threads have been created*/
 void
-tm2c_init()
-{
+tm2c_init() {
   PF_MSG(9, "receiving");
   PF_MSG(10, "sending");
 
-  ID = NODE_ID(); //thread specific
+  ID = NODE_ID(); //thread specific, reads TM2C_ID in sys_default
   sys_tm2c_init();//nothing to do in sys_default
-  if (!is_app_core(ID)) 
-    {
+  if (!is_app_core(ID)) {
       //dsl node
-      tm2c_dsl_init();//todo
-    }
-  else 
-    { //app node
+	  printf("tm2c_dsl_init %d\n", ID);
+      tm2c_dsl_init();
+  } else { //app node
+	  printf("tm2c_app_init\n");
       tm2c_app_init();
       tm2c_tx_node = tm2c_tx_meta_node_new();//ok
       tm2c_tx = tm2c_tx_meta_new(); //ok
@@ -133,7 +131,7 @@ tm2c_init()
 	  PRINTD("Could not alloc tx metadata @ TM2C_INIT");
 	  EXIT(-1);
 	}
-    }
+  }
 }
 
 void

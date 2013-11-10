@@ -59,7 +59,7 @@ main(int argc, char **argv) {
       mem_size = atoi(argv[1]) * sizeof(int32_t);
     }
 
-  if (argc > 1)
+  if (argc > 2)
     {
       num_dsl = atoi(argv[2]);
     }
@@ -68,8 +68,9 @@ main(int argc, char **argv) {
 }
 
 void* mainthread(void *args) {
+  printf("tm2c_init_thread\n");
   TM2C_INIT_THREAD;
-
+  printf("tm2c_init_thread\n");
   ONCE
     {
       printf("memory size in bytes: %lu, words: %lu\n  emulating %lu dsl nodes\n",
