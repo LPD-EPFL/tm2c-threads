@@ -123,6 +123,20 @@ tm2c_init() {
   }
 }
 
+void start_threads(void* (*mainthread)(void *args)) {
+  pthread_t threads;
+  int rank = 0;
+  for(rank = 0; rank < TM2C_NUM_NODES; rank++) {
+      PRINTD("Forking child %u", rank);
+	  struct args_start_thread *args = malloc(sizeof(struct args_start_thread));
+	  args->id = rank;
+	  args->mainthread = mainthread;
+	  if (0 < pthread_create(&threads, NULL, initthread, (void*) args)) {
+		  fprintf(stderr, "Failure in pthread_create():\n%s", strerror(errno));
+	  }
+  }
+}
+
 void
 tm2c_init_system(int* argc, char** argv[])
 {
@@ -130,7 +144,7 @@ tm2c_init_system(int* argc, char** argv[])
   PF_CORRECTION;
 
   /* call platform level initializer */
-  sys_tm2c_init_system(argc, argv);
+  sys_tm2c_init_system(argc, argv);//declared where ?
 
   /* initialize globals */
   //ID            = NODE_ID(); //thread specific

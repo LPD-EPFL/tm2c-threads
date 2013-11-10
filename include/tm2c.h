@@ -614,6 +614,13 @@ extern "C" {
   extern void tm2c_term(void);
 
 
+  struct args_start_thread {
+	uint8_t id;
+	void* (*mainthread) (void*);
+  };
+
+  extern void start_threads(void* (*)(void *));
+
 #ifdef	__cplusplus
 }
 #endif
