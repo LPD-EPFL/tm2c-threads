@@ -246,9 +246,7 @@ pthread_once(&sys_dsl_init_once_control, sys_dsl_init_once);
 	}
     }
 #endif
-
-  BARRIERW;
-
+  //BARRIERW;
 }
 
 void
@@ -347,7 +345,6 @@ dsl_service()
 
 
   ssmp_color_buf_init(cbuf, is_app_core);
-
   while (1) 
     {
       ssmp_recv_color_start(cbuf, msg);
@@ -591,7 +588,7 @@ tm2c_init_barrier()
 {
   ssmp_barrier_init(1, 0, is_app_core);
   ssmp_barrier_init(14, 0, is_dsl_core);
-  //BARRIERW;
+  //BARRIERW;//still single threaded here so useless
 }
 
 void

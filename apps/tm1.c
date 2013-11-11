@@ -88,7 +88,7 @@ void* mainthread(void *args) {
   BARRIER;
 
   sys_shfree((void*) mem);
-  TM_END;
+  TM_END;//TODO
   pthread_exit(NULL);
 }
 

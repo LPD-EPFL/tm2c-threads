@@ -435,7 +435,7 @@ tm2c_rpc_stats(tm2c_tx_node_t* stats, double duration)
 	stats_cmd->aborts_waw = stats->aborts_waw;
 	stats_cmd->tx_duration = 0;
 
-	sys_sendcmd_all(stats_cmd, sizeof(TM2C_RPC_STATS_T));
+	sys_sendcmd_all(stats_cmd, sizeof(TM2C_RPC_STATS_T));//todo
 
 	BARRIERW;
 	free(stats_cmd);
