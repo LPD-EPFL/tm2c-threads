@@ -207,12 +207,12 @@ pthread_once(&sys_app_init_once_control, sys_app_init_once);
 
 #endif
 
-  //BARRIERW;
+  BARRIERW;
 
   tm2c_rpc_remote_msg = NULL;
   PRINTD("sys_app_init: done");
 
-  //BARRIERW;
+  BARRIERW;
 }
 
 
@@ -229,8 +229,8 @@ void sys_dsl_init_once(void) {
 void
 sys_dsl_init(void)
 {
-pthread_once(&sys_dsl_init_once_control, sys_dsl_init_once);
-// BARRIERW;
+   pthread_once(&sys_dsl_init_once_control, sys_dsl_init_once);
+   BARRIERW;
 
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
   cm_abort_flags = (int32_t**) malloc(TOTAL_NODES() * sizeof(int32_t*));
@@ -246,7 +246,7 @@ pthread_once(&sys_dsl_init_once_control, sys_dsl_init_once);
 	}
     }
 #endif
-  //BARRIERW;
+   BARRIERW;
 }
 
 void
