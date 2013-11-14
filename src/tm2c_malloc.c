@@ -39,10 +39,10 @@
 #define MAX_FILENAME_LENGTH 100
 
 static void* tm2c_app_mem;
-static size_t alloc_next = 0;
-static void* tm2c_free_list[256] = {0};
-static uint8_t tm2c_free_cur = 0;
-static uint8_t tm2c_free_num = 0;
+static __thread size_t alloc_next = 0;
+static __thread void* tm2c_free_list[256] = {0};
+static __thread uint8_t tm2c_free_cur = 0;
+static __thread uint8_t tm2c_free_num = 0;
 
 void
 tm2c_shmalloc_set(void* mem)
@@ -124,6 +124,7 @@ tm2c_shmalloc_term()
 #endif	/* !PLATFORM_TILERA */
 
 //--------------------------------------------------------------------------------------
+/**use lock in this function ?*/
 void*
 tm2c_shmalloc(size_t size)
 {

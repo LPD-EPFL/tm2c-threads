@@ -39,6 +39,7 @@
 void *mainthread(void *args) {
   TM_START;
   int *sis = (int *) sys_shmalloc(SIS_SIZE * sizeof (int));
+  printf("thread %d allocated at %p\n", TM2C_ID, sis);
   if (sis == NULL)
     {
       perror("sys_shmalloc");
