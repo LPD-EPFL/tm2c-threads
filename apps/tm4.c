@@ -43,6 +43,7 @@ main(int argc, char **argv)
   TM2C_INIT;
 
   int *sis = (int *) sys_shmalloc(SIS_SIZE * sizeof (int));
+  printf("process %d allocated at %p\n", TM2C_ID, sis);
   if (sis == NULL)
     {
       perror("sys_shmalloc");
