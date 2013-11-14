@@ -248,7 +248,7 @@ extern "C" {
 
   /*  ------- Plug platform related things here END   ------- */
 
-#define EXIT(reason) pthread_exit(reason);
+#define EXIT(reason) pthread_exit((void*)reason);
 
 #include "tm2c_sys.h"
 
