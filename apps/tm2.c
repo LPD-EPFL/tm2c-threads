@@ -29,12 +29,12 @@
 #include "tm2c.h"
 
 #define SIS_SIZE 1000
-int
-main(int argc, char **argv)
-{
+
+void *mainthread(void *args) {
+
   PRINT("Write a whole array, then read the whole array repeatedly!");
 
-  TM2C_INIT;
+  TM_START
 
   int *sis = (int *) sys_shmalloc(SIS_SIZE * sizeof (int));
   if (sis == NULL)
@@ -91,5 +91,13 @@ main(int argc, char **argv)
 
   TM_END;
 
+  EXIT(0);
+}
+
+int
+main(int argc, char **argv)
+{
+  TM2C_INIT_SYS;
+  TM2C_INIT_THREAD;
   EXIT(0);
 }

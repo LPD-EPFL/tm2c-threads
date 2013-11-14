@@ -45,6 +45,7 @@ extern "C" {
 #include <stddef.h>
 #include <unistd.h>
 #include <inttypes.h>
+#include <pthread.h>
 
 #ifndef INLINED
 #  if __GNUC__ && !__GNUC_STDC_INLINE__ && !SCC
@@ -247,7 +248,7 @@ extern "C" {
 
   /*  ------- Plug platform related things here END   ------- */
 
-#define EXIT(reason) exit(reason);
+#define EXIT(reason) pthread_exit(reason);
 
 #include "tm2c_sys.h"
 

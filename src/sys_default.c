@@ -197,6 +197,7 @@ void
 sys_app_init(void)
 {
 pthread_once(&sys_app_init_once_control, sys_app_init_once);
+BARRIERW;
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
   cm_abort_flag_mine = cm_init(NODE_ID());
   *cm_abort_flag_mine = NO_CONFLICT;
@@ -207,7 +208,6 @@ pthread_once(&sys_app_init_once_control, sys_app_init_once);
 
 #endif
 
-  BARRIERW;
 
   tm2c_rpc_remote_msg = NULL;
   PRINTD("sys_app_init: done");
