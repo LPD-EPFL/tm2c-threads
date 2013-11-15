@@ -53,20 +53,13 @@
 
 int delay = DEFAULT_DELAY;
 int test_verbose = DEFAULT_VERBOSE;
+int argc;
+char **argv;
 
 #define XSTR(s)                         STR(s)
 #define STR(s)                          #s
 
 #define CAST_VOIDP(addr)                ((void *) (addr))
-
-double duration;
-int nb_accounts;
-int nb_app_cores;
-int read_all;
-int read_cores;
-int write_all;
-int check;
-int write_cores;
 
 /* ################################################################### *
  * GLOBALS
@@ -346,9 +339,160 @@ test(void *data, double duration, int nb_accounts)
 }
 
 void *mainthread(void *args) {
-  TM_START
+
+  TM_START;
+  struct option long_options[] =
+    {
+      // These options don't set a flag
+      {"help", no_argument, NULL, 'h'},
+      {"accounts", required_argument, NULL, 'a'},
+      {"contention-manager", required_argument, NULL, 'c'},
+      {"duration", required_argument, NULL, 'd'},
+      {"delay", required_argument, NULL, 'D'},
+      {"read-all-rate", required_argument, NULL, 'r'},
+      {"check", required_argument, NULL, 'c'},
+      {"read-threads", required_argument, NULL, 'R'},
+      {"write-all-rate", required_argument, NULL, 'w'},
+      {"write-threads", required_argument, NULL, 'W'},
+      {"verbose", no_argument, NULL, 'v'},
+      {NULL, 0, NULL, 0}
+    };
+
   bank_t* bank;
-  thread_data_t *data = (thread_data_t*) memalign(CACHE_LINE_SIZE, sizeof(thread_data_t));
+  thread_data_t* data;
+
+  double duration = DEFAULT_DURATION;
+  int nb_accounts = DEFAULT_NB_ACCOUNTS;
+  int nb_app_cores = NUM_APP_NODES;
+  int read_all = DEFAULT_READ_ALL;
+  int read_cores = DEFAULT_READ_THREADS;
+  int write_all = DEFAULT_READ_ALL + DEFAULT_WRITE_ALL;
+  int check = write_all + DEFAULT_CHECK;
+  int write_cores = DEFAULT_WRITE_THREADS;
+
+  int i, c;
+  while (1)
+    {
+      i = 0;
+      c = getopt_long(argc, argv, "ha:d:D:r:c:R:w:W:jv", long_options, &i);
+
+      if (c == -1)
+	break;
+
+      if (c == 0 && long_options[i].flag == 0)
+	c = long_options[i].val;
+
+      switch (c)
+	{
+	case 0:
+	  /* Flag is automatically set */
+	  break;
+	case 'h':
+	  ONCE
+	    {
+	      PRINT("bank -- STM stress test\n"
+		    "\n"
+		    "Usage:\n"
+		    "  bank [options...]\n"
+		    "\n"
+		    "Options:\n"
+		    "  -h, --help\n"
+		    "        Print this message\n"
+		    "  -a, --accounts <int>\n"
+		    "        Number of accounts in the bank (default=" XSTR(DEFAULT_NB_ACCOUNTS) ")\n"
+		    "  -d, --duration <double>\n"
+		    "        Test duration in seconds (0=infinite, default=" XSTR(DEFAULT_DURATION) ")\n"
+		    "  -d, --delay <int>\n"
+		    "        Delay ns after succesfull request. Used to understress the system, default=" XSTR(DEFAULT_DELAY) ")\n"
+		    "  -c, --check <int>\n"
+		    "        Percentage of check transactions transactions (default=" XSTR(DEFAULT_CHECK) ")\n"
+		    "  -r, --read-all-rate <int>\n"
+		    "        Percentage of read-all transactions (default=" XSTR(DEFAULT_READ_ALL) ")\n"
+		    "  -R, --read-threads <int>\n"
+		    "        Number of threads issuing only read-all transactions (default=" XSTR(DEFAULT_READ_THREADS) ")\n"
+		    "  -w, --write-all-rate <int>\n"
+		    "        Percentage of write-all transactions (default=" XSTR(DEFAULT_WRITE_ALL) ")\n"
+		    "  -W, --write-threads <int>\n"
+		    "        Number of threads issuing only write-all transactions (default=" XSTR(DEFAULT_WRITE_THREADS) ")\n"
+		    );
+	    }
+	  exit(0);
+	case 'a':
+	  nb_accounts = atoi(optarg);
+	  break;
+	case 'd':
+	  duration = atof(optarg);
+	  break;
+	case 'D':
+	  delay = atoi(optarg);
+	  break;
+	case 'c':
+	  check = atoi(optarg);
+	  break;
+	case 'r':
+	  read_all = atoi(optarg);
+	  break;
+	case 'R':
+	  read_cores = atoi(optarg);
+	  break;
+	case 'w':
+	  write_all = atoi(optarg);
+	  PRINT("*** warning: write all has been disabled");
+	  break;
+	case 'W':
+	  write_cores = atoi(optarg);
+	  PRINT("*** warning: write all cores have been disabled");
+	  break;
+	case 'v':
+	  test_verbose = 1;
+	  break;
+	case '?':
+	  ONCE
+	    {
+	      PRINT("Use -h or --help for help\n");
+	    }
+
+	  exit(0);
+	default:
+	  exit(1);
+	}
+    }
+
+
+#if defined(NB_ACC_POWER2)
+  nb_accounts = pow2roundup(nb_accounts);
+#endif	/* NB_ACC_POWER2 */
+  write_all = 0;
+  write_cores = 0;
+
+  write_all += read_all;
+  check += write_all;
+
+  assert(duration >= 0);
+  assert(nb_accounts >= 2);
+  assert(nb_app_cores > 0);
+  assert(read_all >= 0 && write_all >= 0 && check >= 0 && check <= 100);
+  assert(read_cores + write_cores <= nb_app_cores);
+
+  if (test_verbose)
+    {
+      ONCE
+	{
+	  PRINTN("Nb accounts    : %d\n", nb_accounts);
+	  PRINTN("Duration       : %fs\n", duration);
+	  PRINTN("Check acc rate : %d\n", check - write_all);
+	  PRINTN("Transfer rate  : %d\n", 100 - check);
+	}
+    }
+  /* normalize percentages to 128 */
+
+  double normalize = (double) 128/100;
+  check *= normalize;
+  write_all *= normalize;
+  read_all *= normalize;
+
+
+  data = (thread_data_t*) memalign(CACHE_LINE_SIZE, sizeof(thread_data_t));
   if (data == NULL)
     {
       perror("posix_memalign");
@@ -382,7 +526,7 @@ void *mainthread(void *args) {
     {
       APP_EXEC_ORDER
 	{
-	  printf("---Core %d\n  #transfer   : %llu\n  #checks     : %llu\n  #read-all   : %llu\n  #write-all  : %llu\n",
+	  printf("---Core %d\n  #transfer   : %llu\n  #checks     : %llu\n  #read-all   : %llu\n  #write-all  : %llu\n", 
 		 NODE_ID(), (LLU) data->nb_transfer, (LLU) data->nb_checks, (LLU) data->nb_read_all, (LLU) data->nb_write_all);
 	  FLUSH;
 	} APP_EXEC_ORDER_END;
@@ -407,152 +551,17 @@ void *mainthread(void *args) {
 }
 
 int
-main(int argc, char **argv)
+main(int argc2, char **argv2)
 {
   dup2(STDOUT_FILENO, STDERR_FILENO);
   PF_MSG(0, "1st TX_LOAD_STORE (transfer)");
   PF_MSG(1, "2nd TX_LOAD_STORE (transfer)");
   PF_MSG(2, "the whole transfer");
 
-
-  struct option long_options[] =
-    {
-      // These options don't set a flag
-      {"help", no_argument, NULL, 'h'},
-      {"accounts", required_argument, NULL, 'a'},
-      {"contention-manager", required_argument, NULL, 'c'},
-      {"duration", required_argument, NULL, 'd'},
-      {"delay", required_argument, NULL, 'D'},
-      {"read-all-rate", required_argument, NULL, 'r'},
-      {"check", required_argument, NULL, 'c'},
-      {"read-threads", required_argument, NULL, 'R'},
-      {"write-all-rate", required_argument, NULL, 'w'},
-      {"write-threads", required_argument, NULL, 'W'},
-      {"verbose", no_argument, NULL, 'v'},
-      {NULL, 0, NULL, 0}
-    };
-
-  int i, c;
-  duration = DEFAULT_DURATION;
-  nb_accounts = DEFAULT_NB_ACCOUNTS;
-  nb_app_cores = NUM_APP_NODES;
-  read_all = DEFAULT_READ_ALL;
-  read_cores = DEFAULT_READ_THREADS;
-  write_all = DEFAULT_READ_ALL + DEFAULT_WRITE_ALL;
-  check = write_all + DEFAULT_CHECK;
-  write_cores = DEFAULT_WRITE_THREADS;
-
-  while (1)
-    {
-      i = 0;
-      c = getopt_long(argc, argv, "ha:d:D:r:c:R:w:W:jv", long_options, &i);
-
-      if (c == -1)
-	break;
-
-      if (c == 0 && long_options[i].flag == 0)
-	c = long_options[i].val;
-
-      switch (c)
-	{
-	case 0:
-	  /* Flag is automatically set */
-	  break;
-	case 'h':
-	      PRINT("bank -- STM stress test\n"
-		    "\n"
-		    "Usage:\n"
-		    "  bank [options...]\n"
-		    "\n"
-		    "Options:\n"
-		    "  -h, --help\n"
-		    "        Print this message\n"
-		    "  -a, --accounts <int>\n"
-		    "        Number of accounts in the bank (default=" XSTR(DEFAULT_NB_ACCOUNTS) ")\n"
-		    "  -d, --duration <double>\n"
-		    "        Test duration in seconds (0=infinite, default=" XSTR(DEFAULT_DURATION) ")\n"
-		    "  -d, --delay <int>\n"
-		    "        Delay ns after succesfull request. Used to understress the system, default=" XSTR(DEFAULT_DELAY) ")\n"
-		    "  -c, --check <int>\n"
-		    "        Percentage of check transactions transactions (default=" XSTR(DEFAULT_CHECK) ")\n"
-		    "  -r, --read-all-rate <int>\n"
-		    "        Percentage of read-all transactions (default=" XSTR(DEFAULT_READ_ALL) ")\n"
-		    "  -R, --read-threads <int>\n"
-		    "        Number of threads issuing only read-all transactions (default=" XSTR(DEFAULT_READ_THREADS) ")\n"
-		    "  -w, --write-all-rate <int>\n"
-		    "        Percentage of write-all transactions (default=" XSTR(DEFAULT_WRITE_ALL) ")\n"
-		    "  -W, --write-threads <int>\n"
-		    "        Number of threads issuing only write-all transactions (default=" XSTR(DEFAULT_WRITE_THREADS) ")\n"
-		    );
-	  exit(0);
-	case 'a':
-	  nb_accounts = atoi(optarg);
-	  break;
-	case 'd':
-	  duration = atof(optarg);
-	  break;
-	case 'D':
-	  delay = atoi(optarg);
-	  break;
-	case 'c':
-	  check = atoi(optarg);
-	  break;
-	case 'r':
-	  read_all = atoi(optarg);
-	  break;
-	case 'R':
-	  read_cores = atoi(optarg);
-	  break;
-	case 'w':
-	  write_all = atoi(optarg);
-	  PRINT("*** warning: write all has been disabled");
-	  break;
-	case 'W':
-	  write_cores = atoi(optarg);
-	  PRINT("*** warning: write all cores have been disabled");
-	  break;
-	case 'v':
-	  test_verbose = 1;
-	  break;
-	case '?':
-	  PRINT("Use -h or --help for help\n");
-	  exit(0);
-	default:
-	  exit(1);
-	}
-    }
-
-
-#if defined(NB_ACC_POWER2)
-  nb_accounts = pow2roundup(nb_accounts);
-#endif	/* NB_ACC_POWER2 */
-  write_all = 0;
-  write_cores = 0;
-
-  write_all += read_all;
-  check += write_all;
-
-  assert(duration >= 0);
-  assert(nb_accounts >= 2);
-  assert(nb_app_cores > 0);
-  assert(read_all >= 0 && write_all >= 0 && check >= 0 && check <= 100);
-  assert(read_cores + write_cores <= nb_app_cores);
-
-  if (test_verbose)
-    {
-	  PRINTN("Nb accounts    : %d\n", nb_accounts);
-	  PRINTN("Duration       : %fs\n", duration);
-	  PRINTN("Check acc rate : %d\n", check - write_all);
-	  PRINTN("Transfer rate  : %d\n", 100 - check);
-    }
-  /* normalize percentages to 128 */
-
-  double normalize = (double) 128/100;
-  check *= normalize;
-  write_all *= normalize;
-  read_all *= normalize;
-
+  argc = argc2;
+  argv = argv2;
   TM2C_INIT_SYS;
   TM2C_INIT_THREAD;
   EXIT(0);
+
 }
