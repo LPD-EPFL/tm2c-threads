@@ -30,24 +30,17 @@
 
 #define SIS_SIZE 1000
 
-int
-main(int argc, char **argv)
-{    
-  PRINT("testing WAR conflicts");
-  TM2C_INIT;
-    
-  int reps = SIS_SIZE<<4;
-    
-  if (argc > 1)
-    {
-      reps = atoi(argv[1]);
-    }
-    
+int reps = SIS_SIZE<<4;
+
+void *mainthread(void *args) {
+
+  TM_START;
+
   ONCE
     {
       PRINT("Repetitions %d", reps);
     }
-    
+
   int* j = (int*) sys_shmalloc(reps * sizeof(int));
   if (j == NULL)
     {
@@ -55,14 +48,14 @@ main(int argc, char **argv)
     }
 
   BARRIER;
-    
+
   /*
    * Write after read conflicts : some writers and some readers on the whole
    * memory
    */
-    
+
   TX_START;
-    
+
   if (TM2C_ID == min_app_id())
     {
       int i;
@@ -82,12 +75,24 @@ main(int argc, char **argv)
 
 
   TX_COMMIT;
-    
+
   BARRIER;
 
   sys_shfree((void*) j);
 
   TM_END;
 
+  EXIT(0);
+
+}
+
+int main(int argc, char **argv) {
+    
+ PRINT("testing WAR conflicts");
+  if (argc > 1) {
+      reps = atoi(argv[1]);
+    }
+  TM2C_INIT_SYS;
+  TM2C_INIT_THREAD;
   EXIT(0);
 }

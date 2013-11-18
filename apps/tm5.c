@@ -32,11 +32,8 @@
 
 #define SIS_SIZE 20
 
-int
-main(int argc, char **argv)
-{
-  TM2C_INIT;
-  
+void *mainthread(void *args) {
+	TM_START;
   int *sis = (int *) sys_shmalloc(SIS_SIZE * sizeof (int));
   if (sis == NULL)
     {
@@ -76,4 +73,11 @@ main(int argc, char **argv)
 
   TM_END;
   EXIT(0);
+}
+
+int
+main(int argc, char **argv) {
+	TM2C_INIT_SYS;
+	TM2C_INIT_THREAD;
+	EXIT(0);
 }
