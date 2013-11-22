@@ -51,7 +51,7 @@ extern __thread TM2C_RPC_REPLY* tm2c_rpc_remote_msg; // holds the received msg
 extern nodeid_t *dsl_nodes;
 
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if any other CM (greedy, wholly, faircm) */
-extern __thread int32_t **cm_abort_flags;
+extern int32_t **cm_abort_flags;
 extern __thread int32_t *cm_abort_flag_mine;
 #endif /* CM_H */
 

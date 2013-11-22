@@ -181,12 +181,12 @@ sys_tm2c_init()
 }
 
 static pthread_once_t tm2c_shmalloc_init_once_control = PTHREAD_ONCE_INIT;
-void tm2c_shmalloc_init_once(void) {
+static void tm2c_shmalloc_init_once(void) {
 	tm2c_shmalloc_init(TM2C_SHMEM_SIZE);
 }
 
 static pthread_once_t sys_app_init_once_control = PTHREAD_ONCE_INIT;
-void sys_app_init_once(void) {
+static void sys_app_init_once(void) {
 #if defined(PGAS)
   pgas_app_init();
 #else  /* PGAS */
@@ -219,7 +219,7 @@ BARRIERW;
 
 
 static pthread_once_t sys_dsl_init_once_control = PTHREAD_ONCE_INIT;
-void sys_dsl_init_once(void) {
+static void sys_dsl_init_once(void) {
 #if defined(PGAS)
   pgas_dsl_init();
 #else  /* PGAS */
@@ -227,16 +227,9 @@ void sys_dsl_init_once(void) {
 #endif	/* PGAS */
 }
 
-/**already a thread here*/
-void
-sys_dsl_init(void)
-{
-   pthread_once(&sys_dsl_init_once_control, sys_dsl_init_once);
-   BARRIERW;
-
-   BARRIERW;//wait for all app_node called init_cm()
-//TODO init once : have all app_node called init_cm() ?
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
+static pthread_once_t sys_dsl_cm_init_once_control = PTHREAD_ONCE_INIT;
+static void sys_dsl_cm_init_once() {
   cm_abort_flags = (int32_t**) malloc(TOTAL_NODES() * sizeof(int32_t*));
   assert(cm_abort_flags != NULL);
 
@@ -249,9 +242,28 @@ sys_dsl_init(void)
 	  cm_abort_flags[i] = cm_init(i);    
 	}
     }
+}
+#endif
+
+/**already a thread here*/
+void sys_dsl_init(void) {
+   pthread_once(&sys_dsl_init_once_control, sys_dsl_init_once);
+   BARRIERW;
+
+   BARRIERW;//wait for all app_node called init_cm()
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
+   pthread_once(&sys_dsl_cm_init_once_control, sys_dsl_cm_init_once);
 #endif
    BARRIERW;
 }
+
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
+static pthread_once_t sys_dsl_term_once_control = PTHREAD_ONCE_INIT;
+static void sys_dsl_term_once(void) {
+  assert(cm_abort_flags != NULL);
+  free(cm_abort_flags);
+}
+#endif
 
 void
 sys_dsl_term(void)
@@ -262,20 +274,8 @@ sys_dsl_term(void)
   tm2c_shmalloc_term();
 #endif	/* PGAS */
 
-
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
-  assert(cm_abort_flags != NULL);
-
-  uint32_t i;
-  for (i = 0; i < TOTAL_NODES(); i++) 
-    {
-      if (is_app_core(i))
-	{
-	  cm_term(i);    
-	}
-    }
-
-  free(cm_abort_flags);
+  pthread_once(&sys_dsl_term_once_control, sys_dsl_term_once);
 #endif
 
   BARRIERW;
@@ -611,49 +611,16 @@ global_barrier()
 int32_t*
 cm_init(nodeid_t node)
 {
-  char keyF[50];
-  sprintf(keyF,"/cm_abort_flag%03d", node);
-
   size_t cache_line = 64;
-
-  int abrtfd = shm_open(keyF, O_CREAT | O_EXCL | O_RDWR, S_IRWXU | S_IRWXG);
-  if (abrtfd<0)
-    {
-      if (errno != EEXIST)
-	{
-	  perror("In shm_open");
-	  exit(1);
-	}
-
-      //this time it is ok if it already exists                                                    
-      abrtfd = shm_open(keyF, O_CREAT | O_RDWR, S_IRWXU | S_IRWXG);
-      if (abrtfd<0)
-	{
-	  perror("In shm_open");
-	  exit(1);
-	}
-    }
-  else
-    {
-      //only if it is just created                                                                 
-      if(ftruncate(abrtfd, cache_line))
-	{
-	  printf("ftruncate");
-	}
-    }
-
-  int32_t* tmp = (int32_t*) mmap(NULL, 64, PROT_READ | PROT_WRITE, MAP_SHARED, abrtfd, 0);
+  int32_t* tmp = (int32_t*) memalign(SSMP_CACHE_LINE_SIZE, 64);
   assert(tmp != NULL);
-   
   return tmp;
 }
 
 void
 cm_term(nodeid_t node)
 {
-  char keyF[50];
-  sprintf(keyF,"/cm_abort_flag%03d", node);
-  shm_unlink(keyF);
+  free(cm_abort_flags[node]);
 }
 
 #  if defined(GREEDY) && defined(GREEDY_GLOBAL_TS)
