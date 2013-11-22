@@ -182,9 +182,10 @@ sys_tm2c_init()
 
 static pthread_once_t tm2c_shmalloc_init_once_control = PTHREAD_ONCE_INIT;
 static void tm2c_shmalloc_init_once(void) {
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
 	cm_abort_flags = (int32_t**) malloc(TOTAL_NODES() * sizeof(int32_t*));
 	assert(cm_abort_flags != NULL);
-
+#endif
 	tm2c_shmalloc_init(TM2C_SHMEM_SIZE);
 }
 
@@ -238,24 +239,23 @@ void sys_dsl_init(void) {
 
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
 static pthread_once_t sys_dsl_term_once_control = PTHREAD_ONCE_INIT;
-static void sys_dsl_term_once(void) {
-  assert(cm_abort_flags != NULL);
-  free(cm_abort_flags);
-}
 #endif
+static void sys_dsl_term_once(void) {
+#if !defined(PGAS)
+  tm2c_shmalloc_term();
+#endif
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
+  free(cm_abort_flags);
+#endif
+}
 
 void
 sys_dsl_term(void)
 {
 #if defined(PGAS)
   pgas_dsl_term();
-#else  /* PGAS */
-  tm2c_shmalloc_term();
-#endif	/* PGAS */
-
-#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
-  pthread_once(&sys_dsl_term_once_control, sys_dsl_term_once);
 #endif
+  pthread_once(&sys_dsl_term_once_control, sys_dsl_term_once);
 
   BARRIERW;
 }
