@@ -80,10 +80,11 @@ nodeid_t TM2C_NUM_NODES;
 
 
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if any other CM (greedy, wholly, faircm) */
-__thread int32_t**cm_abort_flags;
-__thread int32_t* cm_abort_flag_mine;
+int32_t** cm_abort_flags; //all flags
+__thread int32_t* cm_abort_flag_mine; //thread specific
 #  if defined(GREEDY) && defined(GREEDY_GLOBAL_TS)
-__thread ticks* greedy_global_ts;
+ticks* greedy_global_ts; //global
+//TODO make only one global
 #  endif
 #endif /* NOCM */
 
@@ -213,6 +214,7 @@ BARRIERW;
   PRINTD("sys_app_init: done");
 
   BARRIERW;
+  BARRIERW; //extra for dsl updating cm_flags
 }
 
 
@@ -232,6 +234,8 @@ sys_dsl_init(void)
    pthread_once(&sys_dsl_init_once_control, sys_dsl_init_once);
    BARRIERW;
 
+   BARRIERW;//wait for all app_node called init_cm()
+//TODO init once : have all app_node called init_cm() ?
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
   cm_abort_flags = (int32_t**) malloc(TOTAL_NODES() * sizeof(int32_t*));
   assert(cm_abort_flags != NULL);
