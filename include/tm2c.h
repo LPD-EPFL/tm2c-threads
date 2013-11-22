@@ -617,7 +617,7 @@ extern "C" {
 
 
   struct args_start_thread {
-	uint8_t id;
+	nodeid_t id;
 	void* (*mainthread) (void*);
   };
 
