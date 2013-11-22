@@ -81,7 +81,7 @@ nodeid_t TM2C_NUM_NODES;
 
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if any other CM (greedy, wholly, faircm) */
 int32_t** cm_abort_flags; //all flags
-__thread int32_t* cm_abort_flag_mine; //thread specific
+__thread int32_t *cm_abort_flag_mine;
 #  if defined(GREEDY) && defined(GREEDY_GLOBAL_TS)
 ticks* greedy_global_ts; //global
 //TODO make only one global
@@ -182,6 +182,9 @@ sys_tm2c_init()
 
 static pthread_once_t tm2c_shmalloc_init_once_control = PTHREAD_ONCE_INIT;
 static void tm2c_shmalloc_init_once(void) {
+	cm_abort_flags = (int32_t**) malloc(TOTAL_NODES() * sizeof(int32_t*));
+	assert(cm_abort_flags != NULL);
+
 	tm2c_shmalloc_init(TM2C_SHMEM_SIZE);
 }
 
@@ -202,6 +205,7 @@ BARRIERW;
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
   cm_abort_flag_mine = cm_init(NODE_ID());
   *cm_abort_flag_mine = NO_CONFLICT;
+  cm_abort_flags[NODE_ID()] = cm_abort_flag_mine;
 
 #  if defined(GREEDY) && defined(GREEDY_GLOBAL_TS)
   greedy_global_ts = cm_greedy_global_ts_init();
@@ -212,8 +216,6 @@ BARRIERW;
 
   tm2c_rpc_remote_msg = NULL;
   PRINTD("sys_app_init: done");
-
-  BARRIERW;
   BARRIERW; //extra for dsl updating cm_flags
 }
 
@@ -227,33 +229,10 @@ static void sys_dsl_init_once(void) {
 #endif	/* PGAS */
 }
 
-#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
-static pthread_once_t sys_dsl_cm_init_once_control = PTHREAD_ONCE_INIT;
-static void sys_dsl_cm_init_once() {
-  cm_abort_flags = (int32_t**) malloc(TOTAL_NODES() * sizeof(int32_t*));
-  assert(cm_abort_flags != NULL);
-
-  uint32_t i;
-  for (i = 0; i < TOTAL_NODES(); i++) 
-    {
-      //TODO: make it open only for app nodes
-      if (is_app_core(i))
-	{
-	  cm_abort_flags[i] = cm_init(i);    
-	}
-    }
-}
-#endif
-
 /**already a thread here*/
 void sys_dsl_init(void) {
    pthread_once(&sys_dsl_init_once_control, sys_dsl_init_once);
    BARRIERW;
-
-   BARRIERW;//wait for all app_node called init_cm()
-#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
-   pthread_once(&sys_dsl_cm_init_once_control, sys_dsl_cm_init_once);
-#endif
    BARRIERW;
 }
 
