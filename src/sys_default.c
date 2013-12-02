@@ -144,6 +144,14 @@ void *initthread(void *args) {
 	struct args_start_thread c_args= *((struct args_start_thread *) args);
 	free(args);
 	TM2C_ID = c_args.id;
+	int place = rank_to_core[TM2C_ID];
+	cpu_set_t mask;
+	CPU_ZERO(&mask);
+	CPU_SET(place, &mask);
+	if (pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &mask) != 0) {
+			fprintf(stderr, "Problem with setting thread affinity\n");
+			exit(3);
+	}
 	tm2c_init();
 	(*c_args.mainthread)(NULL);
 }
