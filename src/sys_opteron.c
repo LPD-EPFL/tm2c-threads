@@ -41,11 +41,12 @@
 #include <sched.h>
 #include <assert.h>
 #include <limits.h>
-#include <ssmp.h>
+#include <ssmpthread.h>
 #ifdef PLATFORM_NUMA
 #  include <numa.h>
 #endif /* PLATFORM_NUMA */
 #include "common.h"
+#include "tm2c.h"
 #include "tm2c_app.h"
 #include "tm2c_dsl.h"
 #include "tm2c_malloc.h"
