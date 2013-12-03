@@ -51,6 +51,7 @@
 #include "tm2c_malloc.h"
 
 #include "hash.h"
+#include <pthread.h>
 
 uint8_t rank_to_core[] =
   {
@@ -64,7 +65,7 @@ uint8_t rank_to_core[] =
     70, 71, 72, 73, 74, 75, 76, 77, 78, 79,
   };
 
-TM2C_RPC_REPLY* tm2c_rpc_remote_msg; // holds the received msg
+__thread TM2C_RPC_REPLY* tm2c_rpc_remote_msg; // holds the received msg
 
 INLINED nodeid_t min_dsl_id();
 
@@ -80,13 +81,13 @@ INLINED void sys_tm2c_rpc_req_reply(nodeid_t sender,
  * To make sure we don't rely on any particular order, params should be passed
  * as: -id=ID -total=TOTAL_NODES
  */
-nodeid_t TM2C_ID;
+__thread nodeid_t TM2C_ID;
 nodeid_t TM2C_NUM_NODES;
 
 
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if any other CM (greedy, wholly, faircm) */
 int32_t **cm_abort_flags;
-int32_t *cm_abort_flag_mine;
+__thread int32_t *cm_abort_flag_mine;
 #if defined(GREEDY) && defined(GREEDY_GLOBAL_TS)
 ticks* greedy_global_ts;
 #endif
@@ -137,45 +138,24 @@ sys_tm2c_init_system(int* argc, char** argv[])
   }
   *argc = *argc - (p-cur);
 
-  TM2C_ID = 0;
-
   ssmp_init(TM2C_NUM_NODES);
+  tm2c_init_barrier();
+}
 
-  nodeid_t rank;
-  for (rank = 1; rank < TM2C_NUM_NODES; rank++) 
-    {
-      PRINTD("Forking child %u", rank);
-      pid_t child = fork();
-      if (child < 0) 
-	{
-	  PRINT("Failure in fork():\n%s", strerror(errno));
-	} 
-      else if (child == 0) 
-	{
-	  goto fork_done;
+void *initthread(void *args) {
+	struct args_start_thread c_args= *((struct args_start_thread *) args);
+	free(args);
+	TM2C_ID = c_args.id;
+	int place = rank_to_core[TM2C_ID];
+	cpu_set_t mask;
+	CPU_ZERO(&mask);
+	CPU_SET(place, &mask);
+	if (pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &mask) != 0) {
+		fprintf(stderr, "Problem with setting thread affinity\n");
+		exit(3);
 	}
-    }
-  rank = 0;
-
- fork_done:
-  PRINTD("Initializing child %u", rank);
-  TM2C_ID = rank;
-  ssmp_mem_init(TM2C_ID, TM2C_NUM_NODES);
-
-  // Now, pin the process to the right core (NODE_ID == core id)
-  int place = rank_to_core[rank];
-  cpu_set_t mask;
-  CPU_ZERO(&mask);
-  CPU_SET(place, &mask);
-  if (sched_setaffinity(0, sizeof(cpu_set_t), &mask) != 0) 
-    {
-      PRINT("Problem with setting processor affinity: %s\n",
-	    strerror(errno));
-      EXIT(3);
-    }
-#ifdef PLATFORM_NUMA
-  numa_set_preferred(rank/6);
-#endif /* PLATFORM_NUMA */
+	tm2c_init();
+	(*c_args.mainthread)(NULL);
 }
 
 void
@@ -210,15 +190,29 @@ sys_tm2c_init()
 
 }
 
-void
-sys_app_init(void)
-{
+static pthread_once_t tm2c_shmalloc_init_once_control = PTHREAD_ONCE_INIT;
+static void tm2c_shmalloc_init_once(void) {
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
+	cm_abort_flags = (int32_t**) malloc(TOTAL_NODES() * sizeof(int32_t*));
+	assert(cm_abort_flags != NULL);
+#endif
+	tm2c_shmalloc_init(TM2C_SHMEM_SIZE);
+}
+
+static pthread_once_t sys_app_init_once_control = PTHREAD_ONCE_INIT;
+static void sys_app_init_once(void) {
 #if defined(PGAS)
   pgas_app_init();
 #else  /* PGAS */
-  tm2c_shmalloc_init(TM2C_SHMEM_SIZE); 
+  pthread_once(&tm2c_shmalloc_init_once_control, tm2c_shmalloc_init_once);
 #endif /* PGAS */
+}
 
+void
+sys_app_init(void)
+{
+pthread_once(&sys_app_init_once_control, sys_app_init_once);
+BARRIERW;
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
   cm_abort_flag_mine = cm_init(NODE_ID());
   *cm_abort_flag_mine = NO_CONFLICT;
@@ -229,43 +223,38 @@ sys_app_init(void)
 
 #endif
 
-  BARRIERW;
-
   tm2c_rpc_remote_msg = NULL;
   PRINTD("sys_app_init: done");
 
   BARRIERW;
 }
 
-void
-sys_dsl_init(void)
-{
-
+static pthread_once_t sys_dsl_init_once_control = PTHREAD_ONCE_INIT;
+static void sys_dsl_init_once(void) {
 #if defined(PGAS)
   pgas_dsl_init();
 #else  /* PGAS */
-  tm2c_shmalloc_init(TM2C_SHMEM_SIZE);
+  pthread_once(&tm2c_shmalloc_init_once_control, tm2c_shmalloc_init_once);
 #endif	/* PGAS */
+}
 
-  BARRIERW;
+/**already a thread here*/
+void sys_dsl_init(void) {
+   pthread_once(&sys_dsl_init_once_control, sys_dsl_init_once);
+   BARRIERW;
+   BARRIERW;
+}
 
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
-  cm_abort_flags = (int32_t **) malloc(TOTAL_NODES() * sizeof(int32_t *));
-  assert(cm_abort_flags != NULL);
-
-  uint32_t i;
-  for (i = 0; i < TOTAL_NODES(); i++) 
-    {
-      //TODO: make it open only for app nodes
-      if (is_app_core(i))
-	{
-	  cm_abort_flags[i] = cm_init(i);    
-	}
-    }
+static pthread_once_t sys_dsl_term_once_control = PTHREAD_ONCE_INIT;
 #endif
-
-  BARRIERW;
-
+static void sys_dsl_term_once(void) {
+#if !defined(PGAS)
+  tm2c_shmalloc_term();
+#endif
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
+  free(cm_abort_flags);
+#endif
 }
 
 void
@@ -273,25 +262,8 @@ sys_dsl_term(void)
 {
 #if defined(PGAS)
   pgas_dsl_term();
-#else  /* PGAS */
-  tm2c_shmalloc_term();
-#endif	/* PGAS */
-
-
-#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
-  assert(cm_abort_flags != NULL);
-
-  uint32_t i;
-  for (i = 0; i < TOTAL_NODES(); i++) 
-    {
-      if (is_app_core(i))
-	{
-	  cm_term(i);    
-	}
-    }
-
-  free(cm_abort_flags);
 #endif
+  pthread_once(&sys_dsl_term_once_control, sys_dsl_term_once);
 
   BARRIERW;
 }
