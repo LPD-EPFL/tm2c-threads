@@ -45,15 +45,15 @@
 #define BARRIERW ssmp_barrier_wait(0);
 #define BARRIER_DSL ssmp_barrier_wait(14);
 
-extern nodeid_t TM2C_ID;
+extern __thread nodeid_t TM2C_ID;
 extern nodeid_t TM2C_NUM_NODES;
 
-extern TM2C_RPC_REPLY* tm2c_rpc_remote_msg; // holds the received msg
+extern __thread TM2C_RPC_REPLY* tm2c_rpc_remote_msg; // holds the received msg
 extern nodeid_t *dsl_nodes;
 
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if any other CM (greedy, wholly, faircm) */
 extern int32_t **cm_abort_flags;
-extern int32_t *cm_abort_flag_mine;
+extern __thread int32_t *cm_abort_flag_mine;
 #endif /* CM_H */
 
 extern size_t pgas_app_addr_offs(void* addr);
