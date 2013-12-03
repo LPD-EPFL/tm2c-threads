@@ -246,9 +246,7 @@ void sys_dsl_init(void) {
    BARRIERW;
 }
 
-#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
 static pthread_once_t sys_dsl_term_once_control = PTHREAD_ONCE_INIT;
-#endif
 static void sys_dsl_term_once(void) {
 #if !defined(PGAS)
   tm2c_shmalloc_term();
