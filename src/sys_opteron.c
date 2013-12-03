@@ -587,7 +587,7 @@ tm2c_init_barrier()
   ssmp_barrier_init(1, 0, is_app_core);
   ssmp_barrier_init(14, 0, is_dsl_core);
 
-  BARRIERW;
+//  BARRIERW; still one thread here so useless
 }
 
 void
@@ -605,49 +605,16 @@ global_barrier()
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if any other CM (greedy, wholly, faircm) */
 int32_t*
 cm_init(nodeid_t node) {
-   char keyF[50];
-   sprintf(keyF,"/cm_abort_flag%03d", node);
-
-   size_t cache_line = 64;
-
-   int abrtfd = shm_open(keyF, O_CREAT | O_EXCL | O_RDWR, S_IRWXU | S_IRWXG);
-   if (abrtfd<0)
-   {
-      if (errno != EEXIST)
-      {
-         perror("In shm_open");
-         exit(1);
-      }
-
-      //this time it is ok if it already exists                                                    
-      abrtfd = shm_open(keyF, O_CREAT | O_RDWR, S_IRWXU | S_IRWXG);
-      if (abrtfd<0)
-      {
-         perror("In shm_open");
-         exit(1);
-      }
-   }
-   else
-   {
-      //only if it is just created                                                                 
-     if(ftruncate(abrtfd, cache_line))
-       {
-	 printf("ftruncate");
-       }
-   }
-
-   int32_t *tmp = (int32_t *) mmap(NULL, 64, PROT_READ | PROT_WRITE, MAP_SHARED, abrtfd, 0);
-   assert(tmp != NULL);
-   
-   return tmp;
+  size_t cache_line = 64;
+  int32_t* tmp = (int32_t*) memalign(SSMP_CACHE_LINE_SIZE, 64);
+  assert(tmp != NULL);
+  return tmp;
 }
 
 void
 cm_term(nodeid_t node)
 {
-  char keyF[50];
-  sprintf(keyF,"/cm_abort_flag%03d", node);
-  shm_unlink(keyF);
+   free(cm_abort_flags[node]);
 }
 
 
