@@ -217,7 +217,7 @@ BARRIERW;
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
   cm_abort_flag_mine = cm_init(NODE_ID());
   *cm_abort_flag_mine = NO_CONFLICT;
-
+  cm_abort_flags[NODE_ID()] = cm_abort_flag_mine;
 #if defined(GREEDY) && defined(GREEDY_GLOBAL_TS)
   greedy_global_ts = cm_greedy_global_ts_init();
 #endif
