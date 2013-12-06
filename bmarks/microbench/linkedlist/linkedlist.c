@@ -25,7 +25,7 @@
 
 #include "linkedlist.h"
 
-nxt_t offs__;
+__thread nxt_t offs__;
 
 void* shmem_init(size_t offset)
 {
