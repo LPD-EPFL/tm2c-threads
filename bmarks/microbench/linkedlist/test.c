@@ -85,9 +85,11 @@ test(void* data, double duration)
   /* Is the first op an update? */
   unext = (rand_range(100) < d->update);
 
-  signal (SIGALRM, alarm_handler);
+  ONCE {
+	  signal (SIGALRM, alarm_handler);
+	  alarm(duration);
+  }
 
-  alarm(duration);
   BARRIER;
   while(work)
     {

@@ -64,6 +64,8 @@ typedef struct thread_data
 
 
 volatile int work = 1;
+int argc;
+char **argv;
 
 void
 alarm_handler(int sig)
@@ -88,9 +90,11 @@ test(void *data, double duration)
   mnext = (r < d->move);
   cnext = (r >= d->update + d->snapshot);
 
-  signal (SIGALRM, alarm_handler);
 
-  alarm(duration);
+  ONCE {
+	  signal (SIGALRM, alarm_handler);
+	  alarm(duration);
+  }
 
 
   BARRIER;
@@ -238,11 +242,10 @@ print_ht(ht_intset_t *set)
 
 long range = DEFAULT_RANGE;
 
-int
-main(int argc, char **argv) 
-{
+
+void* mainthread(void *args) {
 #ifndef SEQUENTIAL
-  TM2C_INIT;
+	TM_START;
 #else
   SEQ_INIT;
 #endif
@@ -283,157 +286,150 @@ main(int argc, char **argv)
   int verbose = DEFAULT_VERBOSE;
   unsigned int seed = 0;
 
-  while (1) 
-    {
-      i = 0;
-      c = getopt_long(argc, argv, "hAf:d:i:n:r:s:u:m:a:l:x:v", long_options, &i);
-      if (c == -1)
-	break;
+  ONCE {
+	  while (1)
+		{
+		  i = 0;
+		  c = getopt_long(argc, argv, "hAf:d:i:n:r:s:u:m:a:l:x:v", long_options, &i);
+		  if (c == -1)
+		break;
 
-      if (c == 0 && long_options[i].flag == 0)
-	c = long_options[i].val;
+		  if (c == 0 && long_options[i].flag == 0)
+		c = long_options[i].val;
 
-      switch (c) 
-	{
-	case 0:
-	  // Flag is automatically set 
-	  break;
-	case 'h':
-	  ONCE
-	    {
-	      printf("intset -- STM stress test "
-		     "(hash table)\n"
-		     "\n"
-		     "Usage:\n"
-		     "  intset [options...]\n"
-		     "\n"
-		     "Options:\n"
-		     "  -h, --help\n"
-		     "        Print this message\n"
-		     "  -A, --Alternate\n"
-		     "        Consecutive insert/remove target the same value\n"
-		     "  -f, --effective <int>\n"
-		     "        update txs must effectively write (0=trial, 1=effective, default=" XSTR(DEFAULT_EFFECTIVE) ")\n"
-		     "  -d, --duration <double>\n"
-		     "        Test duration in seconds (0=infinite, default=" XSTR(DEFAULT_DURATION) ")\n"
-		     "  -i, --initial-size <int>\n"
-		     "        Number of elements to insert before test (default=" XSTR(DEFAULT_INITIAL) ")\n"
-		     "  -n, --num-threads <int>\n"
-		     "        Number of threads (default=" XSTR(DEFAULT_NB_THREADS) ")\n"
-		     "  -r, --range <int>\n"
-		     "        Range of integer values inserted in set (default=" XSTR(DEFAULT_RANGE) ")\n"
-		     "  -u, --update-rate <int>\n"
-		     "        Percentage of update transactions (default=" XSTR(DEFAULT_UPDATE) ")\n"
-		     "  -m , --move-rate <int>\n"
-		     "        Percentage of move transactions (default=" XSTR(DEFAULT_MOVE) ")\n"
-		     "  -a , --snapshot-rate <int>\n"
-		     "        Percentage of snapshot transactions (default=" XSTR(DEFAULT_SNAPSHOT) ")\n"
-		     "  -l , --load-factor <int>\n"
-		     "        Ratio of keys over buckets (default=" XSTR(DEFAULT_LOAD) ")\n"
-		     "  -v , --verbose\n"
-		     "        Print detailed stats"
-		     );
-	    }
-	  goto end;
-	case 'A':
-	  alternate = 1;
-	  break;
-	case 'f':
-	  effective = atoi(optarg);
-	  break;
-	case 'd':
-	  duration = atof(optarg);
-	  break;
-	case 'i':
-	  initial = atoi(optarg);
-	  break;
-	case 'n':
-	  nb_app_cores = atoi(optarg);
-	  break;
-	case 'r':
-	  range = atol(optarg);
-	  break;
-	case 'u':
-	  update = atoi(optarg);
-	  break;
-	case 'm':
-	  move = atoi(optarg);
-	  if (move)
-	    {
-	      effective = 0;
-	    }
-	  break;
-	case 'a':
-	  snapshot = atoi(optarg);
-	  break;
-	case 'l':
-	  load_factor = atoi(optarg);
-	  break;
-	case 'x':
-	  unit_tx = atoi(optarg);
-	  break;
-	case 'v':
-	  verbose = 1;
-	  break;
-	case '?':
-	  ONCE
-	    {
-	      printf("Use -h or --help for help\n");
-	    }
-	  goto end;
-	default:
-	  exit(1);
-	}
-    }
+		  switch (c)
+		{
+		case 0:
+		  // Flag is automatically set
+		  break;
+		case 'h':
+			  printf("intset -- STM stress test "
+				 "(hash table)\n"
+				 "\n"
+				 "Usage:\n"
+				 "  intset [options...]\n"
+				 "\n"
+				 "Options:\n"
+				 "  -h, --help\n"
+				 "        Print this message\n"
+				 "  -A, --Alternate\n"
+				 "        Consecutive insert/remove target the same value\n"
+				 "  -f, --effective <int>\n"
+				 "        update txs must effectively write (0=trial, 1=effective, default=" XSTR(DEFAULT_EFFECTIVE) ")\n"
+				 "  -d, --duration <double>\n"
+				 "        Test duration in seconds (0=infinite, default=" XSTR(DEFAULT_DURATION) ")\n"
+				 "  -i, --initial-size <int>\n"
+				 "        Number of elements to insert before test (default=" XSTR(DEFAULT_INITIAL) ")\n"
+				 "  -n, --num-threads <int>\n"
+				 "        Number of threads (default=" XSTR(DEFAULT_NB_THREADS) ")\n"
+				 "  -r, --range <int>\n"
+				 "        Range of integer values inserted in set (default=" XSTR(DEFAULT_RANGE) ")\n"
+				 "  -u, --update-rate <int>\n"
+				 "        Percentage of update transactions (default=" XSTR(DEFAULT_UPDATE) ")\n"
+				 "  -m , --move-rate <int>\n"
+				 "        Percentage of move transactions (default=" XSTR(DEFAULT_MOVE) ")\n"
+				 "  -a , --snapshot-rate <int>\n"
+				 "        Percentage of snapshot transactions (default=" XSTR(DEFAULT_SNAPSHOT) ")\n"
+				 "  -l , --load-factor <int>\n"
+				 "        Ratio of keys over buckets (default=" XSTR(DEFAULT_LOAD) ")\n"
+				 "  -v , --verbose\n"
+				 "        Print detailed stats"
+				 );
+		  goto end;
+		case 'A':
+		  alternate = 1;
+		  break;
+		case 'f':
+		  effective = atoi(optarg);
+		  break;
+		case 'd':
+		  duration = atof(optarg);
+		  break;
+		case 'i':
+		  initial = atoi(optarg);
+		  break;
+		case 'n':
+		  nb_app_cores = atoi(optarg);
+		  break;
+		case 'r':
+		  range = atol(optarg);
+		  break;
+		case 'u':
+		  update = atoi(optarg);
+		  break;
+		case 'm':
+		  move = atoi(optarg);
+		  if (move)
+			{
+			  effective = 0;
+			}
+		  break;
+		case 'a':
+		  snapshot = atoi(optarg);
+		  break;
+		case 'l':
+		  load_factor = atoi(optarg);
+		  break;
+		case 'x':
+		  unit_tx = atoi(optarg);
+		  break;
+		case 'v':
+		  verbose = 1;
+		  break;
+		case '?':
+		  printf("Use -h or --help for help\n");
+		  goto end;
+		default:
+		  exit(1);
+		}
+		}
 
-  if (seed == 0) 
-    {
-      srand_core();
-      seed = rand_range((NODE_ID() + 17) * 123);
-      srand(seed);
-    }
-  else
-    srand(seed);
+	  if (seed == 0)
+		{
+		  srand_core();
+		  seed = rand_range((NODE_ID() + 17) * 123);
+		  srand(seed);
+		}
+	  else
+		srand(seed);
 
-  assert(duration >= 0);
-  assert(initial >= 0);
-  assert(nb_app_cores > 0);
-  assert(range > 0 && range >= initial);
-  assert(update >= 0 && update <= 100);
-  assert(move >= 0 && move <= update);
-  assert(snapshot >= 0 && snapshot <= (100 - update));
-  assert(initial < MAXHTLENGTH);
-  assert(initial >= load_factor);
+	  assert(duration >= 0);
+	  assert(initial >= 0);
+	  assert(nb_app_cores > 0);
+	  assert(range > 0 && range >= initial);
+	  assert(update >= 0 && update <= 100);
+	  assert(move >= 0 && move <= update);
+	  assert(snapshot >= 0 && snapshot <= (100 - update));
+	  assert(initial < MAXHTLENGTH);
+	  assert(initial >= load_factor);
 
-  if (verbose)
-    {
-      ONCE
-	{
-	  printf("Set type     : hash table\n");
-#ifdef SEQUENTIAL
-	  printf("                sequential\n");
-#elif defined(EARLY_RELEASE )
-	  printf("                using early-release\n");
-#elif defined(READ_VALIDATION)
-	  printf("                using read-validation\n");
-#endif
-#ifdef LOCKS
-	  printf("                  with locks\n");
-#endif
-	  printf("Duration     : %f\n", duration);
-	  printf("Initial size : %d\n", initial);
-	  printf("Nb threads   : %d\n", nb_app_cores);
-	  printf("Value range  : %ld\n", range);
-	  printf("Update rate  : %d\n", update);
-	  printf("Load factor  : %d\n", load_factor);
-	  printf("Move rate    : %d\n", move);
-	  printf("Snapshot rate: %d\n", snapshot);
-	  printf("Alternate    : %d\n", alternate);
-	  printf("Effective    : %d\n", effective);
-	  FLUSH;
-	}
-    }
-
+	  if (verbose)
+		{
+		  printf("Set type     : hash table\n");
+	#ifdef SEQUENTIAL
+		  printf("                sequential\n");
+	#elif defined(EARLY_RELEASE )
+		  printf("                using early-release\n");
+	#elif defined(READ_VALIDATION)
+		  printf("                using read-validation\n");
+	#endif
+	#ifdef LOCKS
+		  printf("                  with locks\n");
+	#endif
+		  printf("Duration     : %f\n", duration);
+		  printf("Initial size : %d\n", initial);
+		  printf("Nb threads   : %d\n", nb_app_cores);
+		  printf("Value range  : %ld\n", range);
+		  printf("Update rate  : %d\n", update);
+		  printf("Load factor  : %d\n", load_factor);
+		  printf("Move rate    : %d\n", move);
+		  printf("Snapshot rate: %d\n", snapshot);
+		  printf("Alternate    : %d\n", alternate);
+		  printf("Effective    : %d\n", effective);
+		  FLUSH;
+		}
+  }
+  BARRIER;
   if ((data = (thread_data_t *) malloc(sizeof (thread_data_t))) == NULL) {
     perror("malloc");
     exit(1);
@@ -556,4 +552,14 @@ main(int argc, char **argv)
   TM_END;
 #endif
   EXIT(0);
+}
+
+int
+main(int argc2, char **argv2)
+{
+	argc = argc2;
+	argv = argv2;
+	TM2C_INIT_SYS;
+	TM2C_INIT_THREAD;
+	EXIT(0);
 }
