@@ -88,7 +88,7 @@ extern __thread nxt_t offs__;
 
 void *shmem_init(size_t offset);
 
-node_t *new_node(val_t val, nxt_t next, int transactional);
+node_t *new_node(val_t val, node_t* next, int transactional);
 intset_t *set_new();
 void set_delete(intset_t *set);
 int set_size(intset_t *set);
