@@ -62,29 +62,14 @@ typedef size_t nxt_t;
 typedef struct node 
 {
   val_t val;
-  union 
-  {
     struct node *nextp;
-    nxt_t next;
-  };
 } node_t;
 
 typedef struct intset {
 
-    union {
-        nxt_t head;
         node_t *headp;
-    };
 
 } intset_t;
-
-extern __thread nxt_t offs__;
-
-#define N2O(set, node)                  (nxt_t) ((nxt_t) (node) - (nxt_t) (set))
-#define O2N(set, offset)                ((void *) (offs__ = offset) == NULL ? NULL : (node_t *) ((nxt_t) (set) + (offs__)))
-#define SET                             set
-#define ND(offs)                        O2N(SET, (offs))
-#define OF(node)                        N2O(SET, (node))
 
 void *shmem_init(size_t offset);
 

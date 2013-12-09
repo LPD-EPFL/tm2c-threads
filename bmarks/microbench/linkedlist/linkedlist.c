@@ -25,7 +25,6 @@
 
 #include "linkedlist.h"
 
-__thread nxt_t offs__;
 
 void* shmem_init(size_t offset)
 {
@@ -477,7 +476,7 @@ int set_remove(intset_t *set, val_t val, int transactional)
   if (result) {
     //nxt_t nxt = *(nxt_t *) TX_LOAD(&next->next);
   	 node_t* nxt = *((node_t**) TX_LOAD(&next->nextp));
-    TX_STORE(&prev->next, (val_t) nxt, TYPE_INT64);
+    TX_STORE(&prev->nextp, (val_t) nxt, TYPE_INT64);
     TX_SHFREE(next);
     PRINTD("Freed node   %5d. Value: %d", next, next->val);
   }
