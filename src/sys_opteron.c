@@ -278,12 +278,9 @@ sys_app_term(void)
   pgas_app_term();
 #endif
 
-#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
-  //cm_term(NODE_ID());
 #  if defined(GREEDY) && defined(GREEDY_GLOBAL_TS)
   cm_greedy_global_ts_term();
 #  endif
-#endif
 
   BARRIERW;
 }
