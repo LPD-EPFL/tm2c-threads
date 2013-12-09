@@ -252,9 +252,6 @@ static void sys_dsl_term_once(void) {
   tm2c_shmalloc_term();
 #endif
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
-  int i;
-  for(i=0; i < TOTAL_NODES(); i++)
-	cm_term(i);
   free(cm_abort_flags);
 #endif
 }
@@ -278,6 +275,9 @@ sys_app_term(void)
   pgas_app_term();
 #endif
 
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
+  free(cm_abort_flag_mine); 
+#endif
 #  if defined(GREEDY) && defined(GREEDY_GLOBAL_TS)
   cm_greedy_global_ts_term();
 #  endif
