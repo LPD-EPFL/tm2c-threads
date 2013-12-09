@@ -266,12 +266,6 @@ sys_dsl_term(void)
   BARRIERW;
 }
 
-static pthread_once_t sys_app_term_once_control = PTHREAD_ONCE_INIT;
-static void sys_app_term_once(void) {
-#if !defined(PGAS)
-  tm2c_shmalloc_term();
-#endif
-}
 
 void
 sys_app_term(void)
@@ -280,7 +274,6 @@ sys_app_term(void)
   pgas_app_term();
 #endif
 
-pthread_once(&sys_app_term_once_control, sys_app_term_once);
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
   cm_term(NODE_ID());
 #  if defined(GREEDY) && defined(GREEDY_GLOBAL_TS)
