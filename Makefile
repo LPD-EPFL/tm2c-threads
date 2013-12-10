@@ -65,7 +65,7 @@ ARCHIVE_SRCS_PURE:= tm2c_app.c tm2c.c tm2c_log.c tm2c_dsl.c tm2c_mem.c \
 
 ifeq ($(VERSION),DEBUG)
 $(info *********************************** debug version)
-DEBUG_FLAGS := -O0 -g -ggdb -fno-inline #-DDEBUG 
+DEBUG_FLAGS := -g -ggdb -fno-inline #-DDEBUG 
 endif
 
 ifeq ($(TM2C_MAX_PROCS),)
