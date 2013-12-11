@@ -193,6 +193,9 @@ static void tm2c_shmalloc_init_once(void) {
 	cm_abort_flags = (int32_t**) malloc(TOTAL_NODES() * sizeof(int32_t*));
 	assert(cm_abort_flags != NULL);
 #endif
+#  if defined(GREEDY) && defined(GREEDY_GLOBAL_TS)
+  greedy_global_ts = cm_greedy_global_ts_init();
+#  endif
 	tm2c_shmalloc_init(TM2C_SHMEM_SIZE);
 }
 
@@ -214,13 +217,7 @@ BARRIERW;
   cm_abort_flag_mine = cm_init(NODE_ID());
   *cm_abort_flag_mine = NO_CONFLICT;
   cm_abort_flags[NODE_ID()] = cm_abort_flag_mine;
-
-#  if defined(GREEDY) && defined(GREEDY_GLOBAL_TS)
-  greedy_global_ts = cm_greedy_global_ts_init();
-#  endif
-
 #endif
-
 
   tm2c_rpc_remote_msg = NULL;
   PRINTD("sys_app_init: done");
@@ -252,6 +249,9 @@ static void sys_dsl_term_once(void) {
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
   free(cm_abort_flags);
 #endif
+#  if defined(GREEDY) && defined(GREEDY_GLOBAL_TS)
+  cm_greedy_global_ts_term();
+#  endif
 }
 
 void
@@ -261,7 +261,6 @@ sys_dsl_term(void)
   pgas_dsl_term();
 #endif
   pthread_once(&sys_dsl_term_once_control, sys_dsl_term_once);
-
   BARRIERW;
 }
 
@@ -276,9 +275,6 @@ sys_app_term(void)
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
   free(cm_abort_flag_mine);
 #endif
-#  if defined(GREEDY) && defined(GREEDY_GLOBAL_TS)
-  cm_greedy_global_ts_term();
-#  endif
 
   BARRIERW;
 }
@@ -609,49 +605,15 @@ cm_term(nodeid_t node)
 static ticks* 
 cm_greedy_global_ts_init()
 {
-   char keyF[50];
-   sprintf(keyF,"/cm_greedy_global_ts");
-
-   size_t cache_line = 64;
-
-   int abrtfd = shm_open(keyF, O_CREAT | O_EXCL | O_RDWR, S_IRWXU | S_IRWXG);
-   if (abrtfd<0)
-   {
-      if (errno != EEXIST)
-      {
-         perror("In shm_open");
-         exit(1);
-      }
-
-      //this time it is ok if it already exists                                                    
-      abrtfd = shm_open(keyF, O_CREAT | O_RDWR, S_IRWXU | S_IRWXG);
-      if (abrtfd<0)
-      {
-         perror("In shm_open");
-         exit(1);
-      }
-   }
-   else
-   {
-      //only if it is just created                                                                 
-     if(ftruncate(abrtfd, cache_line))
-       {
-	 printf("ftruncate");
-       }
-   }
-
-   ticks* tmp = (ticks*) mmap(NULL, 64, PROT_READ | PROT_WRITE, MAP_SHARED, abrtfd, 0);
+   ticks *tmp = (ticks*) malloc(sizeof(tick));
    assert(tmp != NULL);
-   
    return tmp;
 }
 
 void
 cm_greedy_global_ts_term()
 {
-  char keyF[50];
-  sprintf(keyF,"/cm_greedy_global_ts");
-  shm_unlink(keyF);
+  free(greedy_global_ts);
 }
 
 
