@@ -43,7 +43,6 @@
 #include <sched.h>
 #include <inttypes.h>
 #include <malloc.h>
-#include <pthread.h>
 
 #ifdef PLATFORM_NUMA
 #  include <numa.h>
@@ -147,6 +146,8 @@ extern void ssmp_term(void);
 
 /* send the contents of msg to core to */
 extern inline void ssmp_send(uint32_t to, volatile ssmp_msg_t* msg);
+/* check whether the queue of core to is free */
+extern inline int ssmp_send_is_free(uint32_t to);
 /* send the contents of msg to core to without checking whether the buffer
    for receiving messages of to if free */
 extern inline void ssmp_send_no_sync(uint32_t to, volatile ssmp_msg_t* msg);
@@ -220,8 +221,7 @@ extern void set_cpu(int cpu);
 /* get the value of the timestamp counter of the core */
 extern inline ticks getticks(void);
 /* the cost (in cycles) of a getticks call */
-extern __thread ticks getticks_correction;
-extern ticks getticks_correction_calc();
+extern ticks getticks_correction;
 
 /* round up to next higher power of 2 (return x if it's already a power
    of 2) for 32-bit numbers */

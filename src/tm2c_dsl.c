@@ -66,11 +66,6 @@ __thread int bucket_max[NUM_OF_BUCKETS];
 
 extern void tm2c_term();
 
-static pthread_once_t tmp2c_dsl_init_once_control = PTHREAD_ONCE_INIT;
-void tm2c_dsl_init_once(void) {
-
-}
-
 /**already fork here*/
 void
 tm2c_dsl_init(void)

@@ -85,7 +85,7 @@ void *mainthread(void *args) {
 	sys_shfree((void*) sis);
 
 	TM_END;
-
+	pthread_exit(NULL);
 }
 
 int main(int argc, char **argv) {

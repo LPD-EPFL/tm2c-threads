@@ -153,6 +153,7 @@ void *initthread(void *args) {
 	}
 	tm2c_init();
 	(*c_args.mainthread)(NULL);
+	pthread_exit(NULL);
 }
 
 void
@@ -594,7 +595,7 @@ int32_t*
 cm_init(nodeid_t node)
 {
   size_t cache_line = 64;
-  int32_t* tmp = (int32_t*) memalign(SSMP_CACHE_LINE_SIZE, 64);
+  int32_t* tmp = (int32_t*) memalign(SSMP_CACHE_LINE_SIZE, cache_line);
   assert(tmp != NULL);
   return tmp;
 }
