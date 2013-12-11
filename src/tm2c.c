@@ -40,6 +40,7 @@
 #include <sys/param.h>
 
 #include "tm2c.h"
+#include <pthread.h>
 
 __thread nodeid_t ID; //to be thread specific
 nodeid_t NUM_UES;

@@ -78,7 +78,6 @@ INLINED void sys_tm2c_rpc_req_reply(nodeid_t sender,
 __thread nodeid_t TM2C_ID;
 nodeid_t TM2C_NUM_NODES;
 
-
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if any other CM (greedy, wholly, faircm) */
 int32_t** cm_abort_flags; //all flags
 __thread int32_t *cm_abort_flag_mine;

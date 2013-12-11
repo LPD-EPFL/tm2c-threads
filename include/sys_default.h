@@ -53,6 +53,9 @@ extern nodeid_t *dsl_nodes;
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if any other CM (greedy, wholly, faircm) */
 extern int32_t **cm_abort_flags;
 extern __thread int32_t *cm_abort_flag_mine;
+#  if defined(GREEDY) && defined(GREEDY_GLOBAL_TS)
+extern ticks* greedy_global_ts; //global
+#  endif
 #endif /* CM_H */
 
 extern size_t pgas_app_addr_offs(void* addr);
