@@ -35,6 +35,7 @@
 /client_server_rt
 /core
 /data
+/external/lib/*
 /external/tmp/libconfig-1.4.8/examples/c++/.deps/
 /external/tmp/libconfig-1.4.8/examples/c++/.libs/
 /external/tmp/libconfig-1.4.8/examples/c/.deps/
