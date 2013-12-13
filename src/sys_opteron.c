@@ -192,8 +192,8 @@ sys_tm2c_init()
 
 }
 
-static pthread_once_t tm2c_shmalloc_init_once_control = PTHREAD_ONCE_INIT;
-static void tm2c_shmalloc_init_once(void) {
+static pthread_once_t tm2c_malloc_share_memory_once = PTHREAD_ONCE_INIT;
+static void tm2c_malloc_share_memory(void) {
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
 	cm_abort_flags = (int32_t**) malloc(TOTAL_NODES() * sizeof(int32_t*));
 	assert(cm_abort_flags != NULL);
@@ -209,7 +209,7 @@ static void sys_app_init_once(void) {
 #if defined(PGAS)
   pgas_app_init();
 #else  /* PGAS */
-  pthread_once(&tm2c_shmalloc_init_once_control, tm2c_shmalloc_init_once);
+  pthread_once(&tm2c_malloc_share_memory_once, tm2c_malloc_share_memory);
 #endif /* PGAS */
 }
 
@@ -220,7 +220,6 @@ pthread_once(&sys_app_init_once_control, sys_app_init_once);
 BARRIERW;
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
   cm_abort_flag_mine = cm_init(NODE_ID());
-  *cm_abort_flag_mine = NO_CONFLICT;
   cm_abort_flags[NODE_ID()] = cm_abort_flag_mine;
 #endif
 
@@ -235,7 +234,7 @@ static void sys_dsl_init_once(void) {
 #if defined(PGAS)
   pgas_dsl_init();
 #else  /* PGAS */
-  pthread_once(&tm2c_shmalloc_init_once_control, tm2c_shmalloc_init_once);
+  pthread_once(&tm2c_malloc_share_memory_once, tm2c_malloc_share_memory);
 #endif	/* PGAS */
 }
 
@@ -246,17 +245,21 @@ void sys_dsl_init(void) {
    BARRIERW;
 }
 
-static pthread_once_t sys_dsl_term_once_control = PTHREAD_ONCE_INIT;
-static void sys_dsl_term_once(void) {
-#if !defined(PGAS)
+static void tm2c_free_shared_memory(void) {
+static volatile int last_thread_free_memory = 0;
+	__sync_add_and_fetch(&last_thread_free_memory, 1);
+	if (last_thread_free_memory == TM2C_NUM_NODES) {
+		#if !defined(PGAS)
+		  tm2c_shmalloc_term();
+		#endif
+		#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
+		  free(cm_abort_flags);
+		#endif
+		#  if defined(GREEDY) && defined(GREEDY_GLOBAL_TS)
+		  cm_greedy_global_ts_term();
+		#  endif
+	}
   tm2c_shmalloc_term();
-#endif
-#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
-  free(cm_abort_flags);
-#endif
-#  if defined(GREEDY) && defined(GREEDY_GLOBAL_TS)
-  cm_greedy_global_ts_term();
-#  endif
 }
 
 void
@@ -265,7 +268,7 @@ sys_dsl_term(void)
 #if defined(PGAS)
   pgas_dsl_term();
 #endif
-  pthread_once(&sys_dsl_term_once_control, sys_dsl_term_once);
+  tm2c_free_shared_memory();
   BARRIERW;
 }
 
@@ -280,7 +283,7 @@ sys_app_term(void)
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
   free(cm_abort_flag_mine); 
 #endif
-
+  tm2c_free_shared_memory();
   BARRIERW;
 }
 
@@ -603,6 +606,7 @@ cm_init(nodeid_t node) {
   size_t cache_line = 64;
   int32_t* tmp = (int32_t*) memalign(SSMP_CACHE_LINE_SIZE, cache_line);
   assert(tmp != NULL);
+  *tmp = NO_CONFLICT;
   return tmp;
 }
 
@@ -619,7 +623,7 @@ cm_greedy_global_ts_init()
 {
    ticks *tmp = (ticks*) malloc(sizeof(ticks));
    assert(tmp != NULL);
-   
+   *tmp = 0;
    return tmp;
 }
 

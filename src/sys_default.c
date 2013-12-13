@@ -134,7 +134,6 @@ sys_tm2c_init_system(int* argc, char** argv[])
   *argc = *argc - (p-cur);
 
   ssmp_init(TM2C_NUM_NODES);
-  //call to ssmp_init_barrier
   tm2c_init_barrier();
 }
 
@@ -187,8 +186,9 @@ sys_tm2c_init()
 
 }
 
-static pthread_once_t tm2c_shmalloc_init_once_control = PTHREAD_ONCE_INIT;
-static void tm2c_shmalloc_init_once(void) {
+/**called only once by a dsl node, allocate all the shared memory*/
+static pthread_once_t tm2c_malloc_share_memory_once = PTHREAD_ONCE_INIT;
+static void tm2c_malloc_share_memory(void) {
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
 	cm_abort_flags = (int32_t**) malloc(TOTAL_NODES() * sizeof(int32_t*));
 	assert(cm_abort_flags != NULL);
@@ -204,7 +204,7 @@ static void sys_app_init_once(void) {
 #if defined(PGAS)
   pgas_app_init();
 #else  /* PGAS */
-  pthread_once(&tm2c_shmalloc_init_once_control, tm2c_shmalloc_init_once);
+  pthread_once(&tm2c_malloc_share_memory_once, tm2c_malloc_share_memory);
 #endif /* PGAS */
 }
 
@@ -221,7 +221,7 @@ BARRIERW;
 
   tm2c_rpc_remote_msg = NULL;
   PRINTD("sys_app_init: done");
-  BARRIERW; //extra for dsl updating cm_flags
+  BARRIERW;
 }
 
 
@@ -230,7 +230,7 @@ static void sys_dsl_init_once(void) {
 #if defined(PGAS)
   pgas_dsl_init();
 #else  /* PGAS */
-  pthread_once(&tm2c_shmalloc_init_once_control, tm2c_shmalloc_init_once);
+  pthread_once(&tm2c_malloc_share_memory_once, tm2c_malloc_share_memory);
 #endif	/* PGAS */
 }
 
@@ -238,20 +238,23 @@ static void sys_dsl_init_once(void) {
 void sys_dsl_init(void) {
    pthread_once(&sys_dsl_init_once_control, sys_dsl_init_once);
    BARRIERW;
-   BARRIERW;
+   BARRIERW; //waiting for the app nodes updating cm_abort_flag_mine
 }
 
-static pthread_once_t sys_dsl_term_once_control = PTHREAD_ONCE_INIT;
-static void sys_dsl_term_once(void) {
-#if !defined(PGAS)
-  tm2c_shmalloc_term();
-#endif
-#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
-  free(cm_abort_flags);
-#endif
-#  if defined(GREEDY) && defined(GREEDY_GLOBAL_TS)
-  cm_greedy_global_ts_term();
-#  endif
+static void tm2c_free_shared_memory(void) {
+static volatile int last_thread_free_memory = 0;
+	__sync_add_and_fetch(&last_thread_free_memory, 1);
+	if (last_thread_free_memory == TM2C_NUM_NODES) {
+		#if !defined(PGAS)
+		  tm2c_shmalloc_term();
+		#endif
+		#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
+		  free(cm_abort_flags);
+		#endif
+		#  if defined(GREEDY) && defined(GREEDY_GLOBAL_TS)
+		  cm_greedy_global_ts_term();
+		#  endif
+	}
 }
 
 void
@@ -260,7 +263,7 @@ sys_dsl_term(void)
 #if defined(PGAS)
   pgas_dsl_term();
 #endif
-  pthread_once(&sys_dsl_term_once_control, sys_dsl_term_once);
+  tm2c_free_shared_memory();
   BARRIERW;
 }
 
@@ -275,7 +278,7 @@ sys_app_term(void)
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
   free(cm_abort_flag_mine);
 #endif
-
+  tm2c_free_shared_memory();
   BARRIERW;
 }
 
@@ -607,6 +610,7 @@ cm_greedy_global_ts_init()
 {
    ticks *tmp = (ticks*) malloc(sizeof(tick));
    assert(tmp != NULL);
+   *tmp = 0;
    return tmp;
 }
 
