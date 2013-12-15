@@ -49,7 +49,7 @@ TOP := $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST))))
 SRCPATH := $(TOP)/src
 MAININCLUDE := $(TOP)/include
 
-INCLUDES := -I$(MAININCLUDE) -I$(TOP)/external/include
+INCLUDES := -I$(MAININCLUDE) -I$(TOP)/external/include/
 LIBS := -L$(TOP)/external/lib \
 		-lm \
 		$(PLATFORM_LIBS)
@@ -67,7 +67,7 @@ ifeq ($(VERSION),DEBUG)
 $(info *********************************** debug version)
 DEBUG_FLAGS := -g -ggdb -fno-inline #-DDEBUG 
 endif
-DEBUG_FLAGS := -O0 -g3 -ggdb -fno-inline #-DDEBUG 
+DEBUG_FLAGS := -g3 -ggdb -fno-inline #-DDEBUG 
 
 ifeq ($(TM2C_MAX_PROCS),)
 TM2C_MAX_PROCS=${MAX_PROCS}

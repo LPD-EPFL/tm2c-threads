@@ -189,4 +189,9 @@ set_tx_persisting()
 }
 #endif	/* NOCM */
 
+
+#if defined(GREEDY) && defined(GREEDY_GLOBAL_TS)
+void cm_greedy_global_ts_term(void);
+#endif
+
 #endif	/* _SYS_DEFAULT_H_ */

@@ -45,7 +45,7 @@ TM2C_SHMEM_SIZE_MB = 512
 #  		  (starvation-free in practice, not fair)
 # FAIRCM	: uses the effective transactional time by the core as
   		: the criterion (starvation-free and fair)
-CONTENTION_MANAGER = FAIRCM
+CONTENTION_MANAGER = GREEDY
 
 ############################################################################
 # Setting for the BACKOFF_RETRY policy
@@ -58,7 +58,7 @@ BACKOFF_DELAY = 500
 # Use a global timestamp or the default offset-baded approach with greedy
 # 0 : offset-based calculation
 # 1 : global timestamp (not scalable)
-GREEDY_GLOBAL_TS = 0
+GREEDY_GLOBAL_TS = 1
 
 ############################################################################
 # Maximum number of processes supported

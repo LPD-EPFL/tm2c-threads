@@ -608,7 +608,7 @@ cm_term(nodeid_t node)
 static ticks* 
 cm_greedy_global_ts_init()
 {
-   ticks *tmp = (ticks*) malloc(sizeof(tick));
+   ticks *tmp = (ticks*) malloc(sizeof(ticks));
    assert(tmp != NULL);
    *tmp = 0;
    return tmp;
