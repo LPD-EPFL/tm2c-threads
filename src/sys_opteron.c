@@ -259,7 +259,6 @@ static volatile int last_thread_free_memory = 0;
 		  cm_greedy_global_ts_term();
 		#  endif
 	}
-  tm2c_shmalloc_term();
 }
 
 void
