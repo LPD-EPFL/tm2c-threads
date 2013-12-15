@@ -244,7 +244,7 @@ void sys_dsl_init(void) {
 static void tm2c_free_shared_memory(void) {
 static volatile int last_thread_free_memory = 0;
 	__sync_add_and_fetch(&last_thread_free_memory, 1);
-	if (last_thread_free_memory == TM2C_NUM_NODES) {
+	if (last_thread_free_memory == NUM_APP_NODES) {
 		#if !defined(PGAS)
 		  tm2c_shmalloc_term();
 		#endif
@@ -278,7 +278,7 @@ sys_app_term(void)
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
   free(cm_abort_flag_mine);
 #endif
-  tm2c_free_shared_memory();
+  //tm2c_free_shared_memory();
   BARRIERW;
 }
 
