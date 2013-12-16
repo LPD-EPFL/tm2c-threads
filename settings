@@ -58,7 +58,7 @@ BACKOFF_DELAY = 500
 # Use a global timestamp or the default offset-baded approach with greedy
 # 0 : offset-based calculation
 # 1 : global timestamp (not scalable)
-GREEDY_GLOBAL_TS = 1
+GREEDY_GLOBAL_TS = 0
 
 ############################################################################
 # Maximum number of processes supported
