@@ -44,8 +44,8 @@ TM2C_SHMEM_SIZE_MB = 512
 # GREEDY	: uses timestamps and gives priority to older transactions
 #  		  (starvation-free in practice, not fair)
 # FAIRCM	: uses the effective transactional time by the core as
-  		: the criterion (starvation-free and fair)
-CONTENTION_MANAGER = GREEDY
+#  		: the criterion (starvation-free and fair)
+CONTENTION_MANAGER = NOCM
 
 ############################################################################
 # Setting for the BACKOFF_RETRY policy
@@ -70,7 +70,7 @@ MAX_PROCS = 256
 # 1 : using the dsl_node in tm2c.c
 # 2 : using dsl_node_hex assignement in tm.c
 DSL_CORES_ASSIGN = 0
-DSL_PER_NODE = 3		# for DSL_CORES_ASSIGN = 0
+DSL_PER_NODE = 4		# for DSL_CORES_ASSIGN = 0
 
 ############################################################################
 # defines the way we assign addresses to DSL cores
