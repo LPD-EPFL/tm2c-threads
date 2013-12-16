@@ -314,7 +314,7 @@ dsl_service()
 
   ssmp_msg_t *msg;
   ssmp_color_buf_t *cbuf;
-  static TM2C_RPC_REQ *tm2c_rpc_remote;
+  static __thread TM2C_RPC_REQ *tm2c_rpc_remote;
 
   if (posix_memalign((void**) &msg, CACHE_LINE_SIZE, sizeof(ssmp_msg_t)) != 0
       ||
