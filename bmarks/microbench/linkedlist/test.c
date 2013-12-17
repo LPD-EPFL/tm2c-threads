@@ -414,6 +414,7 @@ void *mainthread(void *args) {
          if (node->val > node->nextp->val) {
             fprintf(stderr, "Error on list integrity\n");
          }
+			node = node->nextp;
       }
     }
 
