@@ -364,7 +364,6 @@ void *mainthread(void *args) {
 	}
 
   shmem_init(10 * 1024 * (NODE_ID()-1) * sizeof (node_t) + ((initial + 2) * sizeof (node_t)));
-//TODO not sure to keep that ??
   /* Access set from all threads */
   data->first = last;
   data->range = range;
@@ -409,6 +408,13 @@ void *mainthread(void *args) {
       int size_after = set_size(set);
       /* set_print(set); */
       printf("Set size (af): %u\n", size_after);
+		node_t *head = set->headp;
+		node_t *node = head->nextp;
+		while (node->nextp != NULL) {
+			if (node->val > node->nextp->val) {
+				fprintf(stderr, "Error on list integrity\n");
+			}
+		}
     }
 
   BARRIER;
