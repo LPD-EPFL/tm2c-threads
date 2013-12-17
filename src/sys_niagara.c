@@ -160,9 +160,9 @@ void *initthread(void *args) {
 	TM2C_ID = c_args.id;
 	// Now, pin the process to the right core (NODE_ID == core id)
 #if defined(ALL_REAL_CORES)
-	set_cpu(id_to_core_id[rank]);
+	set_cpu(id_to_core_id[TM2C_ID]);
 #else
-	set_cpu(rank);
+	set_cpu(TM2C_ID);
 #endif
 	tm2c_init();
 	(*c_args.mainthread)(NULL);
