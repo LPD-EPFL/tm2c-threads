@@ -409,6 +409,14 @@ void *mainthread(void *args) {
       int size_after = set_size(set);
       /* set_print(set); */
       printf("Set size (af): %u\n", size_after);
+    /* We have at least 2 elements */
+      node_t *head = set->headp;
+      node_t *node = head->nextp;
+       while (node->nextp != NULL) {
+	  if (node->val > node->nextp->val) 
+	     fprintf(stderr, "Error on list integrity\n");
+          node = node->nextp;
+       }
     }
 
   BARRIER;

@@ -45,7 +45,7 @@ TM2C_SHMEM_SIZE_MB = 512
 #  		  (starvation-free in practice, not fair)
 # FAIRCM	: uses the effective transactional time by the core as
 #  		: the criterion (starvation-free and fair)
-CONTENTION_MANAGER = NOCM
+CONTENTION_MANAGER = FAIRCM
 
 ############################################################################
 # Setting for the BACKOFF_RETRY policy
