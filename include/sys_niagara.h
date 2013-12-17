@@ -244,9 +244,4 @@ set_tx_persisting()
 #endif	/* NOCM */
 
 
-
-#if !defined(NOCM)	/* if any other CM (greedy, wholly, faircm) */
-int32_t cm_init(nodeid_t id);
-#endif
-
 #endif	/* _SYS_NIAGARA_H_ */
