@@ -1,0 +1,23 @@
+#backoff retry 4 dsl per ndoe
+#-R1 -c0
+./bmarks/bank 6 10145
+./bmarks/bank 12 48931
+./bmarks/bank 18 61689
+./bmarks/bank 24 100987
+./bmarks/bank 30 202710
+./bmarks/bank 36 445416
+./bmarks/bank 48 1312592
+./bmarks/bank 6 21644
+./bmarks/bank 12 50483
+./bmarks/bank 18 59658
+./bmarks/bank 24 112522
+./bmarks/bank 30 217674
+./bmarks/bank 36 444395
+./bmarks/bank 48 1305401
+./bmarks/bank 6 21792
+./bmarks/bank 12 41967
+./bmarks/bank 18 67631
+./bmarks/bank 24 101726
+./bmarks/bank 30 178051
+./bmarks/bank 36 509223
+./bmarks/bank 48 1329760
