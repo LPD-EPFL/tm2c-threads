@@ -167,7 +167,7 @@ set_contains(intset_t *set, val_t val, int transactional)
     //next = ND(*(nxt_t *) TX_LOAD(&prev->next));
   	 next = *((node_t**) TX_LOAD(&prev->nextp));
 #    ifdef EARLY_RELEASE
-    TX_RRLS(&rls->next);
+    TX_RRLS(&rls->nextp);
 #    endif
   }
   FLUSH;
@@ -295,7 +295,7 @@ set_add(intset_t *set, val_t val, int transactional)
   //next = ND(*(nxt_t *) TX_LOAD(&prev->next));
   next = *((node_t**) TX_LOAD(&prev->nextp));
 #    ifdef EARLY_RELEASE
-    TX_RRLS(&pprls->next);
+    TX_RRLS(&pprls->nextp);
     pprls = prls;
     prls = prev;
 #    endif
@@ -466,7 +466,7 @@ int set_remove(intset_t *set, val_t val, int transactional)
 	//next = ND(*(nxt_t *) TX_LOAD(&prev->next));
   	next = *((node_t**) TX_LOAD(&prev->nextp));
 #    ifdef EARLY_RELEASE
-    TX_RRLS(&pprls->next);
+    TX_RRLS(&pprls->nextp);
     pprls = prls;
     prls = prev;
 #    endif
