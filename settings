@@ -70,7 +70,7 @@ MAX_PROCS = 256
 # 1 : using the dsl_node in tm2c.c
 # 2 : using dsl_node_hex assignement in tm.c
 DSL_CORES_ASSIGN = 0
-DSL_PER_NODE = 4		# for DSL_CORES_ASSIGN = 0
+DSL_PER_NODE = 3		# for DSL_CORES_ASSIGN = 0
 
 ############################################################################
 # defines the way we assign addresses to DSL cores
