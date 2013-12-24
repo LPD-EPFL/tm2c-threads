@@ -1,0 +1,22 @@
+#4 dsl node faircm c0 process
+./bmarks/bank 6 2276485
+./bmarks/bank 12 3951162
+./bmarks/bank 18 4822353
+./bmarks/bank 24 5970281
+./bmarks/bank 30 7092525
+./bmarks/bank 36 8002485
+./bmarks/bank 48 9662781
+./bmarks/bank 6 2240270
+./bmarks/bank 12 3930434
+./bmarks/bank 18 4790286
+./bmarks/bank 24 5990587
+./bmarks/bank 30 7051065
+./bmarks/bank 36 8027145
+./bmarks/bank 48 9687437
+./bmarks/bank 6 2272975
+./bmarks/bank 12 3934270
+./bmarks/bank 18 4820738
+./bmarks/bank 24 5986371
+./bmarks/bank 30 7072058
+./bmarks/bank 36 7980714
+./bmarks/bank 48 9721147
