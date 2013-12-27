@@ -27,7 +27,7 @@
 #define SEQUENTIAL_
 #define LOCKS_
 #define STM
-#define EARLY_RELEASE
+#define EARLY_RELEASE_
 #define READ_VALIDATION_
 
 #ifdef READ_VALIDATION
