@@ -174,7 +174,7 @@ set_contains(intset_t *set, val_t val, int transactional)
   TX_COMMIT;
   result = (v == val);
 
-/*#  else	  READ_VALIDATION 
+/*#  else	  READ_VALIDATION
   node_t *prev, *next, *validate;
   nxt_t nextoffs, validateoffs;
   val_t v = 0;

@@ -91,7 +91,6 @@ tm2c_shmalloc_term()
 #endif	/* !PLATFORM_TILERA */
 
 //--------------------------------------------------------------------------------------
-/**use lock in this function ?*/
 void*
 tm2c_shmalloc(size_t size)
 {
