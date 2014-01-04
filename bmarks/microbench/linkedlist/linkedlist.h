@@ -59,16 +59,14 @@ typedef size_t nxt_t;
 #define VAL_MIN                         INT_MIN
 #define VAL_MAX                         INT_MAX
 
-typedef struct node 
+typedef struct ALIGNED(64) node
 {
   val_t val;
     struct node *nextp;
 } node_t;
 
-typedef struct intset {
-
+typedef struct ALIGNED(64) intset {
         node_t *headp;
-
 } intset_t;
 
 void *shmem_init(size_t offset);
