@@ -35,6 +35,7 @@
 
 int argc;
 char **argv;
+intset_t* set;
 
 /* ################################################################### *
  * RANDOM
@@ -194,7 +195,6 @@ void *mainthread(void *args) {
       {NULL, 0, NULL, 0}
     };
 
-  intset_t* set;
   int i, c, size;
   val_t last = 0;
   val_t val = 0;
@@ -340,8 +340,10 @@ void *mainthread(void *args) {
       exit(1);
     }
 
-  set = set_new(); //all thread call that
-
+  ONCE {
+  set = set_new();
+  }
+  _mm_mfence();
   BARRIER;
 
   ONCE

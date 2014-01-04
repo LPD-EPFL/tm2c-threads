@@ -66,6 +66,7 @@ typedef struct thread_data
 volatile int work = 1;
 int argc;
 char **argv;
+ht_intset_t *set;
 
 void
 alarm_handler(int sig)
@@ -265,7 +266,6 @@ void* mainthread(void *args) {
       {NULL, 0, NULL, 0}
     };
 
-  ht_intset_t *set;
   int i, c, size;
   val_t last = 0;
   val_t val = 0;
@@ -438,7 +438,10 @@ void* mainthread(void *args) {
   maxhtlength = (unsigned int) initial / load_factor;
 
 
-  set = ht_new();
+  ONCE {
+	  set = ht_new();
+  }
+  _mm_mfence();
   // Populate set 
 
   BARRIER;
