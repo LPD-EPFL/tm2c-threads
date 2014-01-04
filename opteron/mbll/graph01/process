@@ -1,4 +1,5 @@
 #faircm process 3 dsl per node
+#default
 ./bmarks/mbll 6 -i1024 -r2048 -u 0 9628
 ./bmarks/mbll 12 -i1024 -r2048 -u 0 16277
 ./bmarks/mbll 18 -i1024 -r2048 -u 0 21639

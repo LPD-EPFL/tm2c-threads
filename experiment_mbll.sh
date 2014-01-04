@@ -4,7 +4,7 @@ for command in "./bmarks/mbll"
 do
 	for u in 0 10
 	do
-		for core in 2 3 4 #6 12 18 24 30 36 48
+		for core in 2 3 4 6 12 18 24 30 36 48
 		do
 			echo $command $core
 			$command -i1024 -r2048 -u$u -total\=$core  > tmp
