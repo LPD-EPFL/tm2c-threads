@@ -27,7 +27,7 @@
 
 #define DEFAULT_MOVE                    0
 #define DEFAULT_SNAPSHOT                0
-#define DEFAULT_LOAD                    1
+#define DEFAULT_LOAD                    1024
 #define DEFAULT_ELASTICITY              4
 #define DEFAULT_ALTERNATE               0
 #define DEFAULT_EFFECTIVE               1
