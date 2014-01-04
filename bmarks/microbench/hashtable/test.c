@@ -440,6 +440,8 @@ void* mainthread(void *args) {
 
   ONCE {
 	  set = ht_new();
+  } else {
+	  ht_new(); //just to offet by the same amount
   }
   _mm_mfence();
   // Populate set 

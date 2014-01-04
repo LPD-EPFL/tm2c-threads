@@ -342,6 +342,8 @@ void *mainthread(void *args) {
 
   ONCE {
   set = set_new();
+  } else {
+	  set_new(); //just to offset by the same amount
   }
   _mm_mfence();
   BARRIER;
