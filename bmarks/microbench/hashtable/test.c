@@ -438,9 +438,8 @@ void* mainthread(void *args) {
   maxhtlength = (unsigned int) initial / load_factor;
 
 
-  size_t size_shmem = 10 * 1024 * sizeof(node_t) + (initial + 2) * sizeof(node_t);
-  while (size_shmem % 64 > 0) size_shmem++;
-  shmem_init(size_shmem * NODE_ID());
+  
+  shmem_init(10 * 1024 * NODE_ID() * sizeof(node_t) + (initial + 2) * sizeof(node_t));
   ONCE {
 	  set = ht_new();
   }
