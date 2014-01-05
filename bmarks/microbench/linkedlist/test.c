@@ -340,10 +340,9 @@ void *mainthread(void *args) {
       exit(1);
     }
 
+  shmem_init(10 * 1024 * NODE_ID() * sizeof (node_t) + ((initial + 2) * sizeof (node_t)));
   ONCE {
-  set = set_new();
-  } else {
-	  set_new(); //just to offset by the same amount
+	  set = set_new();
   }
   _mm_mfence();
   BARRIER;
@@ -367,7 +366,6 @@ void *mainthread(void *args) {
       FLUSH
 	}
 
-  shmem_init(10 * 1024 * (NODE_ID()-1) * sizeof (node_t) + ((initial + 2) * sizeof (node_t)));
   /* Access set from all threads */
   data->first = last;
   data->range = range;
