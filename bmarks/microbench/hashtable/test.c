@@ -244,22 +244,9 @@ print_ht(ht_intset_t *set)
 }
 
 
-void deepCopy(int argc, char ***dest, char **src) {
-	int i = 0;
-	*dest = malloc(argc * sizeof(char**));
-	for (i = 0; i < argc; i++) {
-		(*dest)[i] = strdup(src[i]);
-		if ((*dest)[i] == NULL) {
-			fprintf(stderr, "strdup error\n");
-			exit(1);
-		}
-	}
-}
+long range = DEFAULT_RANGE;
 
-__thread long range = DEFAULT_RANGE;
 void* mainthread(void *args) {
-  argc = argc2 - 1;
-  deepCopy(argc, &argv, argv2);
 #ifndef SEQUENTIAL
 	TM_START;
 #else
@@ -285,22 +272,24 @@ void* mainthread(void *args) {
   val_t last = 0;
   val_t val = 0;
   thread_data_t *data;
-  double duration = DEFAULT_DURATION;
-  int initial = DEFAULT_INITIAL;
-  int nb_app_cores = TOTAL_NODES();
+  static double duration = DEFAULT_DURATION;
+  static int initial = DEFAULT_INITIAL;
+  static int nb_app_cores;
 #if defined(SEQUENTIAL)
-  nb_app_cores = 1;
+  static nb_app_cores = 1;
 #endif
-  int update = DEFAULT_UPDATE;
-  int load_factor = DEFAULT_LOAD;
-  int move = DEFAULT_MOVE;
-  int snapshot = DEFAULT_SNAPSHOT;
-  int unit_tx = DEFAULT_ELASTICITY;
-  int alternate = DEFAULT_ALTERNATE;
-  int effective = DEFAULT_EFFECTIVE;
-  int verbose = DEFAULT_VERBOSE;
+  static int update = DEFAULT_UPDATE;
+  static int load_factor = DEFAULT_LOAD;
+  static int move = DEFAULT_MOVE;
+  static int snapshot = DEFAULT_SNAPSHOT;
+  static int unit_tx = DEFAULT_ELASTICITY;
+  static int alternate = DEFAULT_ALTERNATE;
+  static int effective = DEFAULT_EFFECTIVE;
+  static int verbose = DEFAULT_VERBOSE;
   unsigned int seed = 0;
 
+  ONCE {
+	  nb_app_cores = TOTAL_NODES();
 	  while (1)
 		{
 		  i = 0;
@@ -349,7 +338,7 @@ void* mainthread(void *args) {
 				 "  -v , --verbose\n"
 				 "        Print detailed stats"
 				 );
-		  goto end;
+			  exit(1);
 		case 'A':
 		  alternate = 1;
 		  break;
@@ -392,21 +381,11 @@ void* mainthread(void *args) {
 		  break;
 		case '?':
 		  printf("Use -h or --help for help\n");
-		  goto end;
+		  exit(1);
 		default:
 		  exit(1);
 		}
 		}
-
-	  if (seed == 0)
-		{
-		  srand_core();
-		  seed = rand_range((NODE_ID() + 17) * 123);
-		  srand(seed);
-		}
-	  else
-		srand(seed);
-
 	  assert(duration >= 0);
 	  assert(initial >= 0);
 	  assert(nb_app_cores > 0);
@@ -416,6 +395,16 @@ void* mainthread(void *args) {
 	  assert(snapshot >= 0 && snapshot <= (100 - update));
 	  assert(initial < MAXHTLENGTH);
 	  assert(initial >= load_factor);
+	}
+	  if (seed == 0)
+		{
+		  srand_core();
+		  seed = rand_range((NODE_ID() + 17) * 123);
+		  srand(seed);
+		}
+	  else
+		srand(seed);
+
 
 	  if (verbose)
 		{
@@ -449,7 +438,6 @@ void* mainthread(void *args) {
   }
 
   maxhtlength = (unsigned int) initial / load_factor;
-
 
   
   shmem_init(10 * 1024 * NODE_ID() * sizeof(node_t) + (initial + 2) * sizeof(node_t));
@@ -564,7 +552,6 @@ void* mainthread(void *args) {
 
   BARRIER;
 
- end:
 #ifndef SEQUENTIAL
   TM_END;
 #endif
