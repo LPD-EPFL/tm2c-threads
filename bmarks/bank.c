@@ -502,6 +502,7 @@ void *mainthread(void *args) {
 	/* Init STM */
 	BARRIER;
 
+
 	data->id = app_id_seq(NODE_ID());
 	data->check = check;
 	data->read_all = read_all;
