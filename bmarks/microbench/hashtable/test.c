@@ -258,7 +258,7 @@ void deepCopy(int argc, char ***dest, char **src) {
 
 __thread long range = DEFAULT_RANGE;
 void* mainthread(void *args) {
-  argc = argc2;
+  argc = argc2 - 1;
   deepCopy(argc, &argv, argv2);
 #ifndef SEQUENTIAL
 	TM_START;

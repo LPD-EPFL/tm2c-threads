@@ -355,7 +355,7 @@ void deepCopy(int argc, char ***dest, char **src) {
 void *mainthread(void *args) {
 
 	TM_START;
-	argc = argc2;
+	argc = argc2 - 1; //because of -total that doesn't count
 	deepCopy(argc, &argv, argv2);
 	struct option long_options[] =
 	{

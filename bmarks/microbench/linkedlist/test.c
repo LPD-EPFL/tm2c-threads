@@ -175,12 +175,12 @@ test(void* data, double duration)
   return NULL;
 }
 
-void deepCopy(int argc, char ***dest, char **src) {
-	int i = 0;
-	*dest = malloc(argc * sizeof(char**));
+void deepCopy() {
+	int i;
+	argv = malloc(argc * sizeof(char**));
 	for (i = 0; i < argc; i++) {
-		(*dest)[i] = strdup(src[i]);
-		if ((*dest)[i] == NULL) {
+		argv[i] = strdup(argv2[i]);
+		if (argv[i] == NULL) {
 			fprintf(stderr, "strdup error\n");
 			exit(1);
 		}
@@ -195,7 +195,7 @@ void *mainthread(void *args) {
   //SEQ_INIT;
 #endif
 
-  argc = argc2;
+  argc = argc2 - 1; //-total doesn't count
   deepCopy(argc, &argv, argv2);
   struct option long_options[] =
     {
