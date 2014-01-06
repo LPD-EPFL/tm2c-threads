@@ -338,9 +338,19 @@ test(void *data, double duration, int nb_accounts)
 	return bank;
 }
 
+int deepCopy(int argc, char ***dest, char **src) {
+	int i = 0;
+	*dest = malloc(argc * sizeof(char**));
+	for (i = 0; i < argc; i++) {
+		(*dest)[i] = strdup(src[i]);
+	}
+}
+
 void *mainthread(void *args) {
 
 	TM_START;
+	argc = argc2;
+	deepCopy(argc, &argv, argv2);
 	struct option long_options[] =
 	{
 			// These options don't set a flag
@@ -540,13 +550,6 @@ void *mainthread(void *args) {
 	EXIT(0);
 }
 
-int deepCopy(int argc, char ***dest, char **src) {
-	int i = 0;
-	*dest = malloc(argc * sizeof(char**));
-	for (i = 0; i < argc; i++) {
-		(*dest)[i] = strdup(src[i]);
-	}
-}
 
 int
 main(int argc2, char **argv2)
@@ -555,9 +558,6 @@ main(int argc2, char **argv2)
 	PF_MSG(0, "1st TX_LOAD_STORE (transfer)");
 	PF_MSG(1, "2nd TX_LOAD_STORE (transfer)");
 	PF_MSG(2, "the whole transfer");
-
-	argc = argc2;
-	deepCopy(argc, &argv, argv2);
 
 	TM2C_INIT_SYS;
 	TM2C_INIT_THREAD;

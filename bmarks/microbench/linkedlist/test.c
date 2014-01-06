@@ -173,6 +173,14 @@ test(void* data, double duration)
   return NULL;
 }
 
+int deepCopy(int argc, char ***dest, char **src) {
+	int i = 0;
+	*dest = malloc(argc * sizeof(char**));
+	for (i = 0; i < argc; i++) {
+		(*dest)[i] = strdup(src[i]);
+	}
+}
+
 void *mainthread(void *args) {
 
 #ifndef SEQUENTIAL
@@ -181,6 +189,8 @@ void *mainthread(void *args) {
   //SEQ_INIT;
 #endif
 
+  argc = argc2;
+  deepCopy(argc, &argv, argv2);
   struct option long_options[] =
     {
       // These options don't set a flag
@@ -442,18 +452,9 @@ void *mainthread(void *args) {
   EXIT(0);
 }
 
-int deepCopy(int argc, char ***dest, char **src) {
-	int i = 0;
-	*dest = malloc(argc * sizeof(char**));
-	for (i = 0; i < argc; i++) {
-		(*dest)[i] = strdup(src[i]);
-	}
-}
 
 int main(int argc2, char** argv2) {
 
-	argc = argc2;
-	deepCopy(argc, &argv, argv2);
 	TM2C_INIT_SYS;
 	TM2C_INIT_THREAD;
 	EXIT(0);

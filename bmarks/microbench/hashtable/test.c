@@ -241,10 +241,18 @@ print_ht(ht_intset_t *set)
     }
 }
 
-long range = DEFAULT_RANGE;
 
+int deepCopy(int argc, char ***dest, char **src) {
+	int i = 0;
+	*dest = malloc(argc * sizeof(char**));
+	for (i = 0; i < argc; i++) {
+		(*dest)[i] = strdup(src[i]);
+	}
+}
 
 void* mainthread(void *args) {
+  argc = argc2;
+  deepCopy(argc, &argv, argv2);
 #ifndef SEQUENTIAL
 	TM_START;
 #else
@@ -279,6 +287,7 @@ void* mainthread(void *args) {
   int update = DEFAULT_UPDATE;
   int load_factor = DEFAULT_LOAD;
   int move = DEFAULT_MOVE;
+  long range = DEFAULT_RANGE;
   int snapshot = DEFAULT_SNAPSHOT;
   int unit_tx = DEFAULT_ELASTICITY;
   int alternate = DEFAULT_ALTERNATE;
@@ -556,19 +565,10 @@ void* mainthread(void *args) {
   EXIT(0);
 }
 
-int deepCopy(int argc, char ***dest, char **src) {
-	int i = 0;
-	*dest = malloc(argc * sizeof(char**));
-	for (i = 0; i < argc; i++) {
-		(*dest)[i] = strdup(src[i]);
-	}
-}
 
 int
 main(int argc2, char **argv2)
 {
-	argc = argc2;
-	deepCopy(argc, &argv, argv2);
 	TM2C_INIT_SYS;
 	TM2C_INIT_THREAD;
 	EXIT(0);
