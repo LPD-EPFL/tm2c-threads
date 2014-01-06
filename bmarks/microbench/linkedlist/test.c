@@ -175,18 +175,6 @@ test(void* data, double duration)
   return NULL;
 }
 
-void deepCopy() {
-	int i;
-	argv = malloc(argc * sizeof(char**));
-	for (i = 0; i < argc; i++) {
-		argv[i] = strdup(argv2[i]);
-		if (argv[i] == NULL) {
-			fprintf(stderr, "strdup error\n");
-			exit(1);
-		}
-	}
-}
-
 void *mainthread(void *args) {
 
 #ifndef SEQUENTIAL
@@ -195,8 +183,6 @@ void *mainthread(void *args) {
   //SEQ_INIT;
 #endif
 
-  argc = argc2 - 1; //-total doesn't count
-  deepCopy(argc, &argv, argv2);
   struct option long_options[] =
     {
       // These options don't set a flag
@@ -215,21 +201,23 @@ void *mainthread(void *args) {
   val_t last = 0;
   val_t val = 0;
   thread_data_t* data;
-  double duration = DEFAULT_DURATION;
-  int initial = DEFAULT_INITIAL;
-  int nb_app_cores = NUM_APP_NODES;
+  static double duration = DEFAULT_DURATION;
+  static int initial = DEFAULT_INITIAL;
+  static int nb_app_cores;
 #if defined(SEQUENTIAL)
-  nb_app_cores = 1;
+  static nb_app_cores = 1;
 #endif
-  long range = DEFAULT_RANGE;
-  int update = DEFAULT_UPDATE;
-  int unit_tx = DEFAULT_ELASTICITY;
-  int alternate = DEFAULT_ALTERNATE;
-  int effective = DEFAULT_EFFECTIVE;
-  int verbose = DEFAULT_VERBOSE;
+  static long range = DEFAULT_RANGE;
+  static int update = DEFAULT_UPDATE;
+  static int unit_tx = DEFAULT_ELASTICITY;
+  static int alternate = DEFAULT_ALTERNATE;
+  static int effective = DEFAULT_EFFECTIVE;
+  static int verbose = DEFAULT_VERBOSE;
   unsigned int seed = 0;
 
-	  while (1)
+  ONCE {
+	  nb_app_cores = NUM_APP_NODES;
+	 while (1)
 		{
 		  i = 0;
 		  c = getopt_long(argc, argv, "hAf:d:i:r:u:x:v", long_options, &i);
@@ -272,7 +260,7 @@ void *mainthread(void *args) {
 			   "        Print detailed stats"
 			   );
 		  }
-		goto end;
+		exit(1);
 		  case 'A':
 		alternate = 1;
 		break;
@@ -303,10 +291,11 @@ void *mainthread(void *args) {
 			printf("Use -h or --help for help\n");
 		  }
 		  default:
-		goto end;
+			  exit(1);
 		  }
 		}
 
+  }
 	 if (seed == 0)
 		{
 		  srand_core();
@@ -316,14 +305,15 @@ void *mainthread(void *args) {
 	  else
 		srand(seed);
 
-	  assert(duration >= 0);
-	  assert(initial >= 0);
-	  assert(nb_app_cores > 0);
-	  assert(range > 0 && range >= initial);
-	  assert(update >= 0 && update <= 100);
 
 	  ONCE
 		{
+		  assert(duration >= 0);
+		  assert(initial >= 0);
+		  assert(nb_app_cores > 0);
+		  assert(range > 0 && range >= initial);
+		  assert(update >= 0 && update <= 100);
+
 		  printf("Bench type   : linked list\n");
 	#ifdef SEQUENTIAL
 		  printf("                sequential\n");
@@ -450,7 +440,6 @@ void *mainthread(void *args) {
   free(data);
   BARRIER;
 
- end:
 #ifndef SEQUENTIAL
   TM_END;
 #endif
@@ -459,10 +448,10 @@ void *mainthread(void *args) {
 }
 
 
-int main(int argc, char** argv) {
+int main(int argc2, char** argv2) {
 
-	argc2 = argc;
-	argv2 = argv;
+	argc = argc2;
+	argv = argv2;
 	TM2C_INIT_SYS;
 	TM2C_INIT_THREAD;
 	EXIT(0);
