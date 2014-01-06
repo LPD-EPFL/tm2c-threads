@@ -55,6 +55,8 @@ int delay = DEFAULT_DELAY;
 int test_verbose = DEFAULT_VERBOSE;
 __thread int argc;
 __thread char **argv;
+int argc2;
+char **argv2;
 
 #define XSTR(s)                         STR(s)
 #define STR(s)                          #s
@@ -338,11 +340,15 @@ test(void *data, double duration, int nb_accounts)
 	return bank;
 }
 
-int deepCopy(int argc, char ***dest, char **src) {
+void deepCopy(int argc, char ***dest, char **src) {
 	int i = 0;
 	*dest = malloc(argc * sizeof(char**));
 	for (i = 0; i < argc; i++) {
 		(*dest)[i] = strdup(src[i]);
+		if ((*dest)[i] == NULL) {
+			fprintf(stderr, "strdup error\n");
+			exit(1);
+		}
 	}
 }
 
@@ -552,13 +558,15 @@ void *mainthread(void *args) {
 
 
 int
-main(int argc2, char **argv2)
+main(int argc, char **argv)
 {
 	dup2(STDOUT_FILENO, STDERR_FILENO);
 	PF_MSG(0, "1st TX_LOAD_STORE (transfer)");
 	PF_MSG(1, "2nd TX_LOAD_STORE (transfer)");
 	PF_MSG(2, "the whole transfer");
 
+	argc2 = argc;
+	argv2 = argv;
 	TM2C_INIT_SYS;
 	TM2C_INIT_THREAD;
 	EXIT(0);

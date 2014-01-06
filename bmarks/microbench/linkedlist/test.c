@@ -36,6 +36,8 @@
 __thread int argc;
 __thread char **argv;
 intset_t* set;
+int argc2;
+char **argv2;
 
 /* ################################################################### *
  * RANDOM
@@ -173,11 +175,15 @@ test(void* data, double duration)
   return NULL;
 }
 
-int deepCopy(int argc, char ***dest, char **src) {
+void deepCopy(int argc, char ***dest, char **src) {
 	int i = 0;
 	*dest = malloc(argc * sizeof(char**));
 	for (i = 0; i < argc; i++) {
 		(*dest)[i] = strdup(src[i]);
+		if ((*dest)[i] == NULL) {
+			fprintf(stderr, "strdup error\n");
+			exit(1);
+		}
 	}
 }
 
@@ -453,8 +459,10 @@ void *mainthread(void *args) {
 }
 
 
-int main(int argc2, char** argv2) {
+int main(int argc, char** argv) {
 
+	argc2 = argc;
+	argv2 = argv;
 	TM2C_INIT_SYS;
 	TM2C_INIT_THREAD;
 	EXIT(0);

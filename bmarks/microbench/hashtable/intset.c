@@ -27,7 +27,7 @@
 
 intset_t *offset;
 
-extern int range;
+extern __thread int range;
 
 int
 ht_contains(ht_intset_t *set, int val, int transactional) 

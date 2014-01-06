@@ -66,6 +66,8 @@ typedef struct thread_data
 volatile int work = 1;
 __thread int argc;
 __thread char **argv;
+int argc2;
+char **argv2;
 ht_intset_t *set;
 
 void
@@ -242,14 +244,19 @@ print_ht(ht_intset_t *set)
 }
 
 
-int deepCopy(int argc, char ***dest, char **src) {
+void deepCopy(int argc, char ***dest, char **src) {
 	int i = 0;
 	*dest = malloc(argc * sizeof(char**));
 	for (i = 0; i < argc; i++) {
 		(*dest)[i] = strdup(src[i]);
+		if ((*dest)[i] == NULL) {
+			fprintf(stderr, "strdup error\n");
+			exit(1);
+		}
 	}
 }
 
+__thread long range = DEFAULT_RANGE;
 void* mainthread(void *args) {
   argc = argc2;
   deepCopy(argc, &argv, argv2);
@@ -287,7 +294,6 @@ void* mainthread(void *args) {
   int update = DEFAULT_UPDATE;
   int load_factor = DEFAULT_LOAD;
   int move = DEFAULT_MOVE;
-  long range = DEFAULT_RANGE;
   int snapshot = DEFAULT_SNAPSHOT;
   int unit_tx = DEFAULT_ELASTICITY;
   int alternate = DEFAULT_ALTERNATE;
@@ -567,8 +573,10 @@ void* mainthread(void *args) {
 
 
 int
-main(int argc2, char **argv2)
+main(int argc, char **argv)
 {
+	argc2 = argc;
+	argv2 = argv;
 	TM2C_INIT_SYS;
 	TM2C_INIT_THREAD;
 	EXIT(0);
