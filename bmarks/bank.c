@@ -369,14 +369,14 @@ void *mainthread(void *args) {
 	static int write_cores;
 
 	ONCE {
-		double duration = DEFAULT_DURATION;
-		int nb_accounts = DEFAULT_NB_ACCOUNTS;
-		int nb_app_cores = NUM_APP_NODES;
-		int read_all = DEFAULT_READ_ALL;
-		int read_cores = DEFAULT_READ_THREADS;
-		int write_all = DEFAULT_READ_ALL + DEFAULT_WRITE_ALL;
-		int check = write_all + DEFAULT_CHECK;
-		int write_cores = DEFAULT_WRITE_THREADS;
+		duration = DEFAULT_DURATION;
+		nb_accounts = DEFAULT_NB_ACCOUNTS;
+		nb_app_cores = NUM_APP_NODES;
+		read_all = DEFAULT_READ_ALL;
+		read_cores = DEFAULT_READ_THREADS;
+		write_all = DEFAULT_READ_ALL + DEFAULT_WRITE_ALL;
+		check = write_all + DEFAULT_CHECK;
+		write_cores = DEFAULT_WRITE_THREADS;
 		int i, c;
 		while (1)
 		{
