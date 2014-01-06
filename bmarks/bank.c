@@ -53,10 +53,8 @@
 
 int delay = DEFAULT_DELAY;
 int test_verbose = DEFAULT_VERBOSE;
-__thread int argc;
-__thread char **argv;
-int argc2;
-char **argv2;
+int argc;
+char **argv;
 
 #define XSTR(s)                         STR(s)
 #define STR(s)                          #s
@@ -340,23 +338,9 @@ test(void *data, double duration, int nb_accounts)
 	return bank;
 }
 
-void deepCopy(int argc, char ***dest, char **src) {
-	int i = 0;
-	*dest = malloc(argc * sizeof(char**));
-	for (i = 0; i < argc; i++) {
-		(*dest)[i] = strdup(src[i]);
-		if ((*dest)[i] == NULL) {
-			fprintf(stderr, "strdup error\n");
-			exit(1);
-		}
-	}
-}
-
 void *mainthread(void *args) {
 
 	TM_START;
-	argc = argc2 - 1; //because of -total that doesn't count
-	deepCopy(argc, &argv, argv2);
 	struct option long_options[] =
 	{
 			// These options don't set a flag
@@ -375,15 +359,24 @@ void *mainthread(void *args) {
 	};
 
 
-	double duration = DEFAULT_DURATION;
-	int nb_accounts = DEFAULT_NB_ACCOUNTS;
-	int nb_app_cores = NUM_APP_NODES;
-	int read_all = DEFAULT_READ_ALL;
-	int read_cores = DEFAULT_READ_THREADS;
-	int write_all = DEFAULT_READ_ALL + DEFAULT_WRITE_ALL;
-	int check = write_all + DEFAULT_CHECK;
-	int write_cores = DEFAULT_WRITE_THREADS;
+	static double duration;
+	static int nb_accounts;
+	static int nb_app_cores;
+	static int read_all;
+	static int read_cores;
+	static int write_all;
+	static int check;
+	static int write_cores;
 
+	ONCE {
+		double duration = DEFAULT_DURATION;
+		int nb_accounts = DEFAULT_NB_ACCOUNTS;
+		int nb_app_cores = NUM_APP_NODES;
+		int read_all = DEFAULT_READ_ALL;
+		int read_cores = DEFAULT_READ_THREADS;
+		int write_all = DEFAULT_READ_ALL + DEFAULT_WRITE_ALL;
+		int check = write_all + DEFAULT_CHECK;
+		int write_cores = DEFAULT_WRITE_THREADS;
 		int i, c;
 		while (1)
 		{
@@ -495,6 +488,7 @@ void *mainthread(void *args) {
 		write_all *= normalize;
 		read_all *= normalize;
 
+	}
 
 	bank_t* bank;
 	thread_data_t* data;
@@ -558,15 +552,15 @@ void *mainthread(void *args) {
 
 
 int
-main(int argc, char **argv)
+main(int argc2, char **argv2)
 {
 	dup2(STDOUT_FILENO, STDERR_FILENO);
 	PF_MSG(0, "1st TX_LOAD_STORE (transfer)");
 	PF_MSG(1, "2nd TX_LOAD_STORE (transfer)");
 	PF_MSG(2, "the whole transfer");
 
-	argc2 = argc;
-	argv2 = argv;
+	argc = argc2;
+	argv = argv2;
 	TM2C_INIT_SYS;
 	TM2C_INIT_THREAD;
 	EXIT(0);
