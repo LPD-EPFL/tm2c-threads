@@ -72,8 +72,7 @@ tm2c_shmalloc_init(size_t size)
 }
 
 void
-tm2c_shmalloc_term()
-{
+tm2c_shmalloc_term() {
    free(tm2c_app_mem);
 }
 

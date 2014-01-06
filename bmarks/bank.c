@@ -53,8 +53,8 @@
 
 int delay = DEFAULT_DELAY;
 int test_verbose = DEFAULT_VERBOSE;
-int argc;
-char **argv;
+__thread int argc;
+__thread char **argv;
 
 #define XSTR(s)                         STR(s)
 #define STR(s)                          #s
@@ -368,7 +368,6 @@ void *mainthread(void *args) {
 	int check = write_all + DEFAULT_CHECK;
 	int write_cores = DEFAULT_WRITE_THREADS;
 
-	ONCE {
 		int i, c;
 		while (1)
 		{
@@ -479,9 +478,7 @@ void *mainthread(void *args) {
 		check *= normalize;
 		write_all *= normalize;
 		read_all *= normalize;
-	}
 
-	BARRIER; //Wait for the thread dealing with the args
 
 	bank_t* bank;
 	thread_data_t* data;
@@ -543,6 +540,14 @@ void *mainthread(void *args) {
 	EXIT(0);
 }
 
+int deepCopy(int argc, char ***dest, char **src) {
+	int i = 0;
+	*dest = malloc(argc * sizeof(char**));
+	for (i = 0; i < argc; i++) {
+		(*dest)[i] = strdup(src[i]);
+	}
+}
+
 int
 main(int argc2, char **argv2)
 {
@@ -552,7 +557,8 @@ main(int argc2, char **argv2)
 	PF_MSG(2, "the whole transfer");
 
 	argc = argc2;
-	argv = argv2;
+	deepCopy(argc, &argv, argv2);
+
 	TM2C_INIT_SYS;
 	TM2C_INIT_THREAD;
 	EXIT(0);

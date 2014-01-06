@@ -33,8 +33,8 @@
 #endif
 #endif
 
-int argc;
-char **argv;
+__thread int argc;
+__thread char **argv;
 intset_t* set;
 
 /* ################################################################### *
@@ -213,7 +213,6 @@ void *mainthread(void *args) {
   int verbose = DEFAULT_VERBOSE;
   unsigned int seed = 0;
 
-  ONCE {
 	  while (1)
 		{
 		  i = 0;
@@ -331,8 +330,6 @@ void *mainthread(void *args) {
 		  FLUSH;
 		}
 
-  }
-  BARRIER;
 
   if ((data = (thread_data_t*) malloc(sizeof (thread_data_t))) == NULL)
     {
@@ -445,10 +442,18 @@ void *mainthread(void *args) {
   EXIT(0);
 }
 
+int deepCopy(int argc, char ***dest, char **src) {
+	int i = 0;
+	*dest = malloc(argc * sizeof(char**));
+	for (i = 0; i < argc; i++) {
+		(*dest)[i] = strdup(src[i]);
+	}
+}
+
 int main(int argc2, char** argv2) {
 
 	argc = argc2;
-	argv = argv2;
+	deepCopy(argc, &argv, argv2);
 	TM2C_INIT_SYS;
 	TM2C_INIT_THREAD;
 	EXIT(0);

@@ -33,7 +33,7 @@
 #endif
 
 /* Hashtable length (# of buckets) */
-unsigned int maxhtlength;
+__thread unsigned int maxhtlength;
 
 typedef struct thread_data
 {
@@ -64,8 +64,8 @@ typedef struct thread_data
 
 
 volatile int work = 1;
-int argc;
-char **argv;
+__thread int argc;
+__thread char **argv;
 ht_intset_t *set;
 
 void
@@ -286,7 +286,6 @@ void* mainthread(void *args) {
   int verbose = DEFAULT_VERBOSE;
   unsigned int seed = 0;
 
-  ONCE {
 	  while (1)
 		{
 		  i = 0;
@@ -428,8 +427,7 @@ void* mainthread(void *args) {
 		  printf("Effective    : %d\n", effective);
 		  FLUSH;
 		}
-  }
-  BARRIER;
+
   if ((data = (thread_data_t *) malloc(sizeof (thread_data_t))) == NULL) {
     perror("malloc");
     exit(1);
@@ -558,11 +556,19 @@ void* mainthread(void *args) {
   EXIT(0);
 }
 
+int deepCopy(int argc, char ***dest, char **src) {
+	int i = 0;
+	*dest = malloc(argc * sizeof(char**));
+	for (i = 0; i < argc; i++) {
+		(*dest)[i] = strdup(src[i]);
+	}
+}
+
 int
 main(int argc2, char **argv2)
 {
 	argc = argc2;
-	argv = argv2;
+	deepCopy(argc, &argv, argv2);
 	TM2C_INIT_SYS;
 	TM2C_INIT_THREAD;
 	EXIT(0);

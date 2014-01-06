@@ -634,7 +634,7 @@ cm_term(nodeid_t node)
 
 
 #if defined(GREEDY) && defined(GREEDY_GLOBAL_TS)
-static ticks* 
+static ticks*
 cm_greedy_global_ts_init()
 {
   ticks *tmp = (ticks*) malloc(sizeof(ticks));
