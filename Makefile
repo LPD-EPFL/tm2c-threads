@@ -67,7 +67,6 @@ ifeq ($(VERSION),DEBUG)
 $(info *********************************** debug version)
 DEBUG_FLAGS := -O0 -g -ggdb -fno-inline #-DDEBUG 
 endif
-DEBUG_FLAGS := -O0 -g -ggdb -fno-inline #-DDEBUG 
 
 ifeq ($(TM2C_MAX_PROCS),)
 TM2C_MAX_PROCS=${MAX_PROCS}

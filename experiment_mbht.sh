@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for command in "./bmarks/mbll" 
+for command in "./bmarks/mbht" 
 do
 	for u in '-u0' '-u10'
 	do

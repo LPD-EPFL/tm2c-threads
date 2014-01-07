@@ -370,6 +370,7 @@ void *mainthread(void *args) {
       FLUSH
 	}
 
+  BARRIER;
   /* Access set from all threads */
   data->first = last;
   data->range = range;
