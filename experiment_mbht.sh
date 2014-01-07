@@ -10,8 +10,8 @@ do
 	do	
 		for core in 6 12 18 24 30 36 48
 		do
-			echo $command $i $u -total\=$core 
-			$command $i $u -total\=$core > tmp
+			echo $command $i $u $l -total\=$core 
+			$command $i $u $l -total\=$core > tmp
 			if [ $? -eq 0 ] 
 			then
 				awk -v c="$command -total=$core $i $u $l"\
