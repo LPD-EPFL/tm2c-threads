@@ -125,7 +125,7 @@ check_accs(account_t* acc1, account_t* acc2)
 
 	if (i == j<<20)
 	{
-		PRINT("dummy print");
+		//PRINT("dummy print");
 	}
 }
 
