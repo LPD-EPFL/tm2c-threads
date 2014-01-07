@@ -197,10 +197,10 @@ void *mainthread(void *args) {
       {NULL, 0, NULL, 0}
     };
 
-  int i, c, size;
-  val_t last = 0;
-  val_t val = 0;
-  thread_data_t* data;
+  int i, c;
+  static int size = 0;
+  static val_t last = 0;
+  static val_t val = 0;
   static double duration = DEFAULT_DURATION;
   static int initial = DEFAULT_INITIAL;
   static int nb_app_cores;
@@ -337,6 +337,7 @@ void *mainthread(void *args) {
 		}
 
 
+  thread_data_t* data;
   if ((data = (thread_data_t*) malloc(sizeof (thread_data_t))) == NULL)
     {
       perror("malloc");
