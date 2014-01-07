@@ -35,8 +35,8 @@
 #define MAXHTLENGTH                     65536
 
 /* Hashtable length (# of buckets) */
-extern __thread unsigned int htrange;
-extern __thread unsigned int maxhtlength;
+extern unsigned int htrange;
+extern unsigned int maxhtlength;
 
 typedef struct ht_intset
 {

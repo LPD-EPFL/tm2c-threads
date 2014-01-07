@@ -33,7 +33,7 @@
 #endif
 
 /* Hashtable length (# of buckets) */
-__thread unsigned int maxhtlength;
+unsigned int maxhtlength;
 
 typedef struct thread_data
 {
@@ -436,11 +436,10 @@ void* mainthread(void *args) {
     exit(1);
   }
 
-  maxhtlength = (unsigned int) initial / load_factor;
-
   
   shmem_init(10 * 1024 * NODE_ID() * sizeof(node_t) + (initial + 2) * sizeof(node_t));
   ONCE {
+	  maxhtlength = (unsigned int) initial / load_factor;
 	  set = ht_new();
   }
   _mm_mfence();
