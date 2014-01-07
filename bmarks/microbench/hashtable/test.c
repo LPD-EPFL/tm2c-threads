@@ -64,10 +64,8 @@ typedef struct thread_data
 
 
 volatile int work = 1;
-__thread int argc;
-__thread char **argv;
-int argc2;
-char **argv2;
+int argc;
+char **argv;
 ht_intset_t *set;
 
 void
@@ -560,10 +558,10 @@ void* mainthread(void *args) {
 
 
 int
-main(int argc, char **argv)
+main(int argc2, char **argv2)
 {
-	argc2 = argc;
-	argv2 = argv;
+	argc = argc2;
+	argv = argv2;
 	TM2C_INIT_SYS;
 	TM2C_INIT_THREAD;
 	EXIT(0);

@@ -33,11 +33,9 @@
 #endif
 #endif
 
-__thread int argc;
-__thread char **argv;
+int argc;
+char **argv;
 intset_t* set;
-int argc2;
-char **argv2;
 
 /* ################################################################### *
  * RANDOM
