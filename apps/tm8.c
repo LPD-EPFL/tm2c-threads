@@ -31,13 +31,8 @@
 
 #define SIS_SIZE 48
 
-
-int
-main(int argc, char** argv)
-{    
-  PRINT("testing WAR and RAW conflicts");
-
-  TM2C_INIT;
+void *mainthread(void *args) {
+  TM_START;
   int *sis = (int *) sys_shmalloc(SIS_SIZE * sizeof (int));
   if (sis == NULL)
     {
@@ -114,5 +109,14 @@ main(int argc, char** argv)
 
   TM_END;
 
+  EXIT(0);
+}
+
+int
+main(int argc, char** argv)
+{
+  PRINT("testing WAR and RAW conflicts");
+  TM2C_INIT_SYS;
+  TM2C_INIT_THREAD;
   EXIT(0);
 }

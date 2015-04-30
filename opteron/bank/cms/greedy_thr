@@ -1,0 +1,22 @@
+#greedy thread 3 dsl
+./bmarks/bank -total=6 -c0 0 105868
+./bmarks/bank -total=12 -c0 0 212969
+./bmarks/bank -total=18 -c0 0 287370
+./bmarks/bank -total=24 -c0 0 359727
+./bmarks/bank -total=30 -c0 0 459298
+./bmarks/bank -total=36 -c0 0 532177
+./bmarks/bank -total=48 -c0 0 677792
+./bmarks/bank -total=6 -c0 0 106692
+./bmarks/bank -total=12 -c0 0 212714
+./bmarks/bank -total=18 -c0 0 290752
+./bmarks/bank -total=24 -c0 0 360346
+./bmarks/bank -total=30 -c0 0 461822
+./bmarks/bank -total=36 -c0 0 537230
+./bmarks/bank -total=48 -c0 0 685002
+./bmarks/bank -total=6 -c0 0 106778
+./bmarks/bank -total=12 -c0 0 211705
+./bmarks/bank -total=18 -c0 0 291444
+./bmarks/bank -total=24 -c0 0 370018
+./bmarks/bank -total=30 -c0 0 453872
+./bmarks/bank -total=36 -c0 0 535262
+./bmarks/bank -total=48 -c0 0 661478

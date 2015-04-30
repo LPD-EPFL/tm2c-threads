@@ -49,7 +49,7 @@ TOP := $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST))))
 SRCPATH := $(TOP)/src
 MAININCLUDE := $(TOP)/include
 
-INCLUDES := -I$(MAININCLUDE) -I$(TOP)/external/include
+INCLUDES := -I$(MAININCLUDE) -I$(TOP)/external/include/
 LIBS := -L$(TOP)/external/lib \
 		-lm \
 		$(PLATFORM_LIBS)

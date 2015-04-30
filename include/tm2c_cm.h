@@ -36,7 +36,7 @@ typedef struct
     double duration;
   };
 } cm_metadata_t;
-extern cm_metadata_t *cm_metadata_core;
+extern __thread cm_metadata_t *cm_metadata_core;
 
 extern int32_t* cm_init();
 extern void cm_term(nodeid_t node);

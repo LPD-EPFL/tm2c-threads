@@ -1,0 +1,22 @@
+#wholly process
+./bmarks/bank -total=6 -c0 0 10050
+./bmarks/bank -total=12 -c0 0 20245
+./bmarks/bank -total=18 -c0 0 24525
+./bmarks/bank -total=24 -c0 0 32021
+./bmarks/bank -total=30 -c0 0 48241
+./bmarks/bank -total=36 -c0 0 52853
+./bmarks/bank -total=48 -c0 0 90484
+./bmarks/bank -total=6 -c0 0 10171
+./bmarks/bank -total=12 -c0 0 16036
+./bmarks/bank -total=18 -c0 0 27735
+./bmarks/bank -total=24 -c0 0 38417
+./bmarks/bank -total=30 -c0 0 45385
+./bmarks/bank -total=36 -c0 0 57144
+./bmarks/bank -total=48 -c0 0 119379
+./bmarks/bank -total=6 -c0 0 12010
+./bmarks/bank -total=12 -c0 0 15679
+./bmarks/bank -total=18 -c0 0 26469
+./bmarks/bank -total=24 -c0 0 32497
+./bmarks/bank -total=30 -c0 0 43415
+./bmarks/bank -total=36 -c0 0 57507
+./bmarks/bank -total=48 -c0 0 67348

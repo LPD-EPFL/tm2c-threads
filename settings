@@ -39,13 +39,13 @@ TM2C_SHMEM_SIZE_MB = 512
 # NOCM 	        : no contention manager (prone to livelocks)
 # BACKOFF_RETRY : exponentially increasing backoff after each retry
 #                 (prone to livelocks, but with large backoffs ok whp)
-# WOLLY		: uses the number of committed tx by the core as the
+# WHOLLY		: uses the number of committed tx by the core as the
 #  		: criterion (starvation-free, not fair)
 # GREEDY	: uses timestamps and gives priority to older transactions
 #  		  (starvation-free in practice, not fair)
 # FAIRCM	: uses the effective transactional time by the core as
-  		: the criterion (starvation-free and fair)
-CONTENTION_MANAGER = BACKOFF_RETRY
+#  		: the criterion (starvation-free and fair)
+CONTENTION_MANAGER = FAIRCM
 
 ############################################################################
 # Setting for the BACKOFF_RETRY policy

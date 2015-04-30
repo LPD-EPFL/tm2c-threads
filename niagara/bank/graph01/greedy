@@ -1,0 +1,23 @@
+#greedy 4 dsl per ndoe
+#-R1 -c0
+./bmarks/bank 6 48870
+./bmarks/bank 12 103820
+./bmarks/bank 18 140511
+./bmarks/bank 24 175395
+./bmarks/bank 30 174688
+./bmarks/bank 36 219694
+./bmarks/bank 48 267260
+./bmarks/bank 6 49408
+./bmarks/bank 12 110101
+./bmarks/bank 18 137562
+./bmarks/bank 24 176000
+./bmarks/bank 30 173422
+./bmarks/bank 36 208995
+./bmarks/bank 48 270293
+./bmarks/bank 6 49632
+./bmarks/bank 12 100818
+./bmarks/bank 18 142138
+./bmarks/bank 24 175711
+./bmarks/bank 30 171331
+./bmarks/bank 36 209879
+./bmarks/bank 48 264990

@@ -1,0 +1,22 @@
+#thread faircm 3 dsl per node
+./bmarks/bank -total=6 -c0 0 1010517
+./bmarks/bank -total=12 -c0 0 1751853
+./bmarks/bank -total=18 -c0 0 2203731
+./bmarks/bank -total=24 -c0 0 2706885
+./bmarks/bank -total=30 -c0 0 3418436
+./bmarks/bank -total=36 -c0 0 3965244
+./bmarks/bank -total=48 -c0 0 4225261
+./bmarks/bank -total=6 -c0 0 1010328
+./bmarks/bank -total=12 -c0 0 1757673
+./bmarks/bank -total=18 -c0 0 2230606
+./bmarks/bank -total=24 -c0 0 2821238
+./bmarks/bank -total=30 -c0 0 3457506
+./bmarks/bank -total=36 -c0 0 3986772
+./bmarks/bank -total=48 -c0 0 3893659
+./bmarks/bank -total=6 -c0 0 999213
+./bmarks/bank -total=12 -c0 0 1770745
+./bmarks/bank -total=18 -c0 0 2203596
+./bmarks/bank -total=24 -c0 0 2821270
+./bmarks/bank -total=30 -c0 0 3290934
+./bmarks/bank -total=36 -c0 0 3848969
+./bmarks/bank -total=48 -c0 0 4452905

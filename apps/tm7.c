@@ -51,83 +51,85 @@ inline void ro_tx(int* sis);
  */
 
 unsigned int SIS_SIZE = 200;
-unsigned int store_me, TM2C_ID;
+unsigned int store_me;//, TM2C_ID;
 int sum = 0;
 
-int
-main(int argc, char** argv)
-{
+void *mainthread(void *args) {
+	TM_START;
+	srand_core();
+	store_me = TM2C_ID;
 
-  TM2C_INIT;
 
-  srand_core();
-  store_me = TM2C_ID;
+	int *sis = (int *) sys_shmalloc(SIS_SIZE * sizeof (int));
+	if (sis == NULL)
+	{
+		PRINT("Error: sys_shmalloc failed");
+		EXIT(-1);
+	}
 
-  if (argc > 1) {
-    SIS_SIZE = atoi(argv[1]);
-  }
+	int i;
+	for (i = TM2C_ID; i < SIS_SIZE; i += NUM_UES)
+	{
+		NONTX_STORE(&sis[i], -1, TYPE_INT);
+	}
 
-  int *sis = (int *) sys_shmalloc(SIS_SIZE * sizeof (int));
-  if (sis == NULL)
-    {
-      PRINT("Error: sys_shmalloc failed");
-      EXIT(-1);
-    }
+	BARRIER;
 
-  int i;
-  for (i = TM2C_ID; i < SIS_SIZE; i += NUM_UES)
-    {
-      NONTX_STORE(&sis[i], -1, TYPE_INT);
-    }
+	int txupdate = 0;
+	int txro = 0;
 
-  BARRIER;
+	FOR(DURATION)
+	{ //seconds
 
-  int txupdate = 0;
-  int txro = 0;
+		TX_START;
 
-  FOR(DURATION)
-  { //seconds
+		ROLL(UPDTX_PRCNT)
+		{
+			//update tx
+			txupdate++;
+			update_tx(sis);
+		}
+		LOST
+		{
+			txro++;
+			//read-only tx
+			ro_tx(sis);
+		}
 
-    TX_START;
+		TX_COMMIT;
+	}
+	END_FOR;
 
-    ROLL(UPDTX_PRCNT)
-    {
-      //update tx
-      txupdate++;
-      update_tx(sis);
-    }
-    LOST
-      {
-	txro++;
-	//read-only tx
-	ro_tx(sis);
-      }
+	ONCE
+	{
+		printf("#id #pr #commit #com/s  #latency\n");
+		FLUSH;
+	}
+	BARRIER;
 
-    TX_COMMIT;
-  }
-  END_FOR;
+	PRINT("%02d\t%d\t%d\t%f", NUM_UES,
+			tm2c_tx_node->tx_committed,
+			(int) (tm2c_tx_node->tx_committed / duration__),
+			1000 * (duration__ / tm2c_tx_node->tx_committed));
 
-  ONCE
-    {
-      printf("#id #pr #commit #com/s  #latency\n");
-      FLUSH;
-    }
-  BARRIER;
+	BARRIER;
 
-  PRINT("%02d\t%d\t%d\t%f", NUM_UES,
-	tm2c_tx_node->tx_committed,
-	(int) (tm2c_tx_node->tx_committed / duration__),
-	1000 * (duration__ / tm2c_tx_node->tx_committed));
+	sys_shfree((void*) sis);
 
-  BARRIER;
+	TM_END;
 
-  sys_shfree((void*) sis);
+	fprintf(stderr, "%d", sum);
 
-  TM_END;
+	EXIT(0);
+}
 
-  fprintf(stderr, "%d", sum);
-
-  EXIT(0);
+int main(int argc, char** argv) {
+	if (argc > 1) {
+		SIS_SIZE = atoi(argv[1]);
+	}
+	TM2C_INIT_SYS;
+	TM2C_INIT_THREAD;
+	EXIT(0);
 }
 
 /*
@@ -136,17 +138,17 @@ main(int argc, char** argv)
 inline void
 ro_tx(int* sis)
 {
-  int i;
-  for (i = 0; i < NUM_TXOPS; i++)
-    {
-      long rnd = rand_range(SHMEM_SIZE1);
+	int i;
+	for (i = 0; i < NUM_TXOPS; i++)
+	{
+		long rnd = rand_range(SHMEM_SIZE1);
 #ifdef PGAS
-      sum = TX_LOAD(sis + rnd, TYPE_INT);
+		sum = TX_LOAD(sis + rnd, TYPE_INT);
 #else
-      int *j = (int *) TX_LOAD(sis + rnd);
-      sum = *j;
+		int *j = (int *) TX_LOAD(sis + rnd);
+		sum = *j;
 #endif
-    }
+	}
 }
 
 /*
@@ -155,18 +157,18 @@ ro_tx(int* sis)
 inline void
 update_tx(int* sis)
 {
-  int i;
-  for (i = 0; i < NUM_TXOPS; i++)
-    {
-      long rnd = rand_range(SHMEM_SIZE1);
+	int i;
+	for (i = 0; i < NUM_TXOPS; i++)
+	{
+		long rnd = rand_range(SHMEM_SIZE1);
 
-      ROLL(WRITE_PRCNT)
-      {
-	TX_STORE(sis + rnd, TM2C_ID, TYPE_INT);
-      }
-      LOST
-        {
-	  ro_tx(sis);
-        }
-    }
+		ROLL(WRITE_PRCNT)
+		{
+			TX_STORE(sis + rnd, TM2C_ID, TYPE_INT);
+		}
+		LOST
+		{
+			ro_tx(sis);
+		}
+	}
 }

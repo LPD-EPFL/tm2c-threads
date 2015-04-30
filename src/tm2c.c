@@ -40,16 +40,17 @@
 #include <sys/param.h>
 
 #include "tm2c.h"
+#include <pthread.h>
 
-nodeid_t ID;
+__thread nodeid_t ID; //to be thread specific
 nodeid_t NUM_UES;
 nodeid_t NUM_DSL_NODES;
 nodeid_t NUM_APP_NODES;
 
-tm2c_tx_t *tm2c_tx = NULL;
-tm2c_tx_node_t *tm2c_tx_node = NULL;
+__thread tm2c_tx_t *tm2c_tx = NULL; //to be thread specific
+__thread tm2c_tx_node_t *tm2c_tx_node = NULL;
 
-double duration__ = 0;
+__thread double duration__ = 0;
 
 const char* conflict_reasons[4] = 
   {
@@ -96,30 +97,42 @@ is_dsl_core(int id)
   return !is_app_core(id);
 }
 
-
+/**threads have been created*/
 void
-tm2c_init()
-{
+tm2c_init() {
   PF_MSG(9, "receiving");
   PF_MSG(10, "sending");
 
-  sys_tm2c_init();
-  if (!is_app_core(ID)) 
-    {
+  ID = NODE_ID(); //thread specific, reads TM2C_ID in sys_default
+  ssmp_mem_init(ID, TM2C_NUM_NODES);
+  sys_tm2c_init();//nothing to do in sys_default
+  if (!is_app_core(ID)) {
       //dsl node
       tm2c_dsl_init();
-    }
-  else 
-    { //app node
-      tm2c_app_init();
-      tm2c_tx_node = tm2c_tx_meta_node_new();
-      tm2c_tx = tm2c_tx_meta_new();
+  } else { //app node
+      tm2c_app_init(); //block
+      tm2c_tx_node = tm2c_tx_meta_node_new();//ok
+      tm2c_tx = tm2c_tx_meta_new(); //ok
       if (tm2c_tx == NULL || tm2c_tx_node == NULL) 
 	{
 	  PRINTD("Could not alloc tx metadata @ TM2C_INIT");
 	  EXIT(-1);
 	}
-    }
+  }
+}
+
+void start_threads(void* (*mainthread)(void *args)) {
+  pthread_t threads;
+  int rank = 0;
+  for(rank = 0; rank < TM2C_NUM_NODES; rank++) {
+      PRINTD("Forking child %u", rank);
+	  struct args_start_thread *args = malloc(sizeof(struct args_start_thread));
+	  args->id = rank;
+	  args->mainthread = mainthread;
+	  if (0 < pthread_create(&threads, NULL, initthread, (void*) args)) {
+		  fprintf(stderr, "Failure in pthread_create():\n%s", strerror(errno));
+	  }
+  }
 }
 
 void
@@ -129,10 +142,10 @@ tm2c_init_system(int* argc, char** argv[])
   PF_CORRECTION;
 
   /* call platform level initializer */
-  sys_tm2c_init_system(argc, argv);
+  sys_tm2c_init_system(argc, argv);//declared where ?
 
   /* initialize globals */
-  ID            = NODE_ID();
+  //ID            = NODE_ID(); //thread specific
   NUM_UES       = TOTAL_NODES();
 
   uint32_t i, tot = 0;
@@ -145,8 +158,6 @@ tm2c_init_system(int* argc, char** argv[])
     }
   NUM_DSL_NODES = tot;
   NUM_APP_NODES = NUM_UES - tot;
-
-  tm2c_init_barrier();
 }
 /*
  * Trampolining code for terminating everything

@@ -1,0 +1,23 @@
+#wholly 4 dsl per node
+#-R1 -c0
+./bmarks/bank 6 1707
+./bmarks/bank 12 2666
+./bmarks/bank 18 5304
+./bmarks/bank 24 9833
+./bmarks/bank 30 10803
+./bmarks/bank 36 23143
+./bmarks/bank 48 24651
+./bmarks/bank 6 2080
+./bmarks/bank 12 3132
+./bmarks/bank 18 12000
+./bmarks/bank 24 13192
+./bmarks/bank 30 7535
+./bmarks/bank 36 25413
+./bmarks/bank 48 31742
+./bmarks/bank 6 1800
+./bmarks/bank 12 5823
+./bmarks/bank 18 5648
+./bmarks/bank 24 7515
+./bmarks/bank 30 16168
+./bmarks/bank 36 20228
+./bmarks/bank 48 31443

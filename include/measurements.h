@@ -31,7 +31,7 @@ extern "C" {
 
 #include "common.h"
 #ifdef SSMP
-#  include <ssmp.h>
+#  include <ssmpthread.h>
 #endif
 
   /* 
@@ -235,11 +235,11 @@ extern "C" {
       M_FALSE, M_TRUE
     };
 
-  extern ticks entry_time[ENTRY_TIMES_SIZE];
-  extern ticks total_sum_ticks[ENTRY_TIMES_SIZE];
-  extern long long total_samples[ENTRY_TIMES_SIZE];
-  extern const char *measurement_msgs[ENTRY_TIMES_SIZE];
-  extern ticks getticks_correction;
+  extern __thread ticks entry_time[ENTRY_TIMES_SIZE];
+  extern __thread ticks total_sum_ticks[ENTRY_TIMES_SIZE];
+  extern __thread long long total_samples[ENTRY_TIMES_SIZE];
+  extern __thread const char *measurement_msgs[ENTRY_TIMES_SIZE];
+  extern __thread ticks getticks_correction;
   extern ticks getticks_correction_calc();
 
 #  define MEASUREREMENT_CORRECTION getticks_correction_calc();

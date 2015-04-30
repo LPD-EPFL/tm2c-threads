@@ -146,6 +146,8 @@ extern void ssmp_term(void);
 
 /* send the contents of msg to core to */
 extern inline void ssmp_send(uint32_t to, volatile ssmp_msg_t* msg);
+/* check whether the queue of core to is free */
+extern inline int ssmp_send_is_free(uint32_t to);
 /* send the contents of msg to core to without checking whether the buffer
    for receiving messages of to if free */
 extern inline void ssmp_send_no_sync(uint32_t to, volatile ssmp_msg_t* msg);

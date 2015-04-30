@@ -45,6 +45,7 @@ extern "C" {
 #include <stddef.h>
 #include <unistd.h>
 #include <inttypes.h>
+#include <pthread.h>
 
 #ifndef INLINED
 #  if __GNUC__ && !__GNUC_STDC_INLINE__ && !SCC
@@ -133,7 +134,7 @@ extern "C" {
       WRITE
     } RW;
 
-  extern nodeid_t TM2C_ID;
+  extern __thread nodeid_t TM2C_ID;
   extern nodeid_t NUM_UES;
   extern nodeid_t NUM_APP_NODES;
   extern nodeid_t NUM_DSL_NODES;
@@ -247,7 +248,7 @@ extern "C" {
 
   /*  ------- Plug platform related things here END   ------- */
 
-#define EXIT(reason) exit(reason);
+#define EXIT(reason) pthread_exit((void*)reason);
 
 #include "tm2c_sys.h"
 

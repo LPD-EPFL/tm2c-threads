@@ -1,0 +1,22 @@
+#greedy proces 3 dsl
+./bmarks/bank -total=6 -c0 0 91193
+./bmarks/bank -total=12 -c0 0 180348
+./bmarks/bank -total=18 -c0 0 279384
+./bmarks/bank -total=24 -c0 0 361067
+./bmarks/bank -total=30 -c0 0 454726
+./bmarks/bank -total=36 -c0 0 524131
+./bmarks/bank -total=48 -c0 0 663837
+./bmarks/bank -total=6 -c0 0 91980
+./bmarks/bank -total=12 -c0 0 179543
+./bmarks/bank -total=18 -c0 0 265333
+./bmarks/bank -total=24 -c0 0 361244
+./bmarks/bank -total=30 -c0 0 448241
+./bmarks/bank -total=36 -c0 0 526157
+./bmarks/bank -total=48 -c0 0 699743
+./bmarks/bank -total=6 -c0 0 91791
+./bmarks/bank -total=12 -c0 0 178153
+./bmarks/bank -total=18 -c0 0 269443
+./bmarks/bank -total=24 -c0 0 358702
+./bmarks/bank -total=30 -c0 0 459672
+./bmarks/bank -total=36 -c0 0 524570
+./bmarks/bank -total=48 -c0 0 689738

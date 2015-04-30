@@ -36,28 +36,22 @@
 
 #define REPS 1000
 
-int
-main(int argc, char** argv)
-{
+int steps = REPS<<5;
+int g_argc = 0;
 
-  int steps = REPS<<5;
+void *mainthread(void *args) {
 
-  TM2C_INIT;
-
+  TM_START;
   PF_MSG(0, "TX_LOAD");
   PF_MSG(1, "send & receive");
   PF_MSG(2, "send");
   PF_MSG(3, "receive");
 
-  if (argc > 1)
-    {
-      steps = atoi(argv[1]);
-    }
 
   int* sm = (int*) sys_shmalloc(steps * sizeof (int));
 
   BARRIER;
-  if (argc < 3)
+  if (g_argc < 3)
     { //ONLY 1 cores sending messages
       ONCE
 	{
@@ -122,5 +116,21 @@ main(int argc, char** argv)
   sys_shfree((void*) sm);
 
   TM_END;
+  EXIT(0);
+
+}
+
+int
+main(int argc, char** argv) {
+
+  steps = REPS<<5;
+  printf("argc %d\n", argc);
+  if (argc > 2) {
+      steps = atoi(argv[1]);
+  }
+  g_argc = argc;
+
+  TM2C_INIT_SYS;
+  TM2C_INIT_THREAD;
   EXIT(0);
 }

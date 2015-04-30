@@ -33,65 +33,66 @@
 
 #include "tm2c.h"
 
-int
-main(int argc, char **argv)
-{
-  unsigned int SIS_SIZE = 4800;
-    
-  TM2C_INIT
-    
-    if (argc > 1)
-      {
-	SIS_SIZE = atoi(argv[1]);
-      }
+unsigned int SIS_SIZE = 4800;
 
-  int *sis = (int *) sys_shmalloc(SIS_SIZE * sizeof (int));
-  if (sis == NULL)
-    {
-      perror("sys_shmalloc\n");
-    }
+void *mainthread(void *args) {
+	TM_START;
 
-  int i;
-  for (i = TM2C_ID; i < SIS_SIZE; i += NUM_UES)
-    {
-      sis[i] = -1;
-    }
+	int *sis = (int *) sys_shmalloc(SIS_SIZE * sizeof (int));
+	if (sis == NULL)
+	{
+		perror("sys_shmalloc\n");
+	}
 
-  BARRIER;
-    
-  volatile size_t sum = 0;
+	int i;
+	for (i = TM2C_ID; i < SIS_SIZE; i += NUM_UES)
+	{
+		sis[i] = -1;
+	}
 
-  /*
-   * Benchmark SIS_SIZE reads
-   */
-  TX_START;
-  int i;
-  for (i = 0; i < SIS_SIZE; i++)
-    {
-      PF_START(0);
-      int j = *(int *) TX_LOAD(sis + i);
-      PF_STOP(0);
-      sum += j;
-    }
-  TX_COMMIT;
-    
-  if (sum == (13<<23))
-    {
-      PRINT("dummy print");
-    }
+	BARRIER;
 
-  PF_MSG(0, "TX read");
-  APP_EXEC_ORDER
-    {
-      PF_PRINT;
-    }
-  APP_EXEC_ORDER_END;
+	volatile size_t sum = 0;
 
-  BARRIER;
-    
-  sys_shfree((void*) sis);
-  
-  TM_END;
+	/*
+	 * Benchmark SIS_SIZE reads
+	 */
+	TX_START;
+	int i;
+	for (i = 0; i < SIS_SIZE; i++)
+	{
+		PF_START(0);
+		int j = *(int *) TX_LOAD(sis + i);
+		PF_STOP(0);
+		sum += j;
+	}
+	TX_COMMIT;
 
-  EXIT(0);
+	if (sum == (13<<23))
+	{
+		PRINT("dummy print");
+	}
+
+	PF_MSG(0, "TX read");
+	APP_EXEC_ORDER
+	{
+		PF_PRINT;
+	}
+	APP_EXEC_ORDER_END;
+
+	BARRIER;
+
+	sys_shfree((void*) sis);
+
+	TM_END;
+	pthread_exit(NULL);
+}
+
+int main(int argc, char **argv) {
+	if (argc > 1) {
+		SIS_SIZE = atoi(argv[1]);
+	}
+	TM2C_INIT_SYS;
+	TM2C_INIT_THREAD;
+	EXIT(0);
 }

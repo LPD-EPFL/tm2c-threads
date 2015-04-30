@@ -1,0 +1,23 @@
+#faircm 4 dsl per node
+#-R1 -c0
+./bmarks/bank 6 2332
+./bmarks/bank 12 6609
+./bmarks/bank 18 4807
+./bmarks/bank 24 11333
+./bmarks/bank 30 25792
+./bmarks/bank 36 9359
+./bmarks/bank 48 34403
+./bmarks/bank 6 2778
+./bmarks/bank 12 4822
+./bmarks/bank 18 14789
+./bmarks/bank 24 9867
+./bmarks/bank 30 13182
+./bmarks/bank 36 13448
+./bmarks/bank 48 20358
+./bmarks/bank 6 2584
+./bmarks/bank 12 2287
+./bmarks/bank 18 3579
+./bmarks/bank 24 7610
+./bmarks/bank 30 9199
+./bmarks/bank 36 20424
+./bmarks/bank 48 37809

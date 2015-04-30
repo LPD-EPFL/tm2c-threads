@@ -46,7 +46,7 @@ INLINED TM2C_CONFLICT_T try_store(nodeid_t nodeId, tm_intern_addr_t tm_address);
 void tm2c_dsl_print_global_stats();
 void print_hashtable_usage();
 
-extern unsigned long int tm2c_stats_total,
+extern __thread unsigned long int tm2c_stats_total,
   tm2c_stats_commits,
   tm2c_stats_aborts,
   tm2c_stats_max_retries,
@@ -54,9 +54,9 @@ extern unsigned long int tm2c_stats_total,
   tm2c_stats_aborts_raw,
   tm2c_stats_aborts_waw,
   tm2c_stats_received;
-extern double tm2c_stats_duration;
+extern __thread double tm2c_stats_duration;
 
-extern tm2c_ht_t tm2c_ht;
+extern __thread tm2c_ht_t tm2c_ht;
 
 INLINED TM2C_CONFLICT_T
 try_load(nodeid_t nodeId, tm_intern_addr_t tm_address) 

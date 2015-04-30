@@ -59,36 +59,19 @@ typedef size_t nxt_t;
 #define VAL_MIN                         INT_MIN
 #define VAL_MAX                         INT_MAX
 
-typedef struct node 
+typedef struct ALIGNED(64) node
 {
   val_t val;
-  union 
-  {
     struct node *nextp;
-    nxt_t next;
-  };
 } node_t;
 
-typedef struct intset {
-
-    union {
-        nxt_t head;
+typedef struct ALIGNED(64) intset {
         node_t *headp;
-    };
-
 } intset_t;
-
-extern nxt_t offs__;
-
-#define N2O(set, node)                  (nxt_t) ((nxt_t) (node) - (nxt_t) (set))
-#define O2N(set, offset)                ((void *) (offs__ = offset) == NULL ? NULL : (node_t *) ((nxt_t) (set) + (offs__)))
-#define SET                             set
-#define ND(offs)                        O2N(SET, (offs))
-#define OF(node)                        N2O(SET, (node))
 
 void *shmem_init(size_t offset);
 
-node_t *new_node(val_t val, nxt_t next, int transactional);
+node_t *new_node(val_t val, node_t* next, int transactional);
 intset_t *set_new();
 void set_delete(intset_t *set);
 int set_size(intset_t *set);

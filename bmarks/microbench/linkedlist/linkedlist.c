@@ -25,7 +25,6 @@
 
 #include "linkedlist.h"
 
-nxt_t offs__;
 
 void* shmem_init(size_t offset)
 {
@@ -33,7 +32,7 @@ void* shmem_init(size_t offset)
 }
 
 node_t*
-new_node(val_t val, nxt_t next, int transactional) 
+new_node(val_t val, node_t* next, int transactional) 
 {
   node_t *node;
 
@@ -52,7 +51,7 @@ new_node(val_t val, nxt_t next, int transactional)
     }
 
   node->val = val;
-  node->next = next;
+  node->nextp = next;
 
   return node;
 }
@@ -69,8 +68,8 @@ set_new()
       EXIT(1);
     }
   max = new_node(VAL_MAX, 0, 0);
-  min = new_node(VAL_MIN, OF(max), 0);
-  set->head = OF(min);
+  min = new_node(VAL_MIN, max, 0);
+  set->headp = min;
   return set;
 }
 
@@ -79,9 +78,9 @@ set_delete(intset_t *set)
 {
   node_t *node, *next;
 
-  node = ND(set->head);
+  node = set->headp;
   while (node != NULL) {
-    next = ND(node->next);
+    next = node->nextp;
     sys_shfree((void*) node);
     node = next;
   }
@@ -93,11 +92,11 @@ int set_size(intset_t *set) {
     node_t *node, *head;
 
     /* We have at least 2 elements */
-    head = ND(set->head);
-    node = ND(head->next);
+    head = set->headp;
+    node = head->nextp;
     while (node->nextp != NULL) {
         size++;
-        node = ND(node->next);
+        node = node->nextp;
     }
 
     return size;
@@ -132,11 +131,11 @@ set_contains(intset_t *set, val_t val, int transactional)
   global_lock();
 #  endif
 
-  prev = ND(set->head);
-  next = ND(prev->next);
+  prev = set->headp;
+  next = prev->nextp;
   while (next->val < val) {
     prev = next;
-    next = ND(prev->next);
+    next = prev->nextp;
   }
   result = (next->val == val);
 
@@ -154,8 +153,9 @@ set_contains(intset_t *set, val_t val, int transactional)
   val_t v = 0;
 
   TX_START;
-  prev = ND(set->head);
-  next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+  prev = set->headp;
+  //next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+  next = *((node_t**) TX_LOAD(&prev->nextp));
   while (1) {
     v = next->val;
     if (v >= val)
@@ -164,24 +164,26 @@ set_contains(intset_t *set, val_t val, int transactional)
     rls = prev;
 #    endif
     prev = next;
-    next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+    //next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+  	 next = *((node_t**) TX_LOAD(&prev->nextp));
 #    ifdef EARLY_RELEASE
-    TX_RRLS(&rls->next);
+    TX_RRLS(&rls->nextp);
 #    endif
   }
   FLUSH;
   TX_COMMIT;
   result = (v == val);
 
-#  else	 /* READ_VALIDATION */
+/*#  else	  READ_VALIDATION
   node_t *prev, *next, *validate;
   nxt_t nextoffs, validateoffs;
   val_t v = 0;
 
   TX_START;
-  prev = ND(set->head);
+  prev = set->headp;
   nextoffs = prev->next;
-  next = ND(nextoffs);
+  //next = ND(nextoffs);
+  next = prev->nextp;
   validate = prev;
   validateoffs = nextoffs;
   while (1) {
@@ -192,7 +194,8 @@ set_contains(intset_t *set, val_t val, int transactional)
     validateoffs = nextoffs;
     prev = next;
     nextoffs = prev->next;
-    next = ND(nextoffs);
+    //next = ND(nextoffs);
+	 next = prev->nextp;
     if (validate->next != validateoffs) {
       PRINTD("[C1] Validate failed: expected nxt: %d, got %d", validateoffs, validate->next);
       TX_ABORT(READ_AFTER_WRITE);
@@ -204,6 +207,7 @@ set_contains(intset_t *set, val_t val, int transactional)
   }
   TX_COMMIT;
   result = (v == val);
+  */
 #  endif
 #endif	
 
@@ -218,15 +222,15 @@ static int set_seq_add(intset_t *set, val_t val) {
     global_lock();
 #endif
 
-    prev = ND(set->head);
-    next = ND(prev->next);
+    prev = set->headp;
+    next = prev->nextp;
     while (next->val < val) {
         prev = next;
-        next = ND(prev->next);
+        next = prev->nextp;
     }
     result = (next->val != val);
     if (result) {
-        prev->next = OF(new_node(val, OF(next), 0));
+        prev->nextp = new_node(val, next, 0);
     }
 
 
@@ -265,8 +269,9 @@ set_add(intset_t *set, val_t val, int transactional)
 #    endif
   val_t v;
   TX_START;
-  prev = ND(set->head);
-  next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+  prev = set->headp;
+  //next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+  next = *((node_t**) TX_LOAD(&prev->nextp));
 
   v = next->val;
   if (v >= val)
@@ -276,7 +281,8 @@ set_add(intset_t *set, val_t val, int transactional)
   pprls = prev;
 #    endif
   prev = next;
-  next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+  //next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+  next = *((node_t**) TX_LOAD(&prev->nextp));
 
 #    ifdef EARLY_RELEASE
   prls = prev;
@@ -286,9 +292,10 @@ set_add(intset_t *set, val_t val, int transactional)
     if (v >= val)
       break;
     prev = next;
-    next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+  //next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+  next = *((node_t**) TX_LOAD(&prev->nextp));
 #    ifdef EARLY_RELEASE
-    TX_RRLS(&pprls->next);
+    TX_RRLS(&pprls->nextp);
     pprls = prls;
     prls = prev;
 #    endif
@@ -296,9 +303,9 @@ set_add(intset_t *set, val_t val, int transactional)
  done:
   result = (v != val);
   if (result) {
-    nxt_t nxt = OF(new_node(val, OF(next), transactional));
+    node_t* nxt = new_node(val, next, transactional);
     PRINTD("Created node %5d. Value: %d", nxt, val);
-    TX_STORE(&prev->next, nxt, TYPE_INT64);
+    TX_STORE(&prev->nextp, (val_t) nxt, TYPE_INT64);
   }
   TX_COMMIT_MEM;
 
@@ -309,7 +316,7 @@ set_add(intset_t *set, val_t val, int transactional)
 #    endif
 
 
-#  else	 /* READ_VALIDATION */
+/*#  else	 // READ_VALIDATION 
   node_t *prev, *next, *validate, *pvalidate;
   nxt_t nextoffs, validateoffs, pvalidateoffs;
 
@@ -382,6 +389,7 @@ set_add(intset_t *set, val_t val, int transactional)
   FLUSH;
 #    endif
 
+  */
 #  endif
 #endif
   return result;
@@ -405,15 +413,15 @@ int set_remove(intset_t *set, val_t val, int transactional)
   global_lock();
 #  endif
 
-  prev = ND(set->head);
-  next = ND(prev->next);
+  prev = set->headp;
+  next = prev->nextp;
   while (next->val < val) {
     prev = next;
-    next = ND(prev->next);
+    next = prev->nextp;
   }
   result = (next->val == val);
   if (result) {
-    prev->next = next->next;
+    prev->nextp = next->nextp;
     sys_shfree((void*) next);
   }
 
@@ -430,8 +438,9 @@ int set_remove(intset_t *set, val_t val, int transactional)
   val_t v;
 
   TX_START;
-  prev = ND(set->head);
-  next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+  prev = set->headp;
+  //next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+  next = *((node_t**) TX_LOAD(&prev->nextp));
 
   //v = *(val_t *) TX_LOAD(&next->val);
   v = next->val;
@@ -443,7 +452,8 @@ int set_remove(intset_t *set, val_t val, int transactional)
 #    endif
 
   prev = next;
-  next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+  //next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+  next = *((node_t**) TX_LOAD(&prev->nextp));
 #    ifdef EARLY_RELEASE
   prls = prev;
 #    endif
@@ -453,9 +463,10 @@ int set_remove(intset_t *set, val_t val, int transactional)
     if (v >= val)
       break;
     prev = next;
-    next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+	//next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+  	next = *((node_t**) TX_LOAD(&prev->nextp));
 #    ifdef EARLY_RELEASE
-    TX_RRLS(&pprls->next);
+    TX_RRLS(&pprls->nextp);
     pprls = prls;
     prls = prev;
 #    endif
@@ -463,10 +474,11 @@ int set_remove(intset_t *set, val_t val, int transactional)
  done:
   result = (v == val);
   if (result) {
-    nxt_t nxt = *(nxt_t *) TX_LOAD(&next->next);
-    TX_STORE(&prev->next, nxt, TYPE_INT64);
+    //nxt_t nxt = *(nxt_t *) TX_LOAD(&next->next);
+  	 node_t* nxt = *((node_t**) TX_LOAD(&next->nextp));
+    TX_STORE(&prev->nextp, (val_t) nxt, TYPE_INT64);
     TX_SHFREE(next);
-    PRINTD("Freed node   %5d. Value: %d", OF(next), next->val);
+    PRINTD("Freed node   %5d. Value: %d", next, next->val);
   }
   TX_COMMIT_MEM;
 
@@ -476,7 +488,7 @@ int set_remove(intset_t *set, val_t val, int transactional)
   FLUSH;
 #    endif
 
-#  else	 /* READ_VALIDATION */
+/*#  else	 // READ_VALIDATION 
   node_t *prev, *next, *validate, *pvalidate;
   nxt_t nextoffs, validateoffs, pvalidateoffs;
   val_t v;
@@ -540,16 +552,17 @@ int set_remove(intset_t *set, val_t val, int transactional)
     }
   }
   TX_COMMIT_MEM;
+  */
 #  endif
-#endif
-  return result;
+#endif  
+return result;
 }
 
 void set_print(intset_t* set) 
 {
 
-  node_t *node = ND(set->head);
-  node = ND(node->next);
+  node_t *node = set->headp;
+  node = node->nextp;
 
   if (node == NULL) 
     {
@@ -558,8 +571,8 @@ void set_print(intset_t* set)
 
   while (node->nextp != NULL) 
     {
-      printf("(@%p) %u -[%u]-> ", &node->next, (unsigned int) node->val, (unsigned int) node->next);
-      node = ND(node->next);
+      printf("(@%p) %u -[%p]-> ", &node->nextp, (unsigned int) node->val, node->nextp);
+      node = node->nextp;
     }
 
  null:

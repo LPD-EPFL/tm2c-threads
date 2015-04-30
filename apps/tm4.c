@@ -36,14 +36,10 @@
 
 #define SIS_SIZE 480
 
-int
-main(int argc, char **argv)
-{
-
-  TM2C_INIT;
-
+void *mainthread(void *args) {
+  TM_START;
   int *sis = (int *) sys_shmalloc(SIS_SIZE * sizeof (int));
-  printf("process %d allocated at %p\n", TM2C_ID, sis);
+  printf("thread %d allocated at %p\n", TM2C_ID, sis);
   if (sis == NULL)
     {
       perror("sys_shmalloc");
@@ -113,5 +109,13 @@ main(int argc, char **argv)
 
   TM_END;
 
+  EXIT(0);
+}
+
+int
+main(int argc, char **argv)
+{
+  TM2C_INIT_SYS;
+  TM2C_INIT_THREAD;
   EXIT(0);
 }

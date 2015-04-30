@@ -29,6 +29,7 @@
 #include <assert.h>
 
 #include "tm2c.h"
+#include <pthread.h>
 
 #define SIS_SIZE 65536
 
@@ -49,21 +50,9 @@ get_responsible_node(tm_intern_addr_t addr)
 #endif	/* PGAS */
 }
 
-int
-main(int argc, char **argv)
-{
-  TM2C_INIT;
 
-  if (argc > 1)
-    {
-      mem_size = atoi(argv[1]) * sizeof(int32_t);
-    }
-
-  if (argc > 1)
-    {
-      num_dsl = atoi(argv[2]);
-    }
-
+void* mainthread(void *args) {
+  TM_START;
   ONCE
     {
       printf("memory size in bytes: %lu, words: %lu\n  emulating %lu dsl nodes\n",
@@ -99,8 +88,22 @@ main(int argc, char **argv)
   BARRIER;
 
   sys_shfree((void*) mem);
+  TM_END;//TODO
+  pthread_exit(NULL);
+}
 
-  TM_END;
+int
+main(int argc, char **argv) {
+  if (argc > 1)
+    {
+      mem_size = atoi(argv[1]) * sizeof(int32_t);
+    }
 
-  EXIT(0);
+  if (argc > 2)
+    {
+      num_dsl = atoi(argv[2]);
+    }
+  TM2C_INIT_SYS;
+  TM2C_INIT_THREAD;
+  pthread_exit(NULL);
 }

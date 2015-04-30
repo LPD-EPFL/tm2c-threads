@@ -41,16 +41,18 @@
 #include <sched.h>
 #include <assert.h>
 #include <limits.h>
-#include <ssmp.h>
+#include <ssmpthread.h>
 #ifdef PLATFORM_NUMA
 #  include <numa.h>
 #endif /* PLATFORM_NUMA */
 #include "common.h"
+#include "tm2c.h"
 #include "tm2c_app.h"
 #include "tm2c_dsl.h"
 #include "tm2c_malloc.h"
 
 #include "hash.h"
+#include <pthread.h>
 
 uint8_t rank_to_core[] =
   {
@@ -64,7 +66,7 @@ uint8_t rank_to_core[] =
     70, 71, 72, 73, 74, 75, 76, 77, 78, 79,
   };
 
-TM2C_RPC_REPLY* tm2c_rpc_remote_msg; // holds the received msg
+__thread TM2C_RPC_REPLY* tm2c_rpc_remote_msg; // holds the received msg
 
 INLINED nodeid_t min_dsl_id();
 
@@ -80,13 +82,13 @@ INLINED void sys_tm2c_rpc_req_reply(nodeid_t sender,
  * To make sure we don't rely on any particular order, params should be passed
  * as: -id=ID -total=TOTAL_NODES
  */
-nodeid_t TM2C_ID;
+__thread nodeid_t TM2C_ID;
 nodeid_t TM2C_NUM_NODES;
 
 
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if any other CM (greedy, wholly, faircm) */
 int32_t **cm_abort_flags;
-int32_t *cm_abort_flag_mine;
+__thread int32_t *cm_abort_flag_mine;
 #if defined(GREEDY) && defined(GREEDY_GLOBAL_TS)
 ticks* greedy_global_ts;
 #endif
@@ -137,45 +139,25 @@ sys_tm2c_init_system(int* argc, char** argv[])
   }
   *argc = *argc - (p-cur);
 
-  TM2C_ID = 0;
-
   ssmp_init(TM2C_NUM_NODES);
+  tm2c_init_barrier();
+}
 
-  nodeid_t rank;
-  for (rank = 1; rank < TM2C_NUM_NODES; rank++) 
-    {
-      PRINTD("Forking child %u", rank);
-      pid_t child = fork();
-      if (child < 0) 
-	{
-	  PRINT("Failure in fork():\n%s", strerror(errno));
-	} 
-      else if (child == 0) 
-	{
-	  goto fork_done;
+void *initthread(void *args) {
+	struct args_start_thread c_args= *((struct args_start_thread *) args);
+	free(args);
+	TM2C_ID = c_args.id;
+	int place = rank_to_core[TM2C_ID];
+	cpu_set_t mask;
+	CPU_ZERO(&mask);
+	CPU_SET(place, &mask);
+	if (pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &mask) != 0) {
+		fprintf(stderr, "Problem with setting thread affinity\n");
+		exit(3);
 	}
-    }
-  rank = 0;
-
- fork_done:
-  PRINTD("Initializing child %u", rank);
-  TM2C_ID = rank;
-  ssmp_mem_init(TM2C_ID, TM2C_NUM_NODES);
-
-  // Now, pin the process to the right core (NODE_ID == core id)
-  int place = rank_to_core[rank];
-  cpu_set_t mask;
-  CPU_ZERO(&mask);
-  CPU_SET(place, &mask);
-  if (sched_setaffinity(0, sizeof(cpu_set_t), &mask) != 0) 
-    {
-      PRINT("Problem with setting processor affinity: %s\n",
-	    strerror(errno));
-      EXIT(3);
-    }
-#ifdef PLATFORM_NUMA
-  numa_set_preferred(rank/6);
-#endif /* PLATFORM_NUMA */
+	tm2c_init();
+	(*c_args.mainthread)(NULL);
+	pthread_exit(NULL);
 }
 
 void
@@ -210,26 +192,36 @@ sys_tm2c_init()
 
 }
 
-void
-sys_app_init(void)
-{
-#if defined(PGAS)
-  pgas_app_init();
-#else  /* PGAS */
-  tm2c_shmalloc_init(TM2C_SHMEM_SIZE); 
-#endif /* PGAS */
-
+static pthread_once_t tm2c_malloc_share_memory_once = PTHREAD_ONCE_INIT;
+static void tm2c_malloc_share_memory(void) {
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
-  cm_abort_flag_mine = cm_init(NODE_ID());
-  *cm_abort_flag_mine = NO_CONFLICT;
-
+	cm_abort_flags = (int32_t**) malloc(TOTAL_NODES() * sizeof(int32_t*));
+	assert(cm_abort_flags != NULL);
+#endif
 #if defined(GREEDY) && defined(GREEDY_GLOBAL_TS)
   greedy_global_ts = cm_greedy_global_ts_init();
 #endif
+	tm2c_shmalloc_init(TM2C_SHMEM_SIZE);
+}
 
+static pthread_once_t sys_app_init_once_control = PTHREAD_ONCE_INIT;
+static void sys_app_init_once(void) {
+#if defined(PGAS)
+  pgas_app_init();
+#else  /* PGAS */
+  pthread_once(&tm2c_malloc_share_memory_once, tm2c_malloc_share_memory);
+#endif /* PGAS */
+}
+
+void
+sys_app_init(void)
+{
+pthread_once(&sys_app_init_once_control, sys_app_init_once);
+BARRIERW;
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
+  cm_abort_flag_mine = cm_init(NODE_ID());
+  cm_abort_flags[NODE_ID()] = cm_abort_flag_mine;
 #endif
-
-  BARRIERW;
 
   tm2c_rpc_remote_msg = NULL;
   PRINTD("sys_app_init: done");
@@ -237,35 +229,36 @@ sys_app_init(void)
   BARRIERW;
 }
 
-void
-sys_dsl_init(void)
-{
-
+static pthread_once_t sys_dsl_init_once_control = PTHREAD_ONCE_INIT;
+static void sys_dsl_init_once(void) {
 #if defined(PGAS)
   pgas_dsl_init();
 #else  /* PGAS */
-  tm2c_shmalloc_init(TM2C_SHMEM_SIZE);
+  pthread_once(&tm2c_malloc_share_memory_once, tm2c_malloc_share_memory);
 #endif	/* PGAS */
+}
 
-  BARRIERW;
+/**already a thread here*/
+void sys_dsl_init(void) {
+   pthread_once(&sys_dsl_init_once_control, sys_dsl_init_once);
+   BARRIERW;
+   BARRIERW;
+}
 
-#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
-  cm_abort_flags = (int32_t **) malloc(TOTAL_NODES() * sizeof(int32_t *));
-  assert(cm_abort_flags != NULL);
-
-  uint32_t i;
-  for (i = 0; i < TOTAL_NODES(); i++) 
-    {
-      //TODO: make it open only for app nodes
-      if (is_app_core(i))
-	{
-	  cm_abort_flags[i] = cm_init(i);    
+static void tm2c_free_shared_memory(void) {
+static volatile int last_thread_free_memory = 0;
+	__sync_add_and_fetch(&last_thread_free_memory, 1);
+	if (last_thread_free_memory == TM2C_NUM_NODES) {
+		#if !defined(PGAS)
+		  tm2c_shmalloc_term();
+		#endif
+		#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
+		  free(cm_abort_flags);
+		#endif
+		#  if defined(GREEDY) && defined(GREEDY_GLOBAL_TS)
+		  cm_greedy_global_ts_term();
+		#  endif
 	}
-    }
-#endif
-
-  BARRIERW;
-
 }
 
 void
@@ -273,26 +266,8 @@ sys_dsl_term(void)
 {
 #if defined(PGAS)
   pgas_dsl_term();
-#else  /* PGAS */
-  tm2c_shmalloc_term();
-#endif	/* PGAS */
-
-
-#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
-  assert(cm_abort_flags != NULL);
-
-  uint32_t i;
-  for (i = 0; i < TOTAL_NODES(); i++) 
-    {
-      if (is_app_core(i))
-	{
-	  cm_term(i);    
-	}
-    }
-
-  free(cm_abort_flags);
 #endif
-
+  //tm2c_free_shared_memory();
   BARRIERW;
 }
 
@@ -301,18 +276,12 @@ sys_app_term(void)
 {
 #if defined(PGAS)
   pgas_app_term();
-#else  /* PGAS */
-  tm2c_shmalloc_term();
-#endif /* PGAS */
-
-#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
-  cm_term(NODE_ID());
-#  if defined(GREEDY) && defined(GREEDY_GLOBAL_TS)
-  cm_greedy_global_ts_term();
-#  endif
-
 #endif
 
+#if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if real cm: wholly, greedy, faircm */
+  free(cm_abort_flag_mine); 
+#endif
+  tm2c_free_shared_memory();
   BARRIERW;
 }
 
@@ -345,7 +314,7 @@ dsl_service()
 
   ssmp_msg_t *msg;
   ssmp_color_buf_t *cbuf;
-  static TM2C_RPC_REQ *tm2c_rpc_remote;
+  static __thread TM2C_RPC_REQ *tm2c_rpc_remote;
 
   if (posix_memalign((void**) &msg, CACHE_LINE_SIZE, sizeof(ssmp_msg_t)) != 0
       ||
@@ -614,7 +583,7 @@ tm2c_init_barrier()
   ssmp_barrier_init(1, 0, is_app_core);
   ssmp_barrier_init(14, 0, is_dsl_core);
 
-  BARRIERW;
+//  BARRIERW; still one thread here so useless
 }
 
 void
@@ -632,99 +601,34 @@ global_barrier()
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) /* if any other CM (greedy, wholly, faircm) */
 int32_t*
 cm_init(nodeid_t node) {
-   char keyF[50];
-   sprintf(keyF,"/cm_abort_flag%03d", node);
-
-   size_t cache_line = 64;
-
-   int abrtfd = shm_open(keyF, O_CREAT | O_EXCL | O_RDWR, S_IRWXU | S_IRWXG);
-   if (abrtfd<0)
-   {
-      if (errno != EEXIST)
-      {
-         perror("In shm_open");
-         exit(1);
-      }
-
-      //this time it is ok if it already exists                                                    
-      abrtfd = shm_open(keyF, O_CREAT | O_RDWR, S_IRWXU | S_IRWXG);
-      if (abrtfd<0)
-      {
-         perror("In shm_open");
-         exit(1);
-      }
-   }
-   else
-   {
-      //only if it is just created                                                                 
-     if(ftruncate(abrtfd, cache_line))
-       {
-	 printf("ftruncate");
-       }
-   }
-
-   int32_t *tmp = (int32_t *) mmap(NULL, 64, PROT_READ | PROT_WRITE, MAP_SHARED, abrtfd, 0);
-   assert(tmp != NULL);
-   
-   return tmp;
+  size_t cache_line = 64;
+  int32_t* tmp = (int32_t*) memalign(SSMP_CACHE_LINE_SIZE, cache_line);
+  assert(tmp != NULL);
+  *tmp = NO_CONFLICT;
+  return tmp;
 }
 
 void
 cm_term(nodeid_t node)
 {
-  char keyF[50];
-  sprintf(keyF,"/cm_abort_flag%03d", node);
-  shm_unlink(keyF);
+   free(cm_abort_flags[node]);
 }
 
 
 #if defined(GREEDY) && defined(GREEDY_GLOBAL_TS)
-static ticks* 
+static ticks*
 cm_greedy_global_ts_init()
 {
-   char keyF[50];
-   sprintf(keyF,"/cm_greedy_global_ts");
-
-   size_t cache_line = 64;
-
-   int abrtfd = shm_open(keyF, O_CREAT | O_EXCL | O_RDWR, S_IRWXU | S_IRWXG);
-   if (abrtfd<0)
-   {
-      if (errno != EEXIST)
-      {
-         perror("In shm_open");
-         exit(1);
-      }
-
-      //this time it is ok if it already exists                                                    
-      abrtfd = shm_open(keyF, O_CREAT | O_RDWR, S_IRWXU | S_IRWXG);
-      if (abrtfd<0)
-      {
-         perror("In shm_open");
-         exit(1);
-      }
-   }
-   else
-   {
-      //only if it is just created                                                                 
-     if(ftruncate(abrtfd, cache_line))
-       {
-	 printf("ftruncate");
-       }
-   }
-
-   ticks* tmp = (ticks*) mmap(NULL, 64, PROT_READ | PROT_WRITE, MAP_SHARED, abrtfd, 0);
+   ticks *tmp = (ticks*) malloc(sizeof(ticks));
    assert(tmp != NULL);
-   
+   *tmp = 0;
    return tmp;
 }
 
 void
 cm_greedy_global_ts_term()
 {
-  char keyF[50];
-  sprintf(keyF,"/cm_greedy_global_ts");
-  shm_unlink(keyF);
+	free(greedy_global_ts);
 }
 
 inline ticks

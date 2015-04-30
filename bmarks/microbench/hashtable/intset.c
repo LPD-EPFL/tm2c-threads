@@ -97,7 +97,7 @@ ht_move_naive(ht_intset_t *set, int val1, int val2, int transactional)
 
   int v, addr1, addr2;
   node_t *prev, *next, *prev1, *next1;
-  nxt_t nxt;
+  node_t* nxt;
 
   addr1 = val1 % maxhtlength;
   addr2 = val2 % maxhtlength;
@@ -111,9 +111,10 @@ ht_move_naive(ht_intset_t *set, int val1, int val2, int transactional)
   TX_START;
   result = 0;
 
-  OFFSET(set->buckets[addr1]);
-  prev = ND(set->buckets[addr1]->head);
-  next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+  //OFFSET(set->buckets[addr1]);
+  prev = set->buckets[addr1]->headp;
+  //next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+  next = *((node_t**) TX_LOAD(&prev->nextp));
 
   while (1) 
     {
@@ -123,20 +124,23 @@ ht_move_naive(ht_intset_t *set, int val1, int val2, int transactional)
 	  break;
 	}
       prev = next;
-      next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+      //next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+  		next = *((node_t**) TX_LOAD(&prev->nextp));
     }
 
   if (v == val1) 
     {
       result = 2;
       /* Physically removing */
-      nxt = *(nxt_t *) TX_LOAD(&next->next);
-      TX_STORE(&prev->next, nxt, TYPE_INT64);
+      //nxt = *(nxt_t *) TX_LOAD(&next->next);
+  		nxt = *((node_t**) TX_LOAD(&next->nextp));
+      TX_STORE(&prev->nextp, (val_t) nxt, TYPE_INT64);
       TX_SHFREE(next);
       /* Inserting */
-      OFFSET(set->buckets[addr2]);
-      prev1 = ND(set->buckets[addr2]->head);
-      next1 = ND(*(nxt_t *) TX_LOAD(&prev1->next));
+      //OFFSET(set->buckets[addr2]);
+      prev1 = set->buckets[addr2]->headp;
+      //next1 = ND(*(nxt_t *) TX_LOAD(&prev1->next));
+  		next1 = *((node_t**) TX_LOAD(&prev1->nextp));
       while (1) 
 	{
 	  v = next1->val; //was TX
@@ -145,13 +149,14 @@ ht_move_naive(ht_intset_t *set, int val1, int val2, int transactional)
 	      break;
 	    }
 	  prev1 = next1;
-	  next1 = ND(*(nxt_t *) TX_LOAD(&prev1->next));
+	  //next1 = ND(*(nxt_t *) TX_LOAD(&prev1->next));
+		next1 = *((node_t**) TX_LOAD(&prev1->nextp));
 	}
       if (v != val2) 
 	{
-	  nxt_t nxt1 = OF(new_node(val2, OF(next1), transactional));
+	  node_t* nxt1 = new_node(val2, next1, transactional);
 	  //PRINTD("Created node %5d. Value: %d", nxt, val);
-	  TX_STORE(&prev1->next, nxt1, TYPE_INT64);
+	  TX_STORE(&prev1->nextp, (val_t) nxt1, TYPE_INT64);
 	  result = 1;
 	}
       /* Even if the key is already in, the operation succeeds */
@@ -214,9 +219,10 @@ int ht_move(ht_intset_t *set, int val1, int val2, int transactional) {
 
   result=0;
 
-  OFFSET(set->buckets[addr1]);
-  prev = ND(set->buckets[addr1]->head);
-  next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+  //OFFSET(set->buckets[addr1]);
+  prev = set->buckets[addr1]->headp;
+  //next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+  next = *((node_t**) TX_LOAD(&prev->nextp));
 
   while (1)
     {
@@ -226,7 +232,8 @@ int ht_move(ht_intset_t *set, int val1, int val2, int transactional) {
 	  break;
 	}
       prev = next;
-      next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+      //next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+	  next = *((node_t**) TX_LOAD(&prev->nextp));
     }
 
   prev1 = prev;
@@ -234,9 +241,10 @@ int ht_move(ht_intset_t *set, int val1, int val2, int transactional) {
   if (v == val1)
     {
       /* Inserting */
-      OFFSET(set->buckets[addr2]);
-      prev = ND(set->buckets[addr2]->head);
-      next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+      //OFFSET(set->buckets[addr2]);
+      prev = set->buckets[addr2]->headp;
+      //next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+	  next = *((node_t**) TX_LOAD(&prev->nextp));
 
       while (1)
 	{
@@ -246,7 +254,8 @@ int ht_move(ht_intset_t *set, int val1, int val2, int transactional) {
 	      break;
 	    }
 	  prev = next;
-	  next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+	  //next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+	  next = *((node_t**) TX_LOAD(&prev->nextp));
 	}
 
       if (v != val2 && prev != prev1 && prev != next1)
@@ -255,10 +264,11 @@ int ht_move(ht_intset_t *set, int val1, int val2, int transactional) {
 	  result = 1;
 
 	  /* Physically removing */
-	  nxt_t nxt1 = *(nxt_t *) TX_LOAD(&next1->next);
-	  TX_STORE(&prev1->next, nxt1, TYPE_INT);
-	  nxt_t nxt2 = OF(new_node(val2, OF(next), transactional));
-	  TX_STORE(&prev->next, nxt2, TYPE_INT);
+	  //nxt_t nxt1 = *(nxt_t *) TX_LOAD(&next1->next);
+	  node_t *nxt1 = *((node_t**) TX_LOAD(&next1->nextp));
+	  TX_STORE(&prev1->nextp, (val_t) nxt1, TYPE_INT64);
+	  node_t* nxt2 = new_node(val2, next, transactional);
+	  TX_STORE(&prev->nextp, (val_t) nxt2, TYPE_INT64);
 	  TX_SHFREE(next1);
 	}
     }
@@ -302,45 +312,48 @@ int ht_move_orrollback(ht_intset_t *set, int val1, int val2, int transactional) 
 
     TX_START
     addr1 = val1 % maxhtlength;
-    OFFSET(set->buckets[addr1]);
-    prev = ND(*(nxt_t *) TX_LOAD(&set->buckets[addr1]->head));
-    next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+    //OFFSET(set->buckets[addr1]);
+    prev = *((node_t**) TX_LOAD(&set->buckets[addr1]->headp));
+    next = *((node_t**) TX_LOAD(&prev->nextp));
     while (1) {
         v = next->val; //was TX
         if (v >= val1) {
             break;
         }
         prev = next;
-        next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+        //next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+		  next = *((node_t**) TX_LOAD(&prev->nextp));
     }
     prev1 = prev;
     next1 = next;
     if (v == val1) {
         /* Physically removing */
-        nxt_t nxt = *(nxt_t *) TX_LOAD(&next->next);
-        TX_STORE(&prev->next, nxt, TYPE_INT);
+        //nxt_t nxt = *(nxt_t *) TX_LOAD(&next->next);
+  		  node_t *nxt = *((node_t**) TX_LOAD(&next->nextp));
+        TX_STORE(&prev->nextp, (val_t) nxt, TYPE_INT64);
         /* Inserting */
         addr2 = val2 % maxhtlength;
-        OFFSET(set->buckets[addr2]);
-        prev = ND(*(nxt_t *) TX_LOAD(&set->buckets[addr2]->head));
-        next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+        //OFFSET(set->buckets[addr2]);
+        prev = *((node_t **) TX_LOAD(&set->buckets[addr2]->headp));
+        next = *((node_t **)  TX_LOAD(&prev->nextp));
         while (1) {
             v = next->val; //was TX
             if (v >= val2) {
                 break;
             }
             prev = next;
-            next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+            //next = ND(*(nxt_t *) TX_LOAD(&prev->next));
+			   next = *((node_t**) TX_LOAD(&prev->nextp));
         }
         if (v != val2) {
-            nxt_t nxt = OF(new_node(val2, OF(next), transactional));
+            node_t* nxt = new_node(val2, next, transactional);
             //PRINTD("Created node %5d. Value: %d", nxt, val);
-            TX_STORE(&prev->next, nxt, TYPE_INT);
+            TX_STORE(&prev->nextp, (val_t) nxt, TYPE_INT64);
             TX_SHFREE(next1);
         }
         else {
-            nxt_t nxt = *(nxt_t *) TX_LOAD(&next1);
-            TX_STORE(&prev1->next, nxt, TYPE_INT);
+            node_t *nxt = *((node_t **) TX_LOAD(&next1));
+            TX_STORE(&prev1->nextp, (val_t) nxt, TYPE_INT64);
         }
         /* Even if the key is already in, the operation succeeds */
         result = 1;
@@ -375,12 +388,12 @@ int ht_snapshot(ht_intset_t *set, int transactional) {
     node_t *next;
 
     for (i = 0; i < maxhtlength; i++) {
-        OFFSET(set->buckets[i]);
-        node_t *hd = ND(set->buckets[i]->head);
-        next = ND(hd->next);
+        //OFFSET(set->buckets[i]);
+        node_t *hd = set->buckets[i]->headp;
+        next = hd->nextp;
         while (next->nextp) {
             sum += next->val;
-            next = ND(next->next);
+            next = next->nextp;
         }
     }
     result = 1;
@@ -397,13 +410,13 @@ int ht_snapshot(ht_intset_t *set, int transactional) {
     TX_START
     sum = 0;
     for (i = 0; i < maxhtlength; i++) {
-        OFFSET(set->buckets[i]);
-        node_t *hd = ND(set->buckets[i]->head);
-        next = ND(*(nxt_t *) TX_LOAD(&hd->next));
-        while (next->next) {
+        //OFFSET(set->buckets[i]);
+        node_t *hd = set->buckets[i]->headp;
+        next = *((node_t**) TX_LOAD(&hd->nextp));
+        while (next->nextp) {
             //sum += TX_LOAD(&next->val);
             sum += next->val;
-            next = ND(*(nxt_t *) TX_LOAD(&next->next));
+            next = *((node_t **) TX_LOAD(&next->nextp));
         }
     }
     TX_COMMIT

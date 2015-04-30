@@ -110,9 +110,9 @@ extern "C" {
     BARRIER_DSL;}}
 
 
-  extern tm2c_tx_t* tm2c_tx;
-  extern tm2c_tx_node_t* tm2c_tx_node;
-  extern double duration__;
+  extern __thread tm2c_tx_t* tm2c_tx;
+  extern __thread tm2c_tx_node_t* tm2c_tx_node;
+  extern __thread double duration__;
 
   extern const char* conflict_reasons[4];
 
@@ -189,6 +189,14 @@ extern "C" {
    *______________________________________________________________________________________________________|
    */
 
+#define TM2C_INIT_SYS \
+  tm2c_init_system(&argc, &argv);
+
+  /**to call after pthread_create*/
+#define TM2C_INIT_THREAD \
+  start_threads(&mainthread); \
+
+#define TM_START {
 
 #define TM2C_INIT				\
   tm2c_init_system(&argc, &argv);		\
@@ -607,6 +615,13 @@ extern "C" {
   extern void tm2c_init(void);
   extern void tm2c_term(void);
 
+
+  struct args_start_thread {
+	nodeid_t id;
+	void* (*mainthread) (void*);
+  };
+
+  extern void start_threads(void* (*)(void *));
 
 #ifdef	__cplusplus
 }

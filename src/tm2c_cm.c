@@ -25,7 +25,7 @@
 #include "tm2c_cm.h"
 
 #include "tm2c_dsl_ht.h"
-extern tm2c_ht_t tm2c_ht;
+extern __thread tm2c_ht_t tm2c_ht;
 
 #if !defined(NOCM) && !defined(BACKOFF_RETRY) /* any CM: wholly, greedy, faircm */
 
