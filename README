@@ -1,5 +1,8 @@
 TM2C is the most portable software transactional memory (STM) to date. TM2C is distributed: its design is fully decentralized and builds on top of message passing. Nevertheless, TM2C targets large-scale many-cores, not distributed systems. Although decentralized (and therefore highly scalable), TM2C guarantees the termination of every transaction, unlike other distributed STMs.
 
+TM2C was ported to pthreads by David Cervini <cervini.david@gmail.com> in a semester project supervised by Vasileios Trigonakis <vasileios.trigonakis@epfl.ch>.
+
+
 * Website             : http://lpd.epfl.ch/site/tm2c
 * Author              : Vasileios Trigonakis <vasileios.trigonakis@epfl.ch>
 * Related Publications: TM2C is now a part of the SSYNC synchronization suite (http://lpd.epfl.ch/site/ssync)
